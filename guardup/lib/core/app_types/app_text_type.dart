@@ -1,0 +1,17 @@
+enum AppTextType {
+  headlineLarge,
+  headlineMedium,
+  headlineSmall,
+  displayLarge,
+  displayMedium,
+  displaySmall,
+  bodyLarge,
+  bodyMedium,
+  bodySmall,
+  titleLarge,
+  titleMedium,
+  titleSmall,
+  labelLarge,
+  labelMedium,
+  labelSmall,
+}

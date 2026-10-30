@@ -1,122 +1,276 @@
+import 'dart:async';
+
+import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:guardup/core/constants/env_config.dart';
+import 'package:guardup/core/localization/locale_bloc.dart';
+import 'package:guardup/core/network/connectivity_bloc.dart';
+import 'package:guardup/core/services/injection_container.dart';
+import 'package:guardup/core/services/push_notification_service.dart';
+import 'package:guardup/core/theme/app_themes.dart';
+import 'package:guardup/core/theme/theme_bloc.dart';
+import 'package:guardup/core/utils/app_logs.dart';
+import 'package:guardup/core/utils/app_router.dart';
+import 'package:guardup/core/widgets/app_phone_textfield/app_phone_textfield.dart';
+import 'package:guardup/core/widgets/common/no_internet_screen.dart';
+import 'package:guardup/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:guardup/features/help_centre/presentation/bloc/support_cubit.dart';
+import 'package:guardup/features/locations/presentation/bloc/country_bloc/country_bloc.dart';
+import 'package:guardup/features/notifications/presentation/bloc/notification_bloc.dart'
+    as guard_noti;
+import 'package:guardup/features/notifications/presentation/bloc/notification_event.dart'
+    as guard_noti;
+import 'package:guardup/l10n/generated/app_localizations.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:receive_sharing_intent/receive_sharing_intent.dart';
+import 'package:responsive_sizer/responsive_sizer.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
+import 'package:upgrader/upgrader.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  // Initialize Firebase
+  // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+  // 1. Initialize Dependency Injection
+  await initDI();
+  await PhoneNumberServices.init();
+
+  // 2. Initialize Environment Variables
+  await EnvConfig.init();
+
+  // Initialize Date Formatting for Arabic
+  await initializeDateFormatting('ar', null);
+
+  // 3. Initialize Supabase
+  if (EnvConfig.supabaseUrl.isNotEmpty &&
+      EnvConfig.supabaseAnonKey.isNotEmpty) {
+    try {
+      await Supabase.initialize(
+        url: EnvConfig.supabaseUrl,
+        anonKey: EnvConfig.supabaseAnonKey,
+      );
+    } catch (e) {
+      debugPrint('⚠️ Supabase initialization failed: $e');
+    }
+  } else {
+    debugPrint(
+      'ℹ️ Supabase URL or Anon Key is empty in .env. Initialization deferred.',
     );
   }
+
+  // 4. Initialize Push Notifications
+  try {
+    await sl<PushNotificationService>().init();
+  } catch (e) {
+    debugPrint(
+      'ℹ️ Push notification service initialization skipped/deferred: $e',
+    );
+  }
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  runApp(
+    MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => sl<ThemeBloc>()..add(const LoadTheme()),
+        ),
+        BlocProvider(create: (context) => sl<ConnectivityBloc>()),
+        BlocProvider(
+          create: (context) => sl<LocaleBloc>()..add(const LoadLocale()),
+        ),
+        BlocProvider(create: (context) => sl<AuthBloc>()),
+        BlocProvider(create: (context) => sl<CountryBloc>()),
+        BlocProvider(create: (context) => sl<SupportCubit>()),
+        BlocProvider(
+          create: (context) => sl<guard_noti.NotificationBloc>()
+            ..add(const guard_noti.FetchNotificationsEvent(isRefresh: true)),
+        ),
+      ],
+      child: BlocListener<AuthBloc, AuthState>(
+        listenWhen: (prev, curr) =>
+            curr is AuthenticatedState && prev is! AuthenticatedState,
+        listener: (context, state) {},
+        child: const MyApp(),
+      ),
+    ),
+  );
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<MyApp> createState() => _MyAppState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _MyAppState extends State<MyApp> {
+  late StreamSubscription _intentDataStreamSubscription;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _handleSharingIntents();
+  }
+
+  void _handleSharingIntents() {
+    AppLogs.debugPrint(
+      ">>> [SharingIntent] Setting up ReceiveSharingIntent listeners...",
+    );
+
+    // Listen to media shared while app is in memory
+    _intentDataStreamSubscription = ReceiveSharingIntent.instance
+        .getMediaStream()
+        .listen(
+          (List<SharedMediaFile> value) {
+            AppLogs.debugPrint(
+              ">>> [SharingIntent] Stream received ${value.length} files",
+            );
+            for (final f in value) {
+              AppLogs.debugPrint(
+                ">>> [SharingIntent] Stream file: path=${f.path}, type=${f.type}, mime=${f.mimeType}",
+              );
+            }
+            _processSharedMedia(value);
+          },
+          onError: (err) {
+            AppLogs.debugPrint(">>> [SharingIntent] Stream error: $err");
+          },
+        );
+
+    // Listen to media shared while app is closed (cold launch)
+    ReceiveSharingIntent.instance
+        .getInitialMedia()
+        .then((List<SharedMediaFile> value) {
+          AppLogs.debugPrint(
+            ">>> [SharingIntent] Initial received ${value.length} files",
+          );
+          for (final f in value) {
+            AppLogs.debugPrint(
+              ">>> [SharingIntent] Initial file: path=${f.path}, type=${f.type}, mime=${f.mimeType}",
+            );
+          }
+          _processSharedMedia(value);
+          ReceiveSharingIntent.instance.reset();
+        })
+        .catchError((err) {
+          AppLogs.debugPrint(">>> [SharingIntent] getInitialMedia error: $err");
+        });
+  }
+
+  void _processSharedMedia(List<SharedMediaFile> files) {
+    AppLogs.debugPrint(
+      ">>> [SharingIntent] _processSharedMedia with ${files.length} files",
+    );
+    if (files.isEmpty) return;
+
+    final file = files.first;
+    AppLogs.debugPrint(
+      ">>> [SharingIntent] First file path: ${file.path}, type: ${file.type}, mime: ${file.mimeType}",
+    );
+
+    final String pathLower = file.path.toLowerCase();
+
+    if (file.type == SharedMediaType.url ||
+        file.type == SharedMediaType.text ||
+        pathLower.startsWith('http')) {
+      AppLogs.debugPrint(
+        ">>> [SharingIntent] Ignored because it's a URL or Text (deep link), not a local video file.",
+      );
+      return;
+    }
+
+    final bool isVideoExt =
+        pathLower.endsWith('.mp4') ||
+        pathLower.endsWith('.mov') ||
+        pathLower.endsWith('.mkv') ||
+        pathLower.endsWith('.avi') ||
+        pathLower.endsWith('.3gp') ||
+        pathLower.endsWith('.webm');
+
+    final bool isVideoMime =
+        file.mimeType != null && file.mimeType!.startsWith('video/');
+
+    final bool isVideo =
+        file.type == SharedMediaType.video ||
+        file.type == SharedMediaType.file ||
+        isVideoExt ||
+        isVideoMime;
+
+    if (isVideo) {
+      final videoPath = file.path;
+      AppLogs.debugPrint(
+        ">>> [SharingIntent] Valid video file detected: $videoPath",
+      );
+    } else {
+      AppLogs.debugPrint(
+        ">>> [SharingIntent] File rejected - not recognized as video: type=${file.type}, path=${file.path}",
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _intentDataStreamSubscription.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
+    return BlocBuilder<ThemeBloc, ThemeState>(
+      builder: (context, themeState) {
+        return BlocBuilder<LocaleBloc, LocaleState>(
+          builder: (context, localeState) {
+            return ResponsiveSizer(
+              builder: (p0, p1, p2) {
+                return MaterialApp.router(
+                  title: EnvConfig.appName,
+                  debugShowCheckedModeBanner: EnvConfig.isDebug,
+
+                  // Theme
+                  theme: AppThemes.light,
+                  darkTheme: AppThemes.dark,
+                  themeMode: themeState.themeMode,
+
+                  // Localization
+                  locale: localeState.locale,
+                  localizationsDelegates: const [
+                    AppLocalizations.delegate,
+                    GlobalMaterialLocalizations.delegate,
+                    GlobalWidgetsLocalizations.delegate,
+                    GlobalCupertinoLocalizations.delegate,
+                    CountryLocalizations.delegate,
+                  ],
+                  supportedLocales: AppLocalizations.supportedLocales,
+                  // Router
+                  routerConfig: AppRouter.router,
+
+                  builder: (context, child) {
+                    return UpgradeAlert(
+                      upgrader: Upgrader(debugDisplayAlways: false),
+                      navigatorKey:
+                          AppRouter.router.routerDelegate.navigatorKey,
+                      child: BlocBuilder<ConnectivityBloc, ConnectivityState>(
+                        builder: (context, state) {
+                          return Directionality(
+                            textDirection: Directionality.of(context),
+                            child: (state is ConnectivityOffline)
+                                ? const NoInternetScreen()
+                                : child ?? const SizedBox.shrink(),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 }
