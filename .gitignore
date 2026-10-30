@@ -1,0 +1,34 @@
+# Environment & Secrets
+.env
+**/.env
+*.env.local
+
+# macOS & System Files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/*
+!.vscode/launch.json
+
+# Flutter / Dart build artifacts
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/.pub/
+**/coverage/
+
+# Web Admin / Node.js build artifacts
+**/node_modules/
+**/dist/
+**/.next/
+**/out/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
