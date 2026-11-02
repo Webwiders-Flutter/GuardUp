@@ -1,0 +1,5 @@
+API_KEYS_FILE_NAME = "lib/core/constants/api/json_keys.dart";
+API_CLASS_NAME = "JsonKeys";
+VARIABLE_CASE = "camelCase";
+API_KEY_TEMPLATE = 'static const String <KEY> = "<VALUE>";',
+PREFIXED_VARIABLE_NAME = "JsonKeys.";

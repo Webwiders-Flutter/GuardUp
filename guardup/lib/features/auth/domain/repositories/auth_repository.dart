@@ -1,95 +1,107 @@
 import 'dart:async';
 
-import 'package:guardup/core/constants/enums/app_enums.dart';
+import '../../data/enum/oauth_provider.enum.dart';
+import '../../data/enum/otp_type.enum.dart';
 
-import '../entities/user_entity.dart';
+export '../../data/enum/oauth_provider.enum.dart';
+export '../../data/enum/otp_type.enum.dart';
 
+/// Abstract contract for Authentication operations.
+///
+/// Belongs to the Domain layer: independent of any specific backend (Supabase, Firebase, REST).
 abstract class AuthRepository {
-  /// Stream of authentication status
-  Stream<AuthStatus> get status;
+  /// Stream that emits the current user ID or null when auth state changes
+  /// (e.g., on sign in, sign out, token refresh).
+  Stream<String?> get authStateChanges;
 
-  /// Gets the current authentication status synchronously
-  AuthStatus get currentStatus;
+  /// Returns the currently authenticated user's ID, or null if unauthenticated.
+  String? get currentUserId;
 
-  /// Signs in with Email and Password
-  Future<void> signIn({required String email, required String password});
+  /// Whether a user is currently logged in.
+  bool get isAuthenticated => currentUserId != null;
 
-  /// Signs up with Email and Password
-  Future<void> signUp({
+  /// Signs up a new user using email and password.
+  /// Returns the newly created user ID.
+  Future<String> signUpWithEmail({
     required String email,
     required String password,
-    required String name,
-    required String phone,
-    required String phoneCode,
-    required String countryCode,
+    Map<String, dynamic>? metadata,
   });
 
-  /// Checks if an email is already registered
-  Future<bool> isEmailRegistered(String email);
+  /// Signs in an existing user using email and password.
+  /// Returns the authenticated user ID.
+  Future<String> signInWithEmail({
+    required String email,
+    required String password,
+  });
 
-  /// Checks if a phone number is already registered
-  Future<bool> isPhoneRegistered(String phone);
+  /// Signs up or starts the sign-in flow using a phone number.
+  Future<void> signUpWithPhone({
+    required String phoneNumber,
+    String? password,
+    Map<String, dynamic>? metadata,
+  });
 
-  /// Signs out the current user
-  Future<void> signOut();
+  /// Initiates sign in with phone (sends SMS OTP).
+  Future<void> signInWithPhone({
+    required String phoneNumber,
+  });
 
-  /// Sends a password reset email
-  Future<void> resetPassword({required String email});
+  /// Verifies an OTP code for phone, email, or recovery flows.
+  /// Returns the authenticated user ID.
+  Future<String> verifyOtp({
+    required String target,
+    required String token,
+    required OtpType type,
+  });
 
-  /// Updates the user's password (used after password recovery or change password)
-  Future<void> updatePassword({
+  /// Resends an OTP to the given target (phone or email).
+  Future<void> resendOtp({
+    required String target,
+    required OtpType type,
+  });
+
+  /// Signs in or signs up via third-party OAuth provider (Google, Apple, etc.).
+  /// Returns the authenticated user ID.
+  Future<String> signInWithOAuth({
+    required OAuthProvider provider,
+    List<String>? scopes,
+    Map<String, String>? queryParams,
+  });
+
+  /// Signs in passwordlessly via email magic link.
+  Future<void> signInWithMagicLink({
+    required String email,
+  });
+
+  /// Signs in anonymously / as a guest.
+  /// Returns the temporary guest user ID.
+  Future<String> signInAnonymously();
+
+  /// Sends a password reset email to the specified address.
+  Future<void> sendPasswordResetEmail({
+    required String email,
+  });
+
+  /// Updates the current user's password.
+  Future<void> changePassword({
     required String newPassword,
     String? oldPassword,
   });
 
-  /// Updates the user's email
-  Future<void> updateEmail({required String newEmail});
-
-  /// Verifies the OTP for email update
-  Future<void> verifyEmailUpdate({
-    required String email,
-    required String token,
+  /// Updates auth user credentials (email, password, or user metadata).
+  Future<void> updateUser({
+    String? email,
+    String? password,
+    Map<String, dynamic>? metadata,
   });
 
-  /// Updates the user's phone number
-  Future<void> updatePhone({
-    required String newPhone,
-    required String phoneCode,
-    required String countryCode,
-  });
+  /// Refreshes the active authentication token or session.
+  Future<void> refreshSession();
 
-  /// Verifies the OTP for phone update
-  Future<void> verifyPhoneUpdate({
-    required String phone,
-    required String token,
-    required String phoneCode,
-    required String countryCode,
-  });
+  /// Signs out the current user and clears session tokens.
+  Future<void> signOut();
 
-  /// Deletes the current user account
-  Future<void> deleteAccount({required String password});
-
-  /// Gets the current authenticated user
-  UserEntity? get currentUser;
-
-  /// Saves the FCM device token for the current user
-  Future<void> saveDeviceToken(String token);
-
-  /// Removes the FCM device token for the current user
-  Future<void> removeDeviceToken(String token);
-
-  /// Verifies the OTP for email signup
-  Future<void> verifySignupEmail({
-    required String email,
-    required String token,
-  });
-
-  /// Verifies the OTP for password recovery
-  Future<void> verifyPasswordRecoveryOtp({
-    required String email,
-    required String token,
-  });
-
-  /// Resends the signup confirmation email
-  Future<void> resendSignupEmail({required String email});
+  /// Permanently deletes the current user's authentication account.
+  Future<void> deleteAccount();
 }

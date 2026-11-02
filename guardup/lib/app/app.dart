@@ -1,0 +1,67 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+
+import '/app/routes/app_router.dart';
+import '/app/theme/app_theme.dart';
+import '/core/config/config.dart';
+import '/core/di/injection_container.dart';
+import '/features/auth/auth.dart';
+import '/gen/app_localizations.dart';
+import '/shared/functionalities/connectivity/connectivity.dart';
+import '/shared/functionalities/language/language.dart';
+import '/shared/widgets/feedbacks/feedback.service.dart';
+
+class App extends StatelessWidget {
+  const App({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>.value(
+          value: sl<AuthBloc>(),
+        ),
+        BlocProvider<LanguageCubit>(
+          create: (_) => sl<LanguageCubit>(),
+        ),
+        BlocProvider<ConnectivityCubit>(
+          create: (_) => sl<ConnectivityCubit>(),
+        ),
+      ],
+      child: BlocBuilder<LanguageCubit, LanguageState>(
+        builder: (context, languageState) {
+          return MaterialApp.router(
+            title: AppEnvironment.config.appName,
+            debugShowCheckedModeBanner: false,
+            routerConfig: AppRouter.router,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            locale: languageState.locale,
+            themeMode: ThemeMode.system,
+            scaffoldMessengerKey: FeedbackService.messengerKey,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            builder: (context, child) {
+              return Stack(
+                fit: StackFit.expand,
+                children: [
+                  ?child,
+                  const Align(
+                    alignment: Alignment.topCenter,
+                    child: NoInternetBanner(),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
