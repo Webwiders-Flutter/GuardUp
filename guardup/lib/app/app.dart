@@ -8,6 +8,7 @@ import '/core/config/config.dart';
 import '/core/di/injection_container.dart';
 import '/features/auth/auth.dart';
 import '/gen/app_localizations.dart';
+import '/gen/assets.gen.dart';
 import '/shared/functionalities/connectivity/connectivity.dart';
 import '/shared/functionalities/language/language.dart';
 import '/shared/widgets/feedbacks/feedback.service.dart';
@@ -51,6 +52,12 @@ class App extends StatelessWidget {
               return Stack(
                 fit: StackFit.expand,
                 children: [
+                  Positioned.fill(
+                    child: Image.asset(
+                      Assets.images.background.path,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                   ?child,
                   const Align(
                     alignment: Alignment.topCenter,

@@ -113,8 +113,10 @@ class AppTextField extends StatefulWidget {
   final InputBorder? enabledBorder;
   final InputBorder? focusedBorder;
   final InputBorder? errorBorder;
+  final InputBorder? focusedErrorBorder;
   final EdgeInsetsGeometry? contentPadding;
   final TextStyle? style;
+  final TextStyle? hintStyle;
   final StrutStyle? strutStyle;
   final InputDecoration? decoration;
   final FloatingLabelBehavior? floatingLabelBehavior;
@@ -181,8 +183,10 @@ class AppTextField extends StatefulWidget {
     this.enabledBorder,
     this.focusedBorder,
     this.errorBorder,
+    this.focusedErrorBorder,
     this.contentPadding,
     this.style,
+    this.hintStyle,
     this.strutStyle,
     this.decoration,
     this.floatingLabelBehavior = FloatingLabelBehavior.never,
@@ -238,11 +242,17 @@ class AppTextField extends StatefulWidget {
     Color? fillColor,
     bool? filled,
     BorderRadius? borderRadius,
+    InputBorder? border,
+    InputBorder? enabledBorder,
+    InputBorder? focusedBorder,
+    InputBorder? errorBorder,
+    InputBorder? focusedErrorBorder,
     InputDecoration? decoration,
     FloatingLabelBehavior? floatingLabelBehavior,
     TextInputAction? textInputAction,
     TextAlign textAlign = TextAlign.start,
     TextStyle? style,
+    TextStyle? hintStyle,
     StrutStyle? strutStyle,
     bool readOnly = false,
     bool enabled = true,
@@ -273,11 +283,17 @@ class AppTextField extends StatefulWidget {
     fillColor: fillColor,
     filled: filled,
     borderRadius: borderRadius,
+    border: border,
+    enabledBorder: enabledBorder,
+    focusedBorder: focusedBorder,
+    errorBorder: errorBorder,
+    focusedErrorBorder: focusedErrorBorder,
     decoration: decoration,
     floatingLabelBehavior: floatingLabelBehavior,
     textInputAction: textInputAction,
     textAlign: textAlign,
     style: style,
+    hintStyle: hintStyle,
     strutStyle: strutStyle,
     readOnly: readOnly,
     enabled: enabled,
@@ -605,7 +621,7 @@ class AppTextField extends StatefulWidget {
       keyboardType: TextInputType.emailAddress,
       textInputAction: TextInputAction.next,
       autofillHints: [AutofillHints.email],
-      prefixIcon: Icons.mail_outline_rounded,
+      prefixIcon: null,
       isPassword: false,
       isPhone: false,
       isCard: false,
@@ -687,12 +703,12 @@ class AppTextField extends StatefulWidget {
     ),
     AppInputSize.medium: (
       contentPadding: EdgeInsets.symmetric(
-        horizontal: AppSpacing.mlg,
-        vertical: AppSpacing.md,
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.mlg,
       ),
       fontSize: 15,
       iconSize: AppSizes.iconMd,
-      isDense: true,
+      isDense: false,
     ),
     AppInputSize.large: (
       contentPadding: AppSpacing.lg.allPadding,
@@ -846,7 +862,7 @@ class _AppTextFieldState extends State<AppTextField> {
       return Icon(
         _typeSpec.prefixIcon,
         size: _sizeSpec.iconSize,
-        color: context.colors.onSurfaceSecondary,
+        color: context.colors.onSurfaceVariant,
       );
     }
 
@@ -865,9 +881,11 @@ class _AppTextFieldState extends State<AppTextField> {
             onPressed: _togglePasswordVisibility,
             splashRadius: AppRadius.lg,
             icon: Icon(
-              _obscureText ? CupertinoIcons.eye_slash : CupertinoIcons.eye,
+              _obscureText
+                  ? CupertinoIcons.eye_slash_fill
+                  : CupertinoIcons.eye_fill,
               size: AppSizes.iconMd,
-              color: context.colors.onSurfaceSecondary,
+              color: context.colors.outline,
             ),
             tooltip: _obscureText ? 'Show password' : 'Hide password',
           ),
@@ -889,7 +907,7 @@ class _AppTextFieldState extends State<AppTextField> {
             icon: Icon(
               Icons.cancel_rounded,
               size: _sizeSpec.iconSize,
-              color: context.colors.onSurfaceSecondary.withValues(alpha: 0.7),
+              color: context.colors.onSurfaceVariant.withValues(alpha: 0.7),
             ),
             tooltip: 'Clear',
           ),
@@ -911,7 +929,7 @@ class _AppTextFieldState extends State<AppTextField> {
       return Icon(
         Icons.keyboard_arrow_down_rounded,
         size: AppSizes.iconMd,
-        color: context.colors.onSurfaceSecondary,
+        color: context.colors.onSurfaceVariant,
       );
     }
 
@@ -977,6 +995,7 @@ class _AppTextFieldState extends State<AppTextField> {
     return themeDecoration.copyWith(
       hintText: widget.hintText ?? userDecoration?.hintText,
       hintStyle:
+          widget.hintStyle ??
           userDecoration?.hintStyle ??
           themeDecoration.hintStyle?.size(_sizeSpec.fontSize),
       labelText: widget.labelText ?? userDecoration?.labelText,
@@ -1008,7 +1027,8 @@ class _AppTextFieldState extends State<AppTextField> {
       focusedBorder: resolvedFocusedBorder,
       disabledBorder: userDecoration?.disabledBorder,
       errorBorder: resolvedErrorBorder,
-      focusedErrorBorder: userDecoration?.focusedErrorBorder,
+      focusedErrorBorder:
+          widget.focusedErrorBorder ?? userDecoration?.focusedErrorBorder,
       contentPadding:
           widget.contentPadding ??
           userDecoration?.contentPadding ??
@@ -1034,12 +1054,14 @@ class _AppTextFieldState extends State<AppTextField> {
     BuildContext context, {
     CountryWithPhoneCode? country,
   }) {
+    final defaultColor = context.colors.surface;
     final effectiveStyle = (widget.style ?? context.textTheme.bodyMedium)
         ?.size(_sizeSpec.fontSize)
         .colour(
-          widget.enabled
-              ? context.colors.onSurface
-              : context.colors.onSurfaceSecondary,
+          widget.style?.color ??
+              (widget.enabled
+                  ? defaultColor
+                  : defaultColor.withValues(alpha: 0.6)),
         );
 
     return TextFormField(
@@ -1124,7 +1146,7 @@ class _PhonePrefixSelector extends StatelessWidget {
               : null,
           child: Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
+              // horizontal: AppSpacing.sm,
               vertical: AppSpacing.xs,
             ),
             child: Row(
@@ -1134,31 +1156,32 @@ class _PhonePrefixSelector extends StatelessWidget {
                   LocationPhoneCodeServices.countryFlagEmoji(
                     country.countryCode,
                   ),
-                  style: TextStyle(fontSize: fontSize + 2),
+                  style: TextStyle(fontSize: fontSize),
                 ),
                 AppSpacing.xs.w,
                 Text(
                   '+${country.phoneCode}',
-                  style: context.textTheme.bodyMedium
+                  style: context.textTheme.bodySmall
                       ?.size(fontSize)
-                      .semiBold()
                       .colour(
                         enabled
-                            ? context.colors.onSurface
-                            : context.colors.onSurfaceSecondary,
+                            ? context.colors.surface
+                            : context.colors.onSurfaceVariant,
                       ),
                 ),
                 AppSpacing.xxs.w,
                 Icon(
                   Icons.keyboard_arrow_down_rounded,
                   size: iconSize - 2,
-                  color: context.colors.onSurfaceSecondary,
+                  color: enabled
+                      ? context.colors.surface
+                      : context.colors.onSurfaceVariant,
                 ),
                 AppSpacing.xs.w,
                 QuickContainer(
                   w: 1,
                   h: iconSize,
-                  color: context.colors.borderLight.withValues(alpha: 0.6),
+                  color: context.colors.outlineVariant.withValues(alpha: 0.6),
                 ),
               ],
             ),

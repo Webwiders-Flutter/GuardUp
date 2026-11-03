@@ -21,7 +21,7 @@ class BackIcon extends StatelessWidget {
     this.closeKeyboardFirst = true,
     this.backgroundColor,
     this.iconColor,
-    this.icon = Icons.arrow_back,
+    this.icon = Icons.arrow_back_ios_new,
     this.size = AppSizes.avatarSm,
     this.iconSize = AppSizes.iconMd,
     this.fallbackRoute,

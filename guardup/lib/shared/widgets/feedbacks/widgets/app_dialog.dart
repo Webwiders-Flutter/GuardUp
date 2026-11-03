@@ -52,7 +52,7 @@ final class AppDialogs {
     return showRaw<T>(
       context: context,
       barrierDismissible: barrierDismissible && isDismissible,
-      barrierColor: barrierColor ?? colors.black.withValues(alpha: 0.40),
+      barrierColor: barrierColor ?? colors.surfaceDim.withValues(alpha: 0.40),
       blurBackground: blurBackground,
       child: Builder(
         builder: (dialogContext) {
@@ -75,10 +75,10 @@ final class AppDialogs {
               maxH: responsiveMaxHeight,
               color: backgroundColor ?? colors.surface,
               radius: AppRadius.lg,
-              border: Border.all(color: colors.borderLight, width: 1),
+              border: Border.all(color: colors.outlineVariant, width: 1),
               shadows: [
                 BoxShadow(
-                  color: colors.black.withValues(alpha: 0.15),
+                  color: colors.surfaceDim.withValues(alpha: 0.15),
                   blurRadius: AppSpacing.xxl,
                   offset: const Offset(0, 10),
                 ),
@@ -110,7 +110,7 @@ final class AppDialogs {
 
                   // ── Optional Bottom Footer ─────────────────────────
                   if (bottom != null) ...[
-                    Divider(height: 1, color: colors.borderLight),
+                    Divider(height: 1, color: colors.outlineVariant),
                     Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.lg,
@@ -144,7 +144,7 @@ final class AppDialogs {
       context: context,
       barrierDismissible: barrierDismissible,
       barrierLabel: 'Dialog',
-      barrierColor: barrierColor ?? colors.black.withValues(alpha: 0.40),
+      barrierColor: barrierColor ?? colors.surfaceDim.withValues(alpha: 0.40),
       transitionDuration: duration,
       pageBuilder: (dialogContext, _, _) => Stack(
         children: [
@@ -208,7 +208,8 @@ class _DialogHeader extends StatelessWidget {
         vertical: AppSpacing.md,
       ),
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: colors.borderLight, width: 1)),
+        border:
+            Border(bottom: BorderSide(color: colors.outlineVariant, width: 1)),
       ),
       child: Row(
         children: [
@@ -230,7 +231,7 @@ class _DialogHeader extends StatelessWidget {
                   Text(
                     subtitle!,
                     style: context.textTheme.bodySmall?.colour(
-                      colors.onSurfaceSecondary,
+                      colors.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -256,7 +257,7 @@ class _DialogHeader extends StatelessWidget {
                         ? Icons.close_rounded
                         : Icons.arrow_back_rounded,
                     size: AppSizes.iconMd,
-                    color: colors.onSurfaceSecondary,
+                    color: colors.onSurfaceVariant,
                   ),
                 ),
               ),

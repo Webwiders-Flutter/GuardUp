@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../data/enum/user_role.enum.dart';
 import '../data/model/user.model.dart';
 
 abstract class AuthEvent extends Equatable {
@@ -86,6 +87,16 @@ class AuthUpdateProfileRequested extends AuthEvent {
 
   @override
   List<Object?> get props => [name, profileImageUrl];
+}
+
+/// Dispatched when the user selects a role during onboarding/flow to persist in session.
+class AuthSetSessionRoleRequested extends AuthEvent {
+  final UserRole role;
+
+  const AuthSetSessionRoleRequested(this.role);
+
+  @override
+  List<Object?> get props => [role];
 }
 
 /// Dispatched when the user logs out.

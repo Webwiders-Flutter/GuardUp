@@ -2,118 +2,98 @@ import 'package:flutter/material.dart';
 
 @immutable
 class AppThemeColors extends ThemeExtension<AppThemeColors> {
+  final Color primaryContainer;
+  final Color surfaceDim;
+  final Color surfaceContainer;
+  final Color surfaceContainerHigh;
+  final Color onSurfaceVariant;
+  final Color outline;
+  final Color outlineVariant;
+  final Color errorContainer;
   final Color success;
-  final Color successLight;
+  final Color successContainer;
   final Color warning;
-  final Color warningLight;
+  final Color warningContainer;
   final Color info;
-  final Color infoLight;
-  final Color error;
-  final Color errorLight;
-  final Color onSurfaceSecondary;
-  final Color borderLight;
-  final Color borderDark;
-  final Color backgroundLight;
-  final Color backgroundDark;
-  final Color secondaryLight;
-  final Color purpleLight;
-  final Color borderExtraLight;
+  final Color infoContainer;
 
   const AppThemeColors({
+    required this.primaryContainer,
+    required this.surfaceDim,
+    required this.surfaceContainer,
+    required this.surfaceContainerHigh,
+    required this.onSurfaceVariant,
+    required this.outline,
+    required this.outlineVariant,
+    required this.errorContainer,
     required this.success,
-    required this.successLight,
+    required this.successContainer,
     required this.warning,
-    required this.warningLight,
+    required this.warningContainer,
     required this.info,
-    required this.infoLight,
-    required this.error,
-    required this.errorLight,
-    required this.onSurfaceSecondary,
-    required this.borderLight,
-    required this.borderDark,
-    required this.backgroundLight,
-    required this.backgroundDark,
-    required this.secondaryLight,
-    required this.purpleLight,
-    required this.borderExtraLight,
+    required this.infoContainer,
   });
 
-  Color get lightTeal => secondaryLight;
-
-  // --------------------------------------------------
-  // copyWith
-  // --------------------------------------------------
   @override
   AppThemeColors copyWith({
+    Color? primaryContainer,
+    Color? surfaceDim,
+    Color? surfaceContainer,
+    Color? surfaceContainerHigh,
+    Color? onSurfaceVariant,
+    Color? outline,
+    Color? outlineVariant,
+    Color? errorContainer,
     Color? success,
-    Color? successLight,
+    Color? successContainer,
     Color? warning,
-    Color? warningLight,
+    Color? warningContainer,
     Color? info,
-    Color? infoLight,
-    Color? error,
-    Color? errorLight,
-    Color? onSurfaceSecondary,
-    Color? borderLight,
-    Color? borderDark,
-    Color? backgroundLight,
-    Color? backgroundDark,
-    Color? secondaryLight,
-    Color? purpleLight,
-    Color? borderExtraLight,
+    Color? infoContainer,
   }) {
     return AppThemeColors(
+      primaryContainer: primaryContainer ?? this.primaryContainer,
+      surfaceDim: surfaceDim ?? this.surfaceDim,
+      surfaceContainer: surfaceContainer ?? this.surfaceContainer,
+      surfaceContainerHigh: surfaceContainerHigh ?? this.surfaceContainerHigh,
+      onSurfaceVariant: onSurfaceVariant ?? this.onSurfaceVariant,
+      outline: outline ?? this.outline,
+      outlineVariant: outlineVariant ?? this.outlineVariant,
+      errorContainer: errorContainer ?? this.errorContainer,
       success: success ?? this.success,
-      successLight: successLight ?? this.successLight,
+      successContainer: successContainer ?? this.successContainer,
       warning: warning ?? this.warning,
-      warningLight: warningLight ?? this.warningLight,
+      warningContainer: warningContainer ?? this.warningContainer,
       info: info ?? this.info,
-      infoLight: infoLight ?? this.infoLight,
-      error: error ?? this.error,
-      errorLight: errorLight ?? this.errorLight,
-      onSurfaceSecondary: onSurfaceSecondary ?? this.onSurfaceSecondary,
-      borderLight: borderLight ?? this.borderLight,
-      borderDark: borderDark ?? this.borderDark,
-      backgroundLight: backgroundLight ?? this.backgroundLight,
-      backgroundDark: backgroundDark ?? this.backgroundDark,
-      secondaryLight: secondaryLight ?? this.secondaryLight,
-      purpleLight: purpleLight ?? this.purpleLight,
-      borderExtraLight: borderExtraLight ?? this.borderExtraLight,
+      infoContainer: infoContainer ?? this.infoContainer,
     );
   }
 
-  // --------------------------------------------------
-  // lerp (needed for theme animation)
-  // --------------------------------------------------
   @override
   AppThemeColors lerp(ThemeExtension<AppThemeColors>? other, double t) {
     if (other is! AppThemeColors) return this;
 
     return AppThemeColors(
+      primaryContainer:
+          Color.lerp(primaryContainer, other.primaryContainer, t)!,
+      surfaceDim: Color.lerp(surfaceDim, other.surfaceDim, t)!,
+      surfaceContainer:
+          Color.lerp(surfaceContainer, other.surfaceContainer, t)!,
+      surfaceContainerHigh:
+          Color.lerp(surfaceContainerHigh, other.surfaceContainerHigh, t)!,
+      onSurfaceVariant:
+          Color.lerp(onSurfaceVariant, other.onSurfaceVariant, t)!,
+      outline: Color.lerp(outline, other.outline, t)!,
+      outlineVariant: Color.lerp(outlineVariant, other.outlineVariant, t)!,
+      errorContainer: Color.lerp(errorContainer, other.errorContainer, t)!,
       success: Color.lerp(success, other.success, t)!,
-      successLight: Color.lerp(successLight, other.successLight, t)!,
+      successContainer:
+          Color.lerp(successContainer, other.successContainer, t)!,
       warning: Color.lerp(warning, other.warning, t)!,
-      warningLight: Color.lerp(warningLight, other.warningLight, t)!,
+      warningContainer:
+          Color.lerp(warningContainer, other.warningContainer, t)!,
       info: Color.lerp(info, other.info, t)!,
-      infoLight: Color.lerp(infoLight, other.infoLight, t)!,
-      error: Color.lerp(error, other.error, t)!,
-      errorLight: Color.lerp(errorLight, other.errorLight, t)!,
-      onSurfaceSecondary: Color.lerp(
-        onSurfaceSecondary,
-        other.onSurfaceSecondary,
-        t,
-      )!,
-      borderLight: Color.lerp(borderLight, other.borderLight, t)!,
-      borderDark: Color.lerp(borderDark, other.borderDark, t)!,
-      backgroundLight: Color.lerp(backgroundLight, other.backgroundLight, t)!,
-      backgroundDark: Color.lerp(backgroundDark, other.backgroundDark, t)!,
-      secondaryLight: Color.lerp(secondaryLight, other.secondaryLight, t)!,
-      purpleLight: Color.lerp(purpleLight, other.purpleLight, t)!,
-      borderExtraLight: Color.lerp(
-        borderExtraLight,
-        other.borderExtraLight,
-        t,
-      )!,
+      infoContainer: Color.lerp(infoContainer, other.infoContainer, t)!,
     );
   }
 }

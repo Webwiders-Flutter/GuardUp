@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '/core/constants/app_sizes.dart';
 import '/core/extensions/context.extension.dart';
-import '/core/extensions/number.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 
@@ -76,6 +75,11 @@ class AppButton extends StatelessWidget {
   final EdgeInsetsGeometry? margin;
   final double? width;
   final double? height;
+  final Gradient? gradient;
+  final List<BoxShadow>? boxShadow;
+
+  /// When true, renders a primary-colored ambient glow box shadow and border.
+  final bool makeItGlow;
 
   const AppButton({
     super.key,
@@ -87,6 +91,7 @@ class AppButton extends StatelessWidget {
     this.isLoading = false,
     this.enabled = true,
     this.isFlexible = false,
+    this.makeItGlow = false,
     this.leading,
     this.trailing,
     this.backgroundColor,
@@ -100,6 +105,8 @@ class AppButton extends StatelessWidget {
     this.margin,
     this.width,
     this.height,
+    this.gradient,
+    this.boxShadow,
   }) : assert(
          text != null || icon != null,
          'Either text or icon must be provided',
@@ -133,7 +140,7 @@ class AppButton extends StatelessWidget {
     ButtonSize.large: (
       height: AppSizes.buttonLg,
       padding: AppSpacing.xl.xPadding,
-      fontSize: 16,
+      fontSize: 17,
     ),
   };
 
@@ -158,8 +165,8 @@ class AppButton extends StatelessWidget {
       ),
       ButtonType.secondaryOff: (
         background: colors.surface,
-        foreground: colors.onSurfaceSecondary,
-        border: BorderSide(color: colors.onSurfaceSecondary),
+        foreground: colors.onSurfaceVariant,
+        border: BorderSide(color: colors.onSurfaceVariant),
         elevation: 0,
       ),
       ButtonType.text: (
@@ -199,10 +206,18 @@ class AppButton extends StatelessWidget {
   /// place rather than inside every switch arm.
   _ButtonStyleSpec _resolveStyle(BuildContext context) {
     if (!_isEnabled) {
+      if (type == ButtonType.text) {
+        return (
+          background: context.colors.transparent,
+          foreground: context.colors.outline,
+          border: null,
+          elevation: 0,
+        );
+      }
       return (
-        background: context.colors.borderLight,
-        foreground: context.colors.onSurfaceSecondary,
-        border: BorderSide(color: context.colors.onSurfaceSecondary),
+        background: context.colors.outlineVariant,
+        foreground: context.colors.onSurfaceVariant,
+        border: BorderSide(color: context.colors.outlineVariant),
         elevation: 0,
       );
     }
@@ -222,10 +237,16 @@ class AppButton extends StatelessWidget {
         context.textTheme.labelLarge ??
         context.textTheme.bodyMedium ??
         ThemeData.fallback().textTheme.labelLarge!;
+    final FontWeight resolvedWeight = switch (type) {
+      ButtonType.text => FontWeight.w400,
+      ButtonType.primary => FontWeight.w700,
+      _ => FontWeight.w600,
+    };
+
     return themeStyle
         .colour(foreground)
         .size(sizeSpec.fontSize)
-        .weight(FontWeight.w600);
+        .weight(resolvedWeight);
   }
 
   @override
@@ -237,44 +258,95 @@ class AppButton extends StatelessWidget {
     final resolvedBorder = border ?? style.border;
     final resolvedForeground = foregroundColor ?? style.foreground;
     final splashBaseColor = splashColor ?? resolvedForeground;
+    final resolvedRadius = borderRadius ?? BorderRadius.circular(AppRadius.md);
+    final resolvedBoxShadow =
+        boxShadow ??
+        (makeItGlow
+            ? [
+                BoxShadow(
+                  color: context.colors.primary.withValues(alpha: 0.45),
+                  blurRadius: 24,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 6),
+                ),
+              ]
+            : null);
+
+    final bool hasPrimaryGradient =
+        type == ButtonType.primary && backgroundColor == null && _isEnabled;
+    final effectiveGradient =
+        gradient ??
+        (hasPrimaryGradient ? context.colors.primaryGradient : null);
+
+    final bool effectiveIsFlexible =
+        isFlexible || type == ButtonType.text || width != null;
+    final resolvedPadding =
+        padding ??
+        (type == ButtonType.text
+            ? const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xs,
+                vertical: AppSpacing.xs,
+              )
+            : sizeSpec.padding);
+    final resolvedWidth =
+        width ?? (effectiveIsFlexible ? null : double.infinity);
+    final resolvedHeight =
+        height ?? (type == ButtonType.text ? null : sizeSpec.height);
 
     Widget button = SizedBox(
-      width: isFlexible ? width : double.infinity,
-      height: height ?? sizeSpec.height,
-      child: ElevatedButton(
-        onPressed: _isEnabled ? onPressed : null,
-        style: (themeStyle ?? const ButtonStyle()).copyWith(
-          backgroundColor: WidgetStatePropertyAll(
-            backgroundColor ?? style.background,
-          ),
-          foregroundColor: WidgetStatePropertyAll(resolvedForeground),
-          overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
-            if (states.contains(WidgetState.pressed)) {
-              return splashBaseColor.withValues(alpha: 0.22);
-            }
-            if (states.contains(WidgetState.hovered)) {
-              return splashBaseColor.withValues(alpha: 0.10);
-            }
-            if (states.contains(WidgetState.focused)) {
-              return splashBaseColor.withValues(alpha: 0.14);
-            }
-            return null;
-          }),
-          splashFactory: InkRipple.splashFactory,
-          elevation: WidgetStatePropertyAll(elevation ?? style.elevation),
-          padding: WidgetStatePropertyAll(padding ?? sizeSpec.padding),
-          minimumSize: const WidgetStatePropertyAll(Size.zero),
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          side: resolvedBorder != null
-              ? WidgetStatePropertyAll(resolvedBorder)
+      width: resolvedWidth,
+      height: resolvedHeight,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: effectiveGradient,
+          borderRadius: resolvedRadius,
+          border: resolvedBorder != null
+              ? Border.fromBorderSide(resolvedBorder)
               : null,
-          shape: WidgetStatePropertyAll(
-            RoundedRectangleBorder(
-              borderRadius: borderRadius ?? AppRadius.sm.toBorderRadius,
+          boxShadow: resolvedBoxShadow,
+        ),
+        child: ElevatedButton(
+          onPressed: _isEnabled ? onPressed : null,
+          style: (themeStyle ?? const ButtonStyle()).copyWith(
+            backgroundColor: WidgetStatePropertyAll(
+              effectiveGradient != null
+                  ? context.colors.transparent
+                  : (backgroundColor ?? style.background),
+            ),
+            foregroundColor: WidgetStatePropertyAll(resolvedForeground),
+            overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+              if (states.contains(WidgetState.pressed)) {
+                return splashBaseColor.withValues(alpha: 0.22);
+              }
+              if (states.contains(WidgetState.hovered)) {
+                return splashBaseColor.withValues(alpha: 0.10);
+              }
+              if (states.contains(WidgetState.focused)) {
+                return splashBaseColor.withValues(alpha: 0.14);
+              }
+              return null;
+            }),
+            splashFactory: InkRipple.splashFactory,
+            elevation: WidgetStatePropertyAll(
+              effectiveGradient != null || type == ButtonType.text
+                  ? 0.0
+                  : (elevation ?? style.elevation),
+            ),
+            shadowColor: type == ButtonType.text
+                ? const WidgetStatePropertyAll(Colors.transparent)
+                : null,
+            padding: WidgetStatePropertyAll(resolvedPadding),
+            minimumSize: const WidgetStatePropertyAll(Size.zero),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            side: resolvedBorder != null && effectiveGradient == null
+                ? WidgetStatePropertyAll(resolvedBorder)
+                : null,
+            shape: WidgetStatePropertyAll(
+              RoundedRectangleBorder(borderRadius: resolvedRadius),
             ),
           ),
+          child: _buildChild(context, resolvedForeground, sizeSpec),
         ),
-        child: _buildChild(context, resolvedForeground, sizeSpec),
       ),
     );
 

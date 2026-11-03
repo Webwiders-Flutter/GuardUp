@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '/app/theme/colors/app_colors.dart';
 import '/app/theme/colors/color_extenstion.dart';
 
+/// Semantic accessor for theme colors via [context.colors].
+///
+/// Follows Material 3 token conventions (primary, surface, onSurface, outline, etc.)
+/// rather than raw color names.
 class AppThemeAccessor {
   final BuildContext context;
 
@@ -11,35 +14,105 @@ class AppThemeAccessor {
   ColorScheme get _scheme => Theme.of(context).colorScheme;
   AppThemeColors get _extra => Theme.of(context).extension<AppThemeColors>()!;
 
-  /// Material colors
+  // ------------------------------------------------------------
+  // Primary Gold Tokens
+  // ------------------------------------------------------------
+  /// Luxury Primary Gold (#EDCC73)
   Color get primary => _scheme.primary;
-  Color get primaryLight => _scheme.primary.withValues(alpha: 0.12);
+
+  /// Deep Gold / Bronze Primary Container (#AC7F42)
+  Color get primaryContainer => _extra.primaryContainer;
+
+  /// Content/icon on primary gold (#191B23)
   Color get onPrimary => _scheme.onPrimary;
+
+  /// Content on primaryContainer (#FFFFFF)
+  Color get onPrimaryContainer => _scheme.onSurface;
+
+  /// Primary gold gradient (from #EDCC73 to #AC7F42)
+  LinearGradient get primaryGradient => LinearGradient(
+        colors: [primary, primaryContainer],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      );
+
+  // ------------------------------------------------------------
+  // Secondary Tokens
+  // ------------------------------------------------------------
+  /// Slate secondary surface (#262D3D)
   Color get secondary => _scheme.secondary;
+
+  /// Secondary container (#333C4F)
+  Color get secondaryContainer => _extra.surfaceContainerHigh;
+
+  /// Content on secondary (#FFFFFF)
+  Color get onSecondary => _scheme.onSecondary;
+
+  // ------------------------------------------------------------
+  // Surface & Background Tokens
+  // ------------------------------------------------------------
+  /// Canvas base background surface (#191B23)
   Color get surface => _scheme.surface;
+
+  /// Midnight Deep Gradient End (#000B14)
+  Color get surfaceDim => _extra.surfaceDim;
+
+  /// Card Surface Gradient Start (#1C252D)
+  Color get surfaceContainer => _extra.surfaceContainer;
+
+  /// Elevated Card Container Surface (#262D3D)
+  Color get surfaceContainerHigh => _extra.surfaceContainerHigh;
+
+  /// Primary text / high-emphasis content on surfaces (#FFFFFF)
   Color get onSurface => _scheme.onSurface;
+
+  /// Secondary text / medium-emphasis labels / icons on surfaces (#CCCCCC)
+  Color get onSurfaceVariant => _extra.onSurfaceVariant;
+
+  /// Card surface gradient (from #1C252D to #000B14)
+  LinearGradient get surfaceGradient => LinearGradient(
+        colors: [surfaceContainer, surfaceDim],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      );
+
+  /// Unselected card subtle gradient
+  LinearGradient get surfaceGradientUnselected => LinearGradient(
+        colors: [
+          surfaceContainer.withValues(alpha: 0.4),
+          surfaceDim,
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      );
+
+  // ------------------------------------------------------------
+  // Outline & Border Tokens
+  // ------------------------------------------------------------
+  /// Standard outline border (#7E8B9B)
+  Color get outline => _extra.outline;
+
+  /// Container outline border (#262D3D)
+  Color get outlineVariant => _extra.outlineVariant;
+
+  // ------------------------------------------------------------
+  // Feedback & Status Tokens
+  // ------------------------------------------------------------
   Color get error => _scheme.error;
-  Color get bodyText => _extra.onSurfaceSecondary;
+  Color get errorContainer => _extra.errorContainer;
+  Color get onError => _scheme.onError;
 
-  /// Custom colors
   Color get success => _extra.success;
-  Color get successLight => _extra.successLight;
-  Color get warning => _extra.warning;
-  Color get warningLight => _extra.warningLight;
-  Color get info => _extra.info;
-  Color get infoLight => _extra.infoLight;
-  Color get errorLight => _extra.errorLight;
+  Color get successContainer => _extra.successContainer;
 
-  Color get borderLight => _extra.borderLight;
-  Color get borderDark => _extra.borderDark;
-  Color get onSurfaceSecondary => _extra.onSurfaceSecondary;
-  Color get backgroundLight => _extra.backgroundLight;
-  Color get backgroundDark => _extra.backgroundDark;
-  Color get secondaryLight => _extra.secondaryLight;
-  Color get lightTeal => _extra.secondaryLight;
-  Color get purpleLight => _extra.purpleLight;
-  Color get borderExtraLight => _extra.borderExtraLight;
+  Color get warning => _extra.warning;
+  Color get warningContainer => _extra.warningContainer;
+
+  Color get info => _extra.info;
+  Color get infoContainer => _extra.infoContainer;
+
+  // ------------------------------------------------------------
+  // Misc
+  // ------------------------------------------------------------
   Color get transparent => Colors.transparent;
-  Color get white => AppColors.white;
-  Color get black => AppColors.black;
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '/shared/widgets/buttons/back_button.dart';
 
 import '../../../core/extensions/context.extension.dart';
@@ -82,12 +83,12 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   const AppAppBar.transparent({
     super.key,
-    required this.title,
+    this.title,
     this.actions,
     this.fontSize,
     this.leading,
     this.bottom,
-    this.showBackIcon = true,
+    this.showBackIcon,
     this.onBackTap,
     this.leadingWidth,
     this.showNotificationIcon = false,
@@ -157,7 +158,7 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
           (title != null
               ? Text(
                   title!,
-                  style: context.textTheme.titleMedium?.copyWith(
+                  style: context.textTheme.titleLarge?.copyWith(
                     fontSize: fontSize,
                     color: foregroundColor ?? theme.appBarTheme.foregroundColor,
                   ),

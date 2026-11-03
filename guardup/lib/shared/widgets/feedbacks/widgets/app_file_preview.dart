@@ -253,7 +253,7 @@ class AppFilePreviewSheet extends StatelessWidget {
           child: ClipRRect(
             borderRadius: AppRadius.md.toBorderRadius,
             child: QuickContainer(
-              color: context.colors.borderLight.withValues(alpha: 0.3),
+              color: context.colors.outlineVariant.withValues(alpha: 0.3),
               child: InteractiveViewer(
                 minScale: 0.8,
                 maxScale: 4.0,
@@ -279,7 +279,7 @@ class AppFilePreviewSheet extends StatelessWidget {
           Text(
             'Pinch or double tap to zoom • Tap to open full screen',
             style: context.textTheme.labelSmall?.colour(
-              context.colors.onSurfaceSecondary,
+              context.colors.onSurfaceVariant,
             ),
           ),
         ],
@@ -343,7 +343,7 @@ class AppFilePreviewSheet extends StatelessWidget {
                 child: Text(
                   fileSize,
                   style: context.textTheme.labelSmall?.colour(
-                    context.colors.onSurfaceSecondary,
+                    context.colors.onSurfaceVariant,
                   ),
                 ),
               );
@@ -498,10 +498,10 @@ class _ViewerScreenState extends State<_ViewerScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.backgroundLight,
+      backgroundColor: context.colors.surface,
       appBar: AppAppBar.primary(
         title: widget.title,
-        showBackIcon: true,
+
         actions: [
           if (_targetPath != null && _targetPath!.isNotEmpty) ...[
             IconButton(
@@ -570,13 +570,13 @@ class _ViewerScreenState extends State<_ViewerScreen>
                       px: AppSpacing.md,
                       py: AppSpacing.xs,
                       radius: AppRadius.full,
-                      color: context.colors.black.withValues(alpha: 0.75),
+                      color: context.colors.surfaceDim.withValues(alpha: 0.75),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
                             _isZoomed ? Icons.zoom_out : Icons.zoom_in,
-                            color: Colors.white,
+                            color: context.colors.onSurface,
                             size: AppSizes.iconSm,
                           ),
                           AppSpacing.xs.w,

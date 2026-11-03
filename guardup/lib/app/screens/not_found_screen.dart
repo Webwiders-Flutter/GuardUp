@@ -63,7 +63,7 @@ class _NotFoundScreenState extends State<NotFoundScreen>
     final colors = context.colors;
 
     return Scaffold(
-      backgroundColor: colors.backgroundLight,
+      backgroundColor: colors.surface,
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: SafeArea(
@@ -137,7 +137,7 @@ class _NotFoundScreenState extends State<NotFoundScreen>
                   Text(
                     "The page you're looking for doesn't exist\nor may have been moved.",
                     style: context.textTheme.bodyLarge?.regular().colour(
-                      colors.onSurfaceSecondary,
+                      colors.onSurfaceVariant,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -216,13 +216,13 @@ class _NotFoundPainter extends CustomPainter {
         Radius.circular(AppSpacing.sm + 2),
       ),
       Paint()
-        ..color = colors.borderExtraLight
+        ..color = colors.outlineVariant
         ..style = PaintingStyle.fill,
     );
 
     // Road dashes
     final dashPaint = Paint()
-      ..color = colors.white
+      ..color = colors.onSurface
       ..style = PaintingStyle.fill;
     for (
       double x = AppSpacing.xxxl - 2;
@@ -334,14 +334,14 @@ class _NotFoundPainter extends CustomPainter {
         Offset(cx, cy),
         AppSpacing.md + 2,
         Paint()
-          ..color = colors.backgroundDark
+          ..color = colors.surfaceDim
           ..style = PaintingStyle.fill,
       );
       canvas.drawCircle(
         Offset(cx, cy),
         AppSpacing.sm + 1,
         Paint()
-          ..color = colors.borderDark
+          ..color = colors.outlineVariant
           ..style = PaintingStyle.fill,
       );
       canvas.drawCircle(
@@ -362,7 +362,7 @@ class _NotFoundPainter extends CustomPainter {
       Offset(w * 0.12, h - (AppSpacing.xxl + AppSpacing.xl)),
       Offset(w * 0.12, h - (AppSpacing.xxxl * 3 + AppSpacing.xxl)),
       Paint()
-        ..color = colors.borderDark
+        ..color = colors.outlineVariant
         ..strokeWidth = AppSpacing.xs
         ..strokeCap = StrokeCap.round,
     );
@@ -395,7 +395,7 @@ class _NotFoundPainter extends CustomPainter {
         text: '?',
         style: textTheme.titleLarge
             ?.weight(FontWeight.w900)
-            .colour(colors.white)
+            .colour(colors.onSurface)
             .size(AppSpacing.lg)
             .lineHeight(1),
       ),

@@ -4,6 +4,34 @@
   "@appName": {
     "description": "The title of the application"
   },
+  "searchItem": "Search...",
+  "@searchItem": {
+    "description": "Placeholder for search inputs"
+  },
+  "companyDetailsTitle": "Company Details",
+  "@companyDetailsTitle": {
+    "description": "Title on company details registration screen"
+  },
+  "companyDetailsSubtitle": "Create your company account to manage your team and bookings.",
+  "@companyDetailsSubtitle": {
+    "description": "Subtitle on company details registration screen"
+  },
+  "enterCompanyName": "Enter Company Name",
+  "@enterCompanyName": {
+    "description": "Hint text for company name input"
+  },
+  "businessEmail": "Business Email",
+  "@businessEmail": {
+    "description": "Hint text for business email input"
+  },
+  "companyType": "Company Type",
+  "@companyType": {
+    "description": "Label and hint text for company type dropdown"
+  },
+  "selectCompanyType": "Select Company Type",
+  "@selectCompanyType": {
+    "description": "Hint text for company type dropdown"
+  },
   "cancel": "Cancel",
   "@cancel": {
     "description": "Cancel button label"
@@ -82,6 +110,22 @@
   "@navHome": {
     "description": "Home navigation label"
   },
+  "navBookings": "Bookings",
+  "@navBookings": {
+    "description": "Bookings navigation label"
+  },
+  "navChat": "Chat",
+  "@navChat": {
+    "description": "Chat navigation label"
+  },
+  "navAlerts": "Alerts",
+  "@navAlerts": {
+    "description": "Alerts navigation label"
+  },
+  "navProfile": "Profile",
+  "@navProfile": {
+    "description": "Profile navigation label"
+  },
   "navOrders": "Orders",
   "@navOrders": {
     "description": "Orders navigation label"
@@ -105,5 +149,580 @@
   "navMore": "More",
   "@navMore": {
     "description": "More navigation label"
+  },
+  "failedToLoadMore": "Failed to load more",
+  "@failedToLoadMore": {
+    "description": "Pagination load more error message"
+  },
+  "somethingWentWrong": "Something went wrong",
+  "@somethingWentWrong": {
+    "description": "Generic error message"
+  },
+  "noDataFound": "No data found",
+  "@noDataFound": {
+    "description": "Empty list state message"
+  },
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retry button label"
+  },
+  "chooseRoleSubtitle": "Please choose your role to continue",
+  "@chooseRoleSubtitle": {
+    "description": "Subtitle on select role screen"
+  },
+  "sendCode": "Send Code",
+  "@sendCode": {
+    "description": "Send code button label"
+  },
+  "roleCustomer": "Customer",
+  "@roleCustomer": {
+    "description": "Customer role title"
+  },
+  "roleCustomerLong": "I'm a Customer",
+  "@roleCustomerLong": {
+    "description": "Customer role long label"
+  },
+  "roleCustomerDesc": "Find and book trusted security professional",
+  "@roleCustomerDesc": {
+    "description": "Customer role description"
+  },
+  "roleGuard": "Guard",
+  "@roleGuard": {
+    "description": "Guard role title"
+  },
+  "roleGuardLong": "I'm a Guard",
+  "@roleGuardLong": {
+    "description": "Guard role long label"
+  },
+  "roleGuardDesc": "Create your profile and manage bookings",
+  "@roleGuardDesc": {
+    "description": "Guard role description"
+  },
+  "roleCompany": "Company",
+  "@roleCompany": {
+    "description": "Company role title"
+  },
+  "roleCompanyLong": "I'm a Company",
+  "@roleCompanyLong": {
+    "description": "Company role long label"
+  },
+  "roleCompanyDesc": "Manage your team and security bookings",
+  "@roleCompanyDesc": {
+    "description": "Company role description"
+  },
+  "login": "Login",
+  "@login": {
+    "description": "Login button/title"
+  },
+  "loginSubtitle": "Please enter your registered phone number and password",
+  "@loginSubtitle": {
+    "description": "Login screen subtitle"
+  },
+  "emailAddress": "Email Address",
+  "@emailAddress": {
+    "description": "Email address field placeholder"
+  },
+  "password": "Password",
+  "@password": {
+    "description": "Password field placeholder"
+  },
+  "forgotPassword": "Forgot Password?",
+  "@forgotPassword": {
+    "description": "Forgot password link label"
+  },
+  "dontHaveAccount": "If you don't have account? ",
+  "@dontHaveAccount": {
+    "description": "Text asking if user doesn't have an account"
+  },
+  "signUp": "Sign Up",
+  "@signUp": {
+    "description": "Sign up link label"
+  },
+  "signUpTitle": "Sign Up",
+  "@signUpTitle": {
+    "description": "Sign up screen title"
+  },
+  "signUpSubtitle": "Please enter your details it's Free!!",
+  "@signUpSubtitle": {
+    "description": "Sign up screen subtitle"
+  },
+  "name": "Name",
+  "@name": {
+    "description": "Name field placeholder"
+  },
+  "phoneNumber": "Phone Number",
+  "@phoneNumber": {
+    "description": "Phone number field placeholder"
+  },
+  "confirmPassword": "Confirm Password",
+  "@confirmPassword": {
+    "description": "Confirm password field placeholder"
+  },
+  "alreadyHaveAccount": "Already have an account? ",
+  "@alreadyHaveAccount": {
+    "description": "Already have account text"
+  },
+  "forgotPasswordTitle": "Forgot Password",
+  "@forgotPasswordTitle": {
+    "description": "Forgot password screen title"
+  },
+  "forgotPasswordSubtitle": "Please enter your registered email id",
+  "@forgotPasswordSubtitle": {
+    "description": "Forgot password screen subtitle"
+  },
+  "submit": "Submit",
+  "@submit": {
+    "description": "Submit button label"
+  },
+  "fieldRequired": "{fieldName} is required",
+  "@fieldRequired": {
+    "description": "Generic required field error",
+    "placeholders": {
+      "fieldName": {
+        "type": "String",
+        "example": "This field"
+      }
+    }
+  },
+  "thisField": "This field",
+  "@thisField": {
+    "description": "Default field name fallback"
+  },
+  "thisFieldRequired": "This field is required",
+  "@thisFieldRequired": {
+    "description": "This field is required message"
+  },
+  "minLengthError": "Minimum {length} characters required",
+  "@minLengthError": {
+    "description": "Minimum length error",
+    "placeholders": {
+      "length": {
+        "type": "int",
+        "example": "6"
+      }
+    }
+  },
+  "maxLengthError": "Maximum {length} characters allowed",
+  "@maxLengthError": {
+    "description": "Maximum length error",
+    "placeholders": {
+      "length": {
+        "type": "int",
+        "example": "50"
+      }
+    }
+  },
+  "enterValidName": "Please enter a valid name",
+  "@enterValidName": {
+    "description": "Valid name error message"
+  },
+  "businessName": "Business Name",
+  "@businessName": {
+    "description": "Business name label"
+  },
+  "enterValidBusinessName": "Please enter a valid business name",
+  "@enterValidBusinessName": {
+    "description": "Valid business name error message"
+  },
+  "emailRequired": "Email is required",
+  "@emailRequired": {
+    "description": "Email required error message"
+  },
+  "enterValidEmail": "Please enter a valid email address",
+  "@enterValidEmail": {
+    "description": "Valid email error message"
+  },
+  "passwordRequired": "Password is required",
+  "@passwordRequired": {
+    "description": "Password required error message"
+  },
+  "passwordMinLengthError": "Password must be at least {minLength} characters",
+  "@passwordMinLengthError": {
+    "description": "Password minimum length error message",
+    "placeholders": {
+      "minLength": {
+        "type": "int",
+        "example": "6"
+      }
+    }
+  },
+  "strongPasswordError": "Password must contain uppercase, lowercase, number, and special character",
+  "@strongPasswordError": {
+    "description": "Strong password error message"
+  },
+  "pleaseConfirmPassword": "Please confirm your password",
+  "@pleaseConfirmPassword": {
+    "description": "Please confirm password error message"
+  },
+  "passwordsDoNotMatch": "Passwords do not match",
+  "@passwordsDoNotMatch": {
+    "description": "Passwords do not match error message"
+  },
+  "phoneRequired": "Phone number is required",
+  "@phoneRequired": {
+    "description": "Phone number required error message"
+  },
+  "enterValidPhone": "Please enter a valid phone number",
+  "@enterValidPhone": {
+    "description": "Valid phone number error message"
+  },
+  "panRequired": "PAN is required",
+  "@panRequired": {
+    "description": "PAN required error message"
+  },
+  "enterValidPan": "Please enter a valid PAN number",
+  "@enterValidPan": {
+    "description": "Valid PAN error message"
+  },
+  "gstRequired": "GST is required",
+  "@gstRequired": {
+    "description": "GST required error message"
+  },
+  "enterValidGst": "Please enter a valid GST number",
+  "@enterValidGst": {
+    "description": "Valid GST error message"
+  },
+  "aadhaarRequired": "Aadhaar is required",
+  "@aadhaarRequired": {
+    "description": "Aadhaar required error message"
+  },
+  "enterValidAadhaar": "Please enter a valid Aadhaar number",
+  "@enterValidAadhaar": {
+    "description": "Valid Aadhaar error message"
+  },
+  "ifscRequired": "IFSC code is required",
+  "@ifscRequired": {
+    "description": "IFSC code required error message"
+  },
+  "enterValidIfsc": "Please enter a valid IFSC code",
+  "@enterValidIfsc": {
+    "description": "Valid IFSC error message"
+  },
+  "pincodeRequired": "PIN code is required",
+  "@pincodeRequired": {
+    "description": "PIN code required error message"
+  },
+  "enterValidPincode": "Please enter a valid PIN code",
+  "@enterValidPincode": {
+    "description": "Valid PIN code error message"
+  },
+  "pleaseEnterOrSelectVehicleNumber": "Please enter vehicle number",
+  "@pleaseEnterOrSelectVehicleNumber": {
+    "description": "Vehicle number required message"
+  },
+  "enterValidVehicleNumber": "Please enter a valid vehicle number",
+  "@enterValidVehicleNumber": {
+    "description": "Valid vehicle number error message"
+  },
+  "bankAccountNumberRequired": "Bank account number is required",
+  "@bankAccountNumberRequired": {
+    "description": "Bank account number required message"
+  },
+  "enterValidBankAccountNumber": "Please enter a valid bank account number",
+  "@enterValidBankAccountNumber": {
+    "description": "Valid bank account number error message"
+  },
+  "enterValidNumber": "Please enter a valid number",
+  "@enterValidNumber": {
+    "description": "Valid number error message"
+  },
+  "enterValidUrl": "Please enter a valid URL",
+  "@enterValidUrl": {
+    "description": "Valid URL error message"
+  },
+  "enterValidVersion": "Please enter a valid version",
+  "@enterValidVersion": {
+    "description": "Valid version error message"
+  },
+  "emailVerificationTitle": "Email Verification",
+  "@emailVerificationTitle": {
+    "description": "Email verification screen title"
+  },
+  "emailVerificationSubtitle": "We have sent an email to your email, please verify it",
+  "@emailVerificationSubtitle": {
+    "description": "Email verification screen message"
+  },
+  "continueButton": "Continue",
+  "@continueButton": {
+    "description": "Continue button label"
+  },
+  "resendEmail": "Resend Email",
+  "@resendEmail": {
+    "description": "Resend email button label"
+  },
+  "resendEmailIn": "Resend Email in {seconds}s",
+  "@resendEmailIn": {
+    "description": "Resend email button countdown label",
+    "placeholders": {
+      "seconds": {
+        "type": "int",
+        "example": "59"
+      }
+    }
+  },
+  "customerProfile": "Customer Profile",
+  "@customerProfile": {
+    "description": "Customer profile title"
+  },
+  "editProfile": "EDIT PROFILE",
+  "@editProfile": {
+    "description": "Edit profile menu item"
+  },
+  "changePassword": "CHANGE PASSWORD",
+  "@changePassword": {
+    "description": "Change password menu item"
+  },
+  "membershipPlan": "MEMBERSHIP PLAN",
+  "@membershipPlan": {
+    "description": "Membership plan menu item"
+  },
+  "privacyPolicy": "PRIVACY POLICY",
+  "@privacyPolicy": {
+    "description": "Privacy policy menu item"
+  },
+  "termsAndConditions": "TERMS AND CONDITIONS",
+  "@termsAndConditions": {
+    "description": "Terms and conditions menu item"
+  },
+  "editProfileTitle": "Edit Profile",
+  "@editProfileTitle": {
+    "description": "Edit profile screen title"
+  },
+  "personalInformation": "Personal Information",
+  "@personalInformation": {
+    "description": "Personal information section title"
+  },
+  "fullName": "Full Name",
+  "@fullName": {
+    "description": "Full name input field hint"
+  },
+  "genderLabel": "GENDER",
+  "@genderLabel": {
+    "description": "Gender label"
+  },
+  "male": "Male",
+  "@male": {
+    "description": "Male option label"
+  },
+  "female": "Female",
+  "@female": {
+    "description": "Female option label"
+  },
+  "other": "Other",
+  "@other": {
+    "description": "Other option label"
+  },
+  "saveChanges": "Save Changes",
+  "@saveChanges": {
+    "description": "Save changes button label"
+  },
+  "selectDocument": "Select Document",
+  "@selectDocument": {
+    "description": "Sheet title for document selection"
+  },
+  "selectAVideo": "Select a Video",
+  "@selectAVideo": {
+    "description": "Sheet title for video selection"
+  },
+  "selectAnImage": "Select an Image",
+  "@selectAnImage": {
+    "description": "Sheet title for image selection"
+  },
+  "chooseSource": "Choose Source",
+  "@chooseSource": {
+    "description": "Sheet subtitle for source selection"
+  },
+  "chooseFromYourVideoLibraryOrTakeAVideo": "Choose from your video library or take a video",
+  "@chooseFromYourVideoLibraryOrTakeAVideo": {
+    "description": "Sheet subtitle for video choices"
+  },
+  "chooseFromYourGalleryOrTakeAPhoto": "Choose from your gallery or take a photo",
+  "@chooseFromYourGalleryOrTakeAPhoto": {
+    "description": "Sheet subtitle for photo choices"
+  },
+  "chooseFromGallery": "Choose from Gallery",
+  "@chooseFromGallery": {
+    "description": "Gallery option title"
+  },
+  "selectFromYourVideoLibrary": "Select from your video library",
+  "@selectFromYourVideoLibrary": {
+    "description": "Gallery option subtitle for videos"
+  },
+  "selectFromYourPhotoLibrary": "Select from your photo library",
+  "@selectFromYourPhotoLibrary": {
+    "description": "Gallery option subtitle for photos"
+  },
+  "takeAPhoto": "Take a Photo",
+  "@takeAPhoto": {
+    "description": "Camera option title"
+  },
+  "useCameraToCaptureNewImage": "Use camera to capture new image",
+  "@useCameraToCaptureNewImage": {
+    "description": "Camera option subtitle"
+  },
+  "chooseFile": "Choose File",
+  "@chooseFile": {
+    "description": "File option title"
+  },
+  "selectFromYourFiles": "Select from your files",
+  "@selectFromYourFiles": {
+    "description": "File option subtitle"
+  },
+  "changePasswordTitle": "Change Password",
+  "@changePasswordTitle": {
+    "description": "Change password screen title"
+  },
+  "oldPassword": "Old Password",
+  "@oldPassword": {
+    "description": "Old password field placeholder"
+  },
+  "newPassword": "New Password",
+  "@newPassword": {
+    "description": "New password field placeholder"
+  },
+  "updatePassword": "Update Password",
+  "@updatePassword": {
+    "description": "Update password button label"
+  },
+  "passwordChangedSuccessfully": "Password updated successfully",
+  "@passwordChangedSuccessfully": {
+    "description": "Success message when password is changed"
+  },
+  "deleteAccount": "DELETE ACCOUNT",
+  "@deleteAccount": {
+    "description": "Delete account menu item"
+  },
+  "uploadDocuments": "Upload Documents",
+  "@uploadDocuments": {
+    "description": "Upload documents title and button label"
+  },
+  "businessRegistration": "Business Registration",
+  "@businessRegistration": {
+    "description": "Business registration document label"
+  },
+  "governmentIdAdmin": "Government ID (Admin)",
+  "@governmentIdAdmin": {
+    "description": "Government ID document label"
+  },
+  "companyLogo": "Company Logo",
+  "@companyLogo": {
+    "description": "Company logo document label"
+  },
+  "additionalDocuments": "Additional Documents",
+  "@additionalDocuments": {
+    "description": "Additional documents label"
+  },
+  "documentsUploadedSuccess": "Documents uploaded successfully",
+  "@documentsUploadedSuccess": {
+    "description": "Success message when documents are uploaded"
+  },
+  "pleaseUploadRequiredDocuments": "Please upload the required documents",
+  "@pleaseUploadRequiredDocuments": {
+    "description": "Error message when required documents are missing"
+  },
+  "oneTimeRegistrationFee": "ONE-TIME REGISTRATION FEE",
+  "@oneTimeRegistrationFee": {
+    "description": "Title for one-time registration fee"
+  },
+  "registrationFeeSubtitle": "Background check, licensing, and priority onboarding audit",
+  "@registrationFeeSubtitle": {
+    "description": "Subtitle describing registration fee scope"
+  },
+  "lifetime": "LIFETIME",
+  "@lifetime": {
+    "description": "Lifetime duration label"
+  },
+  "securePaymentWithStripe": "Secure payment with Stripe",
+  "@securePaymentWithStripe": {
+    "description": "Stripe security badge text"
+  },
+  "payNow": "PAY NOW",
+  "@payNow": {
+    "description": "Pay now button title"
+  },
+  "poweredBy": "Powered by",
+  "@poweredBy": {
+    "description": "Powered by label"
+  },
+  "paymentSuccessful": "Payment completed successfully",
+  "@paymentSuccessful": {
+    "description": "Success message after payment"
+  },
+  "support": "SUPPORT",
+  "@support": {
+    "description": "Support menu item in profile"
+  },
+  "paymentSuccessTitle": "Payment Successful!",
+  "@paymentSuccessTitle": {
+    "description": "Payment successful heading"
+  },
+  "bookingConfirmedSubtitle": "Your Booking has been confirmed.",
+  "@bookingConfirmedSubtitle": {
+    "description": "Subtitle on payment success screen"
+  },
+  "referenceId": "Reference ID",
+  "@referenceId": {
+    "description": "Reference ID label"
+  },
+  "dateAndSchedule": "Date & Schedule",
+  "@dateAndSchedule": {
+    "description": "Date & Schedule label"
+  },
+  "paymentGateway": "Payment Gateway",
+  "@paymentGateway": {
+    "description": "Payment Gateway label"
+  },
+  "stripeVerified": "Stripe Verified",
+  "@stripeVerified": {
+    "description": "Stripe Verified label"
+  },
+  "totalPaid": "Total Paid",
+  "@totalPaid": {
+    "description": "Total Paid label"
+  },
+  "incMembershipDiscount": "Inc. membership discount",
+  "@incMembershipDiscount": {
+    "description": "Included membership discount note"
+  },
+  "next": "Next",
+  "@next": {
+    "description": "Next button title"
+  },
+  "applicationStatus": "APPLICATION STATUS",
+  "@applicationStatus": {
+    "description": "Application status title header"
+  },
+  "step2Of3": "Step 2 of 3",
+  "@step2Of3": {
+    "description": "Step 2 of 3 pill badge"
+  },
+  "applicationSubmitted": "Application Submitted",
+  "@applicationSubmitted": {
+    "description": "Application submitted title"
+  },
+  "documents": "Documents",
+  "@documents": {
+    "description": "Documents step label"
+  },
+  "review": "Review",
+  "@review": {
+    "description": "Review step label"
+  },
+  "approval": "Approval",
+  "@approval": {
+    "description": "Approval step label"
+  },
+  "applicationUnderReviewNotice": "Your application is under review. You will receive an SMS and email notification once verified (typically within 24 hours).",
+  "@applicationUnderReviewNotice": {
+    "description": "Notice message for application under review"
+  },
+  "logoutButton": "Logout",
+  "@logoutButton": {
+    "description": "Logout button on application status screen"
+  },
+
+  "checkStatus": "Check Status",
+  "@checkStatus": {
+    "description": "Check status button label"
   }
 }

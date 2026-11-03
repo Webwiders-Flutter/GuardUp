@@ -746,10 +746,10 @@ class AppImage extends StatelessWidget {
           w: width,
           h: height,
           alignment: Alignment.center,
-          color: context.colors.borderLight.withValues(alpha: 0.3),
+          color: context.colors.outlineVariant.withValues(alpha: 0.3),
           child: Icon(
             Icons.broken_image_outlined,
-            color: context.colors.onSurfaceSecondary,
+            color: context.colors.onSurfaceVariant,
             size: (width != null && width! < AppSizes.iconXl)
                 ? AppSizes.iconSm
                 : AppSizes.iconLg,
@@ -780,7 +780,7 @@ class _ShimmerPlaceholder extends StatelessWidget {
     final placeholderBox = QuickContainer(
       w: width,
       h: height,
-      color: context.colors.borderLight.withValues(alpha: 0.6),
+      color: context.colors.outlineVariant.withValues(alpha: 0.6),
       radius: AppRadius.sm,
       borderRadius: borderRadius,
     );
@@ -788,7 +788,7 @@ class _ShimmerPlaceholder extends StatelessWidget {
     if (!enabled) return placeholderBox;
 
     return Shimmer.fromColors(
-      baseColor: context.colors.borderLight.withValues(alpha: 0.6),
+      baseColor: context.colors.outlineVariant.withValues(alpha: 0.6),
       highlightColor: context.colors.surface,
       child: placeholderBox,
     );

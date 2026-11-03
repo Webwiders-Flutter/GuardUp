@@ -94,7 +94,7 @@ class _PhoneCodePickerContentState extends State<PhoneCodePickerContent> {
                   icon: Icon(
                     Icons.close_rounded,
                     size: AppSizes.iconMd,
-                    color: colors.onSurfaceSecondary,
+                    color: colors.onSurfaceVariant,
                   ),
                   splashRadius: AppRadius.lg,
                   onPressed: () => Navigator.of(context).pop(),
@@ -115,7 +115,7 @@ class _PhoneCodePickerContentState extends State<PhoneCodePickerContent> {
               decoration: InputDecoration(
                 hintText: 'Search country or dial code...',
                 filled: true,
-                fillColor: colors.backgroundLight,
+                fillColor: colors.surfaceContainer,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md,
                   vertical: AppSpacing.sm,
@@ -124,7 +124,7 @@ class _PhoneCodePickerContentState extends State<PhoneCodePickerContent> {
             ),
           ),
 
-          Divider(height: 1, color: colors.borderLight),
+          Divider(height: 1, color: colors.outlineVariant),
 
           // Country List
           Expanded(
@@ -173,13 +173,13 @@ class _PhoneCodePickerContentState extends State<PhoneCodePickerContent> {
                 Icon(
                   Icons.search_off_rounded,
                   size: AppSizes.iconXl,
-                  color: colors.onSurfaceSecondary.withValues(alpha: 0.5),
+                  color: colors.onSurfaceVariant.withValues(alpha: 0.5),
                 ),
                 AppSpacing.sm.h,
                 Text(
                   'No countries found',
                   style: context.textTheme.bodyMedium?.colour(
-                    colors.onSurfaceSecondary,
+                    colors.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -249,7 +249,7 @@ class _PhoneCodePickerContentState extends State<PhoneCodePickerContent> {
                               .colour(
                                 isSelected
                                     ? colors.primary
-                                    : colors.onSurfaceSecondary,
+                                    : colors.onSurfaceVariant,
                               ),
                         ),
                         if (isSelected) ...[

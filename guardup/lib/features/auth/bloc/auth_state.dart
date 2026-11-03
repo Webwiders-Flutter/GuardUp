@@ -1,64 +1,73 @@
 import 'package:equatable/equatable.dart';
 
+import '/core/state/api_state.dart';
+import '../data/enum/user_role.enum.dart';
 import '../data/model/user.model.dart';
 
-enum AuthStatus {
-  initial,
-  loading,
+/// The single source of truth for global session authentication.
+enum AuthSessionStatus {
+  unknown,
   authenticated,
   unauthenticated,
-  error,
 }
 
+/// Represents the authentication state of the application.
+///
+/// Combines the single-source-of-truth [sessionStatus] with the reusable
+/// [operationState] for async actions (login, register, profile updates).
 class AuthState extends Equatable {
-  final AuthStatus status;
-  final UserModel? user;
-  final String? errorMessage;
+  final AuthSessionStatus sessionStatus;
+  final ApiState<UserModel> operationState;
 
   const AuthState({
-    this.status = AuthStatus.initial,
-    this.user,
-    this.errorMessage,
+    this.sessionStatus = AuthSessionStatus.unknown,
+    this.operationState = const ApiState.initial(),
   });
 
-  const AuthState.initial() : this(status: AuthStatus.initial);
-
-  const AuthState.loading({UserModel? previousUser})
-      : this(status: AuthStatus.loading, user: previousUser);
-
-  const AuthState.authenticated(UserModel user)
-      : this(status: AuthStatus.authenticated, user: user);
-
-  const AuthState.unauthenticated()
-      : this(status: AuthStatus.unauthenticated);
-
-  const AuthState.error(String message, {UserModel? previousUser})
+  const AuthState.unknown()
       : this(
-          status: AuthStatus.error,
-          errorMessage: message,
-          user: previousUser,
+          sessionStatus: AuthSessionStatus.unknown,
+          operationState: const ApiState.initial(),
         );
 
-  bool get isAuthenticated =>
-      status == AuthStatus.authenticated && user != null;
-  bool get isUnauthenticated => status == AuthStatus.unauthenticated;
-  bool get isLoading => status == AuthStatus.loading;
-  bool get isInitial => status == AuthStatus.initial;
-  bool get hasError => status == AuthStatus.error;
+  const AuthState.unauthenticated({
+    ApiState<UserModel> operationState = const ApiState.initial(),
+  }) : this(
+          sessionStatus: AuthSessionStatus.unauthenticated,
+          operationState: operationState,
+        );
+
+  AuthState.authenticated(
+    UserModel user, {
+    ApiState<UserModel>? operationState,
+  }) : this(
+          sessionStatus: AuthSessionStatus.authenticated,
+          operationState: operationState ?? ApiSuccess(user),
+        );
+
+  bool get isAuthenticated => sessionStatus == AuthSessionStatus.authenticated;
+  bool get isUnauthenticated =>
+      sessionStatus == AuthSessionStatus.unauthenticated;
+  bool get isUnknown => sessionStatus == AuthSessionStatus.unknown;
+
+  UserModel? get user => operationState.dataOrNull;
+  UserRole? get sessionRole => user?.role;
+  bool get isLoading => operationState.isLoading;
+  bool get hasError => operationState.isFailure;
+  String? get errorMessage => operationState.errorMessageOrNull;
 
   AuthState copyWith({
-    AuthStatus? status,
-    UserModel? user,
-    String? errorMessage,
+    AuthSessionStatus? sessionStatus,
+    ApiState<UserModel>? operationState,
   }) {
     return AuthState(
-      status: status ?? this.status,
-      user: user ?? this.user,
-      errorMessage: errorMessage ?? this.errorMessage,
+      sessionStatus: sessionStatus ?? this.sessionStatus,
+      operationState: operationState ?? this.operationState,
     );
   }
 
   @override
-  List<Object?> get props => [status, user, errorMessage];
+  List<Object?> get props => [sessionStatus, operationState];
 }
+
 

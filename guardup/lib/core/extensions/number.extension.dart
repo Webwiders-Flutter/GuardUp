@@ -14,6 +14,26 @@ extension NumberFormattingExtension on num {
     return formatter.format(this);
   }
 
+  /// Formats this number into USD currency format (e.g. `$60` or `$60.50`).
+  String get toUsd {
+    final formatter = NumberFormat.currency(
+      locale: 'en_US',
+      symbol: '\$',
+      decimalDigits: this is double && (this % 1 != 0) ? 2 : 0,
+    );
+    return formatter.format(this);
+  }
+
+  /// Formats this number into percentage text (e.g. `20%` or `10%`).
+  String get toPercentageText {
+    final isWhole = this % 1 == 0;
+    final value = isWhole ? toInt().toString() : toStringAsFixed(1);
+    return '$value%';
+  }
+
+  /// Alias for [toPercentageText].
+  String get percentageText => toPercentageText;
+
 
   /// Converts this amount in Rupees (e.g. 500.50) to integer paise (50050).
   int get toPaise => (this * 100).round();

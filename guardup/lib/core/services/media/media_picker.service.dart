@@ -1,0 +1,193 @@
+import 'package:file_picker/file_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '/app/theme/colors/color_accessor.dart';
+import '/core/error/api_exception.dart';
+
+enum ImageSourceType { camera, gallery }
+
+class MediaPickerService {
+  static Future<XFile?> pickImage(
+    ImageSourceType source, {
+    int imageQuality = 100,
+    double? maxWidth,
+    double? maxHeight,
+  }) async {
+    try {
+      return await ImagePicker().pickImage(
+        source: source == ImageSourceType.camera
+            ? ImageSource.camera
+            : ImageSource.gallery,
+        imageQuality: imageQuality,
+        maxWidth: maxWidth,
+        maxHeight: maxHeight,
+        requestFullMetadata: true,
+      );
+    } catch (e) {
+      throw ApiException(
+        'Image picker failed',
+        raw: e,
+        stackTrace: StackTrace.current,
+      );
+    }
+  }
+
+  static Future<List<XFile>?> pickMultipleImages({
+    int imageQuality = 100,
+    double? maxWidth,
+    double? maxHeight,
+    int? limit = 5,
+  }) async {
+    try {
+      return await ImagePicker().pickMultiImage(
+        imageQuality: imageQuality,
+        maxWidth: maxWidth,
+        maxHeight: maxHeight,
+        requestFullMetadata: true,
+        limit: limit,
+      );
+    } catch (e) {
+      throw ApiException(
+        'Image picker failed',
+        raw: e,
+        stackTrace: StackTrace.current,
+      );
+    }
+  }
+
+  static Future<XFile?> pickVideo(
+    ImageSourceType source, {
+    Duration? maxDuration = const Duration(seconds: 30),
+  }) async {
+    try {
+      return await ImagePicker().pickVideo(
+        source: source == ImageSourceType.camera
+            ? ImageSource.camera
+            : ImageSource.gallery,
+        maxDuration: maxDuration,
+      );
+    } catch (e) {
+      throw ApiException(
+        'Video picker failed',
+        raw: e,
+        stackTrace: StackTrace.current,
+      );
+    }
+  }
+
+  static Future<List<XFile>?> pickMutlipleVideo(
+    ImageSourceType source, {
+    Duration? maxDuration = const Duration(seconds: 30),
+    int? limit = 3,
+  }) async {
+    try {
+      return await ImagePicker().pickMultiVideo(
+        maxDuration: maxDuration,
+        limit: limit,
+      );
+    } catch (e) {
+      throw ApiException(
+        'Video picker failed',
+        raw: e,
+        stackTrace: StackTrace.current,
+      );
+    }
+  }
+
+  static Future<XFile?> cropImage(
+    String path,
+    AppThemeAccessor theme, {
+    List<CropAspectRatioPreset>? aspectRatioPresets,
+    CropStyle cropStyle = CropStyle.rectangle,
+    bool lockAspectRatio = false,
+  }) async {
+    try {
+      List<CropAspectRatioPreset> aspectRatio =
+          aspectRatioPresets ??
+          [
+            CropAspectRatioPreset.original,
+            CropAspectRatioPreset.square,
+            CropAspectRatioPreset.ratio3x2,
+            CropAspectRatioPreset.ratio4x3,
+            CropAspectRatioPreset.ratio16x9,
+          ];
+
+      CropAspectRatioPreset initAspectRatio = aspectRatio.isNotEmpty
+          ? aspectRatio[0]
+          : CropAspectRatioPreset.original;
+
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: path,
+        compressQuality: 100,
+        maxWidth: 2048,
+        maxHeight: 2048,
+
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Crop Image',
+            toolbarColor: theme.primary,
+            cropStyle: cropStyle,
+            toolbarWidgetColor: theme.onPrimary,
+            backgroundColor: theme.surface,
+            activeControlsWidgetColor: theme.primary,
+            dimmedLayerColor: theme.onSurfaceVariant,
+            cropFrameColor: theme.primary,
+            cropGridColor: theme.onPrimary,
+            initAspectRatio: initAspectRatio,
+            lockAspectRatio: lockAspectRatio,
+            aspectRatioPresets: aspectRatio,
+            cropFrameStrokeWidth: 2,
+            cropGridStrokeWidth: 1,
+            showCropGrid: true,
+            hideBottomControls: false,
+          ),
+          IOSUiSettings(
+            title: 'Crop Image',
+            doneButtonTitle: 'Done',
+            cancelButtonTitle: 'Cancel',
+            cropStyle: cropStyle,
+            aspectRatioLockEnabled: !lockAspectRatio,
+            resetAspectRatioEnabled: !lockAspectRatio,
+            aspectRatioPickerButtonHidden: lockAspectRatio,
+            aspectRatioPresets: aspectRatio,
+            rotateClockwiseButtonHidden: false,
+            rotateButtonsHidden: false,
+            resetButtonHidden: false,
+            aspectRatioLockDimensionSwapEnabled: !lockAspectRatio,
+          ),
+        ],
+      );
+
+      if (croppedFile == null) return null;
+      return XFile(croppedFile.path);
+    } catch (e) {
+      throw ApiException(
+        'Image picker failed',
+        raw: e,
+        stackTrace: StackTrace.current,
+      );
+    }
+  }
+
+  /// Picks a single document (PDF, JPG, PNG) using the system file picker.
+  /// Returns [XFile] wrapping the selected file, or null if the user cancelled.
+  static Future<XFile?> pickDocument({
+    List<String> allowedExtensions = const ['pdf', 'jpg', 'jpeg', 'png'],
+  }) async {
+    try {
+      final file = await FilePicker.pickFile(
+        type: FileType.custom,
+        allowedExtensions: allowedExtensions,
+      );
+      if (file == null) return null;
+      return file.xFile;
+    } catch (e) {
+      throw ApiException(
+        'File picker failed',
+        raw: e,
+        stackTrace: StackTrace.current,
+      );
+    }
+  }
+}

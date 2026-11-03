@@ -257,8 +257,8 @@ class _ConnectivityPill extends StatelessWidget {
 
     final accentColor = isRestored ? colors.success : colors.error;
     final accentBgColor = isRestored
-        ? colors.successLight.withValues(alpha: 0.15)
-        : colors.errorLight.withValues(alpha: 0.15);
+        ? colors.successContainer.withValues(alpha: 0.15)
+        : colors.errorContainer.withValues(alpha: 0.15);
 
     return Material(
       color: colors.surface,
@@ -343,7 +343,7 @@ class _ConnectivityPill extends StatelessWidget {
                       vertical: AppSpacing.xs,
                     ),
                     decoration: BoxDecoration(
-                      color: colors.onSurfaceSecondary.withValues(alpha: 0.08),
+                      color: colors.onSurfaceVariant.withValues(alpha: 0.08),
                       borderRadius: AppRadius.full.toBorderRadius,
                     ),
                     child: Row(
@@ -389,7 +389,7 @@ class _ConnectivityPill extends StatelessWidget {
                     child: Icon(
                       Icons.close_rounded,
                       size: AppSizes.iconSm,
-                      color: colors.onSurfaceSecondary,
+                      color: colors.onSurfaceVariant,
                     ),
                   ),
                 ),
@@ -401,7 +401,7 @@ class _ConnectivityPill extends StatelessWidget {
                     vertical: AppSpacing.xs,
                   ),
                   decoration: BoxDecoration(
-                    color: colors.successLight.withValues(alpha: 0.15),
+                    color: colors.successContainer.withValues(alpha: 0.15),
                     borderRadius: AppRadius.full.toBorderRadius,
                   ),
                   child: Row(

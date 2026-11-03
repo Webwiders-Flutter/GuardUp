@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '/core/state/api_state.dart';
 import '../data/model/user.model.dart';
 import '../domain/repositories/auth_repository.dart';
 import '../domain/repositories/user_repository.dart';
@@ -20,7 +21,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     UserRepository? userRepository,
   })  : _authRepo = authRepository,
         _userRepo = userRepository,
-        super(const AuthState.initial()) {
+        super(const AuthState.unknown()) {
     on<AuthCheckStatusRequested>(_onCheckStatusRequested);
     on<AuthUserChanged>(_onUserChanged);
     on<AuthProfileChanged>(_onProfileChanged);
@@ -28,6 +29,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthLoginRequested>(_onLoginRequested);
     on<AuthSignUpRequested>(_onSignUpRequested);
     on<AuthUpdateProfileRequested>(_onUpdateProfileRequested);
+    on<AuthSetSessionRoleRequested>(_onSetSessionRoleRequested);
     on<AuthSignOutRequested>(_onSignOutRequested);
 
     _init();
@@ -69,13 +71,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthErrorOccurred event,
     Emitter<AuthState> emit,
   ) {
-    emit(AuthState.error(event.message, previousUser: state.user));
+    emit(state.copyWith(
+      operationState: ApiState.failure(
+        event.message,
+        previousData: state.user,
+      ),
+    ));
   }
 
   Future<void> _onCheckStatusRequested(
     AuthCheckStatusRequested event,
     Emitter<AuthState> emit,
   ) async {
+    // Artificial 2-second delay for splash bootstrap
+    await Future.delayed(const Duration(seconds: 2));
+
     final authRepo = _authRepo;
     if (authRepo == null) {
       emit(const AuthState.unauthenticated());
@@ -84,7 +94,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     final currentUid = authRepo.currentUserId;
     if (currentUid != null) {
-      emit(const AuthState.loading());
       try {
         if (_userRepo != null) {
           final profile = await _userRepo.getUserProfile(currentUid);
@@ -96,11 +105,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         }
         emit(AuthState.authenticated(UserModel(id: currentUid, name: 'User')));
       } catch (e) {
-        emit(AuthState.error(e.toString()));
+        emit(AuthState.unauthenticated(
+          operationState: ApiState.failure(e.toString()),
+        ));
       }
     } else {
       emit(const AuthState.unauthenticated());
     }
+  }
+
+  void _onSetSessionRoleRequested(
+    AuthSetSessionRoleRequested event,
+    Emitter<AuthState> emit,
+  ) {
+    final currentUser = state.user ?? const UserModel(id: '', name: '');
+    final updatedUser = currentUser.copyWith(role: event.role);
+
+    emit(state.copyWith(
+      operationState: ApiState.success(updatedUser),
+    ));
   }
 
   Future<void> _onUserChanged(
@@ -133,11 +156,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     final authRepo = _authRepo;
     if (authRepo == null) {
-      emit(const AuthState.error('AuthRepository not configured.'));
+      emit(state.copyWith(
+        operationState:
+            const ApiState.failure('AuthRepository not configured.'),
+      ));
       return;
     }
 
-    emit(const AuthState.loading());
+    emit(state.copyWith(
+      operationState: ApiState.loading(previousData: state.user),
+    ));
     try {
       final userId = await authRepo.signInWithEmail(
         email: event.email,
@@ -147,12 +175,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         final profile = await _userRepo.getUserProfile(userId);
         if (profile != null) {
           emit(AuthState.authenticated(profile));
+          _listenToProfile(userId);
           return;
         }
       }
-      emit(AuthState.authenticated(UserModel(id: userId, name: event.email)));
+      emit(AuthState.authenticated(UserModel(id: userId, name: 'User')));
+      _listenToProfile(userId);
     } catch (e) {
-      emit(AuthState.error(e.toString()));
+      emit(state.copyWith(
+        operationState: ApiState.failure(e.toString()),
+      ));
     }
   }
 
@@ -162,24 +194,35 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     final authRepo = _authRepo;
     if (authRepo == null) {
-      emit(const AuthState.error('AuthRepository not configured.'));
+      emit(state.copyWith(
+        operationState:
+            const ApiState.failure('AuthRepository not configured.'),
+      ));
       return;
     }
 
-    emit(const AuthState.loading());
+    emit(state.copyWith(
+      operationState: ApiState.loading(previousData: state.user),
+    ));
     try {
       final userId = await authRepo.signUpWithEmail(
         email: event.email,
         password: event.password,
-        metadata: event.name != null ? {'name': event.name} : null,
       );
-      final user = UserModel(id: userId, name: event.name ?? event.email);
+      final newUser = UserModel(
+        id: userId,
+        name: event.name ?? 'New User',
+        role: state.sessionRole,
+      );
       if (_userRepo != null) {
-        await _userRepo.createUserProfile(user: user);
+        await _userRepo.createUserProfile(user: newUser);
       }
-      emit(AuthState.authenticated(user));
+      emit(AuthState.authenticated(newUser));
+      _listenToProfile(userId);
     } catch (e) {
-      emit(AuthState.error(e.toString()));
+      emit(state.copyWith(
+        operationState: ApiState.failure(e.toString()),
+      ));
     }
   }
 
@@ -188,20 +231,24 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     final current = state.user;
-    if (current == null) return;
+    if (current == null || _userRepo == null) return;
 
-    emit(AuthState.loading(previousUser: current));
+    emit(state.copyWith(
+      operationState: ApiState.loading(previousData: current),
+    ));
     try {
       final updated = current.copyWith(
         name: event.name ?? current.name,
         profileImageUrl: event.profileImageUrl ?? current.profileImageUrl,
       );
-      if (_userRepo != null) {
-        await _userRepo.updateUserProfile(user: updated);
-      }
-      emit(AuthState.authenticated(updated));
+      await _userRepo.updateUserProfile(user: updated);
+      emit(state.copyWith(
+        operationState: ApiState.success(updated),
+      ));
     } catch (e) {
-      emit(AuthState.error(e.toString(), previousUser: current));
+      emit(state.copyWith(
+        operationState: ApiState.failure(e.toString(), previousData: current),
+      ));
     }
   }
 
@@ -209,26 +256,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthSignOutRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(const AuthState.loading());
-    try {
-      _cancelSubscriptions();
-      await _authRepo?.signOut();
-      emit(const AuthState.unauthenticated());
-    } catch (e) {
-      emit(AuthState.error(e.toString()));
+    final authRepo = _authRepo;
+    if (authRepo != null) {
+      await authRepo.signOut();
     }
-  }
-
-  void _cancelSubscriptions() {
-    _authSubscription?.cancel();
-    _authSubscription = null;
     _profileSubscription?.cancel();
     _profileSubscription = null;
+    emit(const AuthState.unauthenticated());
   }
 
   @override
   Future<void> close() {
-    _cancelSubscriptions();
+    _authSubscription?.cancel();
+    _profileSubscription?.cancel();
     return super.close();
   }
 }

@@ -52,7 +52,7 @@ class AppPopup {
     return AppDialogs.showRaw<PopupResult>(
       context: context,
       barrierDismissible: barrierDismissible,
-      barrierColor: colors.black.withValues(alpha: 0.40),
+      barrierColor: colors.surfaceDim.withValues(alpha: 0.40),
       blurBackground: blurBackground,
       child: Builder(
         builder: (dialogContext) => _AppPopupWidget(
@@ -628,17 +628,17 @@ class _AppPopupWidget extends StatelessWidget {
             color: colors.surface,
             borderRadius: AppRadius.xl.toBorderRadius,
             border: Border.all(
-              color: colors.borderLight.withValues(alpha: 0.8),
+              color: colors.outlineVariant.withValues(alpha: 0.8),
               width: 1.0,
             ),
             boxShadow: [
               BoxShadow(
-                color: colors.black.withValues(alpha: 0.14),
+                color: colors.surfaceDim.withValues(alpha: 0.14),
                 blurRadius: 28,
                 offset: const Offset(0, 12),
               ),
               BoxShadow(
-                color: colors.black.withValues(alpha: 0.04),
+                color: colors.surfaceDim.withValues(alpha: 0.04),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -723,7 +723,7 @@ class _AppPopupWidget extends StatelessWidget {
                                     child: Icon(
                                       Icons.close_rounded,
                                       size: AppSizes.iconMd,
-                                      color: colors.onSurfaceSecondary,
+                                      color: colors.onSurfaceVariant,
                                     ),
                                   ),
                                 ),
@@ -753,7 +753,7 @@ class _AppPopupWidget extends StatelessWidget {
                           textAlign: TextAlign.center,
                           style: context.textTheme.bodyMedium
                               ?.medium()
-                              .colour(colors.onSurfaceSecondary)
+                              .colour(colors.onSurfaceVariant)
                               .lineHeight(1.45),
                         ),
                       ],

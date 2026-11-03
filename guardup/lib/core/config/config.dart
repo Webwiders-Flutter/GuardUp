@@ -11,9 +11,6 @@ abstract class AppConfig {
   String get supabasePublishableKey;
   String get deepLinkScheme;
   bool get enableLogging;
-  String get googleMapsApiKey;
-  String get razorpayApiKey;
-  String get razorpaySecret;
 }
 
 final class AppEnvironment {

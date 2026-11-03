@@ -107,7 +107,7 @@ class _StatePickerContentState extends State<StatePickerContent> {
                   icon: Icon(
                     Icons.close_rounded,
                     size: AppSizes.iconMd,
-                    color: colors.onSurfaceSecondary,
+                    color: colors.onSurfaceVariant,
                   ),
                   splashRadius: AppRadius.lg,
                   onPressed: () => Navigator.of(context).pop(),
@@ -128,7 +128,7 @@ class _StatePickerContentState extends State<StatePickerContent> {
               decoration: InputDecoration(
                 hintText: 'Search state...',
                 filled: true,
-                fillColor: colors.backgroundLight,
+                fillColor: colors.surfaceContainer,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md,
                   vertical: AppSpacing.sm,
@@ -137,7 +137,7 @@ class _StatePickerContentState extends State<StatePickerContent> {
             ),
           ),
 
-          Divider(height: 1, color: colors.borderLight),
+          Divider(height: 1, color: colors.outlineVariant),
 
           // State List
           Expanded(
@@ -184,13 +184,13 @@ class _StatePickerContentState extends State<StatePickerContent> {
                 Icon(
                   Icons.search_off_rounded,
                   size: AppSizes.iconXl,
-                  color: colors.onSurfaceSecondary.withValues(alpha: 0.5),
+                  color: colors.onSurfaceVariant.withValues(alpha: 0.5),
                 ),
                 AppSpacing.sm.h,
                 Text(
                   'No states found',
                   style: context.textTheme.bodyMedium?.colour(
-                    colors.onSurfaceSecondary,
+                    colors.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -270,7 +270,7 @@ class _StatePickerContentState extends State<StatePickerContent> {
     return Center(
       child: Text(
         'Unable to load states',
-        style: context.textTheme.bodyMedium?.colour(colors.onSurfaceSecondary),
+        style: context.textTheme.bodyMedium?.colour(colors.onSurfaceVariant),
       ),
     );
   }

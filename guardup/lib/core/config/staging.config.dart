@@ -9,26 +9,26 @@ class StagingConfig implements AppConfig {
 
   @override
   String get supabaseUrl =>
-      dotenv.maybeGet('SUPABASE_URL') ??
       dotenv.maybeGet('STAGE_SUPABASE_URL') ??
+      dotenv.maybeGet('SUPABASE_URL') ??
       '';
 
   @override
   String get supabasePublishableKey =>
-      dotenv.maybeGet('SUPABASE_PUBLISHABLE_KEY') ??
       dotenv.maybeGet('STAGE_SUPABASE_PUBLISHABLE_KEY') ??
+      dotenv.maybeGet('SUPABASE_PUBLISHABLE_KEY') ??
       '';
 
   @override
   String get baseUrl =>
-      dotenv.maybeGet('BASE_URL') ??
       dotenv.maybeGet('STAGE_BASE_URL') ??
+      dotenv.maybeGet('BASE_URL') ??
       supabaseUrl;
 
   @override
   String get apiKey =>
-      dotenv.maybeGet('X_API_KEY') ??
       dotenv.maybeGet('STAGE_X_API_KEY') ??
+      dotenv.maybeGet('X_API_KEY') ??
       supabasePublishableKey;
 
   @override
@@ -39,21 +39,4 @@ class StagingConfig implements AppConfig {
   bool get enableLogging =>
       dotenv.maybeGet('ENABLE_LOGGING')?.toLowerCase() == 'true' || true;
 
-  @override
-  String get googleMapsApiKey =>
-      dotenv.maybeGet('GOOGLE_MAPS_API_KEY') ??
-      dotenv.maybeGet('GOOGLE_PLACES_API_KEY') ??
-      '';
-
-  @override
-  String get razorpayApiKey =>
-      dotenv.maybeGet('REZORPAY_API_KEY') ??
-      dotenv.maybeGet('RAZORPAY_API_KEY') ??
-      '';
-
-  @override
-  String get razorpaySecret =>
-      dotenv.maybeGet('REZORPAY_SECRET') ??
-      dotenv.maybeGet('RAZORPAY_SECRET') ??
-      '';
 }

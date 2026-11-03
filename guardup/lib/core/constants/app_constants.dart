@@ -1,6 +1,6 @@
 final class AppConstants {
   AppConstants._();
-  static const String appName = 'Starter';
+  static const String appName = 'GuardUp';
 
   static const int paginationLimit = 10;
   static const Duration apiTimeout = Duration(seconds: 30);

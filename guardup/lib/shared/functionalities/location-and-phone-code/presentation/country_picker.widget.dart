@@ -93,7 +93,7 @@ class _CountryPickerContentState extends State<CountryPickerContent> {
                   icon: Icon(
                     Icons.close_rounded,
                     size: AppSpacing.xl,
-                    color: colors.onSurfaceSecondary,
+                    color: colors.onSurfaceVariant,
                   ),
                   splashRadius: AppRadius.lg,
                   onPressed: () => Navigator.of(context).pop(),
@@ -114,7 +114,7 @@ class _CountryPickerContentState extends State<CountryPickerContent> {
               decoration: InputDecoration(
                 hintText: 'Search country...',
                 filled: true,
-                fillColor: colors.backgroundLight,
+                fillColor: colors.surfaceContainer,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md,
                   vertical: AppSpacing.sm,
@@ -123,7 +123,7 @@ class _CountryPickerContentState extends State<CountryPickerContent> {
             ),
           ),
 
-          Divider(height: 1, color: colors.borderLight),
+          Divider(height: 1, color: colors.outlineVariant),
 
           // Country List
           Expanded(
@@ -167,13 +167,13 @@ class _CountryPickerContentState extends State<CountryPickerContent> {
                 Icon(
                   Icons.search_off_rounded,
                   size: AppSpacing.xxxl,
-                  color: colors.onSurfaceSecondary.withValues(alpha: 0.5),
+                  color: colors.onSurfaceVariant.withValues(alpha: 0.5),
                 ),
                 AppSpacing.sm.h,
                 Text(
                   'No countries found',
                   style: context.textTheme.bodyMedium?.colour(
-                    colors.onSurfaceSecondary,
+                    colors.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -268,7 +268,7 @@ class _CountryPickerContentState extends State<CountryPickerContent> {
           Text(
             'Unable to load countries',
             style: context.textTheme.bodyMedium?.colour(
-              colors.onSurfaceSecondary,
+              colors.onSurfaceVariant,
             ),
           ),
         ],

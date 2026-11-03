@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:guardup/core/logger/app_logger.dart';
 
 import '/app/theme/colors/app_colors.dart';
 import '/bootstrap/flavor.dart';
@@ -18,7 +19,11 @@ Future<void> bootstrap({
   try {
     await dotenv.load(fileName: '.env.${flavor.name}');
   } catch (_) {
-    await dotenv.load(fileName: '.env');
+    try {
+      await dotenv.load(fileName: '.env');
+    } catch (e) {
+      AppLogger.d('Could not load .env file: $e');
+    }
   }
 
   SystemChrome.setSystemUIOverlayStyle(
@@ -26,7 +31,7 @@ Future<void> bootstrap({
       statusBarColor: AppColors.transparent,
       statusBarIconBrightness: Brightness.light,
       statusBarBrightness: Brightness.dark,
-      systemNavigationBarColor: AppColors.background,
+      systemNavigationBarColor: AppColors.surface,
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );

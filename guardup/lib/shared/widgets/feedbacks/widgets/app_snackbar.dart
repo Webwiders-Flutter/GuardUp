@@ -45,40 +45,40 @@ class SnackbarStyles {
       case SnackbarType.success:
         return (
           backgroundColor: colors.success,
-          iconColor: colors.white,
-          iconBackgroundColor: colors.white.withValues(alpha: 0.18),
-          borderColor: colors.white.withValues(alpha: 0.22),
-          actionColor: colors.white,
+          iconColor: colors.onSurface,
+          iconBackgroundColor: colors.onSurface.withValues(alpha: 0.18),
+          borderColor: colors.onSurface.withValues(alpha: 0.22),
+          actionColor: colors.onSurface,
           icon: Icons.check_circle_rounded,
         );
 
       case SnackbarType.error:
         return (
           backgroundColor: colors.error,
-          iconColor: colors.white,
-          iconBackgroundColor: colors.white.withValues(alpha: 0.18),
-          borderColor: colors.white.withValues(alpha: 0.22),
-          actionColor: colors.white,
+          iconColor: colors.onSurface,
+          iconBackgroundColor: colors.onSurface.withValues(alpha: 0.18),
+          borderColor: colors.onSurface.withValues(alpha: 0.22),
+          actionColor: colors.onSurface,
           icon: Icons.error_rounded,
         );
 
       case SnackbarType.warning:
         return (
           backgroundColor: colors.warning,
-          iconColor: colors.white,
-          iconBackgroundColor: colors.white.withValues(alpha: 0.18),
-          borderColor: colors.white.withValues(alpha: 0.22),
-          actionColor: colors.white,
+          iconColor: colors.onSurface,
+          iconBackgroundColor: colors.onSurface.withValues(alpha: 0.18),
+          borderColor: colors.onSurface.withValues(alpha: 0.22),
+          actionColor: colors.onSurface,
           icon: Icons.warning_rounded,
         );
 
       case SnackbarType.info:
         return (
           backgroundColor: colors.primary,
-          iconColor: colors.white,
-          iconBackgroundColor: colors.white.withValues(alpha: 0.18),
-          borderColor: colors.white.withValues(alpha: 0.22),
-          actionColor: colors.secondaryLight,
+          iconColor: colors.onSurface,
+          iconBackgroundColor: colors.onSurface.withValues(alpha: 0.18),
+          borderColor: colors.onSurface.withValues(alpha: 0.22),
+          actionColor: colors.secondaryContainer,
           icon: Icons.info_rounded,
         );
     }
@@ -552,12 +552,12 @@ class _AppSnackbarContent extends StatelessWidget {
       border: Border.all(color: style.borderColor, width: 1.0),
       shadows: [
         BoxShadow(
-          color: colors.black.withValues(alpha: 0.16),
+          color: colors.surfaceDim.withValues(alpha: 0.16),
           blurRadius: AppSpacing.lg,
           offset: const Offset(0, 4),
         ),
         BoxShadow(
-          color: colors.black.withValues(alpha: 0.08),
+          color: colors.surfaceDim.withValues(alpha: 0.08),
           blurRadius: AppSpacing.xs,
           offset: const Offset(0, 1),
         ),
@@ -594,7 +594,7 @@ class _AppSnackbarContent extends StatelessWidget {
                                 ? context.textTheme.labelMedium?.bold()
                                 : context.textTheme.titleSmall?.bold())
                             ?.size(isCompact ? 12 : 13)
-                            .colour(colors.white),
+                            .colour(colors.onSurface),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -609,7 +609,7 @@ class _AppSnackbarContent extends StatelessWidget {
                                   : context.textTheme.bodyMedium?.medium()) ??
                               ThemeData.fallback().textTheme.bodyMedium!)
                           .size(isCompact ? 11 : 12)
-                          .colour(textStyle?.color ?? colors.white)
+                          .colour(textStyle?.color ?? colors.onSurface)
                           .lineHeight(1.3),
                   maxLines: isCompact ? 2 : 3,
                   overflow: TextOverflow.ellipsis,
@@ -634,7 +634,7 @@ class _AppSnackbarContent extends StatelessWidget {
                     vertical: isCompact ? AppSpacing.xxs : AppSpacing.xs,
                   ),
                   decoration: BoxDecoration(
-                    color: colors.white.withValues(alpha: 0.15),
+                    color: colors.onSurface.withValues(alpha: 0.15),
                     borderRadius: AppRadius.sm.toBorderRadius,
                   ),
                   child: Text(
@@ -643,7 +643,7 @@ class _AppSnackbarContent extends StatelessWidget {
                         (isCompact
                                 ? context.textTheme.labelSmall?.bold()
                                 : context.textTheme.labelMedium?.bold())
-                            ?.colour(style.actionColor ?? colors.white),
+                            ?.colour(style.actionColor ?? colors.onSurface),
                   ),
                 ),
               ),
@@ -664,7 +664,7 @@ class _AppSnackbarContent extends StatelessWidget {
                   child: Icon(
                     Icons.close_rounded,
                     size: isCompact ? AppSizes.iconSm : AppSizes.iconMd,
-                    color: colors.white.withValues(alpha: 0.8),
+                    color: colors.onSurface.withValues(alpha: 0.8),
                   ),
                 ),
               ),

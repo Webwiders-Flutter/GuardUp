@@ -76,7 +76,7 @@ final class AppSheet {
                     QuickContainer(
                       w: AppSizes.buttonNormal,
                       h: AppSpacing.xs,
-                      color: theme.onSurfaceSecondary,
+                      color: theme.onSurfaceVariant,
                       radius: AppRadius.full,
                     ),
                   ],
@@ -166,7 +166,7 @@ final class _SheetHeader extends StatelessWidget {
                   subtitle!,
                   textAlign: isCenter ? TextAlign.center : TextAlign.start,
                   style: context.textTheme.bodyMedium?.colour(
-                    context.colors.onSurfaceSecondary,
+                    context.colors.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -199,7 +199,9 @@ final class _SheetHeader extends StatelessWidget {
       onPressed: onPressed,
       padding: EdgeInsets.zero,
       elevation: 0,
+      isFlexible: true,
       width: AppSizes.buttonSm,
+      height: AppSizes.buttonSm,
       backgroundColor: theme.transparent,
       foregroundColor: theme.onSurface,
       borderRadius: AppRadius.full.toBorderRadius,
