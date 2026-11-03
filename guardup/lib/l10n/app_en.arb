@@ -464,6 +464,38 @@
   "@customerProfile": {
     "description": "Customer profile title"
   },
+  "bodyguardProfile": "Bodyguard Profile",
+  "@bodyguardProfile": {
+    "description": "Bodyguard profile title"
+  },
+  "companyProfile": "Company Profile",
+  "@companyProfile": {
+    "description": "Company profile title"
+  },
+  "myWallet": "MY WALLET",
+  "@myWallet": {
+    "description": "My wallet menu item"
+  },
+  "myBankDetails": "MY BANK DETAILS",
+  "@myBankDetails": {
+    "description": "My bank details menu item"
+  },
+  "myBank": "MY BANK",
+  "@myBank": {
+    "description": "My bank menu item"
+  },
+  "reviewAndRatings": "REVIEW & RATINGS",
+  "@reviewAndRatings": {
+    "description": "Reviews and ratings menu item"
+  },
+  "businessDocuments": "BUSINESS DOCUMENTS",
+  "@businessDocuments": {
+    "description": "Business documents menu item"
+  },
+  "bookNow": "Book now",
+  "@bookNow": {
+    "description": "Book now button label"
+  },
   "editProfile": "EDIT PROFILE",
   "@editProfile": {
     "description": "Edit profile menu item"
@@ -491,6 +523,98 @@
   "personalInformation": "Personal Information",
   "@personalInformation": {
     "description": "Personal information section title"
+  },
+  "companyInformation": "Company Information",
+  "@companyInformation": {
+    "description": "Company information section title"
+  },
+  "companyName": "Company Name",
+  "@companyName": {
+    "description": "Company name input field hint"
+  },
+  "email": "Email",
+  "@email": {
+    "description": "Email field label"
+  },
+  "phone": "Phone",
+  "@phone": {
+    "description": "Phone field label"
+  },
+  "address": "Address",
+  "@address": {
+    "description": "Address field label"
+  },
+  "editInformation": "Edit Information",
+  "@editInformation": {
+    "description": "Edit information button label"
+  },
+  "contactUs": "Contact Us",
+  "@contactUs": {
+    "description": "Contact Us screen and card title"
+  },
+  "contactUsSubtitle": "Have a question, feedback, or need help? Send us a message.",
+  "@contactUsSubtitle": {
+    "description": "Contact Us card subtitle"
+  },
+  "mobileNumber": "Mobile Number",
+  "@mobileNumber": {
+    "description": "Mobile number field label"
+  },
+  "message": "Message",
+  "@message": {
+    "description": "Message field label"
+  },
+  "messageHint": "Describe your message or issue in detail...",
+  "@messageHint": {
+    "description": "Message field placeholder hint"
+  },
+  "submitMessage": "Submit Message",
+  "@submitMessage": {
+    "description": "Submit message button label"
+  },
+  "myBankDetailsTitle": "My Bank Details",
+  "@myBankDetailsTitle": {
+    "description": "My Bank Details screen title"
+  },
+  "savedBankAccount": "Saved Bank Account",
+  "@savedBankAccount": {
+    "description": "Saved bank account section title"
+  },
+  "addNewBankAccount": "Add New Bank Account",
+  "@addNewBankAccount": {
+    "description": "Add new bank account section title"
+  },
+  "accountNumber": "Account Number",
+  "@accountNumber": {
+    "description": "Account number field hint"
+  },
+  "accountHolder": "Account Holder",
+  "@accountHolder": {
+    "description": "Account holder field hint"
+  },
+  "bankName": "Bank Name",
+  "@bankName": {
+    "description": "Bank name field hint"
+  },
+  "branch": "Branch",
+  "@branch": {
+    "description": "Branch field hint"
+  },
+  "ifscCode": "IFSC Code",
+  "@ifscCode": {
+    "description": "IFSC code field hint"
+  },
+  "branchAddress": "Branch Address",
+  "@branchAddress": {
+    "description": "Branch address field label"
+  },
+  "bankHolderName": "Bank holder name",
+  "@bankHolderName": {
+    "description": "Bank holder name field hint"
+  },
+  "add": "Add",
+  "@add": {
+    "description": "Add button label"
   },
   "fullName": "Full Name",
   "@fullName": {
@@ -724,5 +848,50 @@
   "checkStatus": "Check Status",
   "@checkStatus": {
     "description": "Check status button label"
+  },
+  "profileSetupTitle": "Profile Setup",
+  "@profileSetupTitle": {
+    "description": "Title on bodyguard profile setup screen"
+  },
+  "uploadPortraitGuidance": "Upload clear tactical or formal portrait",
+  "@uploadPortraitGuidance": {
+    "description": "Guidance text below profile picture"
+  },
+  "fullNameLabel": "FULL NAME",
+  "@fullNameLabel": {
+    "description": "Header label for full name field"
+  },
+  "hourlyRateLabel": "HOURLY RATE",
+  "@hourlyRateLabel": {
+    "description": "Header label for hourly rate field"
+  },
+  "perHour": "per hour",
+  "@perHour": {
+    "description": "Suffix for hourly rate"
+  },
+  "servicesOfferedLabel": "SERVICES OFFERED (SELECT & REMOVE)",
+  "@servicesOfferedLabel": {
+    "description": "Header label for services offered section"
+  },
+  "selectedServicesCount": "{count} selected",
+  "@selectedServicesCount": {
+    "description": "Counter for selected services",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "selectService": "Select Service",
+  "@selectService": {
+    "description": "Hint text for select service dropdown"
+  },
+  "bioBackgroundLabel": "BIO & BACKGROUND",
+  "@bioBackgroundLabel": {
+    "description": "Header label for bio and background field"
+  },
+  "bioBackgroundHint": "Tell us about your tactical experience, military background, or security licensing...",
+  "@bioBackgroundHint": {
+    "description": "Placeholder for bio and background input"
   }
 }

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:guardup/features/auth/presentation/screens/admin_approval_screen.dart';
+import 'package:guardup/features/body_guard/presentation/screens/body_guard_complete_profile_screen.dart';
+import 'package:guardup/features/body_guard/presentation/screens/body_guard_upload_documents_screen.dart';
 
 import '/app/routes/app_routes.dart';
 import '/app/routes/auth_refresh_listenable.dart';
@@ -34,8 +37,6 @@ final class AppRouter {
       final authState = sl<AuthBloc>().state;
 
       final isSplash = location == AppRoutes.splash;
-      final isLogin = location == AppRoutes.login;
-
       // ------------------------------------------------------------
       // 1. Session is unknown (App bootstrap / Splash)
       // ------------------------------------------------------------
@@ -47,70 +48,13 @@ final class AppRouter {
       // 2. Once bootstrap is complete, route away from splash
       // ------------------------------------------------------------
       if (isSplash) {
-        return authState.isAuthenticated
-            ? AppRoutes.home
-            : AppRoutes.login;
-      }
-
-      // ------------------------------------------------------------
-      // 3. Unauthenticated session
-      // ------------------------------------------------------------
-      if (authState.isUnauthenticated) {
-        final unauthenticatedRoutes = {
-          AppRoutes.selectRole,
-          AppRoutes.onboarding,
-          AppRoutes.login,
-          AppRoutes.signup,
-          AppRoutes.register,
-          AppRoutes.forgotPassword,
-          AppRoutes.resetPassword,
-          AppRoutes.verifyOtp,
-          AppRoutes.emailVerification,
-          AppRoutes.uploadDocuments,
-          AppRoutes.registrationFee,
-          AppRoutes.paymentSuccess,
-          AppRoutes.adminApproval,
-          AppRoutes.home,
-          AppRoutes.editProfile,
-          AppRoutes.changePassword,
-          AppRoutes.membershipPlans,
-          AppRoutes.privacyPolicy,
-          AppRoutes.termsAndConditions,
-          AppRoutes.contactUs,
-        };
-
-        // Allowed to access authentication & onboarding routes.
-        if (unauthenticatedRoutes.contains(location)) {
-          return null;
-        }
-
-        // All other routes require authentication.
-        return isLogin ? null : AppRoutes.login;
-      }
-
-      // ------------------------------------------------------------
-      // 4. Authenticated session
-      // ------------------------------------------------------------
-      if (authState.isAuthenticated) {
-        final authenticatedRedirectRoutes = {
-          AppRoutes.splash,
-          AppRoutes.selectRole,
-          AppRoutes.login,
-          AppRoutes.signup,
-          AppRoutes.register,
-          AppRoutes.onboarding,
-          AppRoutes.blocked,
-        };
-
-        // Fully authenticated users should redirect away from entry pages.
-        if (authenticatedRedirectRoutes.contains(location)) {
-          return AppRoutes.home;
-        }
+        return authState.isAuthenticated ? AppRoutes.home : AppRoutes.login;
       }
 
       // Current route is valid.
       return null;
     },
+    
     routes: [
       GoRoute(
         path: AppRoutes.splash,
@@ -121,8 +65,16 @@ final class AppRouter {
         builder: (context, state) => const SelectRoleScreen(),
       ),
       GoRoute(
-        path: AppRoutes.companyDetails,
-        builder: (context, state) => const CompanyDetailsScreen(),
+        path: AppRoutes.companyProfile,
+        builder: (context, state) => const CompanyCompleteProfileScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.bodyguardProfile,
+        builder: (context, state) => const BodyGuardCompleteProfileScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.bodyguardUploadDocuments,
+        builder: (context, state) => const BodyGuardUploadDocumentsScreen(),
       ),
       GoRoute(
         path: AppRoutes.login,
@@ -168,6 +120,18 @@ final class AppRouter {
       GoRoute(
         path: AppRoutes.editProfile,
         builder: (context, state) => const EditProfileScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.companyEditProfile,
+        builder: (context, state) => const CompanyEditProfileScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.companyInformation,
+        builder: (context, state) => const CompanyInformationScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.myBankDetails,
+        builder: (context, state) => const MyBankDetailsScreen(),
       ),
       GoRoute(
         path: AppRoutes.changePassword,

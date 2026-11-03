@@ -94,7 +94,7 @@ extension StringMaskingExtension on String {
   // =========================================================
 
   String get digitsOnly {
-    return replaceAll(AppRegex.numbersOnly, '');
+    return replaceAll(AppRegex.nonDigits, '');
   }
 
   String get reversed {
@@ -123,12 +123,32 @@ extension StringMaskingExtension on String {
     return substring(0, maxLength) + suffix;
   }
 
-  String initials({int limit = 2}) {
+  String getInitials({int charLength = 2}) {
     if (isBlank) return '';
+    if (charLength <= 0) return '';
 
-    final words = removeExtraSpaces().split(' ');
+    final words = removeExtraSpaces()
+        .split(' ')
+        .where((w) => w.isNotEmpty)
+        .toList();
+    if (words.isEmpty) return '';
 
-    return words.take(limit).map((e) => e[0].toUpperCase()).join();
+    if (words.length == 1) {
+      final word = words.first;
+      return word
+          .substring(0, word.length >= charLength ? charLength : word.length)
+          .toUpperCase();
+    }
+
+    if (words.length >= charLength) {
+      return words.take(charLength).map((w) => w[0].toUpperCase()).join();
+    }
+
+    return words.map((w) => w[0].toUpperCase()).join();
+  }
+
+  String initials({int limit = 2, int? charLength}) {
+    return getInitials(charLength: charLength ?? limit);
   }
 
   // =========================================================
@@ -194,7 +214,7 @@ extension StringMaskingExtension on String {
     required int showLast,
     required String maskChar,
   }) {
-    final digitsOnly = value.replaceAll(AppRegex.numbersOnly, '');
+    final digitsOnly = value.replaceAll(AppRegex.nonDigits, '');
 
     if (value.contains('@')) {
       return _maskEmail(value, visibleChars: showFirst, maskChar: maskChar);
@@ -258,7 +278,7 @@ extension StringMaskingExtension on String {
     required int showLast,
     required String maskChar,
   }) {
-    final digitsOnly = value.replaceAll(AppRegex.numbersOnly, '');
+    final digitsOnly = value.replaceAll(AppRegex.nonDigits, '');
 
     if (digitsOnly.length <= showLast) {
       return value;
@@ -336,4 +356,8 @@ extension NullableStringExtension on String? {
   bool get isUrl => this != null && this!.isUrl;
   bool get isNullOrBlank => this == null || this!.trim().isEmpty;
   bool get isNotNullOrBlank => this != null && this!.trim().isNotEmpty;
+  String getInitials({int charLength = 2}) =>
+      this?.getInitials(charLength: charLength) ?? '';
+  String initials({int limit = 2, int? charLength}) =>
+      this?.initials(limit: limit, charLength: charLength) ?? '';
 }

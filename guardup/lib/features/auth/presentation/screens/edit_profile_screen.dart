@@ -4,7 +4,6 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
@@ -19,6 +18,7 @@ import '/shared/widgets/inputs/app_media_picker_sheet.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/app_image.dart';
+import '/shared/widgets/sections/wrapper_card.dart';
 import '/shared/widgets/selection/app_selectable_chip.dart';
 import '/shared/widgets/selection/selection.controller.dart';
 
@@ -90,7 +90,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       backgroundColor: context.colors.transparent,
       appBar: AppAppBar.transparent(
         title: context.l10n.editProfileTitle,
-        centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: context.horizontalEdgeInsets,
@@ -101,14 +100,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             children: [
               AppSpacing.xl.h,
               // 1. Avatar Card with Camera Badge & Name
-              QuickContainer(
-                p: AppSpacing.lg,
-                radius: AppRadius.lg,
-                color: context.colors.surfaceContainer.withValues(alpha: 0.72),
-                border: Border.all(
-                  color: context.colors.outlineVariant,
-                  width: 1,
-                ),
+              WrapperCard(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -215,21 +207,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               AppSpacing.sm.h,
 
               // 3. Personal Information Form Fields Card
-              QuickContainer(
-                p: AppSpacing.lg,
-                radius: AppRadius.lg,
-                color: context.colors.surfaceContainer.withValues(alpha: 0.72),
-                border: Border.all(
-                  color: context.colors.outlineVariant,
-                  width: 1,
-                ),
+              WrapperCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Full Name Field
                     AppTextField(
                       controller: _nameController,
-                      hintText: context.l10n.fullName,
+                      decoration: InputDecoration(
+                        hintText: context.l10n.fullName,
+                      ),
                       keyboardType: TextInputType.name,
                       textCapitalization: TextCapitalization.words,
                       textInputAction: TextInputAction.next,
@@ -240,7 +227,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     // Email Address Field
                     AppTextField.email(
                       controller: _emailController,
-                      hintText: context.l10n.emailAddress,
+                      decoration: InputDecoration(
+                        hintText: context.l10n.emailAddress,
+                      ),
                       textInputAction: TextInputAction.next,
                       validator: (value) => Validators.email(context, value),
                     ),
@@ -249,7 +238,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     // Phone Number Field
                     AppTextField.phone(
                       controller: _phoneController,
-                      hintText: context.l10n.phoneNumber,
+                      decoration: InputDecoration(
+                        hintText: context.l10n.phoneNumber,
+                      ),
                       textInputAction: TextInputAction.done,
                       validator: (value) => Validators.phone(context, value),
                     ),

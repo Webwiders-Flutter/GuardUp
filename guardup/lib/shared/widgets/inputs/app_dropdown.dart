@@ -38,6 +38,8 @@ class AppDropdown<V> extends StatefulWidget {
   final String? hintText;
   final String? Function(String?)? validator;
   final Function(List<String> labels)? onItemTap;
+  final ValueChanged<V>? onSelected;
+  final bool? closeOnSelect;
   final Future<PaginationState<SelectableItem<V, String>>> Function({
     String? value,
     bool forceRefresh,
@@ -56,6 +58,8 @@ class AppDropdown<V> extends StatefulWidget {
     this.hintText,
     this.validator,
     this.onItemTap,
+    this.onSelected,
+    this.closeOnSelect,
     this.onLoad,
     this.dropdownItemChild,
     this.isSearchEnabled = false,
@@ -108,7 +112,7 @@ class _AppDropdownState<V> extends State<AppDropdown<V>> {
   void didUpdateWidget(covariant AppDropdown<V> oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (oldWidget.items != widget.items && entry == null) {
+    if (oldWidget.items != widget.items) {
       paginationController.updateState(
         paginationController.value.copyWith(
           items: widget.items,
@@ -142,13 +146,15 @@ class _AppDropdownState<V> extends State<AppDropdown<V>> {
           key: fieldKey,
           controller: TextEditingController(text: displayText),
           readOnly: true,
-          hintText: widget.hintText ?? context.l10n.companyType,
-          validator: widget.validator,
-          suffixIcon: Icon(
-            Icons.keyboard_arrow_down_rounded,
-            color: context.colors.onSurfaceVariant,
-            size: 22,
+          decoration: InputDecoration(
+            hintText: widget.hintText ?? context.l10n.companyType,
+            suffixIcon: Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: context.colors.onSurfaceVariant,
+              size: 22,
+            ),
           ),
+          validator: widget.validator,
         );
       },
     );
@@ -303,7 +309,9 @@ class _AppDropdownState<V> extends State<AppDropdown<V>> {
                             type: AppTextFieldType.search,
                             controller: searchController,
                             focusNode: searchFocusNode,
-                            hintText: context.l10n.searchItem,
+                            decoration: InputDecoration(
+                              hintText: context.l10n.searchItem,
+                            ),
                             onChanged: (val) async {
                               await _search(val);
                               setSheetState(() {});
@@ -435,7 +443,9 @@ class _AppDropdownState<V> extends State<AppDropdown<V>> {
                                 type: AppTextFieldType.search,
                                 controller: searchController,
                                 focusNode: searchFocusNode,
-                                hintText: context.l10n.searchItem,
+                                decoration: InputDecoration(
+                                  hintText: context.l10n.searchItem,
+                                ),
                                 onChanged: _search,
                               ),
                             ),
@@ -477,6 +487,16 @@ class _AppDropdownState<V> extends State<AppDropdown<V>> {
 
             return InkWell(
               onTap: () {
+                final shouldClose =
+                    widget.closeOnSelect ?? widget.controller.isSingleSelection;
+                if (shouldClose) {
+                  if (isSheet) {
+                    Navigator.of(context).pop();
+                  } else {
+                    _removeDropdown();
+                  }
+                }
+
                 widget.controller.toggle(item.id);
 
                 final labels = paginationController.value.items
@@ -485,14 +505,7 @@ class _AppDropdownState<V> extends State<AppDropdown<V>> {
                     .toList();
 
                 widget.onItemTap?.call(labels);
-
-                if (widget.controller.isSingleSelection) {
-                  if (isSheet) {
-                    Navigator.of(context).pop();
-                  } else {
-                    _removeDropdown();
-                  }
-                }
+                widget.onSelected?.call(item.id);
               },
               child: widget.dropdownItemChild?.call(isSelected) ??
                   QuickContainer(

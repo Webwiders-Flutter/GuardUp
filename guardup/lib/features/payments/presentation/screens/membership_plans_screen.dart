@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:guardup/app/routes/app_routes.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '/core/constants/app_radius.dart';
@@ -93,7 +94,7 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
           : 'Subscribed to ${selected.title} successfully!';
 
       AppSnackbar.success(message, context: context);
-      context.pop();
+      widget.mode == .booking ? context.go(AppRoutes.home) : context.pop();
     });
   }
 
@@ -173,7 +174,7 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
                               text:
                                   '\$${(widget.bookingAmount ?? 240.0).toStringAsFixed(2)}',
                               style: context.textTheme.bodyMedium
-                                  ?.bold()
+                                  ?.semiBold()
                                   .colour(context.colors.onSurface),
                             ),
                             AppTextSpan(
@@ -187,7 +188,7 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
                                   widget.operativeName ??
                                   'Operative Vikram Singh',
                               style: context.textTheme.bodyMedium
-                                  ?.bold()
+                                  ?.semiBold()
                                   .colour(context.colors.onSurface),
                             ),
                             AppTextSpan(
@@ -257,7 +258,6 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
                                         text: selectedPlan != null
                                             ? 'Apply ${selectedPlan.title}'
                                             : 'Apply Plan',
-                                        size: ButtonSize.large,
                                         trailing: const Icon(
                                           Icons.arrow_forward_rounded,
                                           size: 18,
@@ -271,9 +271,9 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
                                       flex: 4,
                                       child: AppButton(
                                         text: 'Skip',
-                                        size: ButtonSize.large,
                                         type: ButtonType.secondaryOff,
-                                        onPressed: () => context.pop(),
+                                        onPressed: () =>
+                                            context.go(AppRoutes.home),
                                       ),
                                     ),
                                   ],

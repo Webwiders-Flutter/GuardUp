@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:guardup/features/legal/legal.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
+import '/core/extensions/textstyle_extension.dart';
 import '/core/utils/validators.dart';
+import '/features/legal/legal.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
+import '/shared/widgets/misc/app_input_label.dart';
 import '/shared/widgets/sections/app_appbar.dart';
+import '/shared/widgets/sections/wrapper_card.dart';
 
 /// Screen allowing users to send inquiries or security dispatch messages.
 class ContactUsScreen extends StatelessWidget {
@@ -100,91 +102,137 @@ class _ContactUsViewState extends State<_ContactUsView> {
 
         return Scaffold(
           backgroundColor: context.colors.transparent,
-          appBar: const AppAppBar.transparent(
-            title: 'Contact Us',
-            centerTitle: true,
-          ),
+          appBar: AppAppBar.transparent(title: context.l10n.contactUs),
           body: SingleChildScrollView(
-            padding: context.screenPadding,
+            padding: context.horizontalEdgeInsets,
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  QuickContainer(
-                    p: AppSpacing.lg,
-                    radius: AppRadius.lg,
-                    color: context.colors.surfaceContainer.withValues(
-                      alpha: 0.72,
-                    ),
-                    border: Border.all(
-                      color: context.colors.outlineVariant,
-                      width: 1,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                  AppSpacing.xl.h,
+
+                  // 1. Upper Info Card
+                  WrapperCard(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        // Full Name
-                        AppTextField(
-                          controller: _nameController,
-                          hintText: context.l10n.fullName,
-                          textInputAction: TextInputAction.next,
-                          validator: (value) => Validators.name(context, value),
+                        QuickContainer(
+                          w: 48,
+                          h: 48,
+                          shape: QuickContainerShape.circle,
+                          color: context.colors.primaryContainer.withValues(
+                            alpha: 0.35,
+                          ),
+                          border: Border.all(
+                            color: context.colors.primary.withValues(
+                              alpha: 0.4,
+                            ),
+                            width: 1.5,
+                          ),
+                          alignment: Alignment.center,
+                          child: Icon(
+                            Icons.support_agent_rounded,
+                            color: context.colors.primary,
+                            size: 26,
+                          ),
                         ),
-                        AppSpacing.md.h,
-
-                        // Email Address
-                        AppTextField.email(
-                          controller: _emailController,
-                          hintText: context.l10n.emailAddress,
-                          textInputAction: TextInputAction.next,
-                          validator: (value) =>
-                              Validators.email(context, value),
-                        ),
-                        AppSpacing.md.h,
-
-                        // Phone Number
-                        AppTextField(
-                          controller: _phoneController,
-                          hintText: context.l10n.phoneNumber,
-                          keyboardType: TextInputType.phone,
-                          textInputAction: TextInputAction.next,
-                          validator: (value) =>
-                              Validators.phone(context, value),
-                        ),
-                        AppSpacing.md.h,
-
-                        // Message Field
-                        AppTextField(
-                          controller: _messageController,
-                          hintText: 'Enter your message...',
-                          maxLines: 4,
-                          minLines: 3,
-                          keyboardType: TextInputType.multiline,
-                          textInputAction: TextInputAction.newline,
-                          validator: (value) =>
-                              Validators.required(context, value),
+                        AppSpacing.md.w,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                context.l10n.contactUs,
+                                style: context.textTheme.titleMedium
+                                    ?.bold()
+                                    .colour(context.colors.onSurface),
+                              ),
+                              AppSpacing.xxs.h,
+                              Text(
+                                context.l10n.contactUsSubtitle,
+                                style: context.textTheme.bodySmall?.colour(
+                                  context.colors.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  AppSpacing.xl.h,
+                  AppSpacing.lg.h,
 
-                  // Submit Button
-                  AppButton(
-                    text: 'Send Message',
-                    size: ButtonSize.large,
-                    isLoading: isLoading,
-                    onPressed: isLoading ? null : _handleSubmit,
-                  ),
-                  AppSpacing.md.h,
+                  // 2. Form Card
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Full Name Field
+                      AppFieldLabel(
+                        text: context.l10n.fullName,
+                        isRequired: true,
+                      ),
+                      AppSpacing.xs.h,
+                      AppTextField(
+                        controller: _nameController,
+                        decoration: InputDecoration(
+                          hintText: context.l10n.fullName,
+                          fillColor: context.colors.onPrimary,
+                        ),
+                        style: TextStyle(color: context.colors.onSurface),
+                        textCapitalization: TextCapitalization.words,
+                        textInputAction: TextInputAction.next,
+                        validator: (value) => Validators.name(context, value),
+                      ),
+                      AppSpacing.lg.h,
 
-                  // Cancel Button
-                  AppButton(
-                    text: context.l10n.cancel,
-                    type: ButtonType.secondaryOff,
-                    size: ButtonSize.large,
-                    onPressed: () => context.pop(),
+                      // Email Field
+                      AppFieldLabel(text: context.l10n.email, isRequired: true),
+                      AppSpacing.xs.h,
+                      AppTextField.email(
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          hintText: context.l10n.email,
+                          fillColor: context.colors.onPrimary,
+                        ),
+                        style: TextStyle(color: context.colors.onSurface),
+                        textInputAction: TextInputAction.next,
+                        validator: (value) => Validators.email(context, value),
+                      ),
+                      AppSpacing.lg.h,
+
+                      // Message Field
+                      AppFieldLabel(
+                        text: context.l10n.message,
+                        isRequired: true,
+                      ),
+                      AppSpacing.xs.h,
+                      AppTextField(
+                        controller: _messageController,
+                        decoration: InputDecoration(
+                          hintText: context.l10n.messageHint,
+                          fillColor: context.colors.onPrimary,
+                        ),
+                        style: TextStyle(color: context.colors.onSurface),
+                        maxLines: 4,
+                        minLines: 3,
+                        keyboardType: TextInputType.multiline,
+                        textInputAction: TextInputAction.newline,
+                        validator: (value) =>
+                            Validators.required(context, value),
+                      ),
+                      AppSpacing.xl.h,
+
+                      // Submit Message Button
+                      AppButton(
+                        text: context.l10n.submitMessage,
+                        size: ButtonSize.large,
+                        isLoading: isLoading,
+                        onPressed: isLoading ? null : _handleSubmit,
+                      ),
+                    ],
                   ),
                   AppSpacing.xxl.h,
                 ],

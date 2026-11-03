@@ -9,6 +9,7 @@ import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/misc/app_rich_text.dart';
+import '/shared/widgets/sections/wrapper_card.dart';
 import '/shared/widgets/selection/selection.controller.dart';
 import '../../data/model/plan.model.dart';
 
@@ -78,32 +79,24 @@ class PlanSelectionCard extends StatelessWidget {
           child: Stack(
             children: [
               // 1. Base card container with outline / gold selection border
-              GestureDetector(
+              WrapperCard(
                 onTap: () {
                   controller.select(plan);
                   onTap?.call();
                 },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  decoration: BoxDecoration(
-                    borderRadius: cardRadius,
-                    color: context.colors.surfaceContainer.withValues(
-                      alpha: 0.72,
-                    ),
-                    border: Border.all(
-                      color: isSelected
-                          ? context.colors.primary
-                          : context.colors.outlineVariant,
-                      width: isSelected ? 1.5 : 1.2,
-                    ),
-                  ),
-                  padding: EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
-                    effectiveBadge != null ? AppSpacing.xl : AppSpacing.lg,
-                    AppSpacing.lg,
-                    AppSpacing.lg,
-                  ),
-                  child: Column(
+                border: Border.all(
+                  color: isSelected
+                      ? context.colors.primary
+                      : context.colors.outlineVariant,
+                  width: isSelected ? 1.5 : 1.2,
+                ),
+                padding: EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  effectiveBadge != null ? AppSpacing.xl : AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                ),
+                child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -265,7 +258,6 @@ class PlanSelectionCard extends StatelessWidget {
                     ],
                   ),
                 ),
-              ),
 
               // 2. Corner Ribbon Badge (e.g. ★ MOST POPULAR or ACTIVE PLAN)
               if (effectiveBadge != null)

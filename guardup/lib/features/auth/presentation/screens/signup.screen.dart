@@ -92,7 +92,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         // 3. Name Field
                         AppTextField(
                           controller: _nameController,
-                          hintText: context.l10n.name,
+                          decoration: InputDecoration(
+                            hintText: context.l10n.name,
+                          ),
                           keyboardType: TextInputType.name,
                           textCapitalization: TextCapitalization.words,
                           textInputAction: TextInputAction.next,
@@ -103,7 +105,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         // 4. Phone Number Field
                         AppTextField.phone(
                           controller: _phoneController,
-                          hintText: context.l10n.phoneNumber,
+                          decoration: InputDecoration(
+                            hintText: context.l10n.phoneNumber,
+                          ),
                           textInputAction: TextInputAction.next,
                           validator: (value) =>
                               Validators.phone(context, value),
@@ -113,7 +117,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         // 5. Email Address Field
                         AppTextField.email(
                           controller: _emailController,
-                          hintText: context.l10n.emailAddress,
+                          decoration: InputDecoration(
+                            hintText: context.l10n.emailAddress,
+                          ),
                           textInputAction: TextInputAction.next,
                           validator: (value) =>
                               Validators.email(context, value),
@@ -123,7 +129,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         // 6. Password Field
                         AppTextField.password(
                           controller: _passwordController,
-                          hintText: '••••••••••••',
+                          decoration: const InputDecoration(
+                            hintText: '••••••••••••',
+                          ),
                           textInputAction: TextInputAction.next,
                           validator: (value) =>
                               Validators.password(context, value),
@@ -133,7 +141,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         // 7. Confirm Password Field
                         AppTextField.password(
                           controller: _confirmPasswordController,
-                          hintText: '••••••••••••',
+                          decoration: const InputDecoration(
+                            hintText: '••••••••••••',
+                          ),
                           textInputAction: TextInputAction.done,
                           validator: (value) => Validators.confirmPassword(
                             context,

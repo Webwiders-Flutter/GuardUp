@@ -1,7 +1,6 @@
 import 'dart:io' as io;
 
 import 'package:flutter/material.dart';
-import 'package:guardup/shared/widgets/misc/app_input_label.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:quick_container/quick_container.dart';
 
@@ -12,17 +11,20 @@ import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/shared/widgets/feedbacks/widgets/app_file_preview.dart';
 import '../sections/app_image.dart';
+import '../sections/wrapper_card.dart';
 
 /// A sleek, dumb document upload card matching GuardUp dark luxury design standards.
 ///
 /// Behavior:
-/// - When no file is selected: shows document icon, title, optional description, and "Upload" button.
+/// - When no file is selected: shows document icon, title, optional REQ badge / (Optional) text
+///   or custom [iconWidget], optional description, and a "+" button or "Upload" button with icon.
 /// - When a file is selected: changes icon to a thumbnail/file badge, shows filename with green checkmark,
-///   "View" (preview) button, and "Change" action with icon.
+///   "View" / "Upload" button with icon, and "Change" action with icon.
+/// - If [description] is provided, the leading icon container and icon scale up to balance the two-line height.
 /// - Supports [selectedFilePath] (local file path) and [initialUrl] (remote file URL).
 /// - When [isLoading] is true, disables all interactions and shows a loading spinner.
 class DocumentUploadCard extends StatelessWidget {
-  /// The title of the document (e.g. "Additional Documents", "Transit Pass").
+  /// The title of the document (e.g. "Security License", "Certifications").
   final String title;
 
   /// Optional subtitle or guidance description.
@@ -37,8 +39,15 @@ class DocumentUploadCard extends StatelessWidget {
   /// Optional override for the displayed file name.
   final String? fileName;
 
-  /// Whether this document is required (renders a red asterisk *).
+  /// Whether this document is required (renders a red "REQ" badge). Defaults to `false`.
   final bool isRequired;
+
+  /// Whether this document is optional (renders "(Optional)" text). Defaults to `false`.
+  final bool isOptional;
+
+  /// Optional custom icon or widget displayed next to the title instead of
+  /// the "REQ" badge or "(Optional)" text.
+  final Widget? iconWidget;
 
   /// When true, disables clicks and renders a loading indicator.
   final bool isLoading;
@@ -46,7 +55,11 @@ class DocumentUploadCard extends StatelessWidget {
   /// When true, hides Change and Upload actions and only allows viewing/previewing the document.
   final bool isReadOnly;
 
-  /// Callback when user taps "Upload" or "Change".
+  /// Explicitly control whether to show the "Upload" button instead of "+".
+  /// If null, automatically shown when [onUpload] is provided.
+  final bool? showUploadButton;
+
+  /// Callback when user taps the "+" button, the card, or "Change".
   final VoidCallback? onPick;
 
   /// Callback when an upload action is triggered.
@@ -58,7 +71,7 @@ class DocumentUploadCard extends StatelessWidget {
   /// Optional custom leading icon when no file is selected.
   final Widget? icon;
 
-  /// Label for initial select button. Defaults to "Select".
+  /// Label for initial select button (kept for backwards compatibility).
   final String selectLabel;
 
   /// Label for upload button. Defaults to "Upload".
@@ -81,8 +94,11 @@ class DocumentUploadCard extends StatelessWidget {
     this.initialUrl,
     this.fileName,
     this.isRequired = false,
+    this.isOptional = false,
+    this.iconWidget,
     this.isLoading = false,
     this.isReadOnly = false,
+    this.showUploadButton,
     this.onPick,
     this.onUpload,
     this.onPreview,
@@ -92,7 +108,10 @@ class DocumentUploadCard extends StatelessWidget {
     this.changeLabel = 'Change',
     this.viewLabel = 'View',
     this.allowedExtensions = const ['pdf', 'jpg', 'jpeg', 'png'],
-  });
+  }) : assert(
+         !(isRequired && isOptional),
+         'Both isRequired and isOptional cannot be true simultaneously',
+       );
 
   bool get _hasFile =>
       (selectedFilePath != null && selectedFilePath!.trim().isNotEmpty) ||
@@ -111,8 +130,7 @@ class DocumentUploadCard extends StatelessWidget {
   }
 
   bool get _isImage {
-    final path = (selectedFilePath?? initialUrl ?? '')
-        .toLowerCase();
+    final path = (selectedFilePath ?? initialUrl ?? '').toLowerCase();
     return path.endsWith('.jpg') ||
         path.endsWith('.jpeg') ||
         path.endsWith('.png') ||
@@ -121,8 +139,7 @@ class DocumentUploadCard extends StatelessWidget {
   }
 
   bool get _isPdf {
-    final path = (selectedFilePath  ?? initialUrl ?? '')
-        .toLowerCase();
+    final path = (selectedFilePath ?? initialUrl ?? '').toLowerCase();
     return path.endsWith('.pdf');
   }
 
@@ -136,8 +153,8 @@ class DocumentUploadCard extends StatelessWidget {
 
     final resolvedFile =
         (selectedFilePath != null && selectedFilePath!.isNotEmpty
-            ? XFile(selectedFilePath!)
-            : null);
+        ? XFile(selectedFilePath!)
+        : null);
 
     AppFilePreviewSheet.show(
       context: context,
@@ -149,21 +166,22 @@ class DocumentUploadCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool hasDescription =
+        description != null && description!.trim().isNotEmpty;
+
+    final VoidCallback? tapCallback = isReadOnly && _hasFile
+        ? () => _handlePreview(context)
+        : (!_hasFile && !isReadOnly ? onPick : null);
+
     return IgnorePointer(
       ignoring: isLoading,
-      child: GestureDetector(
-        onTap: isReadOnly && _hasFile
-            ? () => _handlePreview(context)
-            : (!_hasFile && !isReadOnly ? onPick : null),
-        child: QuickContainer(
-        p: AppSpacing.lg,
-        radius: AppRadius.lg,
-        color: context.colors.surfaceContainer.withValues(alpha: 0.72),
-        border: Border.all(color: context.colors.outlineVariant, width: 1),
+      child: WrapperCard(
+        onTap: tapCallback,
+        padding: AppSpacing.lg.allPadding,
         child: Row(
           children: [
             // 1. Leading Icon / Thumbnail
-            _buildLeading(context),
+            _buildLeading(context, hasDescription),
             AppSpacing.md.w,
 
             // 2. Title & Status / Description
@@ -172,16 +190,11 @@ class DocumentUploadCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  AppFieldLabel(
-                    text: title,
-                    isRequired: isRequired,
-                    labelStyle: context.textTheme.bodyLarge?.decreaseSize(1),
-                  ),
+                  _buildTitleRow(context),
                   if (_hasFile) ...[
                     AppSpacing.xxs.h,
                     _buildFileStatusRow(context),
-                  ] else if (description != null &&
-                      description!.isNotEmpty) ...[
+                  ] else if (hasDescription) ...[
                     AppSpacing.xxs.h,
                     Text(
                       description!,
@@ -202,13 +215,80 @@ class DocumentUploadCard extends StatelessWidget {
           ],
         ),
       ),
-    ),
-  );
-}
+    );
+  }
+
+  /// Builds the title row with optional [iconWidget], "REQ" badge, or "(Optional)" label.
+  Widget _buildTitleRow(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(
+          child: Text(
+            title,
+            style: context.textTheme.bodyLarge
+                ?.decreaseSize(1)
+                .semiBold()
+                .colour(context.colors.onSurface),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        if (iconWidget != null) ...[
+          AppSpacing.xs.w,
+          iconWidget!,
+        ] else if (isRequired) ...[
+          AppSpacing.xs.w,
+          _buildRequiredBadge(context),
+        ] else if (isOptional) ...[
+          AppSpacing.xs.w,
+          _buildOptionalLabel(context),
+        ],
+      ],
+    );
+  }
+
+  /// Builds the red "REQ" badge as shown in the design.
+  Widget _buildRequiredBadge(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: context.colors.error.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(AppRadius.xs),
+        border: Border.all(
+          color: context.colors.error.withValues(alpha: 0.32),
+          width: 1,
+        ),
+      ),
+      child: Text(
+        'REQ',
+        style: context.textTheme.labelSmall?.bold().copyWith(
+          color: context.colors.error,
+          fontSize: 10,
+          letterSpacing: 0.5,
+          height: 1.1,
+        ),
+      ),
+    );
+  }
+
+  /// Builds the muted "(Optional)" label as shown in the design.
+  Widget _buildOptionalLabel(BuildContext context) {
+    return Text(
+      '(Optional)',
+      style: context.textTheme.labelSmall?.copyWith(
+        color: context.colors.onSurfaceVariant.withValues(alpha: 0.72),
+        fontSize: 11,
+        fontWeight: FontWeight.normal,
+      ),
+    );
+  }
 
   /// Builds the leading document icon, image thumbnail, or PDF badge.
-  Widget _buildLeading(BuildContext context) {
-    const size = 46.0;
+  /// If [hasDescription] is true, sizes scale up to visually align with two-line content.
+  Widget _buildLeading(BuildContext context, bool hasDescription) {
+    final double containerSize = hasDescription ? 52.0 : 44.0;
+    final double iconSize = hasDescription ? 28.0 : 22.0;
 
     if (_hasFile) {
       if (_isImage) {
@@ -217,9 +297,9 @@ class DocumentUploadCard extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(AppRadius.md),
             child: SizedBox(
-              width: size,
-              height: size,
-              child: _buildImageWidget(),
+              width: containerSize,
+              height: containerSize,
+              child: _buildImageWidget(containerSize),
             ),
           ),
         );
@@ -229,8 +309,8 @@ class DocumentUploadCard extends StatelessWidget {
         return GestureDetector(
           onTap: () => _handlePreview(context),
           child: QuickContainer(
-            w: size,
-            h: size,
+            w: containerSize,
+            h: containerSize,
             radius: AppRadius.md,
             color: context.colors.error.withValues(alpha: 0.12),
             border: Border.all(
@@ -241,7 +321,7 @@ class DocumentUploadCard extends StatelessWidget {
             child: Icon(
               Icons.picture_as_pdf_rounded,
               color: context.colors.error,
-              size: 24,
+              size: iconSize,
             ),
           ),
         );
@@ -250,8 +330,8 @@ class DocumentUploadCard extends StatelessWidget {
       return GestureDetector(
         onTap: () => _handlePreview(context),
         child: QuickContainer(
-          w: size,
-          h: size,
+          w: containerSize,
+          h: containerSize,
           radius: AppRadius.md,
           color: context.colors.primary.withValues(alpha: 0.12),
           border: Border.all(
@@ -262,76 +342,83 @@ class DocumentUploadCard extends StatelessWidget {
           child: Icon(
             Icons.insert_drive_file_rounded,
             color: context.colors.primary,
-            size: 24,
+            size: iconSize,
           ),
         ),
       );
     }
 
-    // Default unselected state: dark square with gold document icon
+    // Default unselected state: dark square with gold document/custom icon
     return QuickContainer(
-      w: size,
-      h: size,
+      w: containerSize,
+      h: containerSize,
       radius: AppRadius.md,
       color: context.colors.surfaceContainerHigh.withValues(alpha: 0.5),
       border: Border.all(
-        color: context.colors.outlineVariant.withValues(alpha: 0.5),
+        color: context.colors.outlineVariant.withValues(alpha: 0.6),
         width: 1,
       ),
       alignment: Alignment.center,
-      child:
-          icon ??
-          Icon(
-            Icons.description_outlined,
-            color: context.colors.primary,
-            size: 24,
-          ),
+      child: _buildLeadingIcon(context, hasDescription, iconSize),
     );
   }
 
-  Widget _buildImageWidget() {
+  Widget _buildLeadingIcon(
+    BuildContext context,
+    bool hasDescription,
+    double defaultSize,
+  ) {
+    if (icon == null) {
+      return Icon(
+        Icons.description_outlined,
+        color: context.colors.primary,
+        size: defaultSize,
+      );
+    }
+
+    if (icon is Icon) {
+      final original = icon as Icon;
+      final double targetSize = hasDescription
+          ? (original.size != null
+                ? (original.size! >= 26 ? original.size! : defaultSize)
+                : defaultSize)
+          : (original.size ?? defaultSize);
+
+      return Icon(
+        original.icon,
+        color: original.color ?? context.colors.primary,
+        size: targetSize,
+        semanticLabel: original.semanticLabel,
+        textDirection: original.textDirection,
+        shadows: original.shadows,
+      );
+    }
+
+    return IconTheme.merge(
+      data: IconThemeData(size: defaultSize, color: context.colors.primary),
+      child: icon!,
+    );
+  }
+
+  Widget _buildImageWidget(double size) {
     if (selectedFilePath != null && selectedFilePath!.isNotEmpty) {
       return AppImage.file(
         file: io.File(selectedFilePath!),
-        width: 46,
-        height: 46,
+        width: size,
+        height: size,
         fit: BoxFit.cover,
       );
     }
     if (initialUrl != null && initialUrl!.isNotEmpty) {
       return AppImage.network(
         imageUrl: initialUrl!,
-        width: 46,
-        height: 46,
+        width: size,
+        height: size,
         fit: BoxFit.cover,
       );
     }
-    return const Icon(Icons.image_outlined, size: 24);
+    return Icon(Icons.image_outlined, size: size * 0.5);
   }
-
-  // /// Builds the title row with optional red asterisk.
-  // Widget _buildTitleRow(BuildContext context) {
-  //   return RichText(
-  //     maxLines: 1,
-  //     overflow: TextOverflow.ellipsis,
-  //     text: TextSpan(
-  //       style: context.textTheme.titleSmall?.bold().colour(
-  //         context.colors.onSurface,
-  //       ),
-  //       children: [
-  //         TextSpan(text: title),
-  //         if (isRequired)
-  //           TextSpan(
-  //             text: ' *',
-  //             style: TextStyle(
-  //               color: context.colors.error,
-  //               fontWeight: FontWeight.bold,
-  //             ),
-  //           ),
-  //       ],
-  //     ),
-  //   );
-  // }
 
   /// Builds the filename with green checkmark when a file is selected.
   Widget _buildFileStatusRow(BuildContext context) {
@@ -347,9 +434,7 @@ class DocumentUploadCard extends StatelessWidget {
         Flexible(
           child: Text(
             _resolvedFileName,
-            style: context.textTheme.bodySmall?.bold().colour(
-              context.colors.success,
-            ),
+            style: context.textTheme.bodySmall?.colour(context.colors.success),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -358,7 +443,8 @@ class DocumentUploadCard extends StatelessWidget {
     );
   }
 
-  /// Builds the right-side action (Select pill, View/Upload + Change actions, or loading spinner).
+  /// Builds the right-side action ("+" button, "Upload" button with icon,
+  /// "View" button with icon, or loading spinner).
   Widget _buildTrailingActions(BuildContext context) {
     if (isLoading) {
       return SizedBox(
@@ -371,37 +457,21 @@ class DocumentUploadCard extends StatelessWidget {
       );
     }
 
-    if (_hasFile) {
-      final bool showUploadButton = !isReadOnly && onUpload != null;
-      final String actionButtonLabel =
-          showUploadButton ? uploadLabel : viewLabel;
-      final VoidCallback? actionCallback =
-          showUploadButton ? onUpload : () => _handlePreview(context);
+    if (isReadOnly && !_hasFile) {
+      return const SizedBox.shrink();
+    }
 
+    if (_hasFile) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Action Button: "Upload" if onUpload provided; "View" otherwise or in read-only
-          GestureDetector(
-            onTap: actionCallback,
-            child: QuickContainer(
-              px: 16,
-              py: 5,
-              radius: AppRadius.round,
-              color: const Color(0xFF0F2922),
-              border: Border.all(color: const Color(0xFF16654C), width: 1),
-              alignment: Alignment.center,
-              child: Text(
-                actionButtonLabel,
-                style: context.textTheme.labelMedium?.bold().colour(
-                  const Color(0xFF22C55E),
-                ),
-              ),
-            ),
+          _buildActionButton(
+            context: context,
+            label: viewLabel,
+            icon: Icons.visibility_outlined,
+            onTap: () => _handlePreview(context),
           ),
-
-          // "Change" Action Link (hidden if read-only)
           if (!isReadOnly) ...[
             AppSpacing.xxs.h,
             GestureDetector(
@@ -409,17 +479,17 @@ class DocumentUploadCard extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.crop_free_rounded,
-                    size: 14,
-                    color: context.colors.onSurface,
-                  ),
-                  AppSpacing.sm.w,
                   Text(
                     changeLabel,
                     style: context.textTheme.labelMedium?.semiBold().colour(
-                      context.colors.onSurface,
+                      context.colors.onSurfaceVariant,
                     ),
+                  ),
+                  AppSpacing.xs.w,
+                  Icon(
+                    Icons.change_circle,
+                    size: 14,
+                    color: context.colors.onSurfaceVariant,
                   ),
                 ],
               ),
@@ -430,27 +500,63 @@ class DocumentUploadCard extends StatelessWidget {
     }
 
     // When no file is selected:
-    // If read-only, hide actions completely
-    if (isReadOnly) {
-      return const SizedBox.shrink();
-    }
+    // If showUploadButton is true or onUpload is provided, render "Upload" button with icon
 
-    // Default "Select" pill button
+    // Default "+" action button
+    return _buildAddButton(context);
+  }
+
+  /// Action button with outline border, leading icon, and gold text (used for "Upload" and "View").
+  Widget _buildActionButton({
+    required BuildContext context,
+    required String label,
+    required IconData icon,
+    required VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: QuickContainer(
+        px: 14,
+        py: 8,
+        radius: AppRadius.md,
+        color: context.colors.surfaceContainerHigh.withValues(alpha: 0.4),
+        border: Border.all(
+          color: context.colors.primary.withValues(alpha: 0.45),
+          width: 1,
+        ),
+        alignment: Alignment.center,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: context.colors.primary),
+            AppSpacing.xs.w,
+            Text(
+              label,
+              style: context.textTheme.labelMedium?.bold().colour(
+                context.colors.primary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Modern "+" action button used when no file is selected.
+  Widget _buildAddButton(BuildContext context) {
     return GestureDetector(
       onTap: onPick,
       child: QuickContainer(
-        px: 18,
-        py: 8,
-        radius: AppRadius.round,
-        color: const Color(0xFF0F2922),
-        border: Border.all(color: const Color(0xFF16654C), width: 1),
-        alignment: Alignment.center,
-        child: Text(
-          selectLabel,
-          style: context.textTheme.labelMedium?.bold().colour(
-            const Color(0xFF22C55E),
-          ),
+        w: 42,
+        h: 42,
+        radius: AppRadius.md,
+        color: context.colors.surfaceContainerHigh.withValues(alpha: 0.4),
+        border: Border.all(
+          color: context.colors.outlineVariant.withValues(alpha: 0.7),
+          width: 1,
         ),
+        alignment: Alignment.center,
+        child: Icon(Icons.add_rounded, color: context.colors.primary, size: 22),
       ),
     );
   }

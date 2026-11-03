@@ -91,7 +91,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         // 4. Email Field (Uses default theme styling)
                         AppTextField.email(
                           controller: _emailController,
-                          hintText: context.l10n.emailAddress,
+                          decoration: InputDecoration(
+                            hintText: context.l10n.emailAddress,
+                          ),
                           textInputAction: TextInputAction.done,
                           validator: (value) =>
                               Validators.email(context, value),

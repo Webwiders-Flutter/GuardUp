@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '/core/constants/app_spacing.dart';
+import '/core/extensions/context.extension.dart';
+import '/core/extensions/textstyle_extension.dart';
 import '/shared/widgets/buttons/back_button.dart';
 
-import '../../../core/extensions/context.extension.dart';
+/// Alignment options for the app bar title text.
+enum AlignTitle { left, right, center }
 
 class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? title;
@@ -21,7 +25,7 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
   final List<Widget>? actions;
   final PreferredSizeWidget? bottom;
 
-  final bool centerTitle;
+  final AlignTitle align;
   final bool automaticallyImplyLeading;
 
   final double height;
@@ -47,13 +51,14 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.onNotificationTap,
     this.notificationIcon = Icons.notifications_outlined,
     this.notificationIconColor = Colors.white,
-    this.centerTitle = true,
+    AlignTitle? alignTitle,
     this.automaticallyImplyLeading = false,
     this.height = kToolbarHeight,
     this.elevation = 0,
     this.backgroundColor,
     this.foregroundColor,
-  }) : _isTransparent = false;
+  }) : align = alignTitle ?? AlignTitle.right,
+       _isTransparent = false;
 
   factory AppAppBar.primary({
     required String title,
@@ -66,6 +71,7 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
     VoidCallback? onNotificationTap,
     IconData notificationIcon = Icons.notifications_outlined,
     Color? notificationIconColor = Colors.white,
+    AlignTitle? alignTitle,
   }) {
     return AppAppBar(
       title: title,
@@ -78,6 +84,7 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
       onNotificationTap: onNotificationTap,
       notificationIcon: notificationIcon,
       notificationIconColor: notificationIconColor,
+      alignTitle: alignTitle,
     );
   }
 
@@ -95,12 +102,13 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.onNotificationTap,
     this.notificationIcon = Icons.notifications_outlined,
     this.notificationIconColor = Colors.white,
-    this.centerTitle = true,
+    AlignTitle? alignTitle,
     this.automaticallyImplyLeading = false,
     this.height = kToolbarHeight,
     this.foregroundColor,
     this.titleWidget,
-  }) : backgroundColor = null,
+  }) : align = alignTitle ?? AlignTitle.right,
+       backgroundColor = null,
        elevation = 0,
        _isTransparent = true;
 
@@ -108,11 +116,31 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    final titleNode =
+        titleWidget ??
+        (title != null
+            ? Text(
+                title!,
+                style:
+                    (context.textTheme.titleMedium?.bold() ??
+                            context.textTheme.titleLarge ??
+                            const TextStyle())
+                        .semiBold()
+                        .copyWith(
+                          fontSize: fontSize,
+                          color:
+                              foregroundColor ??
+                              (theme.appBarTheme.foregroundColor ??
+                                  context.colors.onSurface),
+                        ),
+              )
+            : null);
+
     return AppBar(
       toolbarHeight: height,
       elevation: elevation,
       scrolledUnderElevation: 0,
-      centerTitle: centerTitle,
+      centerTitle: align == AlignTitle.center,
       automaticallyImplyLeading: automaticallyImplyLeading,
       backgroundColor: _isTransparent
           ? context.colors.transparent
@@ -140,30 +168,21 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
         return shouldShowBack ? BackIcon(onTap: onBackTap) : null;
       }(),
       actions: [
+        if (align == AlignTitle.right && titleNode != null)
+          Padding(
+            padding: EdgeInsets.only(
+              right: (actions == null || actions!.isEmpty)
+                  ? AppSpacing.md
+                  : AppSpacing.sm,
+            ),
+            child: Center(child: titleNode),
+          ),
         ...?actions,
-        if (showNotificationIcon) Icon(Icons.notifications_active_outlined),
-        // NotificationIconWidget(
-        //   icon: notificationIcon,
-        //   iconColor: notificationIconColor ?? theme.colorScheme.surface,
-        //   onTap:
-        //       onNotificationTap ??
-        //       () {
-        //         context.push(AppRoutes.notifications);
-        //       },
-        // ),
+        if (showNotificationIcon)
+          const Icon(Icons.notifications_active_outlined),
       ],
       bottom: bottom,
-      title:
-          titleWidget ??
-          (title != null
-              ? Text(
-                  title!,
-                  style: context.textTheme.titleLarge?.copyWith(
-                    fontSize: fontSize,
-                    color: foregroundColor ?? theme.appBarTheme.foregroundColor,
-                  ),
-                )
-              : null),
+      title: align == AlignTitle.right ? null : titleNode,
     );
   }
 

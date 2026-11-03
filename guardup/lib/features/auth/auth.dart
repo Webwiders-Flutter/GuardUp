@@ -8,7 +8,6 @@ export 'data/enum/user_role.enum.dart';
 export 'data/model/user.model.dart';
 export 'domain/repositories/auth_repository.dart';
 export 'domain/repositories/user_repository.dart';
-export '../company/presentation/screens/admin_approval_screen.dart';
 export 'presentation/screens/change_password_screen.dart';
 export 'presentation/screens/edit_profile_screen.dart';
 export 'presentation/screens/email_verification.screen.dart';

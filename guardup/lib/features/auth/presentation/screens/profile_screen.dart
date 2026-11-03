@@ -1,146 +1,237 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '/app/routes/app_routes.dart';
-import '/core/di/injection_container.dart';
-import '/features/auth/bloc/auth_bloc.dart';
-import '/features/auth/bloc/auth_event.dart';
-import '/features/payments/payments.dart';
-import '/shared/widgets/feedbacks/widgets/app_popup.dart';
-
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
+import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/number.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
+import '/features/auth/bloc/auth_bloc.dart';
+import '/features/auth/bloc/auth_event.dart';
+import '/features/auth/bloc/auth_state.dart';
+import '/features/payments/payments.dart';
 import '/gen/assets.gen.dart';
+import '/shared/widgets/feedbacks/widgets/app_popup.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/app_image.dart';
+import '/shared/widgets/sections/wrapper_card.dart';
+import '../../data/enum/user_role.enum.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
+  String _getAppBarTitle(BuildContext context, UserRole role) {
+    switch (role) {
+      case UserRole.guard:
+        return context.l10n.bodyguardProfile;
+      case UserRole.company:
+        return context.l10n.companyProfile;
+      case UserRole.customer:
+        return context.l10n.customerProfile;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.colors.transparent,
-      appBar: AppAppBar.transparent(
-        title: context.l10n.customerProfile,
-        centerTitle: false,
-        actions: [
-          QuickContainer(
-            w: 38,
-            h: 38,
-            shape: QuickContainerShape.circle,
-            color: context.colors.surfaceContainer.withValues(alpha: 0.85),
-            border: Border.all(color: context.colors.outlineVariant, width: 1),
-            alignment: Alignment.center,
-            mr: AppSpacing.lg,
-            child: Assets.svg.profileCircle.svg(
-              width: 24,
-              height: 24,
-              colorFilter: ColorFilter.mode(
-                context.colors.primary,
-                BlendMode.srcIn,
+    return BlocBuilder<AuthBloc, AuthState>(
+      bloc: sl<AuthBloc>(),
+      builder: (context, state) {
+        final role = state.sessionRole ?? UserRole.customer;
+
+        return Scaffold(
+          backgroundColor: context.colors.transparent,
+          appBar: AppAppBar.transparent(
+            title: _getAppBarTitle(context, role),
+            alignTitle: .left,
+            actions: [
+              QuickContainer(
+                w: 38,
+                h: 38,
+                shape: QuickContainerShape.circle,
+                color: context.colors.surfaceContainer.withValues(alpha: 0.85),
+                border: Border.all(
+                  color: context.colors.outlineVariant,
+                  width: 1,
+                ),
+                alignment: Alignment.center,
+                mr: AppSpacing.lg,
+                child: Assets.svg.profileCircle.svg(
+                  width: 24,
+                  height: 24,
+                  colorFilter: .mode(context.colors.primary, .srcIn),
+                ),
               ),
+            ],
+          ),
+          body: SingleChildScrollView(
+            padding: context.horizontalEdgeInsets,
+            child: Column(
+              children: [
+                // 1. Profile Header Card
+                _ProfileCard(
+                  name: 'Michael Carter',
+                  specialization: 'Licensed armed, Corporate visits',
+                  rating: 4.8,
+                  location: 'Toronto, ON',
+                  hourlyRate: 60,
+                  avatarAssetPath: Assets.images.profilePicture.path,
+                  isVerified: true,
+                  onTap: () {
+                    switch (role) {
+                      case .company:
+                        context.push(AppRoutes.companyInformation);
+                      default:
+                    }
+                  },
+                ),
+                AppSpacing.xl.h,
+
+                // 2. Edit Profile Menu Card
+                if (role != .guard)
+                  _ProfileMenuCard(
+                    title: context.l10n.editProfile,
+                    icon: Icons.person_outline_rounded,
+                    onTap: () {
+                      switch (role) {
+                        case UserRole.customer:
+                          context.push(AppRoutes.editProfile);
+                          break;
+                        case UserRole.company:
+                          context.push(AppRoutes.companyEditProfile);
+                          break;
+                        default:
+                      }
+                    },
+                  ),
+
+                // 3. Role-Specific Menu Cards
+                if (role == UserRole.guard) ...[
+                  _ProfileMenuCard(
+                    title: context.l10n.myWallet,
+                    icon: Icons.account_balance_wallet_outlined,
+                    onTap: () {},
+                  ),
+                  _ProfileMenuCard(
+                    title: context.l10n.myBankDetails,
+                    icon: Icons.account_balance_outlined,
+                    onTap: () {
+                      context.push(AppRoutes.myBankDetails);
+                    },
+                  ),
+                  _ProfileMenuCard(
+                    title: context.l10n.reviewAndRatings,
+                    icon: Icons.star_outline_rounded,
+                    onTap: () {},
+                  ),
+                ] else if (role == UserRole.company) ...[
+                  _ProfileMenuCard(
+                    title: context.l10n.myWallet,
+                    icon: Icons.account_balance_wallet_outlined,
+                    onTap: () {},
+                  ),
+                  _ProfileMenuCard(
+                    title: context.l10n.myBank,
+                    icon: Icons.account_balance_outlined,
+                    onTap: () {
+                      context.push(AppRoutes.myBankDetails);
+                    },
+                  ),
+                  _ProfileMenuCard(
+                    title: context.l10n.businessDocuments,
+                    icon: Icons.folder_shared_outlined,
+                    onTap: () {
+                      context.push(AppRoutes.uploadDocuments);
+                    },
+                  ),
+                ],
+
+                // 4. Common Action Cards
+                _ProfileMenuCard(
+                  title: context.l10n.changePassword,
+                  icon: Icons.lock_outline_rounded,
+                  onTap: () {
+                    context.push(AppRoutes.changePassword);
+                  },
+                ),
+                if (role == .customer)
+                  _ProfileMenuCard(
+                    title: context.l10n.membershipPlan,
+                    icon: Icons.workspace_premium_outlined,
+                    onTap: () {
+                      context.push(
+                        AppRoutes.membershipPlans,
+                        extra: (
+                          mode: MembershipPlanMode.profile,
+                          bookingAmount: 240.0,
+                          operativeName: 'Operative Vikram Singh',
+                          activePlanId: 'gold_sentinel',
+                        ),
+                      );
+                    },
+                  ),
+                _ProfileMenuCard(
+                  title: context.l10n.privacyPolicy,
+                  icon: Icons.privacy_tip_outlined,
+                  onTap: () {
+                    context.push(AppRoutes.privacyPolicy);
+                  },
+                ),
+                _ProfileMenuCard(
+                  title: context.l10n.termsAndConditions,
+                  icon: Icons.article_outlined,
+                  onTap: () {
+                    context.push(AppRoutes.termsAndConditions);
+                  },
+                ),
+                _ProfileMenuCard(
+                  title: context.l10n.support,
+                  icon: Icons.headset_mic_outlined,
+                  onTap: () {
+                    context.push(AppRoutes.contactUs);
+                  },
+                ),
+                _ProfileMenuCard(
+                  title: context.l10n.logOut.toUpperCase(),
+                  textColor: context.colors.error,
+                  icon: Icons.logout_rounded,
+                  onTap: () async {
+                    final result = await AppPopup.showLogoutConfirmation(
+                      context,
+                    );
+                    if (result?.action == PopupAction.confirm &&
+                        context.mounted) {
+                      sl<AuthBloc>().add(const AuthSignOutRequested());
+                      context.go(AppRoutes.login);
+                    }
+                  },
+                ),
+                _ProfileMenuCard(
+                  title: context.l10n.deleteAccount,
+                  textColor: context.colors.error,
+                  icon: Icons.delete_forever_rounded,
+                  onTap: () async {
+                    final result = await AppPopup.showDeleteAccountConfirmation(
+                      context,
+                    );
+                    if (result?.action == PopupAction.confirm &&
+                        context.mounted) {
+                      sl<AuthBloc>().add(const AuthSignOutRequested());
+                      context.go(AppRoutes.login);
+                    }
+                  },
+                ),
+                AppSpacing.xxl.h,
+              ],
             ),
           ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: context.screenPadding,
-        child: Column(
-          children: [
-            // 1. Profile Header Card
-            _ProfileCard(
-              name: 'Michael Carter',
-              specialization: 'Licensed armed, Corporate visits',
-              rating: 4.8,
-              location: 'Toronto, ON',
-              hourlyRate: 60,
-              avatarAssetPath: Assets.images.profilePicture.path,
-              isVerified: true,
-            ),
-            AppSpacing.xl.h,
-
-            // 2. Menu Action Cards
-            _ProfileMenuCard(
-              title: context.l10n.editProfile,
-              onTap: () {
-                context.push(AppRoutes.editProfile);
-              },
-            ),
-            _ProfileMenuCard(
-              title: context.l10n.changePassword,
-              onTap: () {
-                context.push(AppRoutes.changePassword);
-              },
-            ),
-            _ProfileMenuCard(
-              title: context.l10n.membershipPlan,
-              onTap: () {
-                context.push(
-                  AppRoutes.membershipPlans,
-                  extra: (
-                    mode: MembershipPlanMode.booking,
-                    bookingAmount: 240.0,
-                    operativeName: 'Operative Vikram Singh',
-                    activePlanId: 'gold_sentinel',
-                  ),
-                );
-              },
-            ),
-            _ProfileMenuCard(
-              title: context.l10n.privacyPolicy,
-              onTap: () {
-                context.push(AppRoutes.privacyPolicy);
-              },
-            ),
-            _ProfileMenuCard(
-              title: context.l10n.termsAndConditions,
-              onTap: () {
-                context.push(AppRoutes.termsAndConditions);
-              },
-            ),
-            _ProfileMenuCard(
-              title: context.l10n.support,
-              onTap: () {
-                context.push(AppRoutes.contactUs);
-              },
-            ),
-            _ProfileMenuCard(
-              title: context.l10n.logOut.toUpperCase(),
-              textColor: context.colors.error,
-              icon: Icons.logout_rounded,
-              onTap: () async {
-                final result = await AppPopup.showLogoutConfirmation(context);
-                if (result?.action == PopupAction.confirm && context.mounted) {
-                  sl<AuthBloc>().add(const AuthSignOutRequested());
-                  context.go(AppRoutes.login);
-                }
-              },
-            ),
-            _ProfileMenuCard(
-              title: context.l10n.deleteAccount,
-              textColor: context.colors.error,
-              icon: Icons.delete_forever_rounded,
-              onTap: () async {
-                final result = await AppPopup.showDeleteAccountConfirmation(
-                  context,
-                );
-                if (result?.action == PopupAction.confirm && context.mounted) {
-                  sl<AuthBloc>().add(const AuthSignOutRequested());
-                  context.go(AppRoutes.login);
-                }
-              },
-            ),
-            AppSpacing.xxl.h,
-          ],
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -154,6 +245,7 @@ class _ProfileCard extends StatelessWidget {
   final num hourlyRate;
   final String avatarAssetPath;
   final bool isVerified;
+  final VoidCallback? onTap;
 
   const _ProfileCard({
     required this.name,
@@ -162,16 +254,15 @@ class _ProfileCard extends StatelessWidget {
     required this.location,
     required this.hourlyRate,
     required this.avatarAssetPath,
+    required this.onTap,
     this.isVerified = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    return QuickContainer(
-      p: AppSpacing.xlg,
-      color: context.colors.onPrimary,
-      radius: AppRadius.lg,
-      border: Border.all(color: context.colors.outlineVariant, width: 1),
+    return WrapperCard(
+      onTap: onTap,
+      padding: AppSpacing.xlg.allPadding,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -312,15 +403,13 @@ class _ProfileMenuCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return QuickContainer(
-      mb: AppSpacing.lg,
-      px: AppSpacing.lg,
-      py: AppSpacing.xl,
-      color: context.colors.surfaceContainer.withValues(alpha: 0.72),
-      radius: AppRadius.lg,
-      border: Border.all(color: context.colors.outlineVariant, width: 1),
+    return WrapperCard(
+      margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.xl,
+      ),
       onTap: onTap,
-      ripple: true,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

@@ -166,7 +166,7 @@ class AppButton extends StatelessWidget {
       ButtonType.secondaryOff: (
         background: colors.surface,
         foreground: colors.onSurfaceVariant,
-        border: BorderSide(color: colors.onSurfaceVariant),
+        border: BorderSide.none,
         elevation: 0,
       ),
       ButtonType.text: (

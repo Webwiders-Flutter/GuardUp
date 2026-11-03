@@ -95,7 +95,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         // 3. Email / Phone Field
                         AppTextField.email(
                           controller: _emailController,
-                          hintText: context.l10n.emailAddress,
+                          decoration: InputDecoration(
+                            hintText: context.l10n.emailAddress,
+                          ),
                           textInputAction: TextInputAction.next,
                           validator: (value) =>
                               Validators.email(context, value),
@@ -105,7 +107,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         // 4. Password Field
                         AppTextField.password(
                           controller: _passwordController,
-                          hintText: '••••••••••••',
+                          decoration: const InputDecoration(
+                            hintText: '••••••••••••',
+                          ),
                           textInputAction: TextInputAction.done,
                           validator: (value) =>
                               Validators.password(context, value),

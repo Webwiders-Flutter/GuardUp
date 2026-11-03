@@ -11,6 +11,7 @@ final class AppRegex {
   );
 
   static final numbersOnly = RegExp(r'^\d+$');
+  static final nonDigits = RegExp(r'\D');
 
   static final username = RegExp(r'^[a-zA-Z0-9_]{3,20}$');
   static final fullName = RegExp(r'^[a-zA-Z ]+$');

@@ -12,6 +12,7 @@ import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/shared/widgets/misc/app_rich_text.dart';
 import '/shared/widgets/sections/app_appbar.dart';
+import '/shared/widgets/sections/wrapper_card.dart';
 import '../../bloc/legal_content/legal_content_bloc.dart';
 import '../../bloc/legal_content/legal_content_event.dart';
 import '../../bloc/legal_content/legal_content_state.dart';
@@ -45,7 +46,6 @@ class _LegalContentView extends StatelessWidget {
       backgroundColor: context.colors.transparent,
       appBar: AppAppBar.transparent(
         title: type.label(context.l10n),
-        centerTitle: true,
       ),
       body: BlocBuilder<LegalContentBloc, LegalContentState>(
         builder: (context, state) {
@@ -104,14 +104,7 @@ class _LegalContentView extends StatelessWidget {
             enabled: isLoading,
             child: SingleChildScrollView(
               padding: context.screenPadding,
-              child: QuickContainer(
-                p: AppSpacing.lg,
-                radius: AppRadius.lg,
-                color: context.colors.surfaceContainer.withValues(alpha: 0.72),
-                border: Border.all(
-                  color: context.colors.outlineVariant,
-                  width: 1,
-                ),
+              child: WrapperCard(
                 child: Html(
                   data: data.contentHtml,
                   style: {

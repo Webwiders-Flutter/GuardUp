@@ -106,16 +106,15 @@ class _NotFoundScreenState extends State<NotFoundScreen>
                   QuickContainer(
                     px: AppSpacing.lg,
                     py: AppSpacing.sm - 2,
-                    color: colors.secondary.withValues(alpha: 0.12),
+                    color: colors.primary.withValues(alpha: 0.12),
                     radius: AppRadius.full,
                     border: Border.all(
-                      color: colors.secondary.withValues(alpha: 0.35),
+                      color: colors.primary.withValues(alpha: 0.35),
                     ),
                     child: Text(
                       'Error 404',
                       style: context.textTheme.labelMedium
                           ?.medium()
-                          .colour(colors.secondary)
                           .textSpacing(1.2),
                     ),
                   ),

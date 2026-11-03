@@ -61,7 +61,13 @@ class WrapperCard extends StatelessWidget {
   /// Border thickness. Defaults to 1.0.
   final double? borderWidth;
 
-  /// Corner radius of the card. Defaults to [AppRadius.xxl].
+  /// Custom border override. If provided, overrides [borderColor] and [borderWidth].
+  final BoxBorder? border;
+
+  /// Optional background gradient override.
+  final Gradient? gradient;
+
+  /// Corner radius of the card. Defaults to [AppRadius.lg].
   final double? borderRadius;
 
   /// Background color behind header icon.
@@ -72,6 +78,15 @@ class WrapperCard extends StatelessWidget {
 
   /// Shadows or glow applied to the card.
   final List<BoxShadow>? shadows;
+
+  /// Optional callback when the whole card is tapped.
+  final VoidCallback? onTap;
+
+  /// Whether to show a touch ripple when [onTap] is provided. Defaults to `true`.
+  final bool ripple;
+
+  /// External margin around the card container.
+  final EdgeInsetsGeometry? margin;
 
   /// Card width. Defaults to `double.infinity`.
   final double? width;
@@ -107,10 +122,15 @@ class WrapperCard extends StatelessWidget {
     this.backgroundColor,
     this.borderColor,
     this.borderWidth,
+    this.border,
+    this.gradient,
     this.borderRadius,
     this.iconBackgroundColor,
     this.iconColor,
     this.shadows,
+    this.onTap,
+    this.ripple = true,
+    this.margin,
     this.width = double.infinity,
     this.height,
     this.crossAxisAlignment = CrossAxisAlignment.stretch,
@@ -241,31 +261,30 @@ class WrapperCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveBgColor = backgroundColor ?? context.colors.surfaceContainer;
-    final effectiveBorderColor = borderColor ?? context.colors.outlineVariant;
-    final effectiveBorderWidth = borderWidth ?? 1.0;
-    final effectiveRadius = borderRadius ?? AppRadius.xxl;
-    final effectivePadding =
-        padding ??
-        EdgeInsets.symmetric(
-          horizontal: AppSpacing.xl,
-          vertical: AppSpacing.xxl,
+    final effectiveBgColor =
+        backgroundColor ?? context.colors.surface.withValues(alpha: 0.9);
+    final effectiveBorder = border ??
+        Border.all(
+          color: borderColor ?? context.colors.outlineVariant,
+          width: borderWidth ?? 1.0,
         );
+    final effectiveRadius = borderRadius ?? AppRadius.lg;
+    final effectivePadding = padding ?? AppSpacing.lg.allPadding;
     final effectiveHeaderSpacing = headerSpacing ?? AppSpacing.md;
 
     final header = _buildHeader(context);
 
-    return QuickContainer(
+    final Widget card = QuickContainer(
       w: width,
       h: height,
-      color: effectiveBgColor,
+      color: gradient != null ? null : effectiveBgColor,
+      gradient: gradient,
       radius: effectiveRadius,
       p: 0,
-      border: Border.all(
-        color: effectiveBorderColor,
-        width: effectiveBorderWidth,
-      ),
+      border: effectiveBorder,
       shadows: shadows,
+      onTap: onTap,
+      ripple: onTap != null && ripple,
       child: Padding(
         padding: effectivePadding,
         child: Column(
@@ -290,5 +309,11 @@ class WrapperCard extends StatelessWidget {
         ),
       ),
     );
+
+    if (margin != null) {
+      return Padding(padding: margin!, child: card);
+    }
+
+    return card;
   }
 }

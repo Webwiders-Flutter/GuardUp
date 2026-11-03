@@ -56,7 +56,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       backgroundColor: context.colors.transparent,
       appBar: AppAppBar.transparent(
         title: context.l10n.changePasswordTitle,
-        centerTitle: true,
       ),
       body: SafeArea(
         child: LayoutBuilder(
@@ -76,7 +75,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         // 1. Old Password Field
                         AppTextField.password(
                           controller: _oldPasswordController,
-                          hintText: context.l10n.oldPassword,
+                          decoration: InputDecoration(
+                            hintText: context.l10n.oldPassword,
+                          ),
                           textInputAction: TextInputAction.next,
                           validator: (value) =>
                               Validators.password(context, value),
@@ -86,7 +87,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         // 2. New Password Field
                         AppTextField.password(
                           controller: _newPasswordController,
-                          hintText: context.l10n.newPassword,
+                          decoration: InputDecoration(
+                            hintText: context.l10n.newPassword,
+                          ),
                           textInputAction: TextInputAction.next,
                           validator: (value) =>
                               Validators.password(context, value),
@@ -96,7 +99,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         // 3. Confirm Password Field
                         AppTextField.password(
                           controller: _confirmPasswordController,
-                          hintText: context.l10n.confirmPassword,
+                          decoration: InputDecoration(
+                            hintText: context.l10n.confirmPassword,
+                          ),
                           textInputAction: TextInputAction.done,
                           validator: (value) => Validators.confirmPassword(
                             context,

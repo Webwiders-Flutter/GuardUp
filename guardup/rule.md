@@ -34,7 +34,7 @@ ValueListenableBuilder<bool>(
   - **Inputs & Fields**: `AppTextField`, `AppFieldLabel`, `DocumentUploadCard`, `AppMediaPickerSheet`.
   - **Feedback & Overlays**: `AppSnackbar`, `AppSheet`, `AppPopup`, `AppDialog`, `AppFilePreviewSheet`.
   - **Navigation**: `AppAppBar`, `AppTabBar`, `AppTabView`.
-  - **Selection**: `SelectionController`, `AppSelectableCard`, `AppSelectableChip`, `PlanSelectionCard`.
+  - **Selection**: `SelectionController`, `AppSelectableCard`, `AppSelectableChip`, `AppRemovableChip`, `PlanSelectionCard`.
   - **Images & Icons**: `AppImage`, `Assets.svg.*.svg(...)`.
 
 ---

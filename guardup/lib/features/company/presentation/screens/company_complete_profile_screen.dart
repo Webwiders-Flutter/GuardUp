@@ -17,14 +17,16 @@ import '/shared/widgets/selection/selection.controller.dart';
 import '../../data/enum/business_type.enum.dart';
 
 /// Screen for company registration / entering company details.
-class CompanyDetailsScreen extends StatefulWidget {
-  const CompanyDetailsScreen({super.key});
+class CompanyCompleteProfileScreen extends StatefulWidget {
+  const CompanyCompleteProfileScreen({super.key});
 
   @override
-  State<CompanyDetailsScreen> createState() => _CompanyDetailsScreenState();
+  State<CompanyCompleteProfileScreen> createState() =>
+      _CompanyCompleteProfileScreenState();
 }
 
-class _CompanyDetailsScreenState extends State<CompanyDetailsScreen> {
+class _CompanyCompleteProfileScreenState
+    extends State<CompanyCompleteProfileScreen> {
   final _formKey = GlobalKey<FormState>();
 
   late final TextEditingController _companyNameController;
@@ -89,9 +91,9 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen> {
                         // 1. Heading: Company Details
                         Text(
                           context.l10n.companyDetailsTitle,
-                          style: context.textTheme.headlineLarge
-                              ?.bold()
-                              .colour(context.colors.onSurface),
+                          style: context.textTheme.headlineLarge?.bold().colour(
+                            context.colors.onSurface,
+                          ),
                         ),
                         AppSpacing.xs.h,
 
@@ -107,7 +109,9 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen> {
                         // 3. Company Name Field
                         AppTextField(
                           controller: _companyNameController,
-                          hintText: context.l10n.enterCompanyName,
+                          decoration: InputDecoration(
+                            hintText: context.l10n.enterCompanyName,
+                          ),
                           textInputAction: TextInputAction.next,
                           validator: (value) =>
                               Validators.required(context, value),
@@ -117,7 +121,9 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen> {
                         // 4. Business Email Field
                         AppTextField.email(
                           controller: _emailController,
-                          hintText: context.l10n.businessEmail,
+                          decoration: InputDecoration(
+                            hintText: context.l10n.businessEmail,
+                          ),
                           textInputAction: TextInputAction.next,
                           validator: (value) =>
                               Validators.email(context, value),
@@ -127,7 +133,9 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen> {
                         // 5. Phone Number Field
                         AppTextField.phone(
                           controller: _phoneController,
-                          hintText: context.l10n.phoneNumber,
+                          decoration: InputDecoration(
+                            hintText: context.l10n.phoneNumber,
+                          ),
                           textInputAction: TextInputAction.next,
                           validator: (value) =>
                               Validators.phone(context, value),
@@ -153,8 +161,8 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen> {
                               .toList(),
                           validator: (_) =>
                               _businessTypeController.selectedItem == null
-                                  ? context.l10n.selectCompanyType
-                                  : null,
+                              ? context.l10n.selectCompanyType
+                              : null,
                         ),
 
                         const Spacer(),
@@ -179,4 +187,3 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen> {
     );
   }
 }
-

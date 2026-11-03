@@ -34,6 +34,7 @@ class AppThemeAccessor {
         colors: [primary, primaryContainer],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
+        
       );
 
   // ------------------------------------------------------------

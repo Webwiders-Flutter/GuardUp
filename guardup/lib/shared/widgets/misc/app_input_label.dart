@@ -25,7 +25,12 @@ class AppFieldLabel extends StatelessWidget {
     return RichText(
       text: TextSpan(
         text: text,
-        style: labelStyle ?? context.textTheme.labelLarge,
+        style:
+            labelStyle ??
+            context.textTheme.labelLarge
+                ?.medium()
+                .colour(context.colors.outline)
+                .textSpacing(0.3),
         children: [
           if (isRequired)
             TextSpan(

@@ -26,8 +26,8 @@ class AdminApprovalScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: context.colors.transparent,
       appBar: AppAppBar.transparent(
-        centerTitle: true,
         titleWidget: Assets.svg.appBanner.svg(height: 24),
+        alignTitle: .center,
       ),
       body: SafeArea(
         child: LayoutBuilder(
@@ -43,9 +43,6 @@ class AdminApprovalScreen extends StatelessWidget {
 
                       // Main Application Status Card (NO GLOW, clean border)
                       WrapperCard(
-                        backgroundColor: context.colors.surfaceContainer
-                            .withValues(alpha: 0.72),
-
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -119,25 +116,19 @@ class AdminApprovalScreen extends StatelessWidget {
                             AppSpacing.xxxl.h,
 
                             // 4. Under Review Info Box (Rounded-square clock container)
-                            QuickContainer(
-                              px: AppSpacing.md,
-                              py: AppSpacing.md,
-                              radius: AppRadius.lg,
-                              color: context.colors.surfaceDim,
-                              border: Border.all(
-                                color: context.colors.outlineVariant.withValues(
-                                  alpha: 0.35,
-                                ),
-                                width: 1,
-                              ),
+                            WrapperCard(
+                              padding: AppSpacing.md.allPadding,
+                              backgroundColor: context.colors.surfaceDim,
                               child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   QuickContainer(
-                                    w: 36,
-                                    h: 36,
+                                    w: 32,
+                                    h: 32,
                                     radius: AppRadius.md,
-                                    color: context.colors.surfaceContainer,
+                                    color: context.colors.primary.withValues(
+                                      alpha: 0.2,
+                                    ),
                                     border: Border.all(
                                       color: context.colors.primary.withValues(
                                         alpha: 0.4,
@@ -146,8 +137,8 @@ class AdminApprovalScreen extends StatelessWidget {
                                     ),
                                     alignment: Alignment.center,
                                     child: Assets.svg.clock.svg(
-                                      width: 18,
-                                      height: 18,
+                                      width: 15,
+                                      height: 15,
                                     ),
                                   ),
                                   AppSpacing.md.w,
@@ -175,9 +166,11 @@ class AdminApprovalScreen extends StatelessWidget {
                       AppButton(
                         text: context.l10n.checkStatus,
                         size: ButtonSize.large,
-                        onPressed: () {},
+                        onPressed: () {
+                          context.go(AppRoutes.home);
+                        },
                       ),
-                      AppSpacing.xl.h,
+                      AppSpacing.lg.h,
                       AppButton(
                         type: .secondaryPrimary,
                         text: context.l10n.logoutButton,

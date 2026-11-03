@@ -25,9 +25,8 @@ class RegistrationFeeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: context.colors.transparent,
       appBar: AppAppBar.transparent(
-        centerTitle: true,
-        titleWidget: Assets.svg.appBanner.svg(height: 22),
-        actions: const [],
+        alignTitle: .center,
+        titleWidget: Assets.svg.appBanner.svg(height: 24),
       ),
       body: SafeArea(
         child: LayoutBuilder(

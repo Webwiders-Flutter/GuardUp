@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:guardup/features/payments/payments.dart';
 
+import '../../data/enum/user_role.enum.dart';
 import '/app/routes/app_routes.dart';
 import '/core/constants/app_constants.dart';
 import '/core/constants/app_spacing.dart';
@@ -28,8 +30,9 @@ class EmailVerificationScreen extends StatefulWidget {
 
 class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   Timer? _countdownTimer;
-  final ValueNotifier<int> _secondsRemainingNotifier =
-      ValueNotifier<int>(AppConstants.resendSeconds);
+  final ValueNotifier<int> _secondsRemainingNotifier = ValueNotifier<int>(
+    AppConstants.resendSeconds,
+  );
 
   @override
   void initState() {
@@ -63,7 +66,23 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   }
 
   void _handleContinue() {
-    context.go(AppRoutes.uploadDocuments);
+    final role = sl<AuthBloc>().state.sessionRole ?? UserRole.customer;
+    switch (role) {
+      case UserRole.customer:
+        context.go(
+          AppRoutes.membershipPlans,
+          extra: (
+            mode: MembershipPlanMode.booking,
+            bookingAmount: null,
+            operativeName: null,
+            activePlanId: null,
+          ),
+        );
+      case UserRole.guard:
+        context.go(AppRoutes.bodyguardProfile);
+      case UserRole.company:
+        context.go(AppRoutes.companyProfile);
+    }
   }
 
   void _handleResendEmail() {

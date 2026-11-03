@@ -87,8 +87,7 @@ class _CardNumberFormatter extends TextInputFormatter {
 /// A flexible, well-structured, and production-ready text input field.
 ///
 /// Designed with centralized specs, lightweight factory constructors,
-/// and direct style overrides (like [AppButton]) to keep maintenance and
-/// enhancement easy and robust.
+/// and uses [InputDecoration] directly for field decoration customization.
 class AppTextField extends StatefulWidget {
   // ── Core Configuration ─────────────────────────────────────────────────────
   final AppTextFieldType type;
@@ -97,29 +96,10 @@ class AppTextField extends StatefulWidget {
   final FocusNode? focusNode;
   final String? initialValue;
 
-  // ── Direct Style Overrides (flexible like AppButton) ───────────────────────
-  final String? hintText;
-  final String? labelText;
-  final String? helperText;
-  final String? errorText;
-  final Widget? prefixIcon;
-  final Widget? suffixIcon;
-  final Widget? prefix;
-  final Widget? suffix;
-  final Color? fillColor;
-  final bool? filled;
-  final BorderRadius? borderRadius;
-  final InputBorder? border;
-  final InputBorder? enabledBorder;
-  final InputBorder? focusedBorder;
-  final InputBorder? errorBorder;
-  final InputBorder? focusedErrorBorder;
-  final EdgeInsetsGeometry? contentPadding;
-  final TextStyle? style;
-  final TextStyle? hintStyle;
-  final StrutStyle? strutStyle;
+  // ── Decoration & Styling ───────────────────────────────────────────────────
   final InputDecoration? decoration;
-  final FloatingLabelBehavior? floatingLabelBehavior;
+  final TextStyle? style;
+  final StrutStyle? strutStyle;
 
   // ── Input & Formatting ─────────────────────────────────────────────────────
   final TextInputType? keyboardType;
@@ -168,28 +148,9 @@ class AppTextField extends StatefulWidget {
     this.controller,
     this.focusNode,
     this.initialValue,
-    this.hintText,
-    this.labelText,
-    this.helperText,
-    this.errorText,
-    this.prefixIcon,
-    this.suffixIcon,
-    this.prefix,
-    this.suffix,
-    this.fillColor,
-    this.filled,
-    this.borderRadius,
-    this.border,
-    this.enabledBorder,
-    this.focusedBorder,
-    this.errorBorder,
-    this.focusedErrorBorder,
-    this.contentPadding,
-    this.style,
-    this.hintStyle,
-    this.strutStyle,
     this.decoration,
-    this.floatingLabelBehavior = FloatingLabelBehavior.never,
+    this.style,
+    this.strutStyle,
     this.keyboardType,
     this.textInputAction,
     this.textCapitalization = TextCapitalization.sentences,
@@ -233,26 +194,10 @@ class AppTextField extends StatefulWidget {
     TextEditingController? controller,
     FocusNode? focusNode,
     String? initialValue,
-    String? hintText,
-    String? labelText,
-    String? helperText,
-    String? errorText,
-    Widget? prefixIcon,
-    Widget? suffixIcon,
-    Color? fillColor,
-    bool? filled,
-    BorderRadius? borderRadius,
-    InputBorder? border,
-    InputBorder? enabledBorder,
-    InputBorder? focusedBorder,
-    InputBorder? errorBorder,
-    InputBorder? focusedErrorBorder,
     InputDecoration? decoration,
-    FloatingLabelBehavior? floatingLabelBehavior,
     TextInputAction? textInputAction,
     TextAlign textAlign = TextAlign.start,
     TextStyle? style,
-    TextStyle? hintStyle,
     StrutStyle? strutStyle,
     bool readOnly = false,
     bool enabled = true,
@@ -274,26 +219,10 @@ class AppTextField extends StatefulWidget {
     controller: controller,
     focusNode: focusNode,
     initialValue: initialValue,
-    hintText: hintText,
-    labelText: labelText,
-    helperText: helperText,
-    errorText: errorText,
-    prefixIcon: prefixIcon,
-    suffixIcon: suffixIcon,
-    fillColor: fillColor,
-    filled: filled,
-    borderRadius: borderRadius,
-    border: border,
-    enabledBorder: enabledBorder,
-    focusedBorder: focusedBorder,
-    errorBorder: errorBorder,
-    focusedErrorBorder: focusedErrorBorder,
     decoration: decoration,
-    floatingLabelBehavior: floatingLabelBehavior,
     textInputAction: textInputAction,
     textAlign: textAlign,
     style: style,
-    hintStyle: hintStyle,
     strutStyle: strutStyle,
     readOnly: readOnly,
     enabled: enabled,
@@ -317,19 +246,12 @@ class AppTextField extends StatefulWidget {
     TextEditingController? controller,
     FocusNode? focusNode,
     String? initialValue,
-    String? hintText,
-    String? labelText,
-    Widget? prefixIcon,
-    Widget? suffixIcon,
-    Color? fillColor,
-    bool? filled,
-    BorderRadius? borderRadius,
     InputDecoration? decoration,
-    FloatingLabelBehavior? floatingLabelBehavior,
     bool clearable = true,
     TextInputAction textInputAction = TextInputAction.search,
     TextAlign textAlign = TextAlign.start,
     TextStyle? style,
+    StrutStyle? strutStyle,
     bool enabled = true,
     bool autofocus = false,
     ValueChanged<String>? onChanged,
@@ -344,19 +266,12 @@ class AppTextField extends StatefulWidget {
     controller: controller,
     focusNode: focusNode,
     initialValue: initialValue,
-    hintText: hintText,
-    labelText: labelText,
-    prefixIcon: prefixIcon,
-    suffixIcon: suffixIcon,
-    fillColor: fillColor,
-    filled: filled,
-    borderRadius: borderRadius,
     decoration: decoration,
-    floatingLabelBehavior: floatingLabelBehavior,
     clearable: clearable,
     textInputAction: textInputAction,
     textAlign: textAlign,
     style: style,
+    strutStyle: strutStyle,
     enabled: enabled,
     autofocus: autofocus,
     onChanged: onChanged,
@@ -373,21 +288,12 @@ class AppTextField extends StatefulWidget {
     TextEditingController? controller,
     FocusNode? focusNode,
     String? initialValue,
-    String? hintText,
-    String? labelText,
-    String? helperText,
-    String? errorText,
-    Widget? prefixIcon,
-    Widget? suffixIcon,
-    Color? fillColor,
-    bool? filled,
-    BorderRadius? borderRadius,
     InputDecoration? decoration,
-    FloatingLabelBehavior? floatingLabelBehavior,
     bool clearable = false,
     TextInputAction? textInputAction,
     TextAlign textAlign = TextAlign.start,
     TextStyle? style,
+    StrutStyle? strutStyle,
     bool readOnly = false,
     bool enabled = true,
     bool autofocus = false,
@@ -408,21 +314,12 @@ class AppTextField extends StatefulWidget {
     controller: controller,
     focusNode: focusNode,
     initialValue: initialValue,
-    hintText: hintText,
-    labelText: labelText,
-    helperText: helperText,
-    errorText: errorText,
-    prefixIcon: prefixIcon,
-    suffixIcon: suffixIcon,
-    fillColor: fillColor,
-    filled: filled,
-    borderRadius: borderRadius,
     decoration: decoration,
-    floatingLabelBehavior: floatingLabelBehavior,
     clearable: clearable,
     textInputAction: textInputAction,
     textAlign: textAlign,
     style: style,
+    strutStyle: strutStyle,
     readOnly: readOnly,
     enabled: enabled,
     autofocus: autofocus,
@@ -449,20 +346,12 @@ class AppTextField extends StatefulWidget {
     String? initialCountryCode,
     ValueChanged<String>? onCountryCodeChanged,
     ValueChanged<CountryWithPhoneCode>? onCountryChanged,
-    String? hintText,
-    String? labelText,
-    String? helperText,
-    String? errorText,
-    Widget? suffixIcon,
-    Color? fillColor,
-    bool? filled,
-    BorderRadius? borderRadius,
     InputDecoration? decoration,
-    FloatingLabelBehavior? floatingLabelBehavior,
     bool clearable = false,
     TextInputAction? textInputAction,
     TextAlign textAlign = TextAlign.start,
     TextStyle? style,
+    StrutStyle? strutStyle,
     bool readOnly = false,
     bool enabled = true,
     bool autofocus = false,
@@ -489,20 +378,12 @@ class AppTextField extends StatefulWidget {
     initialCountryCode: initialCountryCode,
     onCountryCodeChanged: onCountryCodeChanged,
     onCountryChanged: onCountryChanged,
-    hintText: hintText,
-    labelText: labelText,
-    helperText: helperText,
-    errorText: errorText,
-    suffixIcon: suffixIcon,
-    fillColor: fillColor,
-    filled: filled,
-    borderRadius: borderRadius,
     decoration: decoration,
-    floatingLabelBehavior: floatingLabelBehavior,
     clearable: clearable,
     textInputAction: textInputAction,
     textAlign: textAlign,
     style: style,
+    strutStyle: strutStyle,
     readOnly: readOnly,
     enabled: enabled,
     autofocus: autofocus,
@@ -527,20 +408,13 @@ class AppTextField extends StatefulWidget {
     TextEditingController? controller,
     FocusNode? focusNode,
     String? initialValue,
-    String? hintText,
-    String? labelText,
-    String? helperText,
-    String? errorText,
-    Color? fillColor,
-    bool? filled,
-    BorderRadius? borderRadius,
     InputDecoration? decoration,
-    FloatingLabelBehavior? floatingLabelBehavior,
     int maxLines = 5,
     int minLines = 3,
     int? maxLength,
     TextAlign textAlign = TextAlign.start,
     TextStyle? style,
+    StrutStyle? strutStyle,
     bool readOnly = false,
     bool enabled = true,
     bool autofocus = false,
@@ -560,15 +434,7 @@ class AppTextField extends StatefulWidget {
     controller: controller,
     focusNode: focusNode,
     initialValue: initialValue,
-    hintText: hintText,
-    labelText: labelText,
-    helperText: helperText,
-    errorText: errorText,
-    fillColor: fillColor,
-    filled: filled,
-    borderRadius: borderRadius,
     decoration: decoration,
-    floatingLabelBehavior: floatingLabelBehavior,
     maxLines: maxLines,
     minLines: minLines,
     maxLength: maxLength,
@@ -576,6 +442,7 @@ class AppTextField extends StatefulWidget {
     textInputAction: TextInputAction.newline,
     textAlign: textAlign,
     style: style,
+    strutStyle: strutStyle,
     readOnly: readOnly,
     enabled: enabled,
     autofocus: autofocus,
@@ -842,7 +709,9 @@ class _AppTextFieldState extends State<AppTextField> {
   // ── Prefix & Suffix Icon Composition ───────────────────────────────────────
 
   Widget? _buildPrefixIcon({CountryWithPhoneCode? country}) {
-    if (widget.prefixIcon != null) return widget.prefixIcon;
+    if (widget.decoration?.prefixIcon != null) {
+      return widget.decoration!.prefixIcon;
+    }
 
     if (_isPhone && country != null) {
       return _PhonePrefixSelector(
@@ -866,11 +735,11 @@ class _AppTextFieldState extends State<AppTextField> {
       );
     }
 
-    return widget.decoration?.prefixIcon;
+    return null;
   }
 
   Widget? _buildSuffixIcon() {
-    final customSuffix = widget.suffixIcon ?? widget.decoration?.suffixIcon;
+    final customSuffix = widget.decoration?.suffixIcon;
 
     if (_isPassword) {
       return Row(
@@ -979,62 +848,30 @@ class _AppTextFieldState extends State<AppTextField> {
     BuildContext context, {
     CountryWithPhoneCode? country,
   }) {
-    final themeDecoration = const InputDecoration().applyDefaults(
-      Theme.of(context).inputDecorationTheme,
-    );
-    final userDecoration = widget.decoration;
+    final baseDecoration = (widget.decoration ?? const InputDecoration())
+        .applyDefaults(Theme.of(context).inputDecorationTheme);
 
-    final resolvedBorder = widget.border ?? userDecoration?.border;
-    final resolvedEnabledBorder =
-        widget.enabledBorder ?? userDecoration?.enabledBorder;
-    final resolvedFocusedBorder =
-        widget.focusedBorder ?? userDecoration?.focusedBorder;
-    final resolvedErrorBorder =
-        widget.errorBorder ?? userDecoration?.errorBorder;
+    final resolvedPrefixIcon = _buildPrefixIcon(country: country);
+    final resolvedSuffixIcon = _buildSuffixIcon();
+    final isPhonePrefix = _isPhone && country != null;
 
-    return themeDecoration.copyWith(
-      hintText: widget.hintText ?? userDecoration?.hintText,
-      hintStyle:
-          widget.hintStyle ??
-          userDecoration?.hintStyle ??
-          themeDecoration.hintStyle?.size(_sizeSpec.fontSize),
-      labelText: widget.labelText ?? userDecoration?.labelText,
-      labelStyle: userDecoration?.labelStyle,
-      floatingLabelBehavior:
-          widget.floatingLabelBehavior ??
-          userDecoration?.floatingLabelBehavior ??
-          themeDecoration.floatingLabelBehavior ??
-          FloatingLabelBehavior.never,
-      helperText: widget.helperText ?? userDecoration?.helperText,
-      helperStyle: userDecoration?.helperStyle,
-      errorText: widget.errorText ?? userDecoration?.errorText,
-      errorStyle: userDecoration?.errorStyle,
-      prefixIcon: _buildPrefixIcon(country: country),
-      prefix: widget.prefix ?? userDecoration?.prefix,
-      suffix: widget.suffix ?? userDecoration?.suffix,
-      suffixIcon: _buildSuffixIcon(),
-      prefixIconConstraints: _isPhone && country != null
+    return baseDecoration.copyWith(
+      prefixIcon: resolvedPrefixIcon,
+      suffixIcon: resolvedSuffixIcon,
+      prefixIconConstraints: isPhonePrefix
           ? const BoxConstraints(minWidth: 0, minHeight: 0)
-          : (userDecoration?.prefixIconConstraints),
-      suffixIconConstraints: userDecoration?.suffixIconConstraints,
-      filled: widget.filled ?? userDecoration?.filled ?? themeDecoration.filled,
-      fillColor:
-          widget.fillColor ??
-          userDecoration?.fillColor ??
-          themeDecoration.fillColor,
-      border: resolvedBorder,
-      enabledBorder: resolvedEnabledBorder,
-      focusedBorder: resolvedFocusedBorder,
-      disabledBorder: userDecoration?.disabledBorder,
-      errorBorder: resolvedErrorBorder,
-      focusedErrorBorder:
-          widget.focusedErrorBorder ?? userDecoration?.focusedErrorBorder,
-      contentPadding:
-          widget.contentPadding ??
-          userDecoration?.contentPadding ??
+          : (widget.decoration?.prefixIconConstraints ??
+              baseDecoration.prefixIconConstraints),
+      suffixIconConstraints: widget.decoration?.suffixIconConstraints ??
+          baseDecoration.suffixIconConstraints,
+      contentPadding: widget.decoration?.contentPadding ??
+          baseDecoration.contentPadding ??
           _sizeSpec.contentPadding,
-      isDense: _sizeSpec.isDense ? true : userDecoration?.isDense,
-      alignLabelWithHint: userDecoration?.alignLabelWithHint,
+      isDense: widget.decoration?.isDense ??
+          baseDecoration.isDense ??
+          _sizeSpec.isDense,
+      hintStyle: widget.decoration?.hintStyle ??
+          baseDecoration.hintStyle?.size(_sizeSpec.fontSize),
     );
   }
 

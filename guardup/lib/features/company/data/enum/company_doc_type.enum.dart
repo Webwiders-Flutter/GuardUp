@@ -4,7 +4,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import '/gen/app_localizations.dart';
 
 /// Represents the document types available across document upload and verification.
-enum DocType {
+enum CompanyDocType {
   @JsonValue('BUSINESS_REGISTRATION')
   businessRegistration('BUSINESS_REGISTRATION'),
 
@@ -19,20 +19,20 @@ enum DocType {
 
   final String apiValue;
 
-  const DocType(this.apiValue);
+  const CompanyDocType(this.apiValue);
 
-  static DocType fromApiValue(String? value) {
-    if (value == null) return DocType.businessRegistration;
-    return DocType.values.firstWhere(
+  static CompanyDocType fromApiValue(String? value) {
+    if (value == null) return CompanyDocType.businessRegistration;
+    return CompanyDocType.values.firstWhere(
       (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      orElse: () => DocType.businessRegistration,
+      orElse: () => CompanyDocType.businessRegistration,
     );
   }
 
-  static DocType? tryFromApiValue(String? value) {
+  static CompanyDocType? tryFromApiValue(String? value) {
     if (value == null) return null;
     try {
-      return DocType.values.firstWhere(
+      return CompanyDocType.values.firstWhere(
         (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
       );
     } catch (_) {
@@ -42,50 +42,49 @@ enum DocType {
 
   String label(AppLocalizations l10n) {
     switch (this) {
-      case DocType.businessRegistration:
+      case CompanyDocType.businessRegistration:
         return l10n.businessRegistration;
-      case DocType.governmentId:
+      case CompanyDocType.governmentId:
         return l10n.governmentIdAdmin;
-      case DocType.companyLogo:
+      case CompanyDocType.companyLogo:
         return l10n.companyLogo;
-      case DocType.additionalDocuments:
+      case CompanyDocType.additionalDocuments:
         return l10n.additionalDocuments;
     }
   }
 
   IconData get icon {
     switch (this) {
-      case DocType.businessRegistration:
+      case CompanyDocType.businessRegistration:
         return Icons.description_outlined;
-      case DocType.governmentId:
+      case CompanyDocType.governmentId:
         return Icons.badge_outlined;
-      case DocType.companyLogo:
+      case CompanyDocType.companyLogo:
         return Icons.image_outlined;
-      case DocType.additionalDocuments:
+      case CompanyDocType.additionalDocuments:
         return Icons.description_outlined;
     }
   }
 
   bool get allowFile {
     switch (this) {
-      case DocType.companyLogo:
+      case CompanyDocType.companyLogo:
         return false;
-      case DocType.businessRegistration:
-      case DocType.governmentId:
-      case DocType.additionalDocuments:
+      case CompanyDocType.businessRegistration:
+      case CompanyDocType.governmentId:
+      case CompanyDocType.additionalDocuments:
         return true;
     }
   }
 
   bool get allowCrop {
     switch (this) {
-      case DocType.companyLogo:
+      case CompanyDocType.companyLogo:
         return true;
-      case DocType.businessRegistration:
-      case DocType.governmentId:
-      case DocType.additionalDocuments:
+      case CompanyDocType.businessRegistration:
+      case CompanyDocType.governmentId:
+      case CompanyDocType.additionalDocuments:
         return false;
     }
   }
 }
-

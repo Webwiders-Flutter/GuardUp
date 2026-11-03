@@ -48,7 +48,7 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
     sl<AuthBloc>().add(AuthSetSessionRoleRequested(selectedRole));
 
     if (selectedRole == UserRole.company) {
-      context.push(AppRoutes.companyDetails);
+      context.push(AppRoutes.companyProfile);
     } else {
       context.push(AppRoutes.signup, extra: selectedRole);
     }

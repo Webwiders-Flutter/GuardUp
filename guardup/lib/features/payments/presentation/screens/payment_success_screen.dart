@@ -66,7 +66,7 @@ class PaymentSuccessScreen extends StatelessWidget {
                 child: IntrinsicHeight(
                   child: Column(
                     children: [
-                      AppSpacing.xxl.h,
+                      AppSpacing.colossal.h,
 
                       // 1. Verified Shield Badge (Gold outline, no glow around icon)
                       Center(
