@@ -132,7 +132,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
         }
       },
       child: Scaffold(
-        backgroundColor: context.colors.transparent,
         body:
             widget.navigationShell ??
             IndexedStack(

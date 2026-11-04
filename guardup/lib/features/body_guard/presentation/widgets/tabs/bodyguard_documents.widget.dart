@@ -6,6 +6,7 @@ import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
+import '/core/extensions/datetime.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
@@ -123,7 +124,7 @@ class BodyguardDocumentsWidget extends StatelessWidget {
                 if (item.issuingAuthority != null)
                   Text(
                     item.issuingAuthority!,
-                    style: context.textTheme.labelSmall?.regular().colour(
+                    style: context.textTheme.labelSmall?.colour(
                       context.colors.onSurfaceVariant,
                     ),
                     maxLines: 1,
@@ -131,8 +132,11 @@ class BodyguardDocumentsWidget extends StatelessWidget {
                   ),
                 AppSpacing.xxs.h,
                 Text(
-                  item.displayValidity,
-                  style: context.textTheme.labelSmall?.regular().colour(
+                  item.customValidity ??
+                      (item.validTill != null
+                          ? item.validTill!.ddMMyyyy
+                          : 'Permanent / Lifetime'),
+                  style: context.textTheme.labelSmall?.colour(
                     context.colors.onSurfaceVariant,
                   ),
                   maxLines: 1,
@@ -221,7 +225,7 @@ class BodyguardDocumentsWidget extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: context.textTheme.labelMedium?.regular().colour(
+            style: context.textTheme.labelMedium?.colour(
               context.colors.onSurfaceVariant,
             ),
           ),

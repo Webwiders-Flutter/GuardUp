@@ -16,7 +16,9 @@ class LegalContentBloc extends Bloc<LegalContentEvent, LegalContentState> {
   ) async {
     // 1. Emit loading with static fake data for Skeletonizer
     final fakeData = LegalContentModel.staticContent(event.contentType);
-    emit(state.copyWith(contentState: ApiState.loading(previousData: fakeData)));
+    emit(
+      state.copyWith(contentState: ApiState.loading(previousData: fakeData)),
+    );
 
     // 2. Simulate short delay for realistic skeleton effect
     await Future<void>.delayed(const Duration(milliseconds: 600));
@@ -26,4 +28,3 @@ class LegalContentBloc extends Bloc<LegalContentEvent, LegalContentState> {
     emit(state.copyWith(contentState: ApiState.success(content)));
   }
 }
-

@@ -26,7 +26,8 @@ class AppPagination<T> extends StatefulWidget {
     ScrollController controller,
     IndexedWidgetBuilder itemBuilder,
     int itemCount,
-  ) builder;
+  )
+  builder;
 
   /// Builds individual list items.
   final Widget Function(BuildContext context, T item, int index) itemBuilder;
@@ -44,11 +45,12 @@ class AppPagination<T> extends StatefulWidget {
   final WidgetBuilder? loadMoreBuilder;
 
   /// Custom builder for the full-screen error state.
-  final Widget Function(BuildContext context, String? errorMessage)? errorBuilder;
+  final Widget Function(BuildContext context, String? errorMessage)?
+  errorBuilder;
 
   /// Custom builder for the footer error state when loading more items fails.
   final Widget Function(BuildContext context, VoidCallback onRetry)?
-      loadMoreErrorBuilder;
+  loadMoreErrorBuilder;
 
   /// Custom builder shown at the end of the list when all items have been fetched.
   final WidgetBuilder? noMoreDataBuilder;
@@ -71,9 +73,9 @@ class AppPagination<T> extends StatefulWidget {
     this.loadMoreErrorBuilder,
     this.enablePullToRefresh = true,
   }) : assert(
-          controller != null || state != null,
-          'Either controller or state must be provided to AppPagination.',
-        );
+         controller != null || state != null,
+         'Either controller or state must be provided to AppPagination.',
+       );
 
   /// Convenient factory constructor for a standard separated/non-separated [ListView].
   factory AppPagination.list({
@@ -81,7 +83,8 @@ class AppPagination<T> extends StatefulWidget {
     PaginationController<T>? controller,
     PaginationState<T>? state,
     Widget? header,
-    required Widget Function(BuildContext context, T item, int index) itemBuilder,
+    required Widget Function(BuildContext context, T item, int index)
+    itemBuilder,
     Widget Function(BuildContext context, int index)? separatorBuilder,
     EdgeInsetsGeometry? padding,
     ScrollPhysics? physics,
@@ -91,7 +94,7 @@ class AppPagination<T> extends StatefulWidget {
     WidgetBuilder? noMoreDataBuilder,
     Widget Function(BuildContext context, String? errorMessage)? errorBuilder,
     Widget Function(BuildContext context, VoidCallback onRetry)?
-        loadMoreErrorBuilder,
+    loadMoreErrorBuilder,
     bool enablePullToRefresh = true,
   }) {
     return AppPagination<T>(
@@ -147,7 +150,8 @@ class AppPagination<T> extends StatefulWidget {
     PaginationState<T>? state,
     Widget? header,
     required SliverGridDelegate gridDelegate,
-    required Widget Function(BuildContext context, T item, int index) itemBuilder,
+    required Widget Function(BuildContext context, T item, int index)
+    itemBuilder,
     EdgeInsetsGeometry? padding,
     ScrollPhysics? physics,
     WidgetBuilder? initialLoaderBuilder,
@@ -156,7 +160,7 @@ class AppPagination<T> extends StatefulWidget {
     WidgetBuilder? noMoreDataBuilder,
     Widget Function(BuildContext context, String? errorMessage)? errorBuilder,
     Widget Function(BuildContext context, VoidCallback onRetry)?
-        loadMoreErrorBuilder,
+    loadMoreErrorBuilder,
     bool enablePullToRefresh = true,
   }) {
     return AppPagination<T>(
@@ -273,11 +277,17 @@ class _AppPaginationState<T> extends State<AppPagination<T>> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.refresh_rounded, size: 18, color: context.colors.error),
+                Icon(
+                  Icons.refresh_rounded,
+                  size: 18,
+                  color: context.colors.error,
+                ),
                 AppSpacing.sm.w,
                 Text(
                   state.loadMoreErrorMessage ?? context.l10n.failedToLoadMore,
-                  style: context.textTheme.bodyMedium?.colour(context.colors.error),
+                  style: context.textTheme.bodyMedium?.colour(
+                    context.colors.error,
+                  ),
                 ),
               ],
             ),
@@ -336,15 +346,14 @@ class _AppPaginationState<T> extends State<AppPagination<T>> {
 
           return widget.initialLoaderBuilder?.call(context) ??
               Center(
-                child: CircularProgressIndicator(
-                  color: context.colors.primary,
-                ),
+                child: CircularProgressIndicator(color: context.colors.primary),
               );
         }
 
         /// 2. Initial Error (Empty List + Has Error)
         if (state.items.isEmpty && state.hasError) {
-          final errorWidget = widget.errorBuilder?.call(context, state.errorMessage) ??
+          final errorWidget =
+              widget.errorBuilder?.call(context, state.errorMessage) ??
               Center(
                 child: Padding(
                   padding: AppSpacing.xl.allPadding,
@@ -389,7 +398,8 @@ class _AppPaginationState<T> extends State<AppPagination<T>> {
 
         /// 3. Empty State (Empty List + Idle)
         if (state.items.isEmpty) {
-          final emptyWidget = widget.emptyBuilder?.call(context) ??
+          final emptyWidget =
+              widget.emptyBuilder?.call(context) ??
               Center(
                 child: Padding(
                   padding: AppSpacing.xl.allPadding,
@@ -417,7 +427,8 @@ class _AppPaginationState<T> extends State<AppPagination<T>> {
         /// 4. Main Paginated List / Grid
         final int headerCount = widget.header != null ? 1 : 0;
         final int footerCount = state.isLastPage ? 0 : 1;
-        final int totalItemCount = state.items.length + headerCount + footerCount;
+        final int totalItemCount =
+            state.items.length + headerCount + footerCount;
 
         return _buildRefreshable(
           child: widget.builder(
@@ -430,4 +441,3 @@ class _AppPaginationState<T> extends State<AppPagination<T>> {
     );
   }
 }
-

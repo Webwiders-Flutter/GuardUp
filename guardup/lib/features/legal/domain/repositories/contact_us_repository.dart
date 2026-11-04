@@ -4,4 +4,3 @@ import '../../data/model/contact_us.model.dart';
 abstract class ContactUsRepository {
   Future<void> submitContactUs(ContactUsSubmission submission);
 }
-

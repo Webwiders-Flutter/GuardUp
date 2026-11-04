@@ -508,16 +508,14 @@ class _AppDropdownState<V> extends State<AppDropdown<V>> {
                 widget.onItemTap?.call(labels);
                 widget.onSelected?.call(item.id);
               },
-              child: widget.dropdownItemChild?.call(isSelected) ??
+              child:
+                  widget.dropdownItemChild?.call(isSelected) ??
                   QuickContainer(
                     px: AppSpacing.md,
                     py: AppSpacing.sm,
                     child: Row(
                       children: [
-                        if (item.icon != null) ...[
-                          item.icon!,
-                          AppSpacing.sm.w,
-                        ],
+                        if (item.icon != null) ...[item.icon!, AppSpacing.sm.w],
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 150),
                           child:

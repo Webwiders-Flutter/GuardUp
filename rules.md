@@ -91,7 +91,7 @@ Use the `LayoutBuilder + ConstrainedBox + IntrinsicHeight + Spacer()` pattern **
 @override
 Widget build(BuildContext context) {
   return Scaffold(
-    backgroundColor: context.colors.transparent,
+    
     appBar: AppAppBar.transparent(
       title: 'Screen Title', // or titleWidget
       showBackIcon: true,

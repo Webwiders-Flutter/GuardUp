@@ -6,6 +6,7 @@ import 'package:quick_container/quick_container.dart';
 
 import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
+import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
@@ -24,9 +25,8 @@ class AdminApprovalScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.transparent,
       appBar: AppAppBar.transparent(
-        titleWidget: Assets.svg.appBanner.svg(height: 24),
+        titleWidget: Assets.svg.appBanner.svg(height: AppSizes.iconLg),
         alignTitle: .center,
       ),
       body: SafeArea(
@@ -47,6 +47,7 @@ class AdminApprovalScreen extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
+                            AppSpacing.sm.h,
                             // 1. Top Bar: APPLICATION STATUS + Step 2 of 3 Pill
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -54,43 +55,23 @@ class AdminApprovalScreen extends StatelessWidget {
                                 Row(
                                   children: [
                                     QuickContainer(
-                                      w: 8,
-                                      h: 8,
+                                      w: 10,
+                                      h: 10,
                                       radius: AppRadius.full,
                                       color: context.colors.primary,
                                     ),
-                                    AppSpacing.xs.w,
+                                    AppSpacing.sm.w,
                                     Text(
                                       context.l10n.applicationStatus,
                                       style: context.textTheme.labelMedium
-                                          ?.bold()
-                                          .colour(context.colors.primary)
+                                          ?.colour(context.colors.primary)
                                           .textSpacing(1.2),
                                     ),
                                   ],
                                 ),
-                                // QuickContainer(
-                                //   px: AppSpacing.sm,
-                                //   py: AppSpacing.xs,
-                                //   radius: AppRadius.round,
-                                //   color: context.colors.surfaceDim,
-                                //   border: Border.all(
-                                //     color: context.colors.outlineVariant
-                                //         .withValues(alpha: 0.35),
-                                //     width: 1,
-                                //   ),
-                                //   child: Text(
-                                //     context.l10n.step2Of3,
-                                //     style: context.textTheme.labelSmall
-                                //         ?.medium()
-                                //         .colour(
-                                //           context.colors.onSurfaceVariant,
-                                //         ),
-                                //   ),
-                                // ),
                               ],
                             ),
-                            AppSpacing.lg.h,
+                            AppSpacing.xl.h,
 
                             // Thin Divider below header row
                             Container(
@@ -115,7 +96,6 @@ class AdminApprovalScreen extends StatelessWidget {
 
                             // 4. Under Review Info Box (Rounded-square clock container)
                             WrapperCard(
-                              padding: AppSpacing.md.allPadding,
                               backgroundColor: context.colors.surfaceDim,
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,8 +115,8 @@ class AdminApprovalScreen extends StatelessWidget {
                                     ),
                                     alignment: Alignment.center,
                                     child: Assets.svg.clock.svg(
-                                      width: 15,
-                                      height: 15,
+                                      width: AppSizes.iconXs,
+                                      height: AppSizes.iconXs,
                                     ),
                                   ),
                                   AppSpacing.md.w,
@@ -144,8 +124,7 @@ class AdminApprovalScreen extends StatelessWidget {
                                     child: Text(
                                       context.l10n.applicationUnderReviewNotice,
                                       style: context.textTheme.bodySmall
-                                          ?.regular()
-                                          .colour(
+                                          ?.colour(
                                             context.colors.onSurfaceVariant,
                                           )
                                           .lineHeight(1.45),
@@ -170,7 +149,7 @@ class AdminApprovalScreen extends StatelessWidget {
                       ),
                       AppSpacing.lg.h,
                       AppButton(
-                        type: .secondaryPrimary,
+                        type: .secondaryOff,
                         text: context.l10n.logoutButton,
                         size: ButtonSize.large,
                         onPressed: () {
@@ -211,7 +190,7 @@ class AdminApprovalScreen extends StatelessWidget {
                 alignment: Alignment.center,
                 child: Icon(
                   Icons.check,
-                  size: 20,
+                  size: AppSizes.iconMd,
                   color: context.colors.onPrimary,
                 ),
               ),
@@ -258,7 +237,7 @@ class AdminApprovalScreen extends StatelessWidget {
                 alignment: Alignment.center,
                 child: Icon(
                   Icons.lock_rounded,
-                  size: 16,
+                  size: AppSizes.iconSm,
                   color: context.colors.onSurfaceVariant.withValues(alpha: 0.5),
                 ),
               ),
@@ -274,8 +253,8 @@ class AdminApprovalScreen extends StatelessWidget {
                 width: 72,
                 child: Text(
                   context.l10n.documents,
-                  textAlign: TextAlign.center,
-                  style: context.textTheme.labelSmall?.bold().colour(
+                  textAlign: TextAlign.start,
+                  style: context.textTheme.labelSmall?.colour(
                     context.colors.primary,
                   ),
                 ),
@@ -285,14 +264,14 @@ class AdminApprovalScreen extends StatelessWidget {
                 child: Text(
                   context.l10n.review,
                   textAlign: TextAlign.center,
-                  style: context.textTheme.labelSmall?.bold(),
+                  style: context.textTheme.labelSmall,
                 ),
               ),
               SizedBox(
                 width: 72,
                 child: Text(
                   context.l10n.approval,
-                  textAlign: TextAlign.center,
+                  textAlign: TextAlign.end,
                   style: context.textTheme.labelSmall?.colour(
                     context.colors.onSurfaceVariant.withValues(alpha: 0.6),
                   ),

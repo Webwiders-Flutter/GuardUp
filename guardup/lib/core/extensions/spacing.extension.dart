@@ -42,9 +42,9 @@ extension SpacingContextExtension on BuildContext {
 
   /// Combined screen padding
   EdgeInsets get screenPadding => EdgeInsets.symmetric(
-        horizontal: horizontalScreenPadding,
-        vertical: verticalScreenPadding,
-      );
+    horizontal: horizontalScreenPadding,
+    vertical: verticalScreenPadding,
+  );
 
   /// Only horizontal screen padding
   EdgeInsets get horizontalEdgeInsets => horizontalScreenPadding.xPadding;

@@ -26,35 +26,26 @@ class BodyguardAvailabilityWidget extends StatefulWidget {
 
 class _BodyguardAvailabilityWidgetState
     extends State<BodyguardAvailabilityWidget> {
-  late final SelectionController<WeekDay> _selectionController;
-  late final Map<WeekDay, TextEditingController> _fromControllers;
-  late final Map<WeekDay, TextEditingController> _toControllers;
+  late final _selectionController = SelectionController<WeekDay>.multi(
+    initial: const [
+      WeekDay.monday,
+      WeekDay.tuesday,
+      WeekDay.thursday,
+      WeekDay.friday,
+      WeekDay.sunday,
+    ],
+    onChanged: widget.onAvailabilityChanged,
+  );
 
-  @override
-  void initState() {
-    super.initState();
-    // Pre-select days matching the design mockup (Monday, Tuesday, Thursday, Friday, Sunday)
-    _selectionController = SelectionController<WeekDay>.multi(
-      initial: [
-        WeekDay.monday,
-        WeekDay.tuesday,
-        WeekDay.thursday,
-        WeekDay.friday,
-        WeekDay.sunday,
-      ],
-      onChanged: widget.onAvailabilityChanged,
-    );
+  final Map<WeekDay, TextEditingController> _fromControllers = {
+    for (final day in WeekDay.values)
+      day: TextEditingController(text: '09:00 AM'),
+  };
 
-    _fromControllers = {
-      for (final day in WeekDay.values)
-        day: TextEditingController(text: '09:00 AM'),
-    };
-
-    _toControllers = {
-      for (final day in WeekDay.values)
-        day: TextEditingController(text: '12:00 PM'),
-    };
-  }
+  final Map<WeekDay, TextEditingController> _toControllers = {
+    for (final day in WeekDay.values)
+      day: TextEditingController(text: '12:00 PM'),
+  };
 
   @override
   void dispose() {
@@ -107,13 +98,6 @@ class _BodyguardAvailabilityWidgetState
     required TextEditingController controller,
     required bool isHighlighted,
   }) {
-    final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(AppRadius.sm),
-      borderSide: isHighlighted
-          ? const BorderSide(color: Color(0xFF2F80ED), width: 1.8)
-          : BorderSide.none,
-    );
-
     return SizedBox(
       width: 108,
       child: AppTextField(
@@ -125,17 +109,12 @@ class _BodyguardAvailabilityWidgetState
           controller: controller,
           initialTime: _parseTime(controller.text),
         ),
-        style: context.textTheme.labelSmall?.bold().colour(
-          context.colors.surface,
-        ),
+        style: context.textTheme.labelSmall?.colour(context.colors.surface),
         decoration: InputDecoration(
           isDense: true,
           filled: true,
           fillColor: context.colors.onSurface,
           contentPadding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
-          border: border,
-          enabledBorder: border,
-          focusedBorder: border,
           prefixIcon: Padding(
             padding: const EdgeInsets.only(left: 8.0, right: 4.0),
             child: Icon(

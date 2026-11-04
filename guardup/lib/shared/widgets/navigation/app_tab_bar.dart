@@ -229,7 +229,9 @@ class AppTabBar extends StatelessWidget implements PreferredSizeWidget {
     required String label,
     required double animValue,
   }) {
-    final bool isSelected = animValue.round() == index;
+    final bool isSelected = controller.indexIsChanging
+        ? controller.index == index
+        : animValue.round() == index;
 
     return Tab(
       height: height,

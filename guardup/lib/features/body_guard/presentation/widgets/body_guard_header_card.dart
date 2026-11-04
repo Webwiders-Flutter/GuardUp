@@ -3,6 +3,7 @@ import 'package:guardup/core/extensions/number.extension.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '/core/constants/app_radius.dart';
+import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
@@ -71,7 +72,7 @@ class BodyGuardHeaderCard extends StatelessWidget {
                       p: 2.5,
                       child: Icon(
                         Icons.check_rounded,
-                        size: 10,
+                        size: AppSizes.iconTiny,
                         color: context.colors.surface,
                       ),
                     ),
@@ -107,7 +108,7 @@ class BodyGuardHeaderCard extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.star_rounded,
-                      size: 16,
+                      size: AppSizes.iconSm,
                       color: context.colors.primary,
                     ),
                     AppSpacing.xxs.w,

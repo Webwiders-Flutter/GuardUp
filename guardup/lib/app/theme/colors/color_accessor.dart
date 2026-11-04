@@ -31,11 +31,10 @@ class AppThemeAccessor {
 
   /// Primary gold gradient (from #EDCC73 to #AC7F42)
   LinearGradient get primaryGradient => LinearGradient(
-        colors: [primary, primaryContainer],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        
-      );
+    colors: [primary, primaryContainer],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
 
   // ------------------------------------------------------------
   // Secondary Tokens
@@ -78,20 +77,17 @@ class AppThemeAccessor {
 
   /// Card surface gradient (from #1C252D to #000B14)
   LinearGradient get surfaceGradient => LinearGradient(
-        colors: [surfaceContainer, surfaceDim],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-      );
+    colors: [surfaceContainer, surfaceDim],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
 
   /// Unselected card subtle gradient
   LinearGradient get surfaceGradientUnselected => LinearGradient(
-        colors: [
-          surfaceContainer.withValues(alpha: 0.4),
-          surfaceDim,
-        ],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-      );
+    colors: [surfaceContainer.withValues(alpha: 0.4), surfaceDim],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
 
   // ------------------------------------------------------------
   // Outline & Border Tokens

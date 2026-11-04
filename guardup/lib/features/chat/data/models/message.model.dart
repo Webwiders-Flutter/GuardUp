@@ -1,74 +1,32 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '../enums/message_status.enum.dart';
 import '../enums/message_type.enum.dart';
 
+part 'message.model.freezed.dart';
+part 'message.model.g.dart';
+
 /// Represents a single chat message exchanged within a conversation.
-class MessageModel {
-  final String id;
-  final String conversationId;
-  final String senderId;
-  final String content;
-  final String? highlightedText;
-  final String? vehicleBadge;
-  final MessageType type;
-  final MessageStatus status;
-  final DateTime createdAt;
-  final bool isMe;
-  final String? customFormattedTime;
-
-  const MessageModel({
-    required this.id,
-    required this.conversationId,
-    required this.senderId,
-    required this.content,
-    this.highlightedText,
-    this.vehicleBadge,
-    this.type = MessageType.text,
-    this.status = MessageStatus.sent,
-    required this.createdAt,
-    this.isMe = false,
-    this.customFormattedTime,
-  });
-
-  /// Readable formatted timestamp (e.g. "9:42 AM").
-  String get displayTime {
-    if (customFormattedTime != null && customFormattedTime!.isNotEmpty) {
-      return customFormattedTime!;
-    }
-    final hour = createdAt.hour > 12
-        ? createdAt.hour - 12
-        : (createdAt.hour == 0 ? 12 : createdAt.hour);
-    final minute = createdAt.minute.toString().padLeft(2, '0');
-    final period = createdAt.hour >= 12 ? 'PM' : 'AM';
-    return '$hour:$minute $period';
-  }
-
-  MessageModel copyWith({
-    String? id,
-    String? conversationId,
-    String? senderId,
-    String? content,
+@freezed
+abstract class MessageModel with _$MessageModel {
+  const factory MessageModel({
+    required String id,
+    required String conversationId,
+    required String senderId,
+    required String content,
     String? highlightedText,
     String? vehicleBadge,
-    MessageType? type,
-    MessageStatus? status,
-    DateTime? createdAt,
-    bool? isMe,
+    @Default(MessageType.text) MessageType type,
+    @Default(MessageStatus.sent) MessageStatus status,
+    required DateTime createdAt,
+    @Default(false) bool isMe,
     String? customFormattedTime,
-  }) {
-    return MessageModel(
-      id: id ?? this.id,
-      conversationId: conversationId ?? this.conversationId,
-      senderId: senderId ?? this.senderId,
-      content: content ?? this.content,
-      highlightedText: highlightedText ?? this.highlightedText,
-      vehicleBadge: vehicleBadge ?? this.vehicleBadge,
-      type: type ?? this.type,
-      status: status ?? this.status,
-      createdAt: createdAt ?? this.createdAt,
-      isMe: isMe ?? this.isMe,
-      customFormattedTime: customFormattedTime ?? this.customFormattedTime,
-    );
-  }
+  }) = _MessageModel;
+
+  factory MessageModel.fromJson(Map<String, dynamic> json) =>
+      _$MessageModelFromJson(json);
+
+  static List<MessageModel> get fakeData => fakeEscortChatMessages;
 
   /// Curated fake messages matching the live escort chat thread screenshot.
   static List<MessageModel> get fakeEscortChatMessages => [

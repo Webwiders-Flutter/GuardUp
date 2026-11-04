@@ -27,4 +27,3 @@ class ContactUsBloc extends Bloc<ContactUsEvent, ContactUsState> {
     );
   }
 }
-

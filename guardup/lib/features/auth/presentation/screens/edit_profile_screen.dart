@@ -4,6 +4,7 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:quick_container/quick_container.dart';
 
+import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
@@ -13,7 +14,6 @@ import '/core/utils/validators.dart';
 import '/gen/assets.gen.dart';
 import '../../data/enum/gender_type.enum.dart';
 import '/shared/widgets/buttons/app_button.dart';
-import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_media_picker_sheet.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/sections/app_appbar.dart';
@@ -32,25 +32,17 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  late final TextEditingController _nameController;
-  late final TextEditingController _emailController;
-  late final TextEditingController _phoneController;
-  late final SelectionController<GenderType> _genderController;
-  final ValueNotifier<XFile?> _profileImageNotifier =
-      ValueNotifier<XFile?>(null);
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController(text: 'Michael Carter');
-    _emailController = TextEditingController(
-      text: 'michael.carter@example.com',
-    );
-    _phoneController = TextEditingController(text: '1234567890');
-    _genderController = SelectionController<GenderType>.single(
-      initial: GenderType.male,
-    );
-  }
+  final _nameController = TextEditingController(text: 'Michael Carter');
+  final _emailController = TextEditingController(
+    text: 'michael.carter@example.com',
+  );
+  final _phoneController = TextEditingController(text: '1234567890');
+  final _genderController = SelectionController<GenderType>.single(
+    initial: GenderType.male,
+  );
+  final ValueNotifier<XFile?> _profileImageNotifier = ValueNotifier<XFile?>(
+    null,
+  );
 
   @override
   void dispose() {
@@ -79,18 +71,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   void _handleSave() {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-    AppSnackbar.success('Profile updated successfully', context: context);
     context.pop();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.transparent,
-      appBar: AppAppBar.transparent(
-        title: context.l10n.editProfileTitle,
-      ),
+      appBar: AppAppBar.transparent(title: context.l10n.editProfileTitle),
       body: SingleChildScrollView(
         padding: context.horizontalEdgeInsets,
         child: Form(
@@ -109,8 +96,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       children: [
                         // Circular Avatar with Gold Ring Border
                         QuickContainer(
-                          w: 96,
-                          h: 96,
+                          w: AppSizes.avatarColossal,
+                          h: AppSizes.avatarColossal,
                           shape: QuickContainerShape.circle,
                           border: Border.all(
                             color: context.colors.primary,
@@ -124,16 +111,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 child: profileImage != null
                                     ? AppImage.xFile(
                                         xFile: profileImage,
-                                        width: 92,
-                                        height: 92,
+                                        width: AppSizes.avatarColossal - 4,
+                                        height: AppSizes.avatarColossal - 4,
                                         fit: BoxFit.cover,
                                         onTap: _handleChangePhoto,
                                       )
                                     : AppImage.asset(
                                         assetPath:
                                             Assets.images.profilePicture.path,
-                                        width: 92,
-                                        height: 92,
+                                        width: AppSizes.avatarColossal - 4,
+                                        height: AppSizes.avatarColossal - 4,
                                         fit: BoxFit.cover,
                                         onTap: _handleChangePhoto,
                                       ),
@@ -149,14 +136,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           child: GestureDetector(
                             onTap: _handleChangePhoto,
                             child: QuickContainer(
-                              w: 28,
-                              h: 28,
+                              w: AppSizes.iconMdl,
+                              h: AppSizes.iconMdl,
                               shape: QuickContainerShape.circle,
                               color: context.colors.primary,
                               alignment: Alignment.center,
                               child: Icon(
                                 Icons.camera_alt,
-                                size: 15,
+                                size: AppSizes.iconSm,
                                 color: context.colors.surface,
                               ),
                             ),
@@ -175,7 +162,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         AppSpacing.xs.w,
                         Icon(
                           Icons.check_circle_rounded,
-                          size: 16,
+                          size: AppSizes.iconSm,
                           color: context.colors.primary,
                         ),
                       ],
@@ -191,7 +178,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   Icon(
                     Icons.badge_outlined,
                     color: context.colors.primary,
-                    size: 20,
+                    size: AppSizes.iconMd,
                   ),
                   AppSpacing.xs.w,
                   Text(

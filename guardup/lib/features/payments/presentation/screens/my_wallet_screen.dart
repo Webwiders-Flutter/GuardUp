@@ -6,9 +6,7 @@ import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
-import '/core/extensions/textstyle_extension.dart';
 import '/core/state/api_state.dart';
-import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/pagination/app_pagination.dart';
 import '/shared/widgets/pagination/pagination.controller.dart';
 import '/shared/widgets/pagination/pagination.state.dart';
@@ -29,13 +27,10 @@ class MyWalletScreen extends StatefulWidget {
 
 class _MyWalletScreenState extends State<MyWalletScreen> {
   late final PaginationController<TransactionModel> _paginationController;
-  late final ValueNotifier<double> _balanceNotifier;
 
   @override
   void initState() {
     super.initState();
-    _balanceNotifier = ValueNotifier<double>(250.0);
-
     // Initial 8 items from fakeData matching the design mockup
     final initialItems = TransactionModel.fakeData.take(8).toList();
 
@@ -45,59 +40,17 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
         total: TransactionModel.fakeData.length,
         status: const ApiState.success(null),
       ),
-      onRefresh: _handleRefresh,
-      onLoadMore: _handleLoadMore,
     );
   }
 
   @override
   void dispose() {
     _paginationController.dispose();
-    _balanceNotifier.dispose();
     super.dispose();
   }
 
-  /// Pull-to-refresh callback simulates real-world network refresh.
-  Future<void> _handleRefresh() async {
-    if (!mounted) return;
-
-    final refreshedItems = TransactionModel.fakeData.take(8).toList();
-    _paginationController.updateState(
-      PaginationState<TransactionModel>(
-        items: refreshedItems,
-        total: TransactionModel.fakeData.length,
-        status: const ApiState.success(null),
-      ),
-    );
-  }
-
-  /// Infinite scroll page-load callback.
-  Future<void> _handleLoadMore() async {
-    await Future.delayed(const Duration(milliseconds: 700));
-    if (!mounted) return;
-
-    final currentItems = _paginationController.value.items;
-    final nextItems = TransactionModel.fakeData
-        .skip(currentItems.length)
-        .take(4)
-        .toList();
-
-    if (nextItems.isEmpty) return;
-
-    final updated = [...currentItems, ...nextItems];
-    _paginationController.updateState(
-      _paginationController.value.copyWith(
-        items: updated,
-        loadMoreStatus: const ApiState.success(null),
-      ),
-    );
-  }
-
   void _handleWithdraw() {
-    AppSnackbar.info(
-      'Withdrawal service will process funds to your linked account.',
-      context: context,
-    );
+    context.push(AppRoutes.myBankDetails);
   }
 
   void _handleAddBankAccount() {
@@ -107,7 +60,6 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.transparent,
       appBar: AppAppBar.transparent(
         title: context.l10n.myWalletTitle,
         showBackIcon: true,
@@ -129,15 +81,7 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
           ),
 
           itemBuilder: (context, transaction, index) {
-            return TransactionCard(
-              transaction: transaction,
-              onTap: () {
-                AppSnackbar.info(
-                  '${transaction.title} • ${transaction.amountFormatted}',
-                  context: context,
-                );
-              },
-            );
+            return TransactionCard(transaction: transaction);
           },
         ),
       ),
@@ -152,16 +96,10 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
         AppSpacing.md.h,
 
         // Upper Balance Card with luxury SVG background
-        ValueListenableBuilder<double>(
-          valueListenable: _balanceNotifier,
-          builder: (context, balance, _) {
-            return WalletBalanceCard(
-              balance: balance,
-              currency: 'USD',
-              onWithdraw: _handleWithdraw,
-              onAddBankAccount: _handleAddBankAccount,
-            );
-          },
+        WalletBalanceCard(
+          balance: 250,
+          onWithdraw: _handleWithdraw,
+          onAddBankAccount: _handleAddBankAccount,
         ),
         AppSpacing.xl.h,
 
@@ -174,7 +112,7 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
             children: [
               Text(
                 context.l10n.transactionHistory,
-                style: context.textTheme.titleLarge?.regular(),
+                style: context.textTheme.titleLarge,
               ),
               const TransactionDateFilter(),
             ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import '/core/constants/app_constants.dart';
 
 /// Extensions on [num] (covering [double] and [int]) for currency and number formatting.
@@ -33,7 +34,6 @@ extension NumberFormattingExtension on num {
 
   /// Alias for [toPercentageText].
   String get percentageText => toPercentageText;
-
 
   /// Converts this amount in Rupees (e.g. 500.50) to integer paise (50050).
   int get toPaise => (this * 100).round();

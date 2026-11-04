@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:guardup/core/extensions/number.extension.dart';
 
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
@@ -14,9 +15,6 @@ class WalletBalanceCard extends StatelessWidget {
   /// Current available balance.
   final double balance;
 
-  /// Currency code (defaults to 'USD').
-  final String currency;
-
   /// Triggered when the user taps "Withdraw".
   final VoidCallback? onWithdraw;
 
@@ -26,15 +24,12 @@ class WalletBalanceCard extends StatelessWidget {
   const WalletBalanceCard({
     super.key,
     this.balance = 250.0,
-    this.currency = 'USD',
     this.onWithdraw,
     this.onAddBankAccount,
   });
 
   @override
   Widget build(BuildContext context) {
-    final formattedBalance = '\$${balance.toStringAsFixed(2)} $currency';
-
     return Padding(
       padding: 5.wPercent(context).lPadding,
       child: Stack(
@@ -67,7 +62,7 @@ class WalletBalanceCard extends StatelessWidget {
 
                 // Balance Value
                 Text(
-                  formattedBalance,
+                  balance.toUsd,
                   style: context.textTheme.headlineMedium?.bold(),
                 ),
                 AppSpacing.md.h,

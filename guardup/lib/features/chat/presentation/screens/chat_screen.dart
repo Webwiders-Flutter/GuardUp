@@ -9,13 +9,11 @@ import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/gen/assets.gen.dart';
-import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 
 import 'package:quick_container/quick_container.dart';
 
-import '../../data/enums/message_status.enum.dart';
 import '../../data/models/conversation.model.dart';
 import '../../data/models/message.model.dart';
 import '../widgets/chat_message_widget.dart';
@@ -31,19 +29,11 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  late final TextEditingController _messageController;
-  late final ScrollController _scrollController;
-  late final ValueNotifier<List<MessageModel>> _messagesNotifier;
-
-  @override
-  void initState() {
-    super.initState();
-    _messageController = TextEditingController();
-    _scrollController = ScrollController();
-    _messagesNotifier = ValueNotifier<List<MessageModel>>(
-      MessageModel.fakeEscortChatMessages,
-    );
-  }
+  final _messageController = TextEditingController();
+  final _scrollController = ScrollController();
+  final _messagesNotifier = ValueNotifier<List<MessageModel>>(
+    MessageModel.fakeEscortChatMessages,
+  );
 
   @override
   void dispose() {
@@ -54,41 +44,12 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _handleSend() {
-    final text = _messageController.text.trim();
-    if (text.isEmpty) return;
-
-    final newMessage = MessageModel(
-      id: 'msg_${DateTime.now().millisecondsSinceEpoch}',
-      conversationId: widget.conversation?.id ?? 'conv_1',
-      senderId: 'current_user',
-      content: text,
-      status: MessageStatus.read,
-      createdAt: DateTime.now(),
-      isMe: true,
-    );
-
-    _messagesNotifier.value = [..._messagesNotifier.value, newMessage];
     _messageController.clear();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
   }
 
-  void _handleAttachment() {
-    AppSnackbar.info('Attachment options coming soon', context: context);
-  }
+  void _handleAttachment() {}
 
-  void _handleVehicleTap(String? badge) {
-    if (badge == null) return;
-    AppSnackbar.info(badge, context: context);
-  }
+  void _handleVehicleTap(String? badge) {}
 
   @override
   Widget build(BuildContext context) {
@@ -97,13 +58,8 @@ class _ChatScreenState extends State<ChatScreen> {
         widget.conversation?.avatarUrl ?? Assets.images.profilePicture2.path;
 
     return Scaffold(
-      backgroundColor: context.colors.transparent,
       appBar: AppAppBar.transparent(
-        showBackIcon: false,
-        leading: Padding(
-          padding: AppSpacing.md.lPadding,
-          child: Icon(Icons.arrow_back_ios_new, color: context.colors.primary),
-        ),
+        showBackIcon: true,
         alignTitle: AlignTitle.left,
         height: 64,
         titleWidget: Row(
@@ -147,8 +103,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   Text(
                     context.l10n.activeEscortSubtitle,
                     style: context.textTheme.labelSmall
-                        ?.regular()
-                        .colour(context.colors.primary)
+                        ?.colour(context.colors.primary)
                         .decreaseSize(3),
                   ),
                 ],
@@ -199,20 +154,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 size: AppInputSize.large,
                 textInputAction: TextInputAction.send,
                 onFieldSubmitted: (_) => _handleSend(),
+                style: TextStyle(color: context.colors.onSurface),
                 decoration: InputDecoration(
                   hintText: context.l10n.typeMessageHint,
-                  hintStyle: context.textTheme.bodyMedium?.colour(
-                    context.colors.onSurfaceVariant.withValues(alpha: 0.7),
-                  ),
                   fillColor: context.colors.surfaceContainer,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.lg),
-                    borderSide: BorderSide(
-                      color: context.colors.outlineVariant.withValues(
-                        alpha: 0.35,
-                      ),
-                    ),
-                  ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.lg),
                     borderSide: BorderSide(

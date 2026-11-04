@@ -13,7 +13,6 @@ import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
-import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_dropdown.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 import '/shared/widgets/selection/app_removable_chip.dart';
@@ -38,34 +37,25 @@ class BodyguardAboutWidget extends StatefulWidget {
 }
 
 class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
-  late final ValueNotifier<bool> _isBioExpandedNotifier;
-  late final ValueNotifier<List<GuardService>> _selectedServicesNotifier;
-  late final SelectionController<GuardService> _dropdownController;
+  final _isBioExpandedNotifier = ValueNotifier<bool>(false);
+  final _dropdownController = SelectionController<GuardService>.single();
+
+  late final _selectedServicesNotifier = ValueNotifier<List<GuardService>>(
+    List.from(
+      widget.bodyguard?.serviceTypes.isNotEmpty == true
+          ? widget.bodyguard!.serviceTypes
+          : const [
+              GuardService.vipCloseProtection,
+              GuardService.armedEscort,
+              GuardService.tacticalDriver,
+            ],
+    ),
+  );
 
   static const String _defaultBio =
       'I am a professional and certified bodyguard with over 8 years of '
       'experience in personal protection, executive security and close protection. '
       'I am trained in situational awareness, conflict management and first aid.';
-
-  @override
-  void initState() {
-    super.initState();
-    _isBioExpandedNotifier = ValueNotifier<bool>(false);
-
-    final initialServices = widget.bodyguard?.serviceTypes.isNotEmpty == true
-        ? widget.bodyguard!.serviceTypes
-        : [
-            GuardService.vipCloseProtection,
-            GuardService.armedEscort,
-            GuardService.tacticalDriver,
-          ];
-
-    _selectedServicesNotifier = ValueNotifier<List<GuardService>>(
-      List.from(initialServices),
-    );
-
-    _dropdownController = SelectionController<GuardService>.single();
-  }
 
   @override
   void dispose() {
@@ -122,8 +112,8 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         icon.svg(
-          width: 18,
-          height: 18,
+          width: AppSizes.iconSmd,
+          height: AppSizes.iconSmd,
           colorFilter: ColorFilter.mode(
             context.colors.primary,
             BlendMode.srcIn,
@@ -187,14 +177,7 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
                     ),
                   ),
                   AppSpacing.sm.w,
-                  _buildEditPencilButton(
-                    onTap:
-                        widget.onEditBio ??
-                        () => AppSnackbar.info(
-                          'Edit bio tapped',
-                          context: context,
-                        ),
-                  ),
+                  _buildEditPencilButton(onTap: widget.onEditBio ?? () {}),
                 ],
               ),
               AppSpacing.sm.h,
@@ -210,9 +193,9 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
                       children: [
                         Text(
                           isExpanded ? 'Show Less' : 'Read More',
-                          style: context.textTheme.labelMedium
-                              ?.regular()
-                              .colour(context.colors.primary),
+                          style: context.textTheme.labelMedium?.colour(
+                            context.colors.primary,
+                          ),
                         ),
                         AppSpacing.xxs.w,
                         Icon(
@@ -242,12 +225,7 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
               'Key Details',
               style: context.textTheme.titleMedium?.semiBold(),
             ),
-            _buildEditPencilButton(
-              onTap:
-                  widget.onEditKeyDetails ??
-                  () =>
-                      AppSnackbar.info('Edit details tapped', context: context),
-            ),
+            _buildEditPencilButton(onTap: widget.onEditKeyDetails ?? () {}),
           ],
         ),
         AppSpacing.md.h,
@@ -267,8 +245,8 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
                 icon: Assets.svg.dollar,
                 label: 'Hourly Rate',
                 value: widget.bodyguard != null
-                    ? widget.bodyguard!.formattedHourlyRate
-                    : '\$60 / hour',
+                    ? '${widget.bodyguard!.hourlyRate.toUsd} / hour'
+                    : '${60.toUsd} / hour',
               ),
               AppSpacing.md.h,
               _buildDetailRow(
@@ -299,10 +277,7 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
         // ---------------------------------------------------------------------
         // 3. Services Section
         // ---------------------------------------------------------------------
-        Text(
-          'Services',
-          style: context.textTheme.titleMedium?.semiBold(),
-        ),
+        Text('Services', style: context.textTheme.titleMedium?.semiBold()),
         AppSpacing.sm.h,
 
         // Selected Service Chips
@@ -322,7 +297,7 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
                     runSpacing: AppSpacing.smd,
                     children: selectedServices.map((service) {
                       return AppRemovableChip(
-                        text: _formatServiceLabel(service),
+                        text: service.label,
                         onRemove: () => _handleRemoveService(service),
                       );
                     }).toList(),
@@ -364,13 +339,13 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
                         ),
                         fillColor: context.colors.onPrimary,
                       ),
-                      );
+                    );
                   },
                   items: availableServices
                       .map(
                         (s) => SelectableItem<GuardService, String>(
                           id: s,
-                          data: _formatServiceLabel(s),
+                          data: s.label,
                           icon: Icon(
                             s.icon,
                             size: AppSizes.iconSm,
@@ -388,26 +363,5 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
         AppSpacing.xl.h,
       ],
     );
-  }
-
-  static String _formatServiceLabel(GuardService service) {
-    switch (service) {
-      case GuardService.vipCloseProtection:
-        return 'VIP Close Protection';
-      case GuardService.armedEscort:
-        return 'Armed Escort';
-      case GuardService.tacticalDriver:
-        return 'Tactical Driver';
-      case GuardService.eventSecurity:
-        return 'Event Security';
-      case GuardService.residentialProtection:
-        return 'Residential Protection';
-      case GuardService.assetProtection:
-        return 'Asset Protection';
-      case GuardService.surveillanceRecon:
-        return 'Surveillance & Recon';
-      case GuardService.crisisManagement:
-        return 'Crisis Management';
-    }
   }
 }

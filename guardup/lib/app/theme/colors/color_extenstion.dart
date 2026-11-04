@@ -78,26 +78,47 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     if (other is! AppThemeColors) return this;
 
     return AppThemeColors(
-      primaryContainer:
-          Color.lerp(primaryContainer, other.primaryContainer, t)!,
+      primaryContainer: Color.lerp(
+        primaryContainer,
+        other.primaryContainer,
+        t,
+      )!,
       surfaceDim: Color.lerp(surfaceDim, other.surfaceDim, t)!,
-      surfaceContainer:
-          Color.lerp(surfaceContainer, other.surfaceContainer, t)!,
-      surfaceContainerHigh:
-          Color.lerp(surfaceContainerHigh, other.surfaceContainerHigh, t)!,
-      onSurfaceVariant:
-          Color.lerp(onSurfaceVariant, other.onSurfaceVariant, t)!,
-      onSurfaceTertiary:
-          Color.lerp(onSurfaceTertiary, other.onSurfaceTertiary, t)!,
+      surfaceContainer: Color.lerp(
+        surfaceContainer,
+        other.surfaceContainer,
+        t,
+      )!,
+      surfaceContainerHigh: Color.lerp(
+        surfaceContainerHigh,
+        other.surfaceContainerHigh,
+        t,
+      )!,
+      onSurfaceVariant: Color.lerp(
+        onSurfaceVariant,
+        other.onSurfaceVariant,
+        t,
+      )!,
+      onSurfaceTertiary: Color.lerp(
+        onSurfaceTertiary,
+        other.onSurfaceTertiary,
+        t,
+      )!,
       outline: Color.lerp(outline, other.outline, t)!,
       outlineVariant: Color.lerp(outlineVariant, other.outlineVariant, t)!,
       errorContainer: Color.lerp(errorContainer, other.errorContainer, t)!,
       success: Color.lerp(success, other.success, t)!,
-      successContainer:
-          Color.lerp(successContainer, other.successContainer, t)!,
+      successContainer: Color.lerp(
+        successContainer,
+        other.successContainer,
+        t,
+      )!,
       warning: Color.lerp(warning, other.warning, t)!,
-      warningContainer:
-          Color.lerp(warningContainer, other.warningContainer, t)!,
+      warningContainer: Color.lerp(
+        warningContainer,
+        other.warningContainer,
+        t,
+      )!,
       info: Color.lerp(info, other.info, t)!,
       infoContainer: Color.lerp(infoContainer, other.infoContainer, t)!,
     );

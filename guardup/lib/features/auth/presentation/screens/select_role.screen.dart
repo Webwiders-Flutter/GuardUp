@@ -26,16 +26,8 @@ class SelectRoleScreen extends StatefulWidget {
 }
 
 class _SelectRoleScreenState extends State<SelectRoleScreen> {
-  late final SelectionController<UserRole> _roleController;
-
-  @override
-  void initState() {
-    super.initState();
-    final initialRole = sl<AuthBloc>().state.sessionRole ?? UserRole.guard;
-    _roleController = SelectionController<UserRole>.single(
-      initial: initialRole,
-    );
-  }
+  final SelectionController<UserRole> _roleController =
+      SelectionController<UserRole>.single(initial: .guard);
 
   @override
   void dispose() {
@@ -46,18 +38,12 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
   void _handleContinue() {
     final selectedRole = _roleController.selectedItem ?? UserRole.customer;
     sl<AuthBloc>().add(AuthSetSessionRoleRequested(selectedRole));
-
-    if (selectedRole == UserRole.company) {
-      context.push(AppRoutes.companyProfile);
-    } else {
-      context.push(AppRoutes.signup, extra: selectedRole);
-    }
+    context.push(AppRoutes.signup, extra: selectedRole);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.transparent,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -84,9 +70,7 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
                         spans: [
                           AppTextSpan(
                             text: 'Welcome to ',
-                            style: context.textTheme.headlineMedium
-                                ?.bold()
-                                ,
+                            style: context.textTheme.headlineMedium?.bold(),
                           ),
                           AppTextSpan(
                             text: 'GUARDUP',

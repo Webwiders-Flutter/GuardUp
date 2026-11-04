@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'string.extension.dart';
+
 // ---------------------------------------------------------------------------
 // Constants & Lookup Tables
 // ---------------------------------------------------------------------------
@@ -522,4 +523,3 @@ extension Uint8ListFileX on Uint8List {
 extension NullableUint8ListFileX on Uint8List? {
   bool get isSvg => this != null && this!.isSvg;
 }
-

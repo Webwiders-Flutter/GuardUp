@@ -92,4 +92,3 @@ enum GuardDocType {
 
   bool get isOptional => !isRequired;
 }
-

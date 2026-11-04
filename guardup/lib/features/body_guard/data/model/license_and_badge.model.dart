@@ -1,94 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'license_and_badge.model.freezed.dart';
+part 'license_and_badge.model.g.dart';
 
 /// Represents a tactical bodyguard certification, operational license, or accredited badge.
-class LicenseAndBadgeModel {
-  final String id;
-  final String name;
-  final String description;
-  final DateTime? validTill;
-  final bool isVerified;
-  final String? badgeNumber;
-  final String? issuingAuthority;
-  final String? customValidity;
-  final IconData? icon;
-
-  const LicenseAndBadgeModel({
-    required this.id,
-    required this.name,
-    required this.description,
-    this.validTill,
-    this.isVerified = false,
-    this.badgeNumber,
-    this.issuingAuthority,
-    this.customValidity,
-    this.icon,
-  });
-
-  bool get isExpired {
-    if (validTill == null) return false;
-    return validTill!.isBefore(DateTime.now());
-  }
-
-  String get displayValidity {
-    if (customValidity != null && customValidity!.isNotEmpty) {
-      return customValidity!;
-    }
-    if (validTill == null) return 'Permanent / Lifetime';
-    return '${validTill!.day.toString().padLeft(2, '0')}/${validTill!.month.toString().padLeft(2, '0')}/${validTill!.year}';
-  }
-
-  LicenseAndBadgeModel copyWith({
-    String? id,
-    String? name,
-    String? description,
+@freezed
+abstract class LicenseAndBadgeModel with _$LicenseAndBadgeModel {
+  const factory LicenseAndBadgeModel({
+    required String id,
+    required String name,
+    required String description,
     DateTime? validTill,
-    bool? isVerified,
+    @Default(false) bool isVerified,
     String? badgeNumber,
     String? issuingAuthority,
-  }) {
-    return LicenseAndBadgeModel(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      description: description ?? this.description,
-      validTill: validTill ?? this.validTill,
-      isVerified: isVerified ?? this.isVerified,
-      badgeNumber: badgeNumber ?? this.badgeNumber,
-      issuingAuthority: issuingAuthority ?? this.issuingAuthority,
-    );
-  }
+    String? customValidity,
+    @JsonKey(includeFromJson: false, includeToJson: false) IconData? icon,
+  }) = _LicenseAndBadgeModel;
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'description': description,
-      if (validTill != null) 'validTill': validTill!.toIso8601String(),
-      'isVerified': isVerified,
-      if (badgeNumber != null) 'badgeNumber': badgeNumber,
-      if (issuingAuthority != null) 'issuingAuthority': issuingAuthority,
-    };
-  }
+  factory LicenseAndBadgeModel.fromJson(Map<String, dynamic> json) =>
+      _$LicenseAndBadgeModelFromJson(json);
 
-  factory LicenseAndBadgeModel.fromJson(Map<String, dynamic> json) {
-    return LicenseAndBadgeModel(
-      id: json['id'] as String? ?? '',
-      name: json['name'] as String? ?? '',
-      description: json['description'] as String? ?? '',
-      validTill: json['validTill'] != null
-          ? DateTime.tryParse(json['validTill'] as String)
-          : null,
-      isVerified: json['isVerified'] as bool? ?? false,
-      badgeNumber: json['badgeNumber'] as String?,
-      issuingAuthority: json['issuingAuthority'] as String?,
-    );
-  }
+  static List<LicenseAndBadgeModel> get fakeData => fakeAuditedLicenses;
 
   /// Curated list of verified licenses matching the bodyguard documents mockup.
   static List<LicenseAndBadgeModel> get fakeAuditedLicenses => [
     LicenseAndBadgeModel(
       id: 'lic_sia',
       name: 'SIA Close Protection License',
-      description: 'Close protection specialist accreditation and threat mitigation.',
+      description:
+          'Close protection specialist accreditation and threat mitigation.',
       issuingAuthority: 'Security Industry Authority',
       customValidity: 'Valid till Oct 2026',
       validTill: DateTime(2026, 10, 31),
@@ -98,7 +40,8 @@ class LicenseAndBadgeModel {
     LicenseAndBadgeModel(
       id: 'lic_cpr',
       name: 'Advanced CPR & First Aid',
-      description: 'Emergency trauma life support, bleed management and resuscitation.',
+      description:
+          'Emergency trauma life support, bleed management and resuscitation.',
       issuingAuthority: 'St. John Ambulance',
       customValidity: 'Valid till Nov 2025',
       validTill: DateTime(2025, 11, 30),
@@ -156,4 +99,3 @@ class LicenseAndBadgeModel {
     ),
   ];
 }
-

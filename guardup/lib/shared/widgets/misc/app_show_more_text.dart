@@ -46,7 +46,9 @@ class AppShowMoreText extends StatelessWidget {
         return Dialog(
           backgroundColor: colors.surface,
           surfaceTintColor: colors.surface,
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.lg.toBorderRadius),
+          shape: RoundedRectangleBorder(
+            borderRadius: AppRadius.lg.toBorderRadius,
+          ),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 560, maxHeight: 520),
             child: Padding(
@@ -177,10 +179,7 @@ class AppShowMoreText extends StatelessWidget {
   Widget build(BuildContext context) {
     final effectiveStyle =
         style ??
-        context.textTheme.bodySmall
-            ?.size(AppSpacing.md)
-            .lineHeight(1.35)
-            ;
+        context.textTheme.bodySmall?.size(AppSpacing.md).lineHeight(1.35);
 
     return LayoutBuilder(
       builder: (context, constraints) {

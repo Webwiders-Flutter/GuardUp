@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '/core/constants/app_radius.dart';
+import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
+import '/core/extensions/datetime.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
@@ -68,7 +70,11 @@ class ReviewCard extends StatelessWidget {
                 ),
               ),
               AppSpacing.xxs.w,
-              Icon(Icons.star_rounded, size: 14, color: context.colors.primary),
+              Icon(
+                Icons.star_rounded,
+                size: AppSizes.iconXs,
+                color: context.colors.primary,
+              ),
 
               const Spacer(),
 
@@ -85,7 +91,7 @@ class ReviewCard extends StatelessWidget {
           Row(
             children: [
               Text(
-                review.timeAgo,
+                review.customFormattedTimeAgo ?? review.createdAt.timeAgo,
                 style: context.textTheme.labelSmall?.colour(
                   context.colors.onSurfaceVariant,
                 ),

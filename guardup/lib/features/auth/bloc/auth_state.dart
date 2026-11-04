@@ -5,11 +5,7 @@ import '../data/enum/user_role.enum.dart';
 import '../data/model/user.model.dart';
 
 /// The single source of truth for global session authentication.
-enum AuthSessionStatus {
-  unknown,
-  authenticated,
-  unauthenticated,
-}
+enum AuthSessionStatus { unknown, authenticated, unauthenticated }
 
 /// Represents the authentication state of the application.
 ///
@@ -25,25 +21,23 @@ class AuthState extends Equatable {
   });
 
   const AuthState.unknown()
-      : this(
-          sessionStatus: AuthSessionStatus.unknown,
-          operationState: const ApiState.initial(),
-        );
+    : this(
+        sessionStatus: AuthSessionStatus.unknown,
+        operationState: const ApiState.initial(),
+      );
 
   const AuthState.unauthenticated({
     ApiState<UserModel> operationState = const ApiState.initial(),
   }) : this(
-          sessionStatus: AuthSessionStatus.unauthenticated,
-          operationState: operationState,
-        );
+         sessionStatus: AuthSessionStatus.unauthenticated,
+         operationState: operationState,
+       );
 
-  AuthState.authenticated(
-    UserModel user, {
-    ApiState<UserModel>? operationState,
-  }) : this(
-          sessionStatus: AuthSessionStatus.authenticated,
-          operationState: operationState ?? ApiSuccess(user),
-        );
+  AuthState.authenticated(UserModel user, {ApiState<UserModel>? operationState})
+    : this(
+        sessionStatus: AuthSessionStatus.authenticated,
+        operationState: operationState ?? ApiSuccess(user),
+      );
 
   bool get isAuthenticated => sessionStatus == AuthSessionStatus.authenticated;
   bool get isUnauthenticated =>
@@ -69,5 +63,3 @@ class AuthState extends Equatable {
   @override
   List<Object?> get props => [sessionStatus, operationState];
 }
-
-

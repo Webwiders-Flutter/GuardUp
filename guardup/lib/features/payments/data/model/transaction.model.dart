@@ -1,58 +1,30 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '../enum/transaction_type.enum.dart';
 
+part 'transaction.model.freezed.dart';
+part 'transaction.model.g.dart';
+
 /// Model representing a monetary transaction record in the user's wallet.
-class TransactionModel {
-  final String id;
-  final double amount;
-  final String currency;
-  final TransactionType type;
-  final String title;
-  final DateTime dateTime;
-  final String? bookingId;
-  final String? formattedDate;
-
-  const TransactionModel({
-    required this.id,
-    required this.amount,
-    this.currency = 'USD',
-    required this.type,
-    required this.title,
-    required this.dateTime,
-    this.bookingId,
-    this.formattedDate,
-  });
-
-  /// Formats amount into clean string: e.g. "$250 USD".
-  String get amountFormatted {
-    final isInt = amount.truncateToDouble() == amount;
-    final formattedValue = isInt ? amount.toInt().toString() : amount.toStringAsFixed(2);
-    return '\$$formattedValue $currency';
-  }
-
-  /// Display date representation.
-  String get displayDate => formattedDate ?? '23 March 2026, 06:36pm';
-
-  TransactionModel copyWith({
-    String? id,
-    double? amount,
-    String? currency,
-    TransactionType? type,
-    String? title,
-    DateTime? dateTime,
+@freezed
+abstract class TransactionModel with _$TransactionModel {
+  const factory TransactionModel({
+    required String id,
+    required double amount,
+    @Default('USD') String currency,
+    required TransactionType type,
+    required String title,
+    required DateTime dateTime,
     String? bookingId,
     String? formattedDate,
-  }) {
-    return TransactionModel(
-      id: id ?? this.id,
-      amount: amount ?? this.amount,
-      currency: currency ?? this.currency,
-      type: type ?? this.type,
-      title: title ?? this.title,
-      dateTime: dateTime ?? this.dateTime,
-      bookingId: bookingId ?? this.bookingId,
-      formattedDate: formattedDate ?? this.formattedDate,
-    );
-  }
+    String? referenceId,
+    String? gateway,
+    String? scheduleText,
+    String? discountNote,
+  }) = _TransactionModel;
+
+  factory TransactionModel.fromJson(Map<String, dynamic> json) =>
+      _$TransactionModelFromJson(json);
 
   /// Curated fake transactions matching the exact wallet history design.
   static List<TransactionModel> get fakeData => [
@@ -172,4 +144,3 @@ class TransactionModel {
     ),
   ];
 }
-

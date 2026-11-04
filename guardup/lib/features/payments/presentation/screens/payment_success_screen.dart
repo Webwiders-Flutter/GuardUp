@@ -2,60 +2,58 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 
+import '../../../../core/extensions/number.extension.dart';
 import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
+import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
+import '/core/extensions/string.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
+import '/features/auth/data/model/user.model.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
-
-/// Arguments passed to [PaymentSuccessScreen].
-class PaymentSuccessArgs {
-  final String? referenceId;
-  final String? companyOrOperativeName;
-  final String? companyInitials;
-  final String? scheduleText;
-  final String? amountText;
-  final String? discountNote;
-  final String? buttonText;
-  final VoidCallback? onTap;
-
-  const PaymentSuccessArgs({
-    this.referenceId,
-    this.companyOrOperativeName,
-    this.companyInitials,
-    this.scheduleText,
-    this.amountText,
-    this.discountNote,
-    this.buttonText,
-    this.onTap,
-  });
-}
+import '../../data/model/transaction.model.dart';
 
 /// Screen displaying a luxury payment confirmation receipt matching GuardUp design standards.
 class PaymentSuccessScreen extends StatelessWidget {
-  final PaymentSuccessArgs? args;
+  final TransactionModel? transaction;
+  final UserModel? user;
+  final String? buttonText;
+  final VoidCallback? onTap;
 
-  const PaymentSuccessScreen({super.key, this.args});
+  const PaymentSuccessScreen({
+    super.key,
+    this.transaction,
+    this.user,
+    this.buttonText,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final referenceId = args?.referenceId ?? '#GD - 884920';
-    final companyName =
-        args?.companyOrOperativeName ?? 'SecurePro Security Ltd.';
-    final initials = args?.companyInitials ?? 'SP';
-    final scheduleText = args?.scheduleText ?? 'Today, 2:00 PM – 4:00 PM';
-    final amountText = args?.amountText ?? r'$49';
+    final referenceId =
+        transaction?.referenceId ?? transaction?.bookingId ?? '#GD - 884920';
+    final companyName = user?.name ?? 'SecurePro Security Ltd.';
+    final initials = user?.name.isNotEmpty == true
+        ? user!.name.getInitials()
+        : 'SP';
+    final scheduleText =
+        transaction?.scheduleText ??
+        transaction?.formattedDate ??
+        'Today, 2:00 PM – 4:00 PM';
+    final amountText = transaction != null
+        ? transaction!.amount.toUsd
+        : 49.toUsd;
+    final gateway = transaction?.gateway ?? context.l10n.stripeVerified;
     final discountNote =
-        args?.discountNote ?? context.l10n.incMembershipDiscount;
-    final buttonText = args?.buttonText ?? context.l10n.next;
+        transaction?.discountNote ?? context.l10n.incMembershipDiscount;
+    final effectiveButtonText = buttonText ?? context.l10n.next;
 
     return Scaffold(
-      backgroundColor: context.colors.transparent,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -86,16 +84,16 @@ class PaymentSuccessScreen extends StatelessWidget {
                               ),
                               alignment: Alignment.center,
                               child: Assets.svg.verifiedShieldBadge.svg(
-                                width: 54,
-                                height: 54,
+                                width: AppSizes.iconGiant,
+                                height: AppSizes.iconGiant,
                               ),
                             ),
                             Positioned(
-                              bottom: 2,
-                              right: 2,
+                              bottom: -2,
+                              right: -2,
                               child: Container(
-                                width: 28,
-                                height: 28,
+                                width: AppSizes.iconMdl,
+                                height: AppSizes.iconMdl,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color: context.colors.success,
@@ -107,7 +105,7 @@ class PaymentSuccessScreen extends StatelessWidget {
                                 alignment: Alignment.center,
                                 child: Icon(
                                   Icons.check,
-                                  size: 16,
+                                  size: AppSizes.iconSm,
                                   color: context.colors.onSurface,
                                 ),
                               ),
@@ -121,11 +119,7 @@ class PaymentSuccessScreen extends StatelessWidget {
                       Text(
                         context.l10n.paymentSuccessTitle,
                         textAlign: TextAlign.center,
-                        style: context.textTheme.headlineMedium
-                            ?.bold()
-                            
-                            .size(24)
-                            .textSpacing(-0.2),
+                        style: context.textTheme.headlineLarge?.semiBold(),
                       ),
                       AppSpacing.xs.h,
 
@@ -133,10 +127,9 @@ class PaymentSuccessScreen extends StatelessWidget {
                       Text(
                         context.l10n.bookingConfirmedSubtitle,
                         textAlign: TextAlign.center,
-                        style: context.textTheme.bodyMedium
-                            ?.regular()
-                            .colour(context.colors.onSurfaceVariant)
-                            .size(14),
+                        style: context.textTheme.bodyMedium?.colour(
+                          context.colors.onSurfaceVariant,
+                        ),
                       ),
                       AppSpacing.xl.h,
 
@@ -179,8 +172,7 @@ class PaymentSuccessScreen extends StatelessWidget {
                                     initials,
                                     style: context.textTheme.titleMedium
                                         ?.bold()
-                                        .colour(context.colors.primary)
-                                        .size(16),
+                                        .colour(context.colors.primary),
                                   ),
                                 ),
                                 AppSpacing.lg.w,
@@ -188,9 +180,7 @@ class PaymentSuccessScreen extends StatelessWidget {
                                   child: Text(
                                     companyName,
                                     style: context.textTheme.titleMedium
-                                        ?.bold()
-                                        
-                                        .size(16),
+                                        ?.bold(),
                                   ),
                                 ),
                               ],
@@ -198,11 +188,9 @@ class PaymentSuccessScreen extends StatelessWidget {
                             AppSpacing.lg.h,
 
                             // 4b. Divider below company header (visible hairline)
-                            Container(
+                            Divider(
                               height: 1,
-                              color: context.colors.outline.withValues(
-                                alpha: 0.25,
-                              ),
+                              color: context.colors.outlineVariant,
                             ),
                             AppSpacing.lg.h,
 
@@ -212,11 +200,7 @@ class PaymentSuccessScreen extends StatelessWidget {
                               label: context.l10n.referenceId,
                               valueWidget: Text(
                                 referenceId,
-                                style: context.textTheme.bodyMedium
-                                    ?.bold()
-                                    
-                                    .size(13)
-                                    .textSpacing(0.5),
+                                style: context.textTheme.bodySmall?.medium(),
                               ),
                             ),
                             AppSpacing.md.h,
@@ -227,10 +211,7 @@ class PaymentSuccessScreen extends StatelessWidget {
                               label: context.l10n.dateAndSchedule,
                               valueWidget: Text(
                                 scheduleText,
-                                style: context.textTheme.bodyMedium
-                                    ?.medium()
-                                    
-                                    .size(13),
+                                style: context.textTheme.bodySmall?.medium(),
                               ),
                             ),
                             AppSpacing.md.h,
@@ -243,44 +224,35 @@ class PaymentSuccessScreen extends StatelessWidget {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    context.l10n.stripeVerified,
-                                    style: context.textTheme.bodyMedium
-                                        ?.medium()
-                                        
-                                        .size(13),
+                                    gateway,
+                                    style: context.textTheme.bodySmall
+                                        ?.medium(),
                                   ),
                                   AppSpacing.sm.w,
-                                  Assets.svg.paymentVerified.svg(height: 14),
+                                  Assets.svg.paymentVerified.svg(
+                                    height: AppSizes.iconXs,
+                                  ),
                                 ],
                               ),
                             ),
                             AppSpacing.lg.h,
 
                             // 4f. Divider above Total Paid (visible hairline)
-                            Container(
+                            Divider(
                               height: 1,
-                              color: context.colors.outline.withValues(
-                                alpha: 0.25,
-                              ),
+                              color: context.colors.outlineVariant,
                             ),
                             AppSpacing.lg.h,
 
                             // 4g. Total Paid Row
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                    top: AppSpacing.xxs,
-                                  ),
-                                  child: Text(
-                                    context.l10n.totalPaid,
-                                    style: context.textTheme.titleMedium
-                                        ?.medium()
-                                        
-                                        .size(16),
-                                  ),
+                                Text(
+                                  context.l10n.totalPaid,
+                                  style: context.textTheme.titleMedium
+                                      ?.medium(),
                                 ),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -290,19 +262,15 @@ class PaymentSuccessScreen extends StatelessWidget {
                                       amountText,
                                       style: context.textTheme.headlineMedium
                                           ?.bold()
-                                          .colour(context.colors.primary)
-                                          .size(24)
-                                          .lineHeight(1.0),
+                                          .colour(context.colors.primary),
                                     ),
                                     AppSpacing.xs.h,
                                     Text(
                                       discountNote,
                                       style: context.textTheme.bodySmall
-                                          ?.regular()
-                                          .colour(
+                                          ?.colour(
                                             context.colors.onSurfaceVariant,
-                                          )
-                                          .size(11),
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -316,11 +284,11 @@ class PaymentSuccessScreen extends StatelessWidget {
 
                       // 5. Action Button (default "Next", no arrow icon)
                       AppButton(
-                        text: buttonText,
+                        text: effectiveButtonText,
                         size: ButtonSize.large,
                         onPressed: () {
-                          if (args?.onTap != null) {
-                            args!.onTap!();
+                          if (onTap != null) {
+                            onTap!();
                           } else {
                             context.go(AppRoutes.adminApproval);
                           }
@@ -348,10 +316,9 @@ class PaymentSuccessScreen extends StatelessWidget {
       children: [
         Text(
           label,
-          style: context.textTheme.bodyMedium
-              ?.regular()
-              .colour(context.colors.onSurfaceVariant)
-              .size(13),
+          style: context.textTheme.bodySmall?.colour(
+            context.colors.onSurfaceVariant,
+          ),
         ),
         valueWidget,
       ],

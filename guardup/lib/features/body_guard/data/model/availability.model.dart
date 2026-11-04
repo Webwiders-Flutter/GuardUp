@@ -1,84 +1,27 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '/features/auth/auth.dart';
 import '../enum/week_day.enum.dart';
 
+part 'availability.model.freezed.dart';
+part 'availability.model.g.dart';
+
 /// Represents a bodyguard's scheduled operational availability window for a day of the week.
-class AvailabilityModel {
-  final String id;
-  final WeekDay weekDay;
-  final DateTime fromDateTime;
-  final DateTime toDateTime;
-  final bool isAvailable;
-  final UserModel? user;
-
-  const AvailabilityModel({
-    required this.id,
-    required this.weekDay,
-    required this.fromDateTime,
-    required this.toDateTime,
-    this.isAvailable = true,
-    this.user,
-  });
-
-  /// Readable time string (e.g. "09:00 AM - 06:00 PM").
-  String get formattedTimeRange {
-    if (!isAvailable) return 'Unavailable';
-    return '${_formatTime(fromDateTime)} - ${_formatTime(toDateTime)}';
-  }
-
-  static String _formatTime(DateTime dt) {
-    final hour = dt.hour > 12
-        ? dt.hour - 12
-        : (dt.hour == 0 ? 12 : dt.hour);
-    final minute = dt.minute.toString().padLeft(2, '0');
-    final period = dt.hour >= 12 ? 'PM' : 'AM';
-    return '$hour:$minute $period';
-  }
-
-  AvailabilityModel copyWith({
-    String? id,
-    WeekDay? weekDay,
-    DateTime? fromDateTime,
-    DateTime? toDateTime,
-    bool? isAvailable,
+@freezed
+abstract class AvailabilityModel with _$AvailabilityModel {
+  const factory AvailabilityModel({
+    required String id,
+    required WeekDay weekDay,
+    required DateTime fromDateTime,
+    required DateTime toDateTime,
+    @Default(true) bool isAvailable,
     UserModel? user,
-  }) {
-    return AvailabilityModel(
-      id: id ?? this.id,
-      weekDay: weekDay ?? this.weekDay,
-      fromDateTime: fromDateTime ?? this.fromDateTime,
-      toDateTime: toDateTime ?? this.toDateTime,
-      isAvailable: isAvailable ?? this.isAvailable,
-      user: user ?? this.user,
-    );
-  }
+  }) = _AvailabilityModel;
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'weekDay': weekDay.apiValue,
-      'fromDateTime': fromDateTime.toIso8601String(),
-      'toDateTime': toDateTime.toIso8601String(),
-      'isAvailable': isAvailable,
-      if (user != null) 'user': user!.toJson(),
-    };
-  }
+  factory AvailabilityModel.fromJson(Map<String, dynamic> json) =>
+      _$AvailabilityModelFromJson(json);
 
-  factory AvailabilityModel.fromJson(Map<String, dynamic> json) {
-    return AvailabilityModel(
-      id: json['id'] as String? ?? '',
-      weekDay: WeekDay.fromApiValue(json['weekDay'] as String?),
-      fromDateTime: DateTime.tryParse(json['fromDateTime'] as String? ?? '') ??
-          DateTime(2026, 1, 1, 9, 0),
-      toDateTime: DateTime.tryParse(json['toDateTime'] as String? ?? '') ??
-          DateTime(2026, 1, 1, 18, 0),
-      isAvailable: json['isAvailable'] as bool? ?? true,
-      user: json['user'] != null
-          ? UserModel.fromJson(json['user'] as Map<String, dynamic>)
-          : null,
-    );
-  }
-
-  /// Curated weekly schedule fake data.
+  static List<AvailabilityModel> get fakeData => fakeWeeklySchedule;
   static List<AvailabilityModel> get fakeWeeklySchedule => [
     AvailabilityModel(
       id: 'avail_mon',
@@ -131,4 +74,3 @@ class AvailabilityModel {
     ),
   ];
 }
-

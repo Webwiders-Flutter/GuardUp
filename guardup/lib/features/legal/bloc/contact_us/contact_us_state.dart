@@ -6,13 +6,9 @@ import '/core/state/api_state.dart';
 class ContactUsState extends Equatable {
   final ApiState<String> submissionState;
 
-  const ContactUsState({
-    this.submissionState = const ApiState.initial(),
-  });
+  const ContactUsState({this.submissionState = const ApiState.initial()});
 
-  ContactUsState copyWith({
-    ApiState<String>? submissionState,
-  }) {
+  ContactUsState copyWith({ApiState<String>? submissionState}) {
     return ContactUsState(
       submissionState: submissionState ?? this.submissionState,
     );
@@ -21,4 +17,3 @@ class ContactUsState extends Equatable {
   @override
   List<Object?> get props => [submissionState];
 }
-

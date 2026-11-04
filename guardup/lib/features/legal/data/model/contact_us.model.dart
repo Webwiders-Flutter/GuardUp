@@ -1,31 +1,20 @@
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'contact_us.model.freezed.dart';
+part 'contact_us.model.g.dart';
 
 /// Data model representing a Contact Us user submission.
-class ContactUsSubmission extends Equatable {
-  final String fullName;
-  final String email;
-  final String phoneCode;
-  final String mobileNumber;
-  final String message;
-  final DateTime submittedAt;
+@freezed
+abstract class ContactUsSubmission with _$ContactUsSubmission {
+  const factory ContactUsSubmission({
+    required String fullName,
+    required String email,
+    @Default('+1') String phoneCode,
+    required String mobileNumber,
+    required String message,
+    required DateTime submittedAt,
+  }) = _ContactUsSubmission;
 
-  const ContactUsSubmission({
-    required this.fullName,
-    required this.email,
-    this.phoneCode = '+1',
-    required this.mobileNumber,
-    required this.message,
-    required this.submittedAt,
-  });
-
-  @override
-  List<Object?> get props => [
-    fullName,
-    email,
-    phoneCode,
-    mobileNumber,
-    message,
-    submittedAt,
-  ];
+  factory ContactUsSubmission.fromJson(Map<String, dynamic> json) =>
+      _$ContactUsSubmissionFromJson(json);
 }
-

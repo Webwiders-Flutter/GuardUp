@@ -50,10 +50,7 @@ class AuthLoginRequested extends AuthEvent {
   final String email;
   final String password;
 
-  const AuthLoginRequested({
-    required this.email,
-    required this.password,
-  });
+  const AuthLoginRequested({required this.email, required this.password});
 
   @override
   List<Object?> get props => [email, password];
@@ -80,10 +77,7 @@ class AuthUpdateProfileRequested extends AuthEvent {
   final String? name;
   final String? profileImageUrl;
 
-  const AuthUpdateProfileRequested({
-    this.name,
-    this.profileImageUrl,
-  });
+  const AuthUpdateProfileRequested({this.name, this.profileImageUrl});
 
   @override
   List<Object?> get props => [name, profileImageUrl];

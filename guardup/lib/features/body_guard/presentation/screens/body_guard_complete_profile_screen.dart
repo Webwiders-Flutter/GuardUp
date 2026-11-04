@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '/app/routes/app_routes.dart';
+import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
@@ -41,33 +42,22 @@ class _BodyGuardCompleteProfileScreenState
     extends State<BodyGuardCompleteProfileScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  late final TextEditingController _fullNameController;
-  late final TextEditingController _hourlyRateController;
-  late final TextEditingController _bioController;
+  final _fullNameController = TextEditingController(text: 'Vikram Singh');
+  final _hourlyRateController = TextEditingController(text: '60');
+  final _bioController = TextEditingController();
 
-  late final SelectionController<GuardService> _serviceDropdownController;
-
-  /// Isolated state for selected services via [ValueNotifier] (Rule 1: no `setState`).
+  final _serviceDropdownController = SelectionController<GuardService>.multi(
+    initial: const [
+      GuardService.vipCloseProtection,
+      GuardService.armedEscort,
+      GuardService.tacticalDriver,
+    ],
+  );
 
   /// Isolated avatar profile picture notifier matching edit profile UI.
   final ValueNotifier<XFile?> _profileImageNotifier = ValueNotifier<XFile?>(
     null,
   );
-
-  @override
-  void initState() {
-    super.initState();
-    _fullNameController = TextEditingController(text: 'Vikram Singh');
-    _hourlyRateController = TextEditingController(text: '60');
-    _bioController = TextEditingController();
-    _serviceDropdownController = SelectionController<GuardService>.multi(
-      initial: [
-        GuardService.vipCloseProtection,
-        GuardService.armedEscort,
-        GuardService.tacticalDriver,
-      ],
-    );
-  }
 
   @override
   void dispose() {
@@ -110,7 +100,6 @@ class _BodyGuardCompleteProfileScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.transparent,
       appBar: AppAppBar.transparent(
         title: context.l10n.profileSetupTitle,
         alignTitle: .center,
@@ -140,8 +129,8 @@ class _BodyGuardCompleteProfileScreenState
                                 children: [
                                   // Circular Avatar with Gold Ring Border
                                   QuickContainer(
-                                    w: 96,
-                                    h: 96,
+                                    w: AppSizes.avatarColossal,
+                                    h: AppSizes.avatarColossal,
                                     shape: QuickContainerShape.circle,
                                     border: Border.all(
                                       color: context.colors.primary,
@@ -155,8 +144,12 @@ class _BodyGuardCompleteProfileScreenState
                                           child: profileImage != null
                                               ? AppImage.xFile(
                                                   xFile: profileImage,
-                                                  width: 92,
-                                                  height: 92,
+                                                  width:
+                                                      AppSizes.avatarColossal -
+                                                      4,
+                                                  height:
+                                                      AppSizes.avatarColossal -
+                                                      4,
                                                   fit: BoxFit.cover,
                                                   onTap: _handleChangePhoto,
                                                 )
@@ -201,14 +194,14 @@ class _BodyGuardCompleteProfileScreenState
                                     child: GestureDetector(
                                       onTap: _handleChangePhoto,
                                       child: QuickContainer(
-                                        w: 28,
-                                        h: 28,
+                                        w: AppSizes.iconMdl,
+                                        h: AppSizes.iconMdl,
                                         shape: QuickContainerShape.circle,
                                         color: context.colors.primary,
                                         alignment: Alignment.center,
                                         child: Icon(
                                           Icons.camera_alt,
-                                          size: 15,
+                                          size: AppSizes.iconSm,
                                           color: context.colors.surface,
                                         ),
                                       ),
@@ -234,6 +227,9 @@ class _BodyGuardCompleteProfileScreenState
                         AppSpacing.sm.h,
                         AppTextField(
                           controller: _fullNameController,
+                          style: TextStyle(
+                            color: context.colors.onPrimaryContainer,
+                          ),
                           decoration: InputDecoration(
                             hintText: 'Enter Full Name',
                             fillColor: context.colors.onPrimary,
@@ -247,6 +243,9 @@ class _BodyGuardCompleteProfileScreenState
                         AppSpacing.sm.h,
                         AppTextField(
                           controller: _hourlyRateController,
+                          style: TextStyle(
+                            color: context.colors.onPrimaryContainer,
+                          ),
                           decoration: InputDecoration(
                             hintText: "Enter Hourly Rate",
                             prefix: Padding(
@@ -308,7 +307,7 @@ class _BodyGuardCompleteProfileScreenState
                                     runSpacing: AppSpacing.sm,
                                     children: selectedServices.map((service) {
                                       return AppRemovableChip(
-                                        text: service.label(context.l10n),
+                                        text: service.label,
                                         onRemove: () =>
                                             _handleRemoveService(service),
                                       );
@@ -324,6 +323,7 @@ class _BodyGuardCompleteProfileScreenState
                                     return AppTextField(
                                       key: fieldKey,
                                       readOnly: true,
+
                                       decoration: InputDecoration(
                                         hintText: context.l10n.selectService,
                                         suffixIcon: Icon(
@@ -344,10 +344,10 @@ class _BodyGuardCompleteProfileScreenState
                                       .map(
                                         (e) => DropdownItem<GuardService>(
                                           id: e,
-                                          data: e.label(context.l10n),
+                                          data: e.label,
                                           icon: Icon(
                                             e.icon,
-                                            size: 18,
+                                            size: AppSizes.iconSmd,
                                             color: context.colors.primary,
                                           ),
                                         ),
@@ -365,6 +365,9 @@ class _BodyGuardCompleteProfileScreenState
                         AppSpacing.sm.h,
                         AppTextField(
                           controller: _bioController,
+                          style: TextStyle(
+                            color: context.colors.onPrimaryContainer,
+                          ),
                           decoration: InputDecoration(
                             hintText: context.l10n.bioBackgroundHint,
                             fillColor: context.colors.onPrimary,
@@ -382,7 +385,7 @@ class _BodyGuardCompleteProfileScreenState
                           text: context.l10n.next,
                           trailing: Icon(
                             Icons.arrow_forward_rounded,
-                            size: 20,
+                            size: AppSizes.iconMd,
                             color: context.colors.onPrimary,
                           ),
                           size: ButtonSize.large,

@@ -21,21 +21,11 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _nameController;
-  late final TextEditingController _phoneController;
-  late final TextEditingController _emailController;
-  late final TextEditingController _passwordController;
-  late final TextEditingController _confirmPasswordController;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController();
-    _phoneController = TextEditingController();
-    _emailController = TextEditingController();
-    _passwordController = TextEditingController();
-    _confirmPasswordController = TextEditingController();
-  }
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
   @override
   void dispose() {
@@ -55,7 +45,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.transparent,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -169,16 +158,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             spans: [
                               AppTextSpan(
                                 text: context.l10n.alreadyHaveAccount,
-                                style: context.textTheme.bodyMedium?.colour(
-                                  context.colors.onSurfaceVariant,
-                                ),
                               ),
                               AppTextSpan(
                                 text: context.l10n.login,
-                                style: context.textTheme.bodyMedium
-                                    ?.semiBold()
-                                    .colour(context.colors.primary)
-                                    .underline(),
                                 onTap: () {
                                   context.push(AppRoutes.login);
                                 },

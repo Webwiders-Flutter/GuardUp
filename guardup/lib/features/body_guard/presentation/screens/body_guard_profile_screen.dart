@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:guardup/app/routes/app_routes.dart';
 import 'package:guardup/features/rating_and_reviews/data/model/review.model.dart';
 
 import '/core/constants/app_spacing.dart';
-import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/navigation/app_tab_bar.dart';
@@ -60,7 +61,6 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
         guard?.user.profileImageUrl ?? Assets.images.profilePicture.path;
 
     return Scaffold(
-      backgroundColor: context.colors.transparent,
       appBar: const AppAppBar.transparent(
         title: 'My Profile',
         showBackIcon: true,
@@ -102,7 +102,12 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
                   SingleChildScrollView(
                     padding:
                         context.horizontalEdgeInsets + AppSpacing.md.yPadding,
-                    child: BodyguardAboutWidget(bodyguard: guard),
+                    child: BodyguardAboutWidget(
+                      bodyguard: guard,
+                      onEditBio: () => context.push(AppRoutes.editProfile),
+                      onEditKeyDetails: () =>
+                          context.push(AppRoutes.editProfile),
+                    ),
                   ),
 
                   // Tab 2: My Availability
@@ -124,13 +129,11 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
                   ),
 
                   // Tab 4: Reviews
-                  SingleChildScrollView(
+                  Padding(
                     padding:
                         context.horizontalEdgeInsets + AppSpacing.md.yPadding,
                     child: BodyguardReviewsWidget(
-                      reviews: guard != null
-                          ? null
-                          : ReviewModel.fakeBodyguardReviews,
+                      reviews: guard != null ? null : ReviewModel.fakeData,
                     ),
                   ),
                 ],

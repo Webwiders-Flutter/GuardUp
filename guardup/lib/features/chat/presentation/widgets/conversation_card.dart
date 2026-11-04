@@ -5,6 +5,7 @@ import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
+import '/core/extensions/datetime.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/gen/assets.gen.dart';
@@ -83,9 +84,12 @@ class ConversationCard extends StatelessWidget {
 
                     // Timestamp
                     Text(
-                      conversation.displayTime,
+                      conversation.customFormattedTime ??
+                          (conversation.updatedAt.isToday
+                              ? conversation.updatedAt.chatTime
+                              : conversation.updatedAt.shortDate),
                       style: context.textTheme.labelSmall?.colour(
-                        conversation.isToday
+                        conversation.updatedAt.isToday
                             ? context.colors.primary
                             : context.colors.onSurfaceVariant.withValues(
                                 alpha: 0.8,
@@ -114,7 +118,7 @@ class ConversationCard extends StatelessWidget {
                     ],
                     Expanded(
                       child: Text(
-                        conversation.snippet,
+                        conversation.lastMessage?.content ?? '',
                         style: context.textTheme.bodySmall?.colour(
                           context.colors.onSurfaceVariant,
                         ),

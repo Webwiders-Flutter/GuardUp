@@ -19,4 +19,3 @@ class LegalContentRequested extends LegalContentEvent {
   @override
   List<Object?> get props => [contentType, forceRefresh];
 }
-

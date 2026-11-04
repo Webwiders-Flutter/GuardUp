@@ -1,6 +1,7 @@
 // ignore_for_file: use_null_aware_elements
 import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import '/core/extensions/string.extension.dart';
 
 final class AppLauncher {

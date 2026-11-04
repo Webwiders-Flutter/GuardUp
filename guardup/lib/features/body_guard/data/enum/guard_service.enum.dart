@@ -52,7 +52,7 @@ enum GuardService {
     }
   }
 
-  String label(AppLocalizations l10n) {
+  String get label {
     switch (this) {
       case GuardService.vipCloseProtection:
         return 'VIP Close Protection';
@@ -72,6 +72,8 @@ enum GuardService {
         return 'Crisis Management';
     }
   }
+
+  String localizedLabel(AppLocalizations l10n) => label;
 
   IconData get icon {
     switch (this) {

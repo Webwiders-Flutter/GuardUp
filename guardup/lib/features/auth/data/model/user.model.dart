@@ -19,13 +19,12 @@ abstract class UserModel with _$UserModel {
     required String name,
     String? profileImageUrl,
     UserRole? role,
-  }) =>
-      UserModel(
-        id: '',
-        name: name,
-        profileImageUrl: profileImageUrl,
-        role: role,
-      );
+  }) => UserModel(
+    id: '',
+    name: name,
+    profileImageUrl: profileImageUrl,
+    role: role,
+  );
 
   factory UserModel.fromJson(Map<String, dynamic> json) =>
       _$UserModelFromJson(json);

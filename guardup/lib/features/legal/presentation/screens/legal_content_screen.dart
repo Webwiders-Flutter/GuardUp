@@ -5,6 +5,7 @@ import 'package:quick_container/quick_container.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '/core/constants/app_radius.dart';
+import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
@@ -43,10 +44,7 @@ class _LegalContentView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.transparent,
-      appBar: AppAppBar.transparent(
-        title: type.label(context.l10n),
-      ),
+      appBar: AppAppBar.transparent(title: type.label(context.l10n)),
       body: BlocBuilder<LegalContentBloc, LegalContentState>(
         builder: (context, state) {
           final contentState = state.contentState;
@@ -184,7 +182,7 @@ class _HeaderCard extends StatelessWidget {
                 child: Icon(
                   Icons.shield_rounded,
                   color: context.colors.primary,
-                  size: 20,
+                  size: AppSizes.iconMd,
                 ),
               ),
               AppSpacing.md.w,
@@ -222,11 +220,7 @@ class _HeaderCard extends StatelessWidget {
   Widget _buildHighlightedDescription(BuildContext context, String text) {
     const highlightWord = 'GuardUp Global';
     if (!text.contains(highlightWord)) {
-      return Text(
-        text,
-        style: context.textTheme.bodySmall
-            ?.lineHeight(1.5),
-      );
+      return Text(text, style: context.textTheme.bodySmall?.lineHeight(1.5));
     }
 
     final parts = text.split(highlightWord);
@@ -234,8 +228,7 @@ class _HeaderCard extends StatelessWidget {
       spans: [
         AppTextSpan(
           text: parts[0],
-          style: context.textTheme.bodySmall
-              ?.lineHeight(1.5),
+          style: context.textTheme.bodySmall?.lineHeight(1.5),
         ),
         AppTextSpan(
           text: highlightWord,
@@ -247,8 +240,7 @@ class _HeaderCard extends StatelessWidget {
         if (parts.length > 1)
           AppTextSpan(
             text: parts[1],
-            style: context.textTheme.bodySmall
-                ?.lineHeight(1.5),
+            style: context.textTheme.bodySmall?.lineHeight(1.5),
           ),
       ],
     );
@@ -289,10 +281,7 @@ class _ClauseCard extends StatelessWidget {
             ],
           ),
           AppSpacing.xs.h,
-          Text(
-            clause.title,
-            style: context.textTheme.titleMedium?.bold(),
-          ),
+          Text(clause.title, style: context.textTheme.titleMedium?.bold()),
           AppSpacing.sm.h,
           Text(
             clause.content,

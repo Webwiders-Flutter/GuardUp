@@ -3,6 +3,9 @@ final class AppSizes {
   AppSizes._();
 
   // ── Icon Sizes ─────────────────────────────────────────────────────────────
+  /// 10.0 - Tiny icon / micro indicators
+  static const double iconTiny = 10;
+
   /// 12.0 - Micro icon
   static const double iconXxs = 12;
 
@@ -21,8 +24,14 @@ final class AppSizes {
   /// 24.0 - Large icon / app bar actions
   static const double iconLg = 24;
 
+  /// 28.0 - Medium-large icon / action badges
+  static const double iconMdl = 28;
+
   /// 32.0 - Extra large icon / feature icons
   static const double iconXl = 32;
+
+  /// 40.0 - Double extra large icon
+  static const double icon2Xl = 40;
 
   /// 48.0 - Huge icon / empty states, status badges
   static const double iconHuge = 48;
@@ -69,8 +78,17 @@ final class AppSizes {
   /// 48.0 - Large avatar
   static const double avatarLg = 48;
 
+  /// 56.0 - Medium-large avatar
+  static const double avatarSmd = 56;
+
   /// 64.0 - Extra large avatar
   static const double avatarXl = 64;
+
+  /// 72.0 - 2X large avatar
+  static const double avatar2Xl = 72;
+
+  /// 96.0 - Colossal avatar / profile photo
+  static const double avatarColossal = 96;
 
   // ── Progress & Indicator Sizes ─────────────────────────────────────────────
   /// 16.0 - Small spinner
@@ -82,4 +100,3 @@ final class AppSizes {
   /// 24.0 - Large spinner
   static const double progressLg = 24;
 }
-

@@ -19,11 +19,10 @@ class LocationPhoneCodeServices {
   // Phone Countries
   // ---------------------------------------------------------------------------
 
-  static final ValueNotifier<Map<String, CountryWithPhoneCode>>
-      phoneCountries = ValueNotifier({});
+  static final ValueNotifier<Map<String, CountryWithPhoneCode>> phoneCountries =
+      ValueNotifier({});
 
-  static final CountryWithPhoneCode defaultPhoneCountry =
-      CountryWithPhoneCode(
+  static final CountryWithPhoneCode defaultPhoneCountry = CountryWithPhoneCode(
     phoneCode: '91',
     countryCode: 'IN',
     exampleNumberMobileNational: '91234 56789',
@@ -49,10 +48,7 @@ class LocationPhoneCodeServices {
 
   /// Call this once from application bootstrap.
   static Future<void> init() async {
-    await Future.wait([
-      _loadPhoneCountries(),
-      _loadLocations(),
-    ]);
+    await Future.wait([_loadPhoneCountries(), _loadLocations()]);
   }
 
   static Future<void> _loadPhoneCountries() async {
@@ -75,11 +71,7 @@ class LocationPhoneCodeServices {
     }
 
     _countries = decoded
-        .map(
-          (item) => Country.fromJson(
-            Map<String, dynamic>.from(item as Map),
-          ),
-        )
+        .map((item) => Country.fromJson(Map<String, dynamic>.from(item as Map)))
         .toList();
   }
 
@@ -91,9 +83,7 @@ class LocationPhoneCodeServices {
     return List.unmodifiable(phoneCountries.value.values);
   }
 
-  static CountryWithPhoneCode? getPhoneCountryByCode(
-    String countryCode,
-  ) {
+  static CountryWithPhoneCode? getPhoneCountryByCode(String countryCode) {
     final code = countryCode.trim().toUpperCase();
 
     if (code.isEmpty) return null;
@@ -107,9 +97,7 @@ class LocationPhoneCodeServices {
     return null;
   }
 
-  static CountryWithPhoneCode? getPhoneCountryByDialCode(
-    String phoneCode,
-  ) {
+  static CountryWithPhoneCode? getPhoneCountryByDialCode(String phoneCode) {
     final cleanCode = phoneCode.replaceAll(RegExp(r'\D'), '');
 
     if (cleanCode.isEmpty) return null;
@@ -162,17 +150,14 @@ class LocationPhoneCodeServices {
 
     return phoneCountries.value.values
         .where((country) => clean.startsWith(country.phoneCode))
-        .fold<CountryWithPhoneCode?>(
-      null,
-      (longest, current) {
-        if (longest == null ||
-            current.phoneCode.length > longest.phoneCode.length) {
-          return current;
-        }
+        .fold<CountryWithPhoneCode?>(null, (longest, current) {
+          if (longest == null ||
+              current.phoneCode.length > longest.phoneCode.length) {
+            return current;
+          }
 
-        return longest;
-      },
-    );
+          return longest;
+        });
   }
 
   static CountryWithPhoneCode? findPhoneCountrySync(String phone) {
@@ -184,44 +169,35 @@ class LocationPhoneCodeServices {
 
     return phoneCountries.value.values
         .where((country) => clean.startsWith(country.phoneCode))
-        .fold<CountryWithPhoneCode?>(
-      null,
-      (longest, current) {
-        if (longest == null ||
-            current.phoneCode.length > longest.phoneCode.length) {
-          return current;
-        }
+        .fold<CountryWithPhoneCode?>(null, (longest, current) {
+          if (longest == null ||
+              current.phoneCode.length > longest.phoneCode.length) {
+            return current;
+          }
 
-        return longest;
-      },
-    );
+          return longest;
+        });
   }
 
-  static List<CountryWithPhoneCode> filterPhoneCountries(
-    String query,
-  ) {
+  static List<CountryWithPhoneCode> filterPhoneCountries(String query) {
     final normalizedQuery = query.trim().toLowerCase();
 
     if (normalizedQuery.isEmpty) {
       return phoneCountries.value.values.toList();
     }
 
-    final cleanDigits =
-        normalizedQuery.replaceAll(RegExp(r'[^\d]'), '');
+    final cleanDigits = normalizedQuery.replaceAll(RegExp(r'[^\d]'), '');
 
     return phoneCountries.value.values.where((country) {
-      final countryName =
-          (country.countryName ?? '').toLowerCase();
+      final countryName = (country.countryName ?? '').toLowerCase();
 
-      final countryCode =
-          country.countryCode.toLowerCase();
+      final countryCode = country.countryCode.toLowerCase();
 
       final phoneCode = country.phoneCode;
 
       return countryName.contains(normalizedQuery) ||
           countryCode.contains(normalizedQuery) ||
-          (cleanDigits.isNotEmpty &&
-              phoneCode.contains(cleanDigits));
+          (cleanDigits.isNotEmpty && phoneCode.contains(cleanDigits));
     }).toList();
   }
 
@@ -230,11 +206,7 @@ class LocationPhoneCodeServices {
 
     final code = countryCode.toUpperCase();
 
-    return String.fromCharCodes(
-      code.codeUnits.map(
-        (c) => 0x1F1E6 + c - 65,
-      ),
-    );
+    return String.fromCharCodes(code.codeUnits.map((c) => 0x1F1E6 + c - 65));
   }
 
   // ===========================================================================
@@ -269,10 +241,7 @@ class LocationPhoneCodeServices {
     return List.unmodifiable(country.state!);
   }
 
-  static Region? getStateById(
-    int countryId,
-    int stateId,
-  ) {
+  static Region? getStateById(int countryId, int stateId) {
     final country = _findCountryById(countryId);
 
     if (country == null || country.state == null) {
@@ -288,14 +257,8 @@ class LocationPhoneCodeServices {
     return null;
   }
 
-  static List<City> getCities(
-    int countryId,
-    int stateId,
-  ) {
-    final state = getStateById(
-      countryId,
-      stateId,
-    );
+  static List<City> getCities(int countryId, int stateId) {
+    final state = getStateById(countryId, stateId);
 
     if (state == null || state.city == null) {
       return const [];
@@ -304,15 +267,8 @@ class LocationPhoneCodeServices {
     return List.unmodifiable(state.city!);
   }
 
-  static City? getCityById(
-    int countryId,
-    int stateId,
-    int cityId,
-  ) {
-    final state = getStateById(
-      countryId,
-      stateId,
-    );
+  static City? getCityById(int countryId, int stateId, int cityId) {
+    final state = getStateById(countryId, stateId);
 
     if (state == null || state.city == null) {
       return null;
@@ -342,15 +298,11 @@ class LocationPhoneCodeServices {
       final name = country.name?.toLowerCase() ?? '';
       final nameAr = country.nameAr?.toLowerCase() ?? '';
 
-      return name.contains(normalizedQuery) ||
-          nameAr.contains(normalizedQuery);
+      return name.contains(normalizedQuery) || nameAr.contains(normalizedQuery);
     }).toList();
   }
 
-  static List<Region> filterStates(
-    int countryId,
-    String query,
-  ) {
+  static List<Region> filterStates(int countryId, String query) {
     final country = _findCountryById(countryId);
 
     if (country == null || country.state == null) {
@@ -367,20 +319,12 @@ class LocationPhoneCodeServices {
       final name = state.name?.toLowerCase() ?? '';
       final nameAr = state.nameAr?.toLowerCase() ?? '';
 
-      return name.contains(normalizedQuery) ||
-          nameAr.contains(normalizedQuery);
+      return name.contains(normalizedQuery) || nameAr.contains(normalizedQuery);
     }).toList();
   }
 
-  static List<City> filterCities(
-    int countryId,
-    int stateId,
-    String query,
-  ) {
-    final state = getStateById(
-      countryId,
-      stateId,
-    );
+  static List<City> filterCities(int countryId, int stateId, String query) {
+    final state = getStateById(countryId, stateId);
 
     if (state == null || state.city == null) {
       return const [];

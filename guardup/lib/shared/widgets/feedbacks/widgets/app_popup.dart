@@ -69,6 +69,7 @@ class AppPopup {
                 AppButton(
                   text: context.l10n.cancel,
                   type: ButtonType.secondaryOff,
+                  border: BorderSide(color: context.colors.outline),
                   size: ButtonSize.normal,
                   onPressed: () => _popResult(
                     dialogContext,
@@ -121,6 +122,7 @@ class AppPopup {
         AppButton(
           text: context.l10n.cancel,
           type: ButtonType.secondaryOff,
+          border: BorderSide(color: context.colors.outline),
           size: ButtonSize.normal,
           onPressed: () => _popResult(
             context,
@@ -158,6 +160,7 @@ class AppPopup {
         AppButton(
           text: 'Keep Trip',
           type: ButtonType.secondaryOff,
+          border: BorderSide(color: context.colors.outline),
           size: ButtonSize.normal,
           onPressed: () => _popResult(
             context,
@@ -192,6 +195,7 @@ class AppPopup {
         AppButton(
           text: context.l10n.keep,
           type: ButtonType.secondaryOff,
+          border: BorderSide(color: context.colors.outline),
           size: ButtonSize.normal,
           onPressed: () => _popResult(
             context,
@@ -239,6 +243,7 @@ class AppPopup {
         AppButton(
           text: context.l10n.cancel,
           type: ButtonType.secondaryOff,
+          border: BorderSide(color: context.colors.outline),
           size: ButtonSize.normal,
           onPressed: () => _popResult(
             context,
@@ -293,6 +298,7 @@ class AppPopup {
         AppButton(
           text: context.l10n.cancel,
           type: ButtonType.secondaryOff,
+          border: BorderSide(color: context.colors.outline),
           size: ButtonSize.normal,
           onPressed: () => _popResult(
             context,
@@ -339,6 +345,7 @@ class AppPopup {
         AppButton(
           text: context.l10n.cancel,
           type: ButtonType.secondaryOff,
+          border: BorderSide(color: context.colors.outline),
           size: ButtonSize.normal,
           onPressed: () => _popResult(
             context,
@@ -410,6 +417,7 @@ class AppPopup {
         AppButton(
           text: cancelLabel ?? context.l10n.goBack,
           type: ButtonType.secondaryOff,
+          border: BorderSide(color: context.colors.outline),
           size: ButtonSize.normal,
           onPressed: () => _popResult(
             context,
@@ -469,6 +477,7 @@ class AppPopup {
         AppButton(
           text: context.l10n.cancel,
           type: ButtonType.secondaryOff,
+          border: BorderSide(color: context.colors.outline),
           size: ButtonSize.normal,
           onPressed: () => _popResult(
             context,
@@ -504,6 +513,7 @@ class AppPopup {
         AppButton(
           text: context.l10n.cancel,
           type: ButtonType.secondaryOff,
+          border: BorderSide(color: context.colors.outline),
           size: ButtonSize.normal,
           onPressed: () => _popResult(
             context,

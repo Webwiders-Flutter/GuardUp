@@ -5,4 +5,3 @@ import '../../data/model/legal_content.model.dart';
 abstract class LegalContentRepository {
   Future<LegalContentModel> getLegalContent(ContentType type);
 }
-

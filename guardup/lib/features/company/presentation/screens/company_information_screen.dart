@@ -31,7 +31,6 @@ class CompanyInformationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.transparent,
       appBar: AppAppBar.transparent(title: context.l10n.companyInformation),
       body: SingleChildScrollView(
         padding: context.horizontalEdgeInsets,
@@ -94,15 +93,12 @@ class _InfoCard extends StatelessWidget {
         children: [
           Text(
             label,
-            style: context.textTheme.labelMedium?.regular().colour(
+            style: context.textTheme.labelMedium?.colour(
               context.colors.primary,
             ),
           ),
           AppSpacing.xs.h,
-          Text(
-            value,
-            style: context.textTheme.bodyLarge,
-          ),
+          Text(value, style: context.textTheme.bodyLarge),
         ],
       ),
     );

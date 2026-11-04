@@ -18,9 +18,7 @@ class PaginationController<T> extends ValueNotifier<PaginationState<T>> {
     this.onLoadMore,
   }) : scrollController = scrollController ?? ScrollController(),
        _ownsScrollController = scrollController == null,
-       super(
-         initialState ?? const PaginationState(),
-       ) {
+       super(initialState ?? const PaginationState()) {
     this.scrollController.addListener(_onScroll);
   }
 

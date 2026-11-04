@@ -43,9 +43,7 @@ abstract class AuthRepository {
   });
 
   /// Initiates sign in with phone (sends SMS OTP).
-  Future<void> signInWithPhone({
-    required String phoneNumber,
-  });
+  Future<void> signInWithPhone({required String phoneNumber});
 
   /// Verifies an OTP code for phone, email, or recovery flows.
   /// Returns the authenticated user ID.
@@ -56,10 +54,7 @@ abstract class AuthRepository {
   });
 
   /// Resends an OTP to the given target (phone or email).
-  Future<void> resendOtp({
-    required String target,
-    required OtpType type,
-  });
+  Future<void> resendOtp({required String target, required OtpType type});
 
   /// Signs in or signs up via third-party OAuth provider (Google, Apple, etc.).
   /// Returns the authenticated user ID.
@@ -70,18 +65,14 @@ abstract class AuthRepository {
   });
 
   /// Signs in passwordlessly via email magic link.
-  Future<void> signInWithMagicLink({
-    required String email,
-  });
+  Future<void> signInWithMagicLink({required String email});
 
   /// Signs in anonymously / as a guest.
   /// Returns the temporary guest user ID.
   Future<String> signInAnonymously();
 
   /// Sends a password reset email to the specified address.
-  Future<void> sendPasswordResetEmail({
-    required String email,
-  });
+  Future<void> sendPasswordResetEmail({required String email});
 
   /// Updates the current user's password.
   Future<void> changePassword({

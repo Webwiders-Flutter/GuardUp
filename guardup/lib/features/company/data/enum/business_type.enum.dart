@@ -113,4 +113,3 @@ enum BusinessType {
     }
   }
 }
-
