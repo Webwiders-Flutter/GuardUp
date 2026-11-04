@@ -148,6 +148,13 @@ final class AppRouter {
         builder: (context, state) => const ConversationsScreen(),
       ),
       GoRoute(
+        path: AppRoutes.chatDetail,
+        builder: (context, state) {
+          final conversation = state.extra as ConversationModel?;
+          return ChatScreen(conversation: conversation);
+        },
+      ),
+      GoRoute(
         path: AppRoutes.changePassword,
         builder: (context, state) => const ChangePasswordScreen(),
       ),

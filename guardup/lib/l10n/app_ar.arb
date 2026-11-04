@@ -233,6 +233,8 @@
   "yesterdaySection": "أمس",
   "allMarkedAsRead": "تم تحديد جميع الإشعارات كمقروءة",
   "searchConversationsHint": "ابحث بالاسم أو التصريح أو المهارة...",
-  "noConversationsFound": "لم يتم العثور على محادثات"
+  "noConversationsFound": "لم يتم العثور على محادثات",
+  "typeMessageHint": "اكتب رسالة...",
+  "activeEscortSubtitle": "مرافقة نشطة • إسكاليد B6"
 }
 

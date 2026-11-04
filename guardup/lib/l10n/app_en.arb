@@ -987,5 +987,13 @@
   "noConversationsFound": "No conversations found",
   "@noConversationsFound": {
     "description": "Empty state text for conversations list"
+  },
+  "typeMessageHint": "Type a message...",
+  "@typeMessageHint": {
+    "description": "Hint text for message input field in chat"
+  },
+  "activeEscortSubtitle": "ACTIVE ESCORT • ESCALADE B6",
+  "@activeEscortSubtitle": {
+    "description": "Subtitle status in chat appbar"
   }
 }

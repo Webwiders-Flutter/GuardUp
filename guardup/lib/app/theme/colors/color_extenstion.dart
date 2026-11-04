@@ -7,6 +7,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
   final Color surfaceContainer;
   final Color surfaceContainerHigh;
   final Color onSurfaceVariant;
+  final Color onSurfaceTertiary;
   final Color outline;
   final Color outlineVariant;
   final Color errorContainer;
@@ -23,6 +24,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     required this.surfaceContainer,
     required this.surfaceContainerHigh,
     required this.onSurfaceVariant,
+    required this.onSurfaceTertiary,
     required this.outline,
     required this.outlineVariant,
     required this.errorContainer,
@@ -41,6 +43,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     Color? surfaceContainer,
     Color? surfaceContainerHigh,
     Color? onSurfaceVariant,
+    Color? onSurfaceTertiary,
     Color? outline,
     Color? outlineVariant,
     Color? errorContainer,
@@ -57,6 +60,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
       surfaceContainer: surfaceContainer ?? this.surfaceContainer,
       surfaceContainerHigh: surfaceContainerHigh ?? this.surfaceContainerHigh,
       onSurfaceVariant: onSurfaceVariant ?? this.onSurfaceVariant,
+      onSurfaceTertiary: onSurfaceTertiary ?? this.onSurfaceTertiary,
       outline: outline ?? this.outline,
       outlineVariant: outlineVariant ?? this.outlineVariant,
       errorContainer: errorContainer ?? this.errorContainer,
@@ -83,6 +87,8 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
           Color.lerp(surfaceContainerHigh, other.surfaceContainerHigh, t)!,
       onSurfaceVariant:
           Color.lerp(onSurfaceVariant, other.onSurfaceVariant, t)!,
+      onSurfaceTertiary:
+          Color.lerp(onSurfaceTertiary, other.onSurfaceTertiary, t)!,
       outline: Color.lerp(outline, other.outline, t)!,
       outlineVariant: Color.lerp(outlineVariant, other.outlineVariant, t)!,
       errorContainer: Color.lerp(errorContainer, other.errorContainer, t)!,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:guardup/core/extensions/number.extension.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '/core/constants/app_radius.dart';
@@ -44,9 +45,14 @@ class ChatMessageWidget extends StatelessWidget {
           // Outgoing Gold Luxury Bubble
           QuickContainer(
             color: context.colors.primary,
-            radius: AppRadius.lg,
-            constraints: BoxConstraints(maxWidth: context.width * 0.78),
-            padding: AppSpacing.md.allPadding,
+            // radius: AppRadius.lg,
+            radiusBR: message.isMe ? 0 : AppRadius.lg,
+            radiusBL: AppRadius.lg,
+            radiusTL: AppRadius.lg,
+            radiusTR: AppRadius.lg,
+
+            maxW: 75.wPercent(context),
+            p: AppSpacing.md,
             child: Text(
               message.content,
               style: context.textTheme.bodyMedium?.medium().colour(
@@ -82,37 +88,39 @@ class ChatMessageWidget extends StatelessWidget {
   Widget _buildIncomingMessage(BuildContext context) {
     final avatar = senderAvatarUrl ?? Assets.images.profilePicture2.path;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        // Operative Circular Avatar
-        ClipRRect(
-          borderRadius: AppRadius.full.toBorderRadius,
-          child: Image.asset(
-            avatar,
-            width: AppSizes.avatarSm,
-            height: AppSizes.avatarSm,
-            fit: BoxFit.cover,
-          ),
-        ),
-        AppSpacing.sm.w,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            // Operative Circular Avatar aligned to bottom of bubble
+            ClipRRect(
+              borderRadius: AppRadius.full.toBorderRadius,
+              child: Image.asset(
+                avatar,
+                width: AppSizes.avatarSm,
+                height: AppSizes.avatarSm,
+                fit: BoxFit.cover,
+              ),
+            ),
+            AppSpacing.sm.w,
 
-        // Message Content + Timestamp
-        Flexible(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Incoming Dark Bubble
-              QuickContainer(
+            // Incoming Dark Bubble
+            Flexible(
+              child: QuickContainer(
                 color: context.colors.surfaceContainer,
                 border: Border.all(
                   color: context.colors.outlineVariant.withValues(alpha: 0.35),
                   width: 1,
                 ),
-                radius: AppRadius.lg,
-                constraints: BoxConstraints(maxWidth: context.width * 0.78),
-                padding: AppSpacing.md.allPadding,
+                radiusBL: !message.isMe ? 0 : AppRadius.lg,
+                radiusBR: AppRadius.lg,
+                radiusTL: AppRadius.lg,
+                radiusTR: AppRadius.lg,
+                maxW: 75.wPercent(context),
+                p: AppSpacing.md,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -123,24 +131,25 @@ class ChatMessageWidget extends StatelessWidget {
                         spans: [
                           AppTextSpan(
                             text: message.content,
-                            style: context.textTheme.bodyMedium?.colour(
-                              context.colors.onSurface,
-                            ),
+                            style: context.textTheme.bodySmall
+                                ?.colour(context.colors.onSurface)
+                                .increaseSize(1),
                           ),
                           AppTextSpan(
                             text: message.highlightedText!,
-                            style: context.textTheme.bodyMedium?.bold().colour(
-                              context.colors.primary,
-                            ),
+                            style: context.textTheme.bodySmall
+                                ?.bold()
+                                .colour(context.colors.primary)
+                                .increaseSize(1),
                           ),
                         ],
                       )
                     else
                       Text(
                         message.content,
-                        style: context.textTheme.bodyMedium?.colour(
-                          context.colors.onSurface,
-                        ),
+                        style: context.textTheme.bodySmall
+                            ?.colour(context.colors.onSurface)
+                            .increaseSize(1),
                       ),
 
                     // Optional Vehicle Identification Badge
@@ -151,12 +160,17 @@ class ChatMessageWidget extends StatelessWidget {
                         borderRadius: AppRadius.sm.toBorderRadius,
                         child: QuickContainer(
                           radius: AppRadius.sm,
-                          color: context.colors.surfaceDim.withValues(alpha: 0.7),
+                          color: context.colors.surfaceDim.withValues(
+                            alpha: 0.7,
+                          ),
                           border: Border.all(
-                            color: context.colors.outlineVariant.withValues(alpha: 0.4),
+                            color: context.colors.outlineVariant.withValues(
+                              alpha: 0.4,
+                            ),
                             width: 1,
                           ),
-                          padding: AppSpacing.sm.xPadding + AppSpacing.xs.yPadding,
+                          px: AppSpacing.sm,
+                          py: AppSpacing.xs,
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -169,9 +183,9 @@ class ChatMessageWidget extends StatelessWidget {
                               Flexible(
                                 child: Text(
                                   message.vehicleBadge!,
-                                  style: context.textTheme.labelSmall?.medium().colour(
-                                    context.colors.onSurfaceVariant,
-                                  ),
+                                  style: context.textTheme.labelSmall
+                                      ?.medium()
+                                      .colour(context.colors.onSurfaceVariant),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
@@ -183,16 +197,19 @@ class ChatMessageWidget extends StatelessWidget {
                   ],
                 ),
               ),
-              AppSpacing.xs.h,
+            ),
+          ],
+        ),
+        AppSpacing.xs.h,
 
-              // Timestamp
-              Text(
-                message.displayTime,
-                style: context.textTheme.labelSmall?.colour(
-                  context.colors.onSurfaceVariant,
-                ),
-              ),
-            ],
+        // Timestamp indented below the bubble
+        Padding(
+          padding: EdgeInsets.only(left: AppSizes.avatarSm + AppSpacing.sm),
+          child: Text(
+            message.displayTime,
+            style: context.textTheme.labelSmall?.colour(
+              context.colors.onSurfaceTertiary,
+            ),
           ),
         ),
       ],
@@ -204,10 +221,7 @@ class ChatMessageWidget extends StatelessWidget {
 class ChatDateChip extends StatelessWidget {
   final String dateText;
 
-  const ChatDateChip({
-    super.key,
-    required this.dateText,
-  });
+  const ChatDateChip({super.key, required this.dateText});
 
   @override
   Widget build(BuildContext context) {
@@ -219,11 +233,12 @@ class ChatDateChip extends StatelessWidget {
           color: context.colors.outlineVariant.withValues(alpha: 0.4),
           width: 1,
         ),
-        padding: AppSpacing.md.xPadding + AppSpacing.xs.yPadding,
+        px: AppSpacing.md,
+        py: AppSpacing.xs,
         child: Text(
           dateText,
           style: context.textTheme.labelSmall?.bold().colour(
-            context.colors.onSurfaceVariant,
+            context.colors.onSurfaceTertiary,
           ),
         ),
       ),

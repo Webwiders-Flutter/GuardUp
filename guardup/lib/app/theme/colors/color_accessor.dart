@@ -70,6 +70,12 @@ class AppThemeAccessor {
   /// Secondary text / medium-emphasis labels / icons on surfaces (#CCCCCC)
   Color get onSurfaceVariant => _extra.onSurfaceVariant;
 
+  /// Warm champagne / sand text, icon, and subtle border color (#D3C4B0)
+  Color get onSurfaceTertiary => _extra.onSurfaceTertiary;
+
+  /// Semantic alias for [onSurfaceTertiary] (#D3C4B0)
+  Color get onSurfaceMuted => _extra.onSurfaceTertiary;
+
   /// Card surface gradient (from #1C252D to #000B14)
   LinearGradient get surfaceGradient => LinearGradient(
         colors: [surfaceContainer, surfaceDim],

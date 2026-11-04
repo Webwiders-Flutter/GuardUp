@@ -36,4 +36,5 @@ final class AppRoutes {
   static const businessDocuments = '/business-documents';
   static const notifications = '/notifications';
   static const chat = '/chat';
+  static const chatDetail = '/chat-detail';
 }

@@ -55,6 +55,12 @@ final class AppColors {
   /// Secondary muted text on surfaces (#CCCCCC)
   static const Color onSurfaceVariant = Color(0xFFCCCCCC);
 
+  /// Warm champagne / sand text, icon, and subtle border color (#D3C4B0)
+  static const Color onSurfaceTertiary = Color(0xFFD3C4B0);
+
+  /// Semantic alias for [onSurfaceTertiary]
+  static const Color onSurfaceMuted = onSurfaceTertiary;
+
   // ------------------------------------------------------------
   // Outlines & Borders (#7E8B9B, #262D3D)
   // ------------------------------------------------------------

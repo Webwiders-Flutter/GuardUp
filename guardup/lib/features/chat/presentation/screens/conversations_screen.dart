@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:guardup/core/constants/app_radius.dart';
+import 'package:go_router/go_router.dart';
 import 'package:guardup/core/extensions/number.extension.dart';
 
+import '/app/routes/app_routes.dart';
+import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/core/state/api_state.dart';
-import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/pagination/app_pagination.dart';
 import '/shared/widgets/pagination/pagination.controller.dart';
@@ -95,10 +96,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
   }
 
   void _handleOpenConversation(ConversationModel conversation) {
-    AppSnackbar.info(
-      'Opening conversation with ${conversation.title}',
-      context: context,
-    );
+    context.push(AppRoutes.chatDetail, extra: conversation);
   }
 
   @override

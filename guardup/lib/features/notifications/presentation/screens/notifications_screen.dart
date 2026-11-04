@@ -165,7 +165,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
           AppButton(
             type: .text,
             text: context.l10n.markAllAsRead,
-            foregroundColor: context.colors.primary.withValues(alpha: 0.7),
+            foregroundColor: context.colors.onSurfaceTertiary,
             textStyle: context.textTheme.labelMedium,
             padding: AppSpacing.md.rPadding,
             onPressed: _handleMarkAllAsRead,

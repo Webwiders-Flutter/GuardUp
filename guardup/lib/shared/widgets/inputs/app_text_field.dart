@@ -578,7 +578,10 @@ class AppTextField extends StatefulWidget {
       isDense: false,
     ),
     AppInputSize.large: (
-      contentPadding: AppSpacing.lg.allPadding,
+      contentPadding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.xl,
+      ),
       fontSize: 16,
       iconSize: AppSizes.iconLg,
       isDense: false,
@@ -861,16 +864,20 @@ class _AppTextFieldState extends State<AppTextField> {
       prefixIconConstraints: isPhonePrefix
           ? const BoxConstraints(minWidth: 0, minHeight: 0)
           : (widget.decoration?.prefixIconConstraints ??
-              baseDecoration.prefixIconConstraints),
-      suffixIconConstraints: widget.decoration?.suffixIconConstraints ??
+                baseDecoration.prefixIconConstraints),
+      suffixIconConstraints:
+          widget.decoration?.suffixIconConstraints ??
           baseDecoration.suffixIconConstraints,
-      contentPadding: widget.decoration?.contentPadding ??
+      contentPadding:
+          widget.decoration?.contentPadding ??
           baseDecoration.contentPadding ??
           _sizeSpec.contentPadding,
-      isDense: widget.decoration?.isDense ??
+      isDense:
+          widget.decoration?.isDense ??
           baseDecoration.isDense ??
           _sizeSpec.isDense,
-      hintStyle: widget.decoration?.hintStyle ??
+      hintStyle:
+          widget.decoration?.hintStyle ??
           baseDecoration.hintStyle?.size(_sizeSpec.fontSize),
     );
   }
