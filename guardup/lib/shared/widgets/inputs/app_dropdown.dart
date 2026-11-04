@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:guardup/core/extensions/number.extension.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '/core/constants/app_radius.dart';
@@ -429,7 +430,7 @@ class _AppDropdownState<V> extends State<AppDropdown<V>> {
                       ),
                     ],
                     child: ClipRRect(
-                      borderRadius: AppRadius.bMd,
+                      borderRadius: AppRadius.md.toBorderRadius,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [

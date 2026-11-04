@@ -10,6 +10,7 @@ import '/app/screens/main_navigation.screen.dart';
 import '/app/screens/not_found_screen.dart';
 import '/core/di/injection_container.dart';
 import '/features/auth/auth.dart';
+import '/features/chat/chat.dart';
 import '/features/company/company.dart';
 import '/features/legal/legal.dart';
 import '/features/notifications/notifications.dart';
@@ -141,6 +142,10 @@ final class AppRouter {
       GoRoute(
         path: AppRoutes.notifications,
         builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.chat,
+        builder: (context, state) => const ConversationsScreen(),
       ),
       GoRoute(
         path: AppRoutes.changePassword,

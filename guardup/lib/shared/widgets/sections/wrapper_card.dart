@@ -274,6 +274,46 @@ class WrapperCard extends StatelessWidget {
 
     final header = _buildHeader(context);
 
+    final borderRad = BorderRadius.circular(effectiveRadius);
+
+    Widget cardContent = Padding(
+      padding: effectivePadding,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: crossAxisAlignment,
+        children: [
+          if (header != null) ...[
+            header,
+            if (showHeaderDivider) ...[
+              effectiveHeaderSpacing.h,
+              Container(
+                height: 1,
+                color:
+                    dividerColor ??
+                    context.colors.outline.withValues(alpha: 0.15),
+              ),
+            ],
+            effectiveHeaderSpacing.h,
+          ],
+          child,
+        ],
+      ),
+    );
+
+    if (onTap != null) {
+      cardContent = Material(
+        color: context.colors.transparent,
+        borderRadius: borderRad,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: borderRad,
+          splashColor: context.colors.primary.withValues(alpha: 0.08),
+          highlightColor: context.colors.transparent,
+          child: cardContent,
+        ),
+      );
+    }
+
     final Widget card = QuickContainer(
       w: width,
       h: height,
@@ -283,31 +323,8 @@ class WrapperCard extends StatelessWidget {
       p: 0,
       border: effectiveBorder,
       shadows: shadows,
-      onTap: onTap,
-      ripple: onTap != null && ripple,
-      child: Padding(
-        padding: effectivePadding,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: crossAxisAlignment,
-          children: [
-            if (header != null) ...[
-              header,
-              if (showHeaderDivider) ...[
-                effectiveHeaderSpacing.h,
-                Container(
-                  height: 1,
-                  color:
-                      dividerColor ??
-                      context.colors.outline.withValues(alpha: 0.15),
-                ),
-              ],
-              effectiveHeaderSpacing.h,
-            ],
-            child,
-          ],
-        ),
-      ),
+      clipBehavior: Clip.antiAlias,
+      child: cardContent,
     );
 
     if (margin != null) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:guardup/core/extensions/number.extension.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '/core/constants/app_radius.dart';
@@ -41,7 +42,7 @@ class TransactionDateFilter extends StatelessWidget {
         // QuickContainer Date Pill
         QuickContainer(
         onTap: onTap,
-        borderRadius: AppRadius.bSm,
+        borderRadius: AppRadius.sm.toBorderRadius,
           radius: AppRadius.sm,
           color: context.colors.onSurface,
           px: AppSpacing.smd,

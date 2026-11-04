@@ -231,6 +231,8 @@
   "accountTab": "الحساب",
   "todaySection": "اليوم",
   "yesterdaySection": "أمس",
-  "allMarkedAsRead": "تم تحديد جميع الإشعارات كمقروءة"
+  "allMarkedAsRead": "تم تحديد جميع الإشعارات كمقروءة",
+  "searchConversationsHint": "ابحث بالاسم أو التصريح أو المهارة...",
+  "noConversationsFound": "لم يتم العثور على محادثات"
 }
 

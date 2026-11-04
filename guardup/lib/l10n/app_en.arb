@@ -979,5 +979,13 @@
   "allMarkedAsRead": "All notifications marked as read",
   "@allMarkedAsRead": {
     "description": "All notifications marked as read toast"
+  },
+  "searchConversationsHint": "Search by name, clearance, or skill..",
+  "@searchConversationsHint": {
+    "description": "Hint text for chat conversation search input"
+  },
+  "noConversationsFound": "No conversations found",
+  "@noConversationsFound": {
+    "description": "Empty state text for conversations list"
   }
 }

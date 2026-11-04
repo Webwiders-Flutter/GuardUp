@@ -1,4 +1,3 @@
-import 'package:flutter/widgets.dart';
 /// Centralized corner radius design tokens.
 final class AppRadius {
   AppRadius._();
@@ -32,15 +31,4 @@ final class AppRadius {
 
   /// 999.0 - Fully rounded pill / circle
   static const double full = 999;
-
-  // ── Pre-resolved BorderRadius instances ────────────────────────────────────
-  static const BorderRadius bNone = BorderRadius.zero;
-  static final BorderRadius bXs = BorderRadius.circular(xs);
-  static final BorderRadius bSm = BorderRadius.circular(sm);
-  static final BorderRadius bMd = BorderRadius.circular(md);
-  static final BorderRadius bLg = BorderRadius.circular(lg);
-  static final BorderRadius bXl = BorderRadius.circular(xl);
-  static final BorderRadius bXxl = BorderRadius.circular(xxl);
-  static final BorderRadius bRound = BorderRadius.circular(round);
-  static final BorderRadius bFull = BorderRadius.circular(full);
 }

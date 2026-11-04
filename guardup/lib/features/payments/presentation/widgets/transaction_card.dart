@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:guardup/core/extensions/number.extension.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '/core/constants/app_radius.dart';
@@ -37,7 +38,7 @@ class TransactionCard extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: AppRadius.bMd,
+      borderRadius: AppRadius.md.toBorderRadius,
       splashColor: context.colors.primary.withValues(alpha: 0.08),
       highlightColor: context.colors.transparent,
       child: Padding(
