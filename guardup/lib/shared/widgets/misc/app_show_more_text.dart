@@ -180,7 +180,7 @@ class AppShowMoreText extends StatelessWidget {
         context.textTheme.bodySmall
             ?.size(AppSpacing.md)
             .lineHeight(1.35)
-            .colour(context.colors.onSurface);
+            ;
 
     return LayoutBuilder(
       builder: (context, constraints) {

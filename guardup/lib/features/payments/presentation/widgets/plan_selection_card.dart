@@ -147,7 +147,7 @@ class PlanSelectionCard extends StatelessWidget {
                                   plan.title,
                                   style: context.textTheme.titleMedium
                                       ?.bold()
-                                      .colour(context.colors.onSurface),
+                                      ,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),

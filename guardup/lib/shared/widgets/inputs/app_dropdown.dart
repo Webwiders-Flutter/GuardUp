@@ -540,9 +540,7 @@ class _AppDropdownState<V> extends State<AppDropdown<V>> {
                           child: Text(
                             item.data,
                             style: isSelected
-                                ? context.textTheme.bodyMedium?.bold().colour(
-                                    context.colors.onSurface,
-                                  )
+                                ? context.textTheme.bodyMedium?.bold()
                                 : context.textTheme.bodyMedium?.colour(
                                     context.colors.onSurfaceVariant,
                                   ),

@@ -78,9 +78,7 @@ class TransactionCard extends StatelessWidget {
                       ),
                       AppTextSpan(
                         text: transaction.title,
-                        style: context.textTheme.bodyMedium?.medium().colour(
-                          context.colors.onSurface,
-                        ),
+                        style: context.textTheme.bodyMedium?.medium(),
                       ),
                     ],
                   ),

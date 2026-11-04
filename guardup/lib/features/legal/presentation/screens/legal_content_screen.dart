@@ -225,8 +225,7 @@ class _HeaderCard extends StatelessWidget {
       return Text(
         text,
         style: context.textTheme.bodySmall
-            ?.colour(context.colors.onSurface)
-            .lineHeight(1.5),
+            ?.lineHeight(1.5),
       );
     }
 
@@ -236,8 +235,7 @@ class _HeaderCard extends StatelessWidget {
         AppTextSpan(
           text: parts[0],
           style: context.textTheme.bodySmall
-              ?.colour(context.colors.onSurface)
-              .lineHeight(1.5),
+              ?.lineHeight(1.5),
         ),
         AppTextSpan(
           text: highlightWord,
@@ -250,8 +248,7 @@ class _HeaderCard extends StatelessWidget {
           AppTextSpan(
             text: parts[1],
             style: context.textTheme.bodySmall
-                ?.colour(context.colors.onSurface)
-                .lineHeight(1.5),
+                ?.lineHeight(1.5),
           ),
       ],
     );
@@ -294,9 +291,7 @@ class _ClauseCard extends StatelessWidget {
           AppSpacing.xs.h,
           Text(
             clause.title,
-            style: context.textTheme.titleMedium?.bold().colour(
-              context.colors.onSurface,
-            ),
+            style: context.textTheme.titleMedium?.bold(),
           ),
           AppSpacing.sm.h,
           Text(

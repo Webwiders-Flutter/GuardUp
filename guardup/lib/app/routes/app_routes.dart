@@ -23,6 +23,8 @@ final class AppRoutes {
   static const editProfile = '/edit-profile';
   static const companyEditProfile = '/company-edit-profile';
   static const companyInformation = '/company-information';
+  static const bodyguardInformation = '/bodyguard-information';
+  static const bodyguardDetails = bodyguardInformation;
   static const changePassword = '/change-password';
   static const membershipPlans = '/membership-plans';
   static const privacyPolicy = '/privacy-policy';
@@ -35,6 +37,7 @@ final class AppRoutes {
   static const reviewAndRatings = '/review-and-ratings';
   static const businessDocuments = '/business-documents';
   static const notifications = '/notifications';
+  static const bookings = '/bookings';
   static const chat = '/chat';
   static const chatDetail = '/chat-detail';
 }

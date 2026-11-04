@@ -105,9 +105,7 @@ class AdminApprovalScreen extends StatelessWidget {
                             Text(
                               context.l10n.applicationSubmitted,
                               textAlign: TextAlign.center,
-                              style: context.textTheme.titleMedium?.colour(
-                                context.colors.onSurface,
-                              ),
+                              style: context.textTheme.titleMedium,
                             ),
                             AppSpacing.xxl.h,
 
@@ -287,9 +285,7 @@ class AdminApprovalScreen extends StatelessWidget {
                 child: Text(
                   context.l10n.review,
                   textAlign: TextAlign.center,
-                  style: context.textTheme.labelSmall?.bold().colour(
-                    context.colors.onSurface,
-                  ),
+                  style: context.textTheme.labelSmall?.bold(),
                 ),
               ),
               SizedBox(

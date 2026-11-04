@@ -152,9 +152,10 @@ class AppRemovableChip extends StatelessWidget {
           Flexible(
             child: Text(
               text,
-              style: (textStyle ?? context.textTheme.labelLarge)?.bold().colour(
-                effectiveForeground,
-              ),
+              style: (textStyle ?? context.textTheme.labelLarge)
+                  ?.decreaseSize(1)
+                  .bold()
+                  .colour(effectiveForeground),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

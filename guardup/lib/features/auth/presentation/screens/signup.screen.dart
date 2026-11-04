@@ -74,9 +74,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         // 1. Heading
                         Text(
                           context.l10n.signUpTitle,
-                          style: context.textTheme.headlineLarge?.bold().colour(
-                            context.colors.onSurface,
-                          ),
+                          style: context.textTheme.headlineLarge?.bold(),
                         ),
                         AppSpacing.xs.h,
 

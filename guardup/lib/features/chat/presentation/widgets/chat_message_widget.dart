@@ -132,8 +132,7 @@ class ChatMessageWidget extends StatelessWidget {
                           AppTextSpan(
                             text: message.content,
                             style: context.textTheme.bodySmall
-                                ?.colour(context.colors.onSurface)
-                                .increaseSize(1),
+                                ?.increaseSize(1),
                           ),
                           AppTextSpan(
                             text: message.highlightedText!,
@@ -148,8 +147,7 @@ class ChatMessageWidget extends StatelessWidget {
                       Text(
                         message.content,
                         style: context.textTheme.bodySmall
-                            ?.colour(context.colors.onSurface)
-                            .increaseSize(1),
+                            ?.increaseSize(1),
                       ),
 
                     // Optional Vehicle Identification Badge

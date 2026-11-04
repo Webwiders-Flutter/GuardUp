@@ -208,7 +208,7 @@ class _AppSelectableCardState<T> extends State<AppSelectableCard<T>> {
                                     widget.title,
                                     style: context.textTheme.headlineSmall
                                         ?.bold()
-                                        .colour(context.colors.onSurface),
+                                        ,
                                   ),
                                   AppSpacing.xxs.h,
                                   Text(

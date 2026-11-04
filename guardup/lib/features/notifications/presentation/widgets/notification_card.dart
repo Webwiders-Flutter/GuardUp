@@ -61,9 +61,7 @@ class NotificationCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         notification.title,
-                        style: context.textTheme.titleSmall?.bold().colour(
-                          context.colors.onSurface,
-                        ),
+                        style: context.textTheme.titleSmall?.bold(),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),

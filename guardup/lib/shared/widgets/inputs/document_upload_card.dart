@@ -229,7 +229,7 @@ class DocumentUploadCard extends StatelessWidget {
             style: context.textTheme.bodyLarge
                 ?.decreaseSize(1)
                 .semiBold()
-                .colour(context.colors.onSurface),
+                ,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),

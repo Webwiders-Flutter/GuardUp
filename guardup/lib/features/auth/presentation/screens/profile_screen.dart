@@ -43,7 +43,7 @@ class ProfileScreen extends StatelessWidget {
     return BlocBuilder<AuthBloc, AuthState>(
       bloc: sl<AuthBloc>(),
       builder: (context, state) {
-        final role = state.sessionRole ?? UserRole.company;
+        final role = state.sessionRole ?? UserRole.guard;
 
         return Scaffold(
           backgroundColor: context.colors.transparent,
@@ -71,6 +71,8 @@ class ProfileScreen extends StatelessWidget {
                     switch (role) {
                       case .company:
                         context.push(AppRoutes.companyInformation);
+                      case .guard:
+                        context.push(AppRoutes.bodyguardInformation);
                       default:
                     }
                   },
@@ -298,9 +300,7 @@ class _ProfileCard extends StatelessWidget {
               children: [
                 Text(
                   name,
-                  style: context.textTheme.titleMedium?.bold().colour(
-                    context.colors.onSurface,
-                  ),
+                  style: context.textTheme.titleMedium?.bold(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

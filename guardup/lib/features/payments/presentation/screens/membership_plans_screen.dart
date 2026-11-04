@@ -153,9 +153,7 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
                       Text(
                         'Unlock Instant Savings',
                         textAlign: TextAlign.center,
-                        style: context.textTheme.headlineMedium?.bold().colour(
-                          context.colors.onSurface,
-                        ),
+                        style: context.textTheme.headlineMedium?.bold(),
                       ),
                       AppSpacing.xs.h,
 
@@ -175,7 +173,7 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
                                   '\$${(widget.bookingAmount ?? 240.0).toStringAsFixed(2)}',
                               style: context.textTheme.bodyMedium
                                   ?.semiBold()
-                                  .colour(context.colors.onSurface),
+                                  ,
                             ),
                             AppTextSpan(
                               text: ' booking with ',
@@ -189,7 +187,7 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
                                   'Operative Vikram Singh',
                               style: context.textTheme.bodyMedium
                                   ?.semiBold()
-                                  .colour(context.colors.onSurface),
+                                  ,
                             ),
                             AppTextSpan(
                               text: '.',

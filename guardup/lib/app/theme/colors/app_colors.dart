@@ -74,7 +74,7 @@ final class AppColors {
   // Feedback & Status Colors
   // ------------------------------------------------------------
   /// Alert Coral Red (#FF7D7D)
-  static const Color error = Color(0xFFFF7D7D);
+  static const Color error = Color(0xFFDC2626);
   static const Color errorContainer = Color(0x1AFF0000);
   static const Color onError = Color(0xFFFFFFFF);
 

@@ -91,9 +91,7 @@ class _CompanyCompleteProfileScreenState
                         // 1. Heading: Company Details
                         Text(
                           context.l10n.companyDetailsTitle,
-                          style: context.textTheme.headlineLarge?.bold().colour(
-                            context.colors.onSurface,
-                          ),
+                          style: context.textTheme.headlineLarge?.bold(),
                         ),
                         AppSpacing.xs.h,
 

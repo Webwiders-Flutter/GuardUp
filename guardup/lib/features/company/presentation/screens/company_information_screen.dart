@@ -101,9 +101,7 @@ class _InfoCard extends StatelessWidget {
           AppSpacing.xs.h,
           Text(
             value,
-            style: context.textTheme.bodyLarge?.colour(
-              context.colors.onSurface,
-            ),
+            style: context.textTheme.bodyLarge,
           ),
         ],
       ),

@@ -129,9 +129,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                       Text(
                         context.l10n.emailVerificationTitle,
                         textAlign: TextAlign.center,
-                        style: context.textTheme.headlineLarge?.bold().colour(
-                          context.colors.onSurface,
-                        ),
+                        style: context.textTheme.headlineLarge?.bold(),
                       ),
                       AppSpacing.sm.h,
 

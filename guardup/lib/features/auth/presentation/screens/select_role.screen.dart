@@ -86,7 +86,7 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
                             text: 'Welcome to ',
                             style: context.textTheme.headlineMedium
                                 ?.bold()
-                                .colour(context.colors.onSurface),
+                                ,
                           ),
                           AppTextSpan(
                             text: 'GUARDUP',

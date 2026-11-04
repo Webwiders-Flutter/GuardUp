@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:guardup/features/booking/booking.dart';
 import 'package:guardup/features/chat/chat.dart';
 import 'package:guardup/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:quick_container/quick_container.dart';
@@ -145,14 +146,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
                     ),
                   ),
                 ),
-                Center(
-                  child: Text(
-                    context.l10n.navBookings,
-                    style: context.textTheme.headlineMedium?.copyWith(
-                      color: context.colors.onSurface,
-                    ),
-                  ),
-                ),
+                const BookingsScreen(),
                 const ConversationsScreen(),
                 const NotificationsScreen(),
                 const ProfileScreen(),

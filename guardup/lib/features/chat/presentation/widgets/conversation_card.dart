@@ -65,9 +65,7 @@ class ConversationCard extends StatelessWidget {
                     Flexible(
                       child: Text(
                         conversation.title,
-                        style: context.textTheme.titleSmall?.bold().colour(
-                          context.colors.onSurface,
-                        ),
+                        style: context.textTheme.titleSmall?.bold(),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),

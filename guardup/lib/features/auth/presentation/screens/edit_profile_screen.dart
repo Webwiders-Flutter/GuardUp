@@ -170,9 +170,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       children: [
                         Text(
                           'Michael Carter',
-                          style: context.textTheme.titleMedium?.bold().colour(
-                            context.colors.onSurface,
-                          ),
+                          style: context.textTheme.titleMedium?.bold(),
                         ),
                         AppSpacing.xs.w,
                         Icon(
@@ -198,9 +196,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   AppSpacing.xs.w,
                   Text(
                     context.l10n.personalInformation,
-                    style: context.textTheme.titleMedium?.bold().colour(
-                      context.colors.onSurface,
-                    ),
+                    style: context.textTheme.titleMedium?.bold(),
                   ),
                 ],
               ),

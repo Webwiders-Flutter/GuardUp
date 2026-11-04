@@ -194,7 +194,7 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
                               name.isEmpty ? 'SecurePro Security Ltd.' : name,
                               style: context.textTheme.titleMedium
                                   ?.bold()
-                                  .colour(context.colors.onSurface),
+                                  ,
                             );
                           },
                         ),
@@ -222,9 +222,7 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
                   AppSpacing.xs.w,
                   Text(
                     context.l10n.companyInformation,
-                    style: context.textTheme.titleMedium?.bold().colour(
-                      context.colors.onSurface,
-                    ),
+                    style: context.textTheme.titleMedium?.bold(),
                   ),
                 ],
               ),

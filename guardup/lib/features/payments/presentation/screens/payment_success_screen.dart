@@ -123,7 +123,7 @@ class PaymentSuccessScreen extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: context.textTheme.headlineMedium
                             ?.bold()
-                            .colour(context.colors.onSurface)
+                            
                             .size(24)
                             .textSpacing(-0.2),
                       ),
@@ -189,7 +189,7 @@ class PaymentSuccessScreen extends StatelessWidget {
                                     companyName,
                                     style: context.textTheme.titleMedium
                                         ?.bold()
-                                        .colour(context.colors.onSurface)
+                                        
                                         .size(16),
                                   ),
                                 ),
@@ -214,7 +214,7 @@ class PaymentSuccessScreen extends StatelessWidget {
                                 referenceId,
                                 style: context.textTheme.bodyMedium
                                     ?.bold()
-                                    .colour(context.colors.onSurface)
+                                    
                                     .size(13)
                                     .textSpacing(0.5),
                               ),
@@ -229,7 +229,7 @@ class PaymentSuccessScreen extends StatelessWidget {
                                 scheduleText,
                                 style: context.textTheme.bodyMedium
                                     ?.medium()
-                                    .colour(context.colors.onSurface)
+                                    
                                     .size(13),
                               ),
                             ),
@@ -246,7 +246,7 @@ class PaymentSuccessScreen extends StatelessWidget {
                                     context.l10n.stripeVerified,
                                     style: context.textTheme.bodyMedium
                                         ?.medium()
-                                        .colour(context.colors.onSurface)
+                                        
                                         .size(13),
                                   ),
                                   AppSpacing.sm.w,
@@ -278,7 +278,7 @@ class PaymentSuccessScreen extends StatelessWidget {
                                     context.l10n.totalPaid,
                                     style: context.textTheme.titleMedium
                                         ?.medium()
-                                        .colour(context.colors.onSurface)
+                                        
                                         .size(16),
                                   ),
                                 ),

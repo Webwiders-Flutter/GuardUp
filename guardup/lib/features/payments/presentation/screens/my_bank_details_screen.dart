@@ -115,9 +115,7 @@ class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
                     children: [
                       Text(
                         context.l10n.savedBankAccount,
-                        style: context.textTheme.titleMedium?.bold().colour(
-                          context.colors.onSurface,
-                        ),
+                        style: context.textTheme.titleMedium?.bold(),
                       ),
                       AppSpacing.sm.h,
                       ...accounts.map(
@@ -135,9 +133,7 @@ class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
               // 2. Add New Bank Account Section
               Text(
                 context.l10n.addNewBankAccount,
-                style: context.textTheme.titleMedium?.bold().colour(
-                  context.colors.onSurface,
-                ),
+                style: context.textTheme.titleMedium?.bold(),
               ),
               AppSpacing.md.h,
 
@@ -229,9 +225,7 @@ class BankAccountCard extends StatelessWidget {
                   type: MaskType.card,
                   maskChar: 'x',
                 ),
-                style: context.textTheme.titleMedium?.bold().colour(
-                  context.colors.onSurface,
-                ),
+                style: context.textTheme.titleMedium?.bold(),
               ),
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -305,9 +299,7 @@ class BankAccountCard extends StatelessWidget {
               ),
               Text(
                 account.accountHolder,
-                style: context.textTheme.bodyMedium?.semiBold().colour(
-                  context.colors.onSurface,
-                ),
+                style: context.textTheme.bodyMedium?.semiBold(),
               ),
             ],
           ),

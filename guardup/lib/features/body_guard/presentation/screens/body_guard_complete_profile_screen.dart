@@ -238,7 +238,6 @@ class _BodyGuardCompleteProfileScreenState
                             hintText: 'Enter Full Name',
                             fillColor: context.colors.onPrimary,
                           ),
-                          style: TextStyle(color: context.colors.onSurface),
                           textInputAction: TextInputAction.next,
                         ),
                         AppSpacing.xxl.h,
@@ -270,7 +269,6 @@ class _BodyGuardCompleteProfileScreenState
                             ),
                             fillColor: context.colors.onPrimary,
                           ),
-                          style: TextStyle(color: context.colors.onSurface),
                           keyboardType: TextInputType.number,
                           textInputAction: TextInputAction.next,
                           validator: (value) =>
@@ -371,7 +369,6 @@ class _BodyGuardCompleteProfileScreenState
                             hintText: context.l10n.bioBackgroundHint,
                             fillColor: context.colors.onPrimary,
                           ),
-                          style: TextStyle(color: context.colors.onSurface),
                           maxLines: 4,
                           minLines: 4,
                           textInputAction: TextInputAction.done,

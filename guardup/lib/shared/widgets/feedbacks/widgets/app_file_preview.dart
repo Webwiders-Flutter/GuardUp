@@ -325,9 +325,7 @@ class AppFilePreviewSheet extends StatelessWidget {
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: context.textTheme.bodyMedium?.semiBold().colour(
-                context.colors.onSurface,
-              ),
+              style: context.textTheme.bodyMedium?.semiBold(),
             ),
           ),
         ),

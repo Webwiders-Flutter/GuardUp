@@ -68,9 +68,7 @@ class WalletBalanceCard extends StatelessWidget {
                 // Balance Value
                 Text(
                   formattedBalance,
-                  style: context.textTheme.headlineMedium?.bold().colour(
-                    context.colors.onSurface,
-                  ),
+                  style: context.textTheme.headlineMedium?.bold(),
                 ),
                 AppSpacing.md.h,
 

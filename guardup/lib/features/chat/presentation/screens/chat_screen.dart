@@ -132,9 +132,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       Flexible(
                         child: Text(
                           operativeName,
-                          style: context.textTheme.titleSmall?.bold().colour(
-                            context.colors.onSurface,
-                          ),
+                          style: context.textTheme.titleSmall?.bold(),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),

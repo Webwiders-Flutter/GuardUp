@@ -148,7 +148,7 @@ class _ContactUsViewState extends State<_ContactUsView> {
                                 context.l10n.contactUs,
                                 style: context.textTheme.titleMedium
                                     ?.bold()
-                                    .colour(context.colors.onSurface),
+                                    ,
                               ),
                               AppSpacing.xxs.h,
                               Text(
@@ -181,7 +181,6 @@ class _ContactUsViewState extends State<_ContactUsView> {
                           hintText: context.l10n.fullName,
                           fillColor: context.colors.onPrimary,
                         ),
-                        style: TextStyle(color: context.colors.onSurface),
                         textCapitalization: TextCapitalization.words,
                         textInputAction: TextInputAction.next,
                         validator: (value) => Validators.name(context, value),
@@ -197,7 +196,6 @@ class _ContactUsViewState extends State<_ContactUsView> {
                           hintText: context.l10n.email,
                           fillColor: context.colors.onPrimary,
                         ),
-                        style: TextStyle(color: context.colors.onSurface),
                         textInputAction: TextInputAction.next,
                         validator: (value) => Validators.email(context, value),
                       ),
@@ -215,7 +213,6 @@ class _ContactUsViewState extends State<_ContactUsView> {
                           hintText: context.l10n.messageHint,
                           fillColor: context.colors.onPrimary,
                         ),
-                        style: TextStyle(color: context.colors.onSurface),
                         maxLines: 4,
                         minLines: 3,
                         keyboardType: TextInputType.multiline,

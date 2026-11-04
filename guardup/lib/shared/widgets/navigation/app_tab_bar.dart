@@ -15,13 +15,23 @@ class AppTabItem {
   const AppTabItem({required this.tabName, this.tabBody});
 }
 
-/// Custom luxury pill-style TabBar widget matching GuardUp design standards.
+/// Visual presentation style for [AppTabBar].
+enum AppTabBarType {
+  /// Separate rounded pill segments with background highlights.
+  pill,
+
+  /// Clean underline tabs with bottom indicator line and subtle divider.
+  underline,
+}
+
+/// Custom TabBar widget supporting both luxury pill and underline styles.
 ///
-/// Features separate rounded pill segments with active gold top-to-bottom
-/// gradient & subtle elevation glow, alongside sleek dark unselected segments.
+/// - **pill**: Separate rounded segments with active gold gradient & elevation.
+/// - **underline**: Clean underline tabs with active gold line and full-width bottom divider.
 class AppTabBar extends StatelessWidget implements PreferredSizeWidget {
   final TabController controller;
   final List<String> tabNames;
+  final AppTabBarType type;
   final ValueChanged<int>? onTap;
   final bool isScrollable;
   final TabAlignment? tabAlignment;
@@ -30,8 +40,30 @@ class AppTabBar extends StatelessWidget implements PreferredSizeWidget {
   final double height;
   final double spacing;
   final double radius;
+  final Color? indicatorColor;
+  final Color? dividerColor;
+  final TabBarIndicatorSize? indicatorSize;
 
   const AppTabBar({
+    super.key,
+    required this.controller,
+    required this.tabNames,
+    this.type = AppTabBarType.pill,
+    this.onTap,
+    this.isScrollable = false,
+    this.tabAlignment,
+    this.padding,
+    this.tabPadding,
+    this.height = 40.0,
+    this.spacing = AppSpacing.sm,
+    this.radius = AppRadius.md,
+    this.indicatorColor,
+    this.dividerColor,
+    this.indicatorSize,
+  });
+
+  /// Factory constructor for rounded pill-style tab bar.
+  const AppTabBar.pill({
     super.key,
     required this.controller,
     required this.tabNames,
@@ -43,13 +75,35 @@ class AppTabBar extends StatelessWidget implements PreferredSizeWidget {
     this.height = 40.0,
     this.spacing = AppSpacing.sm,
     this.radius = AppRadius.md,
-  });
+    this.indicatorColor,
+    this.dividerColor,
+    this.indicatorSize,
+  }) : type = AppTabBarType.pill;
+
+  /// Factory constructor for sleek underline-style tab bar.
+  const AppTabBar.underline({
+    super.key,
+    required this.controller,
+    required this.tabNames,
+    this.onTap,
+    this.isScrollable = false,
+    this.tabAlignment,
+    this.padding,
+    this.tabPadding,
+    this.height = 44.0,
+    this.spacing = AppSpacing.md,
+    this.radius = AppRadius.xs,
+    this.indicatorColor,
+    this.dividerColor,
+    this.indicatorSize = TabBarIndicatorSize.label,
+  }) : type = AppTabBarType.underline;
 
   /// Factory constructor to easily create [AppTabBar] from a list of [AppTabItem]s.
   factory AppTabBar.fromItems({
     Key? key,
     required TabController controller,
     required List<AppTabItem> items,
+    AppTabBarType type = AppTabBarType.pill,
     ValueChanged<int>? onTap,
     bool isScrollable = false,
     TabAlignment? tabAlignment,
@@ -58,11 +112,15 @@ class AppTabBar extends StatelessWidget implements PreferredSizeWidget {
     double height = 44.0,
     double spacing = AppSpacing.sm,
     double radius = AppRadius.md,
+    Color? indicatorColor,
+    Color? dividerColor,
+    TabBarIndicatorSize? indicatorSize,
   }) {
     return AppTabBar(
       key: key,
       controller: controller,
       tabNames: items.map((e) => e.tabName).toList(),
+      type: type,
       onTap: onTap,
       isScrollable: isScrollable,
       tabAlignment: tabAlignment,
@@ -71,6 +129,9 @@ class AppTabBar extends StatelessWidget implements PreferredSizeWidget {
       height: height,
       spacing: spacing,
       radius: radius,
+      indicatorColor: indicatorColor,
+      dividerColor: dividerColor,
+      indicatorSize: indicatorSize,
     );
   }
 
@@ -79,6 +140,55 @@ class AppTabBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (type == AppTabBarType.underline) {
+      return _buildUnderlineTabBar(context);
+    }
+    return _buildPillTabBar(context);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Underline Tab Bar Style
+  // ---------------------------------------------------------------------------
+  Widget _buildUnderlineTabBar(BuildContext context) {
+    final effectiveIndicatorColor = indicatorColor ?? context.colors.primary;
+    final effectiveDividerColor = dividerColor ?? context.colors.outlineVariant;
+
+    return TabBar(
+      controller: controller,
+      onTap: onTap,
+      isScrollable: isScrollable,
+      tabAlignment:
+          tabAlignment ??
+          (isScrollable ? TabAlignment.start : TabAlignment.fill),
+      padding: padding ?? EdgeInsets.zero,
+      labelPadding: EdgeInsets.symmetric(horizontal: spacing),
+      indicatorSize: indicatorSize ?? TabBarIndicatorSize.label,
+      indicator: UnderlineTabIndicator(
+        borderSide: BorderSide(color: effectiveIndicatorColor, width: 2.5),
+        borderRadius: BorderRadius.circular(radius),
+      ),
+      dividerColor: effectiveDividerColor,
+      dividerHeight: 1.0,
+      overlayColor: WidgetStateProperty.all(context.colors.transparent),
+      splashFactory: NoSplash.splashFactory,
+      labelColor: effectiveIndicatorColor,
+      labelStyle: (context.textTheme.labelMedium ?? const TextStyle())
+          .medium()
+          .colour(effectiveIndicatorColor)
+          .increaseSize(1),
+      unselectedLabelColor: context.colors.onSurfaceVariant,
+      unselectedLabelStyle: (context.textTheme.labelMedium ?? const TextStyle())
+          .medium()
+          .colour(context.colors.onSurfaceVariant)
+          .increaseSize(1),
+      tabs: tabNames.map((name) => Tab(height: height, text: name)).toList(),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Pill Tab Bar Style
+  // ---------------------------------------------------------------------------
+  Widget _buildPillTabBar(BuildContext context) {
     return AnimatedBuilder(
       animation: controller.animation ?? controller,
       builder: (context, child) {
@@ -95,9 +205,9 @@ class AppTabBar extends StatelessWidget implements PreferredSizeWidget {
           padding: padding ?? EdgeInsets.zero,
           labelPadding: EdgeInsets.symmetric(horizontal: spacing / 1.5),
           indicator: const BoxDecoration(),
-          indicatorColor: Colors.transparent,
-          dividerColor: Colors.transparent,
-          overlayColor: WidgetStateProperty.all(Colors.transparent),
+          indicatorColor: context.colors.transparent,
+          dividerColor: context.colors.transparent,
+          overlayColor: WidgetStateProperty.all(context.colors.transparent),
           splashFactory: NoSplash.splashFactory,
           tabs: List.generate(
             tabNames.length,
@@ -150,15 +260,13 @@ class AppTabBar extends StatelessWidget implements PreferredSizeWidget {
         child: Text(
           label,
           style: isSelected
-              ? context.textTheme.bodySmall
-                    ?.bold()
-                    .colour(context.colors.onPrimary)
-                    .increaseSize(1)
-              : context.textTheme.bodySmall
+              ? context.textTheme.labelMedium?.bold().colour(
+                  context.colors.onPrimary,
+                )
+              : context.textTheme.labelMedium
                     ?.weight(FontWeight.w500)
                     .colour(context.colors.outline)
                     .increaseSize(1),
-
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,
@@ -172,6 +280,7 @@ class AppTabBar extends StatelessWidget implements PreferredSizeWidget {
 class AppTabView extends StatelessWidget {
   final TabController controller;
   final List<AppTabItem> tabs;
+  final AppTabBarType type;
   final ScrollPhysics? physics;
   final bool isScrollable;
   final TabAlignment? tabAlignment;
@@ -180,8 +289,29 @@ class AppTabView extends StatelessWidget {
   final double height;
   final double spacing;
   final double radius;
+  final Color? indicatorColor;
+  final Color? dividerColor;
+  final TabBarIndicatorSize? indicatorSize;
 
   const AppTabView({
+    super.key,
+    required this.controller,
+    required this.tabs,
+    this.type = AppTabBarType.pill,
+    this.physics,
+    this.isScrollable = false,
+    this.tabAlignment,
+    this.padding,
+    this.tabPadding,
+    this.height = 44.0,
+    this.spacing = AppSpacing.sm,
+    this.radius = AppRadius.md,
+    this.indicatorColor,
+    this.dividerColor,
+    this.indicatorSize,
+  });
+
+  const AppTabView.pill({
     super.key,
     required this.controller,
     required this.tabs,
@@ -193,7 +323,27 @@ class AppTabView extends StatelessWidget {
     this.height = 44.0,
     this.spacing = AppSpacing.sm,
     this.radius = AppRadius.md,
-  });
+    this.indicatorColor,
+    this.dividerColor,
+    this.indicatorSize,
+  }) : type = AppTabBarType.pill;
+
+  const AppTabView.underline({
+    super.key,
+    required this.controller,
+    required this.tabs,
+    this.physics,
+    this.isScrollable = false,
+    this.tabAlignment,
+    this.padding,
+    this.tabPadding,
+    this.height = 44.0,
+    this.spacing = AppSpacing.md,
+    this.radius = AppRadius.xs,
+    this.indicatorColor,
+    this.dividerColor,
+    this.indicatorSize = TabBarIndicatorSize.label,
+  }) : type = AppTabBarType.underline;
 
   /// Constructor taking separate lists of tabNames and tabBodies.
   AppTabView.fromLists({
@@ -201,6 +351,7 @@ class AppTabView extends StatelessWidget {
     required TabController controller,
     required List<String> tabNames,
     required List<Widget> tabBodies,
+    AppTabBarType type = AppTabBarType.pill,
     ScrollPhysics? physics,
     bool isScrollable = false,
     TabAlignment? tabAlignment,
@@ -209,6 +360,9 @@ class AppTabView extends StatelessWidget {
     double height = 44.0,
     double spacing = AppSpacing.sm,
     double radius = AppRadius.md,
+    Color? indicatorColor,
+    Color? dividerColor,
+    TabBarIndicatorSize? indicatorSize,
   }) : this(
          key: key,
          controller: controller,
@@ -217,6 +371,7 @@ class AppTabView extends StatelessWidget {
            (index) =>
                AppTabItem(tabName: tabNames[index], tabBody: tabBodies[index]),
          ),
+         type: type,
          physics: physics,
          isScrollable: isScrollable,
          tabAlignment: tabAlignment,
@@ -225,6 +380,9 @@ class AppTabView extends StatelessWidget {
          height: height,
          spacing: spacing,
          radius: radius,
+         indicatorColor: indicatorColor,
+         dividerColor: dividerColor,
+         indicatorSize: indicatorSize,
        );
 
   @override
@@ -234,6 +392,7 @@ class AppTabView extends StatelessWidget {
         AppTabBar(
           controller: controller,
           tabNames: tabs.map((e) => e.tabName).toList(),
+          type: type,
           isScrollable: isScrollable,
           tabAlignment: tabAlignment,
           padding: padding,
@@ -241,6 +400,9 @@ class AppTabView extends StatelessWidget {
           height: height,
           spacing: spacing,
           radius: radius,
+          indicatorColor: indicatorColor,
+          dividerColor: dividerColor,
+          indicatorSize: indicatorSize,
         ),
         AppSpacing.md.h,
         Expanded(

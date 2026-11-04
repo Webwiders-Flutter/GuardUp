@@ -78,7 +78,7 @@ class RegistrationFeeScreen extends StatelessWidget {
                               textAlign: TextAlign.center,
                               style: context.textTheme.titleMedium
                                   ?.bold()
-                                  .colour(context.colors.onSurface)
+                                  
                                   .textSpacing(0.8),
                             ),
                             AppSpacing.xs.h,
@@ -190,7 +190,7 @@ class RegistrationFeeScreen extends StatelessWidget {
                                   'stripe',
                                   style: context.textTheme.titleSmall
                                       ?.textSpacing(-0.2)
-                                      .colour(context.colors.onSurface),
+                                      ,
                                 ),
                               ],
                             ),

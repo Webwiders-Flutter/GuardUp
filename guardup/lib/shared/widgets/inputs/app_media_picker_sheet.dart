@@ -179,9 +179,7 @@ class _CustomImagePickerSheetState extends State<AppMediaPickerSheet> {
                   children: [
                     Text(
                       title,
-                      style: context.textTheme.titleMedium?.bold().colour(
-                        context.colors.onSurface,
-                      ),
+                      style: context.textTheme.titleMedium?.bold(),
                     ),
                     AppSpacing.xs.h,
                     Text(

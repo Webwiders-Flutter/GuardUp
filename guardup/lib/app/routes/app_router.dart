@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/features/auth/presentation/screens/admin_approval_screen.dart';
-import 'package:guardup/features/body_guard/presentation/screens/body_guard_complete_profile_screen.dart';
-import 'package:guardup/features/body_guard/presentation/screens/body_guard_upload_documents_screen.dart';
 
 import '/app/routes/app_routes.dart';
 import '/app/routes/auth_refresh_listenable.dart';
@@ -10,6 +8,8 @@ import '/app/screens/main_navigation.screen.dart';
 import '/app/screens/not_found_screen.dart';
 import '/core/di/injection_container.dart';
 import '/features/auth/auth.dart';
+import '/features/body_guard/body_guard.dart';
+import '/features/booking/booking.dart';
 import '/features/chat/chat.dart';
 import '/features/company/company.dart';
 import '/features/legal/legal.dart';
@@ -132,6 +132,13 @@ final class AppRouter {
         builder: (context, state) => const CompanyInformationScreen(),
       ),
       GoRoute(
+        path: AppRoutes.bodyguardInformation,
+        builder: (context, state) {
+          final guard = state.extra as BodyGuardModel?;
+          return BodyGuardProfileScreen(bodyguard: guard);
+        },
+      ),
+      GoRoute(
         path: AppRoutes.myBankDetails,
         builder: (context, state) => const MyBankDetailsScreen(),
       ),
@@ -142,6 +149,10 @@ final class AppRouter {
       GoRoute(
         path: AppRoutes.notifications,
         builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.bookings,
+        builder: (context, state) => const BookingsScreen(),
       ),
       GoRoute(
         path: AppRoutes.chat,

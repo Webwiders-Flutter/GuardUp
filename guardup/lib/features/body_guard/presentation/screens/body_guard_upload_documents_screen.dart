@@ -146,7 +146,7 @@ class _BodyGuardUploadDocumentsScreenState
                             'Verification Credentials',
                             style: context.textTheme.headlineMedium
                                 ?.bold()
-                                .colour(context.colors.onSurface),
+                                ,
                           ),
                           AppSpacing.sm.h,
 

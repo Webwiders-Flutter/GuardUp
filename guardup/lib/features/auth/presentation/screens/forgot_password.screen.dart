@@ -73,9 +73,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         // 2. Heading
                         Text(
                           context.l10n.forgotPasswordTitle,
-                          style: context.textTheme.headlineLarge?.bold().colour(
-                            context.colors.onSurface,
-                          ),
+                          style: context.textTheme.headlineLarge?.bold(),
                         ),
                         AppSpacing.xs.h,
 

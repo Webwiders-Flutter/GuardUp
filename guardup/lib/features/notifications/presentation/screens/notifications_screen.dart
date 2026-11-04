@@ -181,7 +181,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
             // Filter Tabs via AppTabBar
             Padding(
               padding: context.horizontalEdgeInsets,
-              child: AppTabBar(
+              child: AppTabBar.pill(
                 controller: _tabController,
                 tabNames: _tabs(context),
                 onTap: _handleTabChanged,
@@ -249,9 +249,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
         // Notifications Title
         Text(
           context.l10n.notifications,
-          style: context.textTheme.titleMedium?.bold().colour(
-            context.colors.onSurface,
-          ),
+          style: context.textTheme.titleMedium?.bold(),
         ),
         AppSpacing.sm.w,
 

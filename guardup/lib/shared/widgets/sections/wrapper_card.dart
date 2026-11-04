@@ -171,9 +171,7 @@ class WrapperCard extends StatelessWidget {
     if (titleWidget != null) return titleWidget!;
 
     if (title != null) {
-      final labelStyle = context.textTheme.titleSmall?.semiBold().colour(
-        context.colors.onSurface,
-      );
+      final labelStyle = context.textTheme.titleSmall?.semiBold();
 
       if (!isRequired) {
         return Text(title!, style: labelStyle);
@@ -263,10 +261,11 @@ class WrapperCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final effectiveBgColor =
         backgroundColor ?? context.colors.surface.withValues(alpha: 0.9);
-    final effectiveBorder = border ??
+    final effectiveBorder =
+        border ??
         Border.all(
           color: borderColor ?? context.colors.outlineVariant,
-          width: borderWidth ?? 1.0,
+          width: borderWidth ?? 1.5,
         );
     final effectiveRadius = borderRadius ?? AppRadius.lg;
     final effectivePadding = padding ?? AppSpacing.lg.allPadding;
