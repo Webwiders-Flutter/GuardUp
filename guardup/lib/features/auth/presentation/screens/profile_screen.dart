@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:guardup/features/notifications/presentation/widgets/notification_icon.widget.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '/app/routes/app_routes.dart';
@@ -42,7 +43,7 @@ class ProfileScreen extends StatelessWidget {
     return BlocBuilder<AuthBloc, AuthState>(
       bloc: sl<AuthBloc>(),
       builder: (context, state) {
-        final role = state.sessionRole ?? UserRole.customer;
+        final role = state.sessionRole ?? UserRole.company;
 
         return Scaffold(
           backgroundColor: context.colors.transparent,
@@ -50,23 +51,7 @@ class ProfileScreen extends StatelessWidget {
             title: _getAppBarTitle(context, role),
             alignTitle: .left,
             actions: [
-              QuickContainer(
-                w: 38,
-                h: 38,
-                shape: QuickContainerShape.circle,
-                color: context.colors.surfaceContainer.withValues(alpha: 0.85),
-                border: Border.all(
-                  color: context.colors.outlineVariant,
-                  width: 1,
-                ),
-                alignment: Alignment.center,
-                mr: AppSpacing.lg,
-                child: Assets.svg.profileCircle.svg(
-                  width: 24,
-                  height: 24,
-                  colorFilter: .mode(context.colors.primary, .srcIn),
-                ),
-              ),
+              NotificationIconWidget(count: 5),
             ],
           ),
           body: SingleChildScrollView(
@@ -115,7 +100,9 @@ class ProfileScreen extends StatelessWidget {
                   _ProfileMenuCard(
                     title: context.l10n.myWallet,
                     icon: Icons.account_balance_wallet_outlined,
-                    onTap: () {},
+                    onTap: () {
+                      context.push(AppRoutes.myWallet);
+                    },
                   ),
                   _ProfileMenuCard(
                     title: context.l10n.myBankDetails,
@@ -133,7 +120,9 @@ class ProfileScreen extends StatelessWidget {
                   _ProfileMenuCard(
                     title: context.l10n.myWallet,
                     icon: Icons.account_balance_wallet_outlined,
-                    onTap: () {},
+                    onTap: () {
+                      context.push(AppRoutes.myWallet);
+                    },
                   ),
                   _ProfileMenuCard(
                     title: context.l10n.myBank,

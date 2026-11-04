@@ -107,7 +107,7 @@ class AppSnackbar {
     String? actionLabel,
     VoidCallback? onAction,
     Duration duration = AppDurations.snackbar,
-    SnackbarPosition position = SnackbarPosition.topCenter,
+    SnackbarPosition position = SnackbarPosition.bottomCenter,
     double? maxWidth,
     bool showCloseButton = true,
     bool isCompact = false,

@@ -34,4 +34,5 @@ final class AppRoutes {
   static const myBank = '/my-bank';
   static const reviewAndRatings = '/review-and-ratings';
   static const businessDocuments = '/business-documents';
+  static const notifications = '/notifications';
 }

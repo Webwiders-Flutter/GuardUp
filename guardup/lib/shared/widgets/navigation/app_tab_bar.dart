@@ -40,7 +40,7 @@ class AppTabBar extends StatelessWidget implements PreferredSizeWidget {
     this.tabAlignment,
     this.padding,
     this.tabPadding,
-    this.height = 44.0,
+    this.height = 40.0,
     this.spacing = AppSpacing.sm,
     this.radius = AppRadius.md,
   });
@@ -93,7 +93,7 @@ class AppTabBar extends StatelessWidget implements PreferredSizeWidget {
               tabAlignment ??
               (isScrollable ? TabAlignment.start : TabAlignment.fill),
           padding: padding ?? EdgeInsets.zero,
-          labelPadding: EdgeInsets.symmetric(horizontal: spacing / 2),
+          labelPadding: EdgeInsets.symmetric(horizontal: spacing / 1.5),
           indicator: const BoxDecoration(),
           indicatorColor: Colors.transparent,
           dividerColor: Colors.transparent,
@@ -136,10 +136,7 @@ class AppTabBar extends StatelessWidget implements PreferredSizeWidget {
             : context.colors.surfaceContainer.withValues(alpha: 0.72),
         border: isSelected
             ? null
-            : Border.all(
-                color: context.colors.outlineVariant,
-                width: 1,
-              ),
+            : Border.all(color: context.colors.outlineVariant, width: 1),
         shadows: isSelected
             ? [
                 BoxShadow(
@@ -153,12 +150,15 @@ class AppTabBar extends StatelessWidget implements PreferredSizeWidget {
         child: Text(
           label,
           style: isSelected
-              ? context.textTheme.bodyMedium
-                  ?.bold()
-                  .colour(context.colors.onPrimary)
-              : context.textTheme.bodyMedium
-                  ?.weight(FontWeight.w500)
-                  .colour(context.colors.onSurfaceVariant),
+              ? context.textTheme.bodySmall
+                    ?.bold()
+                    .colour(context.colors.onPrimary)
+                    .increaseSize(1)
+              : context.textTheme.bodySmall
+                    ?.weight(FontWeight.w500)
+                    .colour(context.colors.outline)
+                    .increaseSize(1),
+
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,

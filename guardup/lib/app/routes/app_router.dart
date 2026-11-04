@@ -12,6 +12,7 @@ import '/core/di/injection_container.dart';
 import '/features/auth/auth.dart';
 import '/features/company/company.dart';
 import '/features/legal/legal.dart';
+import '/features/notifications/notifications.dart';
 import '/features/payments/payments.dart';
 
 final class AppRouter {
@@ -132,6 +133,14 @@ final class AppRouter {
       GoRoute(
         path: AppRoutes.myBankDetails,
         builder: (context, state) => const MyBankDetailsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.myWallet,
+        builder: (context, state) => const MyWalletScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.notifications,
+        builder: (context, state) => const NotificationsScreen(),
       ),
       GoRoute(
         path: AppRoutes.changePassword,

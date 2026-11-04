@@ -30,7 +30,7 @@ class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
   late final TextEditingController _accountHolderController;
   late final TextEditingController _bankNameController;
   late final TextEditingController _branchController;
-  late final TextEditingController _bankHolderNameController;
+  late final TextEditingController _ifscCodeController;
 
   final ValueNotifier<List<BankAccount>> _accountsNotifier =
       ValueNotifier<List<BankAccount>>([
@@ -52,7 +52,7 @@ class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
     _accountHolderController = TextEditingController();
     _bankNameController = TextEditingController();
     _branchController = TextEditingController();
-    _bankHolderNameController = TextEditingController();
+    _ifscCodeController = TextEditingController();
   }
 
   @override
@@ -61,7 +61,7 @@ class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
     _accountHolderController.dispose();
     _bankNameController.dispose();
     _branchController.dispose();
-    _bankHolderNameController.dispose();
+    _ifscCodeController.dispose();
     _accountsNotifier.dispose();
     super.dispose();
   }
@@ -75,7 +75,7 @@ class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
       accountHolder: _accountHolderController.text.trim(),
       bankName: _bankNameController.text.trim(),
       branch: _branchController.text.trim(),
-      ifscCode: 'WORD6589',
+      ifscCode: _ifscCodeController.text.trim().toUpperCase(),
       branchAddress: _branchController.text.trim(),
     );
 
@@ -85,7 +85,7 @@ class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
     _accountHolderController.clear();
     _bankNameController.clear();
     _branchController.clear();
-    _bankHolderNameController.clear();
+    _ifscCodeController.clear();
 
     AppSnackbar.success('Bank account added successfully', context: context);
   }
@@ -183,13 +183,13 @@ class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
               AppSpacing.md.h,
 
               AppTextField(
-                controller: _bankHolderNameController,
+                controller: _ifscCodeController,
                 decoration: InputDecoration(
-                  hintText: context.l10n.bankHolderName,
+                  hintText: context.l10n.ifscCode,
                 ),
-                textCapitalization: TextCapitalization.words,
+                textCapitalization: TextCapitalization.characters,
                 textInputAction: TextInputAction.done,
-                validator: (value) => Validators.required(context, value),
+                validator: (value) => Validators.ifsc(context, value),
               ),
               AppSpacing.xl.h,
 

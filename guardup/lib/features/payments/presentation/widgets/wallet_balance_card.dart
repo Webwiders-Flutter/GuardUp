@@ -1,0 +1,110 @@
+import 'package:flutter/material.dart';
+
+import '/core/constants/app_spacing.dart';
+import '/core/extensions/context.extension.dart';
+import '/core/extensions/localization.extension.dart';
+import '/core/extensions/spacing.extension.dart';
+import '/core/extensions/textstyle_extension.dart';
+import '/gen/assets.gen.dart';
+import '/shared/widgets/buttons/app_button.dart';
+
+/// Top card in the wallet screen displaying current balance and primary actions
+/// (Withdraw and Add Bank Account) backed by the luxury gold [balanceBackground] SVG.
+class WalletBalanceCard extends StatelessWidget {
+  /// Current available balance.
+  final double balance;
+
+  /// Currency code (defaults to 'USD').
+  final String currency;
+
+  /// Triggered when the user taps "Withdraw".
+  final VoidCallback? onWithdraw;
+
+  /// Triggered when the user taps "Add Bank Account".
+  final VoidCallback? onAddBankAccount;
+
+  const WalletBalanceCard({
+    super.key,
+    this.balance = 250.0,
+    this.currency = 'USD',
+    this.onWithdraw,
+    this.onAddBankAccount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final formattedBalance = '\$${balance.toStringAsFixed(2)} $currency';
+
+    return Padding(
+      padding: 5.wPercent(context).lPadding,
+      child: Stack(
+        children: [
+          // Luxury gold balance background SVG
+          Positioned.fill(
+            right: -12.wPercent(context),
+
+            child: Assets.svg.balanceBackground.svg(fit: BoxFit.cover),
+          ),
+
+          // Card Content
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.massive,
+              vertical: AppSpacing.huge,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Balance Label
+                Text(
+                  context.l10n.balance,
+                  style: context.textTheme.titleLarge?.colour(
+                    context.colors.onSurface.withValues(alpha: 0.85),
+                  ),
+                ),
+                AppSpacing.xs.h,
+
+                // Balance Value
+                Text(
+                  formattedBalance,
+                  style: context.textTheme.headlineMedium?.bold().colour(
+                    context.colors.onSurface,
+                  ),
+                ),
+                AppSpacing.md.h,
+
+                // Action Buttons Row
+                Row(
+                  children: [
+                    // Withdraw Button (White background, Dark text)
+                    Expanded(
+                      child: AppButton(
+                        text: context.l10n.withdraw,
+                        size: ButtonSize.normal,
+                        backgroundColor: context.colors.onSurface,
+                        foregroundColor: context.colors.onPrimary,
+                        onPressed: onWithdraw,
+                      ),
+                    ),
+                    AppSpacing.sm.w,
+
+                    // Add Bank Account Button (Elevated surface container, White text)
+                    Expanded(
+                      child: AppButton(
+                        text: context.l10n.addBankAccount,
+                        size: ButtonSize.normal,
+                        type: .secondaryOff,
+                        onPressed: onAddBankAccount,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

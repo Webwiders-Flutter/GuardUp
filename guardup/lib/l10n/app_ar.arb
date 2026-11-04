@@ -212,6 +212,25 @@
   "selectedServicesCount": "{count} محددة",
   "selectService": "اختر الخدمة",
   "bioBackgroundLabel": "السيرة الذاتية والخلفية",
-  "bioBackgroundHint": "أخبرنا عن خبرتك التكتيكية أو خلفيتك العسكرية أو تراخيصك الأمنية..."
+  "bioBackgroundHint": "أخبرنا عن خبرتك التكتيكية أو خلفيتك العسكرية أو تراخيصك الأمنية...",
+  "myWalletTitle": "محفظتي",
+  "balance": "الرصيد",
+  "withdraw": "سحب",
+  "addBankAccount": "إضافة حساب بنكي",
+  "transactionHistory": "سجل المعاملات",
+  "sortBy": "ترتيب حسب",
+  "date": "التاريخ",
+  "bankWithdraw": "سحب بنكي",
+  "receivedFromBooking": "مستلم من الحجز رقم {id}",
+  "notifications": "الإشعارات",
+  "unreadCountBadge": "{count} غير مقروءة",
+  "markAllAsRead": "تحديد الكل كمقروء",
+  "allTab": "الكل",
+  "bookingTab": "الحجوزات",
+  "paymentTab": "المدفوعات",
+  "accountTab": "الحساب",
+  "todaySection": "اليوم",
+  "yesterdaySection": "أمس",
+  "allMarkedAsRead": "تم تحديد جميع الإشعارات كمقروءة"
 }
 

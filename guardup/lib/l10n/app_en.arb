@@ -893,5 +893,91 @@
   "bioBackgroundHint": "Tell us about your tactical experience, military background, or security licensing...",
   "@bioBackgroundHint": {
     "description": "Placeholder for bio and background input"
+  },
+  "myWalletTitle": "My Wallet",
+  "@myWalletTitle": {
+    "description": "My wallet screen title"
+  },
+  "balance": "Balance",
+  "@balance": {
+    "description": "Wallet balance label"
+  },
+  "withdraw": "Withdraw",
+  "@withdraw": {
+    "description": "Withdraw action button"
+  },
+  "addBankAccount": "Add Bank Account",
+  "@addBankAccount": {
+    "description": "Add bank account button"
+  },
+  "transactionHistory": "Transaction History",
+  "@transactionHistory": {
+    "description": "Transaction history section title"
+  },
+  "sortBy": "Sort by",
+  "@sortBy": {
+    "description": "Sort by filter label"
+  },
+  "date": "Date",
+  "@date": {
+    "description": "Date filter label"
+  },
+  "bankWithdraw": "Bank Withdraw",
+  "@bankWithdraw": {
+    "description": "Bank withdraw transaction title"
+  },
+  "receivedFromBooking": "Received from booking ID {id}",
+  "@receivedFromBooking": {
+    "description": "Received from booking transaction title",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "notifications": "Notifications",
+  "@notifications": {
+    "description": "Notifications screen title"
+  },
+  "unreadCountBadge": "{count} Unread",
+  "@unreadCountBadge": {
+    "description": "Unread notification badge",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "markAllAsRead": "Mark all as read",
+  "@markAllAsRead": {
+    "description": "Mark all as read action button"
+  },
+  "allTab": "All",
+  "@allTab": {
+    "description": "All tab label"
+  },
+  "bookingTab": "Booking",
+  "@bookingTab": {
+    "description": "Booking tab label"
+  },
+  "paymentTab": "Payment",
+  "@paymentTab": {
+    "description": "Payment tab label"
+  },
+  "accountTab": "Account",
+  "@accountTab": {
+    "description": "Account tab label"
+  },
+  "todaySection": "TODAY",
+  "@todaySection": {
+    "description": "Today section header"
+  },
+  "yesterdaySection": "YESTERDAY",
+  "@yesterdaySection": {
+    "description": "Yesterday section header"
+  },
+  "allMarkedAsRead": "All notifications marked as read",
+  "@allMarkedAsRead": {
+    "description": "All notifications marked as read toast"
   }
 }
