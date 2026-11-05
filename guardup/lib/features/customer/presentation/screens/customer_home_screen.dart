@@ -89,11 +89,8 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
                 onTap: _navigateToSearch,
                 decoration: InputDecoration(
                   hintText: 'Search bodyguards near you...',
-                  prefixIcon: Padding(
-                    padding: const EdgeInsets.only(
-                      left: AppSpacing.sm,
-                      right: AppSpacing.xs,
-                    ),
+                  suffixIcon: Padding(
+                    padding: AppSpacing.sm.allPadding,
                     child: QuickContainer(
                       w: 36,
                       h: 36,
@@ -113,7 +110,9 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: AppRadius.xl.toBorderRadius,
-                    borderSide: BorderSide(color: context.colors.primary),
+                    borderSide: BorderSide(
+                      color: context.colors.outlineVariant,
+                    ),
                   ),
                   fillColor: context.colors.onPrimary,
                 ),
@@ -217,6 +216,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
               // Top Bodyguard Card (Home Spotlight)
               BodyGuardCard(
                 bodyguard: topBodyguard,
+                isCompact: true,
                 role: UserRole.customer,
                 onTap: () {
                   context.push(

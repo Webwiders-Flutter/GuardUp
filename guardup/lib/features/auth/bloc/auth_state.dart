@@ -45,7 +45,7 @@ class AuthState extends Equatable {
   bool get isUnknown => sessionStatus == AuthSessionStatus.unknown;
 
   UserModel? get user => operationState.dataOrNull;
-  UserRole get sessionRole => user?.role ?? .guard;
+  UserRole get sessionRole => user?.role ?? .customer;
   bool get isLoading => operationState.isLoading;
   bool get hasError => operationState.isFailure;
   String? get errorMessage => operationState.errorMessageOrNull;

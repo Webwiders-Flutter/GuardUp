@@ -53,7 +53,7 @@ class _SearchBodyguardsScreenState extends State<SearchBodyguardsScreen> {
   }
 
   void _onSearchPressed() {
-    context.push(AppRoutes.allBodyguards);
+    context.push(AppRoutes.customerBodyGuard);
   }
 
   @override

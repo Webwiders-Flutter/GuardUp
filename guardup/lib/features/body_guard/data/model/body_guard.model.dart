@@ -43,7 +43,7 @@ abstract class BodyGuardModel with _$BodyGuardModel {
       user: UserModel(
         id: 'usr_vikram',
         name: 'Vikram Singh',
-        profileImageUrl: Assets.images.profilePicture2.path,
+        profileImageUrl: Assets.images.profilePicture.path,
         role: UserRole.guard,
       ),
       licensesAndBadges: LicenseAndBadgeModel.fakeData,
@@ -52,8 +52,9 @@ abstract class BodyGuardModel with _$BodyGuardModel {
       hourlyRate: 60.0,
       currency: 'USD',
       serviceTypes: [
-        GuardService.vipCloseProtection,
         GuardService.armedEscort,
+        GuardService.tacticalDriver,
+        GuardService.vipCloseProtection,
       ],
       bio: 'Former Special Forces operative with 5+ years of high-threat dignitary protection, tactical motorcade operations, and counter-surveillance across global metropolitan centers.',
       experienceYears: 5,

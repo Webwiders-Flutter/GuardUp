@@ -228,6 +228,10 @@ final class AppRouter {
         builder: (context, state) => const CompanyInformationScreen(),
       ),
       GoRoute(
+        path: AppRoutes.customerBodyGuard,
+        builder: (context, state) => const BodyguardsListScreen(),
+      ),
+      GoRoute(
         path: AppRoutes.companyDetails,
         builder: (context, state) {
           final company = state.extra as CompanyModel?;

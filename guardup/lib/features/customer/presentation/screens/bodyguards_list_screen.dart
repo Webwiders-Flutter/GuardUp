@@ -158,11 +158,8 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
                   size: AppInputSize.small,
                   decoration: InputDecoration(
                     hintText: 'Search by name, clearance, or skill...',
-                    prefixIcon: Padding(
-                      padding: const EdgeInsets.only(
-                        left: AppSpacing.sm,
-                        right: AppSpacing.xs,
-                      ),
+                    suffixIcon: Padding(
+                      padding: AppSpacing.sm.allPadding,
                       child: QuickContainer(
                         w: 36,
                         h: 36,
@@ -186,9 +183,9 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
                         color: context.colors.outlineVariant,
                       ),
                     ),
-                   fillColor: context.colors.onPrimary,
-                    ),
-                    style: TextStyle(color: context.colors.onSurface),
+                    fillColor: context.colors.onPrimary,
+                  ),
+                  style: TextStyle(color: context.colors.onSurface),
                 ),
                 AppSpacing.md.h,
 
@@ -242,18 +239,13 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
       itemBuilder: (context, guard, index) {
         return BodyGuardCard(
           bodyguard: guard,
+          isCompact: true,
           role: UserRole.customer,
           onTap: () {
-            context.push(
-              AppRoutes.customerBodyguardProfile,
-              extra: guard,
-            );
+            context.push(AppRoutes.customerBodyguardProfile, extra: guard);
           },
           onBookNow: () {
-            context.push(
-              AppRoutes.customerBooking,
-              extra: guard,
-            );
+            context.push(AppRoutes.customerBooking, extra: guard);
           },
         );
       },
@@ -284,16 +276,10 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
         return CompanyCard(
           company: comp,
           onTap: () {
-            context.push(
-              AppRoutes.companyDetails,
-              extra: comp,
-            );
+            context.push(AppRoutes.companyDetails, extra: comp);
           },
           onBookNow: () {
-            context.push(
-              AppRoutes.customerBooking,
-              extra: comp,
-            );
+            context.push(AppRoutes.customerBooking, extra: comp);
           },
         );
       },

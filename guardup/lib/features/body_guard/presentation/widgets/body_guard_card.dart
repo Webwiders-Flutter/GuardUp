@@ -15,13 +15,14 @@ import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 import '../../data/enum/body_guard_status.enum.dart';
+import '../../data/enum/guard_service.enum.dart';
 import '../../data/model/body_guard.model.dart';
 
 /// A sleek, luxury card widget presenting a bodyguard operative in list feeds.
 ///
 /// Features operative credentials, squircle avatar with verified badge,
 /// availability status pill, hourly rate in USD, selection mode with checkbox,
-/// and role-adaptive operational actions (Book Now for customer, Edit/Delete for company).
+/// compact spotlight layout for customer home feeds, and role-adaptive actions.
 class BodyGuardCard extends StatelessWidget {
   /// The bodyguard domain entity holding user, rating, and operational data.
   final BodyGuardModel bodyguard;
@@ -48,6 +49,13 @@ class BodyGuardCard extends StatelessWidget {
   /// or curated service type labels.
   final String? specialization;
 
+  /// Optional list of short skill/service tags displayed in compact mode.
+  final List<String>? tags;
+
+  /// Whether to render the sleek, compact spotlight card layout
+  /// (matching the home screen spotlight card).
+  final bool isCompact;
+
   /// Callback when the card is tapped.
   final VoidCallback? onTap;
 
@@ -68,6 +76,8 @@ class BodyGuardCard extends StatelessWidget {
     this.onSelectedChanged,
     this.status,
     this.specialization,
+    this.tags,
+    this.isCompact = false,
     this.onTap,
     this.onEdit,
     this.onDelete,
@@ -81,8 +91,45 @@ class BodyGuardCard extends StatelessWidget {
     return effectiveRole == UserRole.customer;
   }
 
+  List<String> get _resolvedTags {
+    if (tags != null && tags!.isNotEmpty) return tags!;
+    if (bodyguard.serviceTypes.isNotEmpty) {
+      final result = <String>[];
+      for (final s in bodyguard.serviceTypes) {
+        switch (s) {
+          case GuardService.armedEscort:
+            result.add('Armed');
+          case GuardService.tacticalDriver:
+            result.add('Tactical Driver');
+          case GuardService.vipCloseProtection:
+            result.add('Close Protection');
+          case GuardService.eventSecurity:
+            result.add('Event Security');
+          case GuardService.residentialProtection:
+            result.add('Residential');
+          case GuardService.assetProtection:
+            result.add('Asset Protection');
+          case GuardService.surveillanceRecon:
+            result.add('Recon');
+          case GuardService.crisisManagement:
+            result.add('Crisis Mgmt');
+        }
+      }
+      if (result.isNotEmpty) return result.take(2).toList();
+    }
+    return const ['Armed', 'Tactical Driver'];
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (isCompact) {
+      return WrapperCard(
+        onTap: onTap,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: _buildCompactCard(context),
+      );
+    }
+
     final showActions = isSelected == null;
 
     return WrapperCard(
@@ -121,7 +168,218 @@ class BodyGuardCard extends StatelessWidget {
   }
 
   // ===========================================================================
-  // SUBCOMPONENTS
+  // COMPACT SPOTLIGHT CARD (Customer Home Spotlight)
+  // ===========================================================================
+
+  Widget _buildCompactCard(BuildContext context) {
+    final avatarUrl = bodyguard.user.profileImageUrl;
+    final isNetworkAvatar = avatarUrl != null && avatarUrl.startsWith('http');
+    final isVerified = bodyguard.isVerified;
+    final resolvedSpecialization =
+        specialization ??
+        bodyguard.clearanceLevel ??
+        'Licensed armed, Corporate visits';
+    final rateInt = bodyguard.hourlyRate.toInt();
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 1. Bodyguard Avatar (Rounded Square + Verified Check Badge at top-right)
+        Stack(
+          alignment: Alignment.topRight,
+          clipBehavior: Clip.none,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              child: SizedBox(
+                width: 78,
+                height: 78,
+                child: isNetworkAvatar
+                    ? AppImage.network(imageUrl: avatarUrl, fit: BoxFit.cover)
+                    : AppImage.asset(
+                        assetPath:
+                            avatarUrl ?? Assets.images.profilePicture.path,
+                        fit: BoxFit.cover,
+                      ),
+              ),
+            ),
+            if (isVerified)
+              Positioned(
+                top: -3,
+                right: -3,
+                child: QuickContainer(
+                  shape: QuickContainerShape.circle,
+                  color: context.colors.primary,
+                  p: 3,
+                  child: Icon(
+                    Icons.check_rounded,
+                    size: 11,
+                    color: context.colors.onPrimary,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        AppSpacing.md.w,
+
+        // 2. Details Column
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Row 1: Name and Rating Badge (aligned to right)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      bodyguard.user.name,
+                      style: context.textTheme.titleMedium?.bold(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  AppSpacing.xs.w,
+                  // Rating Badge (e.g. ★ 4.9 in dark pill with gold border)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xs,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.colors.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                      border: Border.all(
+                        color: context.colors.primary.withValues(alpha: 0.4),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.star_rounded,
+                          size: 13,
+                          color: context.colors.primary,
+                        ),
+                        AppSpacing.xxs.w,
+                        Text(
+                          bodyguard.rating.toStringAsFixed(1),
+                          style: context.textTheme.labelSmall?.colour(
+                            context.colors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              AppSpacing.xxs.h,
+
+              // Row 2: Subtitle / Specialization in Primary Accent
+              Text(
+                resolvedSpecialization,
+                style: context.textTheme.bodySmall
+                    ?.copyWith(fontSize: 11)
+                    .colour(context.colors.primary),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              AppSpacing.xs.h,
+
+              // Row 3: Service Tags (e.g. [Armed] [Tactical Driver])
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: _resolvedTags.map((tag) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.colors.surfaceDim,
+                      borderRadius: BorderRadius.circular(AppRadius.xs),
+                      border: Border.all(
+                        color: context.colors.outlineVariant.withValues(
+                          alpha: 0.5,
+                        ),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: Text(
+                      tag,
+                      style: context.textTheme.labelSmall
+                          ?.copyWith(fontSize: 9.5, height: 1)
+                          .colour(context.colors.onSurfaceVariant),
+                    ),
+                  );
+                }).toList(),
+              ),
+              AppSpacing.sm.h,
+
+              // Row 4: Hourly Rate & Book Now Button
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        '\$$rateInt',
+                        style: context.textTheme.titleMedium?.bold(),
+                      ),
+                      AppSpacing.xxs.w,
+                      Text(
+                        '/ hr',
+                        style: context.textTheme.bodySmall?.colour(
+                          context.colors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                  GestureDetector(
+                    onTap: onBookNow,
+                    behavior: HitTestBehavior.opaque,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: context.colors.primaryGradient,
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                        boxShadow: [
+                          BoxShadow(
+                            color: context.colors.primary.withValues(
+                              alpha: 0.25,
+                            ),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        'Book Now',
+                        style: context.textTheme.labelSmall
+                            ?.copyWith(fontSize: 11)
+                            .colour(context.colors.onPrimary),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ===========================================================================
+  // STANDARD FEED / ROSTER CARD
   // ===========================================================================
 
   Widget _buildHeader(BuildContext context) {
@@ -205,7 +463,7 @@ class BodyGuardCard extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              AppSpacing.smd.h,
+              AppSpacing.xs.h,
               Row(
                 children: [
                   Icon(
@@ -360,8 +618,7 @@ class BodyGuardCard extends StatelessWidget {
         children: [
           AppButton(
             text: 'Book Now',
-            type: ButtonType.primary,
-            size: ButtonSize.normal,
+            size: ButtonSize.small,
             isFlexible: true,
             trailing: Icon(
               Icons.arrow_forward_rounded,

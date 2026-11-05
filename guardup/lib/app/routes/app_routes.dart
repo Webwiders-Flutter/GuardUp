@@ -50,4 +50,5 @@ final class AppRoutes {
   static const bookings = '/bookings';
   static const chat = '/chat';
   static const chatDetail = '/chat-detail';
+  static const customerBodyGuard = '/customer-body-guard';
 }

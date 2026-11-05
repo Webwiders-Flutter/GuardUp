@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/features/company/company.dart';
-import 'package:guardup/features/company/presentation/widgets/company_card.dart';
-import 'package:guardup/features/customer/customer.dart';
 import 'package:guardup/shared/widgets/buttons/app_button.dart';
 import 'package:guardup/shared/widgets/sections/app_image.dart';
 import 'package:quick_container/quick_container.dart';
@@ -11,7 +9,6 @@ import '../../../guard_detail/guard_detail.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
-import '/core/extensions/textstyle_extension.dart';
 import '/features/body_guard/data/model/body_guard.model.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/navigation/app_tab_bar.dart';
