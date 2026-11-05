@@ -87,15 +87,15 @@ class GuardReviewsTabWidget extends StatelessWidget {
                         children: [
                           Text(
                             rev.rating.toStringAsFixed(1),
-                            style: context.textTheme.labelSmall?.bold().colour(
-                              context.colors.gold,
+                            style: context.textTheme.labelSmall?.colour(
+                              context.colors.primary,
                             ),
                           ),
                           AppSpacing.xxs.w,
                           Icon(
                             Icons.star_rounded,
                             size: 15,
-                            color: context.colors.gold,
+                            color: context.colors.primary,
                           ),
                         ],
                       ),

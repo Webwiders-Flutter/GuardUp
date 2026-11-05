@@ -114,7 +114,7 @@ class BodyGuardHeaderCard extends StatelessWidget {
                     AppSpacing.xxs.w,
                     Text(
                       rating.toStringAsFixed(1),
-                      style: context.textTheme.labelSmall?.bold().colour(
+                      style: context.textTheme.labelSmall?.colour(
                         context.colors.primary,
                       ),
                     ),

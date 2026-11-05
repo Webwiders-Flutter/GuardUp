@@ -59,15 +59,7 @@ class _BookingsScreenState extends State<BookingsScreen>
     super.initState();
     _tabController = TabController(length: _tabNames.length, vsync: this);
 
-    // Resolve initial role from override, session, or default to customer
-    final sessionRole = sl.isRegistered<AuthBloc>()
-        ? sl<AuthBloc>().state.sessionRole
-        : null;
-    final initialRole = sessionRole ?? UserRole.guard;
-
-    final initialItems = initialRole == UserRole.customer
-        ? List<BookingModel>.from(BookingModel.fakeCustomerBookings)
-        : List<BookingModel>.from(BookingModel.fakeBookings);
+    final initialItems = List<BookingModel>.from(BookingModel.fakeData);
 
     _paginationController = PaginationController<BookingModel>(
       initialState: PaginationState<BookingModel>(
@@ -140,7 +132,6 @@ class _BookingsScreenState extends State<BookingsScreen>
               child: AppTextField.search(
                 controller: _searchController,
                 size: AppInputSize.small,
-                style: TextStyle(color: context.colors.onSurface),
                 decoration: InputDecoration(
                   hintText: 'Search by name, clearance, or skill...',
                   enabledBorder: OutlineInputBorder(
@@ -149,14 +140,9 @@ class _BookingsScreenState extends State<BookingsScreen>
                       color: context.colors.outlineVariant,
                     ),
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: AppRadius.xl.toBorderRadius,
-                    borderSide: BorderSide(
-                      color: context.colors.outlineVariant,
+                  fillColor: context.colors.onPrimary,
                     ),
-                  ),
-                  fillColor: context.colors.surface,
-                ),
+                    style: TextStyle(color: context.colors.onSurface),
               ),
             ),
             AppSpacing.md.h,
@@ -173,7 +159,8 @@ class _BookingsScreenState extends State<BookingsScreen>
                 spacing: AppSpacing.sm,
               ),
             ),
-            AppSpacing.md.h,
+            AppSpacing.sm.h,
+            Divider(color: context.colors.outline, thickness: 0.4),
 
             // -----------------------------------------------------------------
             // 4. Paginated Bookings Feed using AppPagination.list

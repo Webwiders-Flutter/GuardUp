@@ -30,7 +30,7 @@ class ConversationCard extends StatelessWidget {
 
     return WrapperCard(
       onTap: onTap,
-      padding: AppSpacing.lg.allPadding,
+      padding: AppSpacing.xl.allPadding,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [

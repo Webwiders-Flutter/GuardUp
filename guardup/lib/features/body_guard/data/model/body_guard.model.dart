@@ -36,9 +36,7 @@ abstract class BodyGuardModel with _$BodyGuardModel {
   factory BodyGuardModel.fromJson(Map<String, dynamic> json) =>
       _$BodyGuardModelFromJson(json);
 
-  /// Single fake bodyguard instance (Vikram Singh).
-
-  /// Multiple fake bodyguard profiles for lists, search, and rosters.
+  /// Curated fake bodyguard profiles for lists, search, and rosters.
   static List<BodyGuardModel> get fakeData => [
     BodyGuardModel(
       id: 'guard_vikram_singh',
@@ -48,9 +46,9 @@ abstract class BodyGuardModel with _$BodyGuardModel {
         profileImageUrl: Assets.images.profilePicture2.path,
         role: UserRole.guard,
       ),
-      licensesAndBadges: LicenseAndBadgeModel.fakeLicensesAndBadges,
-      availabilities: AvailabilityModel.fakeWeeklySchedule,
-      documents: DocumentModel.fakeDocuments,
+      licensesAndBadges: LicenseAndBadgeModel.fakeData,
+      availabilities: AvailabilityModel.fakeData,
+      documents: DocumentModel.fakeData,
       hourlyRate: 60.0,
       currency: 'USD',
       serviceTypes: [
@@ -74,11 +72,11 @@ abstract class BodyGuardModel with _$BodyGuardModel {
         profileImageUrl: Assets.images.profilePicture.path,
         role: UserRole.guard,
       ),
-      licensesAndBadges: LicenseAndBadgeModel.fakeLicensesAndBadges
+      licensesAndBadges: LicenseAndBadgeModel.fakeData
           .take(2)
           .toList(),
-      availabilities: AvailabilityModel.fakeWeeklySchedule,
-      documents: DocumentModel.fakeDocuments.take(2).toList(),
+      availabilities: AvailabilityModel.fakeData,
+      documents: DocumentModel.fakeData.take(2).toList(),
       hourlyRate: 85.0,
       currency: 'USD',
       serviceTypes: [
@@ -102,9 +100,9 @@ abstract class BodyGuardModel with _$BodyGuardModel {
         profileImageUrl: Assets.images.profilePicture2.path,
         role: UserRole.guard,
       ),
-      licensesAndBadges: LicenseAndBadgeModel.fakeLicensesAndBadges,
-      availabilities: AvailabilityModel.fakeWeeklySchedule,
-      documents: DocumentModel.fakeDocuments,
+      licensesAndBadges: LicenseAndBadgeModel.fakeData,
+      availabilities: AvailabilityModel.fakeData,
+      documents: DocumentModel.fakeData,
       hourlyRate: 75.0,
       currency: 'USD',
       serviceTypes: [
@@ -128,11 +126,11 @@ abstract class BodyGuardModel with _$BodyGuardModel {
         profileImageUrl: Assets.images.profilePicture.path,
         role: UserRole.guard,
       ),
-      licensesAndBadges: LicenseAndBadgeModel.fakeLicensesAndBadges
+      licensesAndBadges: LicenseAndBadgeModel.fakeData
           .take(3)
           .toList(),
-      availabilities: AvailabilityModel.fakeWeeklySchedule,
-      documents: DocumentModel.fakeDocuments.take(3).toList(),
+      availabilities: AvailabilityModel.fakeData,
+      documents: DocumentModel.fakeData.take(3).toList(),
       hourlyRate: 65.0,
       currency: 'USD',
       serviceTypes: [

@@ -47,7 +47,7 @@ class _BodyGuardHomeScreenState extends State<BodyGuardHomeScreen> {
 
     _bookingsPaginationController = PaginationController<BookingModel>(
       initialState: PaginationState<BookingModel>(
-        items: BookingModel.fakeBookings.take(3).toList(),
+        items: BookingModel.fakeData.take(3).toList(),
         total: 3,
         status: const ApiState.success(null),
       ),

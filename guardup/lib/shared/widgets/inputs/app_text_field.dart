@@ -869,9 +869,7 @@ class _AppTextFieldState extends State<AppTextField> {
           widget.decoration?.suffixIconConstraints ??
           baseDecoration.suffixIconConstraints,
       contentPadding:
-          widget.decoration?.contentPadding ??
-          baseDecoration.contentPadding ??
-          _sizeSpec.contentPadding,
+          widget.decoration?.contentPadding ?? _sizeSpec.contentPadding,
       isDense:
           widget.decoration?.isDense ??
           baseDecoration.isDense ??

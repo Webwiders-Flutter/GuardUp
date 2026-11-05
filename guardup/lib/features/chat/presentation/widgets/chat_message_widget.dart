@@ -56,9 +56,10 @@ class ChatMessageWidget extends StatelessWidget {
             p: AppSpacing.md,
             child: Text(
               message.content,
-              style: context.textTheme.bodyMedium?.medium().colour(
-                context.colors.onPrimary,
-              ),
+              style: context.textTheme.bodyMedium
+                  ?.medium()
+                  .colour(context.colors.onPrimary)
+                  .lineHeight(1.4),
             ),
           ),
           AppSpacing.xs.h,
@@ -132,7 +133,9 @@ class ChatMessageWidget extends StatelessWidget {
                         spans: [
                           AppTextSpan(
                             text: message.content,
-                            style: context.textTheme.bodySmall?.increaseSize(1),
+                            style: context.textTheme.bodySmall
+                                ?.increaseSize(1)
+                                .lineHeight(1.3),
                           ),
                           AppTextSpan(
                             text: message.highlightedText!,
@@ -146,7 +149,9 @@ class ChatMessageWidget extends StatelessWidget {
                     else
                       Text(
                         message.content,
-                        style: context.textTheme.bodySmall?.increaseSize(1),
+                        style: context.textTheme.bodySmall
+                            ?.increaseSize(1)
+                            .lineHeight(1.3),
                       ),
 
                     // Optional Vehicle Identification Badge
@@ -234,7 +239,7 @@ class ChatDateChip extends StatelessWidget {
         py: AppSpacing.xs,
         child: Text(
           dateText,
-          style: context.textTheme.labelSmall?.bold().colour(
+          style: context.textTheme.labelSmall?.colour(
             context.colors.onSurfaceTertiary,
           ),
         ),

@@ -143,7 +143,7 @@ class _CompanyCompleteProfileScreenState
                                   icon: Icon(
                                     e.icon,
                                     size: AppSizes.iconSmd,
-                                    color: e.color(context),
+                                    color:context.colors.primary
                                   ),
                                 ),
                               )

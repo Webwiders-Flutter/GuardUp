@@ -15,9 +15,6 @@ final class AppColors {
 
   /// Deep Gold / Bronze Primary Container (#AC7F42)
   static const Color primaryContainer = Color(0xFFAC7F42);
-
-  /// Vibrant Accent Gold (#E5A93C)
-  static const Color gold = Color(0xFFE5A93C);
   static const Color borderColor = Color(0xFF32353D);
 
   /// High-contrast label on primary (#191B23)

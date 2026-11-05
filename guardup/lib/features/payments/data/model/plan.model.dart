@@ -30,10 +30,8 @@ abstract class PlanModel with _$PlanModel {
     return bookingAmount - calculateSavings(bookingAmount);
   }
 
-  static List<PlanModel> get fakeData => fakePlans;
-
   /// Default production plans matching the exact GuardUp membership tiers and screenshots.
-  static List<PlanModel> get fakePlans => [
+  static List<PlanModel> get fakeData => [
     PlanModel(
       id: 'silver_shield',
       title: 'Silver Shield',

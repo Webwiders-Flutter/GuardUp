@@ -36,7 +36,7 @@ class GuardProfileHeaderWidget extends StatelessWidget {
       borderRadius: BorderRadius.circular(AppRadius.lg),
       color: context.colors.surfaceContainer,
       border: Border.all(
-        color: context.colors.gold.withValues(alpha: 0.3),
+        color: context.colors.primary.withValues(alpha: 0.3),
         width: 0.7,
       ),
       child: Column(
@@ -93,7 +93,7 @@ class GuardProfileHeaderWidget extends StatelessWidget {
                     color: context.colors.surfaceDim.withValues(alpha: 0.85),
                     borderRadius: BorderRadius.circular(AppRadius.full),
                     border: Border.all(
-                      color: context.colors.gold.withValues(alpha: 0.6),
+                      color: context.colors.primary.withValues(alpha: 0.6),
                       width: 0.8,
                     ),
                   ),
@@ -115,9 +115,8 @@ class GuardProfileHeaderWidget extends StatelessWidget {
                             ?.copyWith(
                               fontSize: 9.5,
                               letterSpacing: 0.8,
-                              fontWeight: FontWeight.w400,
                             )
-                            .colour(context.colors.gold),
+                            .colour(context.colors.primary),
                       ),
                     ],
                   ),
@@ -157,7 +156,7 @@ class GuardProfileHeaderWidget extends StatelessWidget {
                             specialization,
                             style: context.textTheme.bodySmall
                                 ?.copyWith(fontSize: 10)
-                                .colour(context.colors.gold),
+                                .colour(context.colors.primary),
                           ),
                         ],
                       ),
@@ -184,7 +183,7 @@ class GuardProfileHeaderWidget extends StatelessWidget {
                                 text: '\$$rateInt',
                                 style: context.textTheme.titleMedium
                                     ?.bold()
-                                    .colour(context.colors.gold),
+                                    .colour(context.colors.primary),
                               ),
                               TextSpan(
                                 text: ' /hr',

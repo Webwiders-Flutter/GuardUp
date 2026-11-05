@@ -20,8 +20,7 @@ class BodyguardDocumentsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveLicenses =
-        licenses ?? LicenseAndBadgeModel.fakeAuditedLicenses;
+    final effectiveLicenses = licenses ?? LicenseAndBadgeModel.fakeData;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -68,7 +67,7 @@ class BodyguardDocumentsWidget extends StatelessWidget {
         // ---------------------------------------------------------------------
         for (final item in effectiveLicenses) ...[
           _buildLicenseCard(context, item),
-          AppSpacing.md.h,
+          AppSpacing.lg.h,
         ],
 
         // ---------------------------------------------------------------------
@@ -120,23 +119,23 @@ class BodyguardDocumentsWidget extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                AppSpacing.xxs.h,
+                AppSpacing.xs.h,
                 if (item.issuingAuthority != null)
                   Text(
                     item.issuingAuthority!,
-                    style: context.textTheme.labelSmall?.colour(
+                    style: context.textTheme.labelSmall?.regular().colour(
                       context.colors.onSurfaceVariant,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                AppSpacing.xxs.h,
+                AppSpacing.xs.h,
                 Text(
                   item.customValidity ??
                       (item.validTill != null
                           ? item.validTill!.ddMMyyyy
                           : 'Permanent / Lifetime'),
-                  style: context.textTheme.labelSmall?.colour(
+                  style: context.textTheme.labelSmall?.regular().colour(
                     context.colors.onSurfaceVariant,
                   ),
                   maxLines: 1,
@@ -160,7 +159,7 @@ class BodyguardDocumentsWidget extends StatelessWidget {
                 AppSpacing.xs.w,
                 Text(
                   'Verified',
-                  style: context.textTheme.labelSmall?.semiBold().colour(
+                  style: context.textTheme.labelSmall?.medium().colour(
                     context.colors.primary,
                   ),
                 ),
@@ -225,7 +224,7 @@ class BodyguardDocumentsWidget extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: context.textTheme.labelMedium?.colour(
+            style: context.textTheme.labelMedium?.regular().colour(
               context.colors.onSurfaceVariant,
             ),
           ),

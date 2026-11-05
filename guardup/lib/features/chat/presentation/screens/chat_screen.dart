@@ -32,7 +32,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
   final _messagesNotifier = ValueNotifier<List<MessageModel>>(
-    MessageModel.fakeEscortChatMessages,
+    MessageModel.fakeData,
   );
 
   @override
@@ -155,9 +155,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 textInputAction: TextInputAction.send,
                 onFieldSubmitted: (_) => _handleSend(),
                 style: TextStyle(color: context.colors.onSurface),
+                
                 decoration: InputDecoration(
                   hintText: context.l10n.typeMessageHint,
-                  fillColor: context.colors.surfaceContainer,
+                  fillColor: context.colors.onPrimary,
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.lg),
                     borderSide: BorderSide(
@@ -166,10 +167,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                     ),
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.lg),
-                    borderSide: BorderSide(color: context.colors.primary),
-                  ),
+                 
                   prefixIcon: IconButton(
                     icon: Icon(
                       Icons.add_rounded,

@@ -23,8 +23,7 @@ abstract class DocumentModel with _$DocumentModel {
   factory DocumentModel.fromJson(Map<String, dynamic> json) =>
       _$DocumentModelFromJson(json);
 
-  static List<DocumentModel> get fakeData => fakeDocuments;
-  static List<DocumentModel> get fakeDocuments => [
+  static List<DocumentModel> get fakeData => [
     DocumentModel(
       id: 'doc_1',
       docType: GuardDocType.idProof,

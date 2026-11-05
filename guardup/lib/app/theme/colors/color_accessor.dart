@@ -22,13 +22,7 @@ class AppThemeAccessor {
 
   /// Deep Gold / Bronze Primary Container (#AC7F42)
   Color get primaryContainer => _extra.primaryContainer;
-
-  /// Vibrant Accent Gold (#E5A93C)
-  Color get gold => _extra.gold;
   Color get borderColor => _extra.borderColor;
-
-  /// Semantic alias for [gold] (#E5A93C)
-  Color get accentGold => _extra.gold;
 
   /// Content/icon on primary gold (#191B23)
   Color get onPrimary => _scheme.onPrimary;

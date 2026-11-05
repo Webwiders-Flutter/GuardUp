@@ -28,8 +28,7 @@ abstract class ConversationModel with _$ConversationModel {
   factory ConversationModel.fromJson(Map<String, dynamic> json) =>
       _$ConversationModelFromJson(json);
 
-  static List<ConversationModel> get fakeData => fakeConversations;
-  static List<ConversationModel> get fakeConversations {
+  static List<ConversationModel> get fakeData {
     final now = DateTime.now();
     final yesterday = now.subtract(const Duration(days: 1));
 

@@ -45,85 +45,60 @@ sealed class NotificationModel with _$NotificationModel {
     return body;
   }
 
-  /// Factory providing realistic sample data for skeleton loading or previews.
-  factory NotificationModel.fake({
-    String id = 'fake-notification',
-    String userId = 'fake-user-id',
-    NotificationType type = NotificationType.bookingRequest,
-    String title = 'New Booking Request',
-    String? titleHi,
-    String body = 'Rahul Sharma has requested a booking for Apr 28, 2025 at 10:00 AM (3 hours).',
-    String? bodyHi,
-    Map<String, dynamic> data = const {},
-    String? imageUrl,
-    bool isRead = false,
-    String? readAt,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) {
-    final now = DateTime.now();
-    return NotificationModel(
-      id: id,
-      userId: userId,
-      type: type,
-      title: title,
-      titleHi: titleHi,
-      body: body,
-      bodyHi: bodyHi,
-      data: data,
-      imageUrl: imageUrl,
-      isRead: isRead,
-      readAt: readAt,
-      createdAt: createdAt ?? now,
-      updatedAt: updatedAt ?? now,
-    );
-  }
-
   /// List of realistic fake notifications matching the GuardUp design mockup.
   static List<NotificationModel> get fakeData {
     final now = DateTime.now();
     final yesterday = now.subtract(const Duration(days: 1));
 
     return [
-      NotificationModel.fake(
+      NotificationModel(
         id: 'notif_1',
+        userId: 'fake-user-id',
         type: NotificationType.bookingRequest,
         title: 'New Booking Request',
         body: 'Rahul Sharma has requested a booking for Apr 28, 2025 at 10:00 AM (3 hours).',
         isRead: false,
         createdAt: now.subtract(const Duration(minutes: 5)),
+        updatedAt: now.subtract(const Duration(minutes: 5)),
         data: const {'timeAgo': '5 min ago'},
       ),
-      NotificationModel.fake(
+      NotificationModel(
         id: 'notif_2',
+        userId: 'fake-user-id',
         type: NotificationType.customerMessage,
         title: 'New Customer Message',
         body: 'You have received a new message from Sara Khan.',
         isRead: false,
         createdAt: now.subtract(const Duration(minutes: 25)),
+        updatedAt: now.subtract(const Duration(minutes: 25)),
         data: const {'timeAgo': '25 min ago'},
       ),
-      NotificationModel.fake(
+      NotificationModel(
         id: 'notif_3',
+        userId: 'fake-user-id',
         type: NotificationType.payoutProcessed,
         title: 'Payout Processed',
         body:
             'Your payout of ${250.toUsd} has been processed successfully to your bank account.',
         isRead: true,
         createdAt: now.subtract(const Duration(hours: 1)),
+        updatedAt: now.subtract(const Duration(hours: 1)),
         data: const {'timeAgo': '1 hr ago'},
       ),
-      NotificationModel.fake(
+      NotificationModel(
         id: 'notif_4',
+        userId: 'fake-user-id',
         type: NotificationType.documentVerified,
         title: 'Document Verified',
         body: 'Your security license has been approved and verified.',
         isRead: true,
         createdAt: now.subtract(const Duration(hours: 2)),
+        updatedAt: now.subtract(const Duration(hours: 2)),
         data: const {'timeAgo': '2 hrs ago'},
       ),
-      NotificationModel.fake(
+      NotificationModel(
         id: 'notif_5',
+        userId: 'fake-user-id',
         type: NotificationType.profileUpdate,
         title: 'Profile Update',
         body: 'Your profile has been updated succesfully.',
@@ -135,10 +110,18 @@ sealed class NotificationModel with _$NotificationModel {
           18,
           45,
         ),
+        updatedAt: DateTime(
+          yesterday.year,
+          yesterday.month,
+          yesterday.day,
+          18,
+          45,
+        ),
         data: const {'timeAgo': 'Yesterday, 6:45 PM'},
       ),
-      NotificationModel.fake(
+      NotificationModel(
         id: 'notif_6',
+        userId: 'fake-user-id',
         type: NotificationType.bookingReminder,
         title: 'Booking Reminder',
         body: 'You have a confirmed booking tomorrow at 11:00 AM.',
@@ -150,14 +133,15 @@ sealed class NotificationModel with _$NotificationModel {
           14,
           30,
         ),
+        updatedAt: DateTime(
+          yesterday.year,
+          yesterday.month,
+          yesterday.day,
+          14,
+          30,
+        ),
         data: const {'timeAgo': 'Yesterday, 2:30 PM'},
       ),
     ];
-  }
-
-  /// List of realistic fake notifications for skeleton loaders or previews.
-  static List<NotificationModel> fakeList({int count = 6}) {
-    final list = fakeData;
-    return List.generate(count, (index) => list[index % list.length]);
   }
 }

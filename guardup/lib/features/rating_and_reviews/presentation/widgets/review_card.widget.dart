@@ -65,7 +65,7 @@ class ReviewCard extends StatelessWidget {
               // Star rating
               Text(
                 review.rating.toStringAsFixed(1),
-                style: context.textTheme.labelMedium?.bold().colour(
+                style: context.textTheme.labelMedium?.colour(
                   context.colors.primary,
                 ),
               ),
@@ -151,7 +151,7 @@ class _VerifiedBadge extends StatelessWidget {
       py: AppSpacing.xxs,
       child: Text(
         'Verified',
-        style: context.textTheme.labelSmall?.semiBold().colour(
+        style: context.textTheme.labelSmall?.colour(
           context.colors.primary,
         ),
       ),

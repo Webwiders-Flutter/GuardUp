@@ -84,16 +84,16 @@ class MembershipPlansScreen extends StatefulWidget {
 
 class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
   late final _selectedPlanNotifier = ValueNotifier<PlanModel>(
-    PlanModel.fakePlans.firstWhere(
+    PlanModel.fakeData.firstWhere(
       (p) => p.id == widget.activePlanId,
-      orElse: () => PlanModel.fakePlans.first,
+      orElse: () => PlanModel.fakeData.first,
     ),
   );
 
   final _paginationController = PaginationController<PlanModel>(
     initialState: PaginationState<PlanModel>(
-      items: PlanModel.fakePlans,
-      total: PlanModel.fakePlans.length,
+      items: PlanModel.fakeData,
+      total: PlanModel.fakeData.length,
       status: ApiState.success(null),
     ),
   );

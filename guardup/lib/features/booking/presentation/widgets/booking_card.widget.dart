@@ -247,7 +247,7 @@ class BookingCard extends StatelessWidget {
                   AppSpacing.xxs.w,
                   Text(
                     guard.rating.toStringAsFixed(1),
-                    style: context.textTheme.labelSmall?.bold().colour(
+                    style: context.textTheme.labelSmall?.colour(
                       context.colors.primary,
                     ),
                   ),

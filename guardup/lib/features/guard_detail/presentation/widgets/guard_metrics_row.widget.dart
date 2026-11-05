@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:quick_container/quick_container.dart';
 
@@ -36,18 +35,16 @@ class GuardMetricsRowWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  CupertinoIcons.briefcase,
+                  Icons.work_outline_rounded,
                   size: 14,
-                  color: context.colors.gold,
+                  color: context.colors.primary,
                 ),
                 05.w,
                 Text(
                   experience,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: context.textTheme.labelSmall?.bold().colour(
-                    context.colors.onSurface,
-                  ),
+                  style: context.textTheme.labelSmall,
                 ),
               ],
             ),
@@ -64,9 +61,7 @@ class GuardMetricsRowWidget extends StatelessWidget {
               qualifications,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: context.textTheme.labelSmall?.bold().colour(
-                context.colors.onSurface,
-              ),
+              style: context.textTheme.labelSmall,
             ),
           ),
         ),
@@ -96,7 +91,7 @@ class GuardMetricsRowWidget extends StatelessWidget {
                     status,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: context.textTheme.labelSmall?.bold().colour(
+                    style: context.textTheme.labelSmall?.colour(
                       isAvailable
                           ? context.colors.success
                           : context.colors.error,
@@ -120,8 +115,7 @@ class GuardMetricsRowWidget extends StatelessWidget {
       py: 13,
       px: AppSpacing.xs,
       borderRadius: BorderRadius.circular(AppRadius.md),
-      // color: context.colors.onPrimary,
-      border: Border.all(color: Colors.white, width: 1),
+      border: Border.all(color: context.colors.outlineVariant, width: 1),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

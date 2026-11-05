@@ -32,41 +32,57 @@ class CompanyInformationScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppAppBar.transparent(title: context.l10n.companyInformation),
-      body: SingleChildScrollView(
-        padding: context.horizontalEdgeInsets,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AppSpacing.xl.h,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            padding: context.horizontalEdgeInsets,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Column(
+                  // crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    AppSpacing.xl.h,
 
-            // 1. Company Name Card
-            _InfoCard(label: context.l10n.companyName, value: companyName),
+                    // 1. Company Name Card
+                    _InfoCard(
+                      label: context.l10n.companyName,
+                      value: companyName,
+                    ),
 
-            // 2. Email Card
-            _InfoCard(label: context.l10n.email, value: email),
+                    // 2. Email Card
+                    _InfoCard(label: context.l10n.email, value: email),
 
-            // 3. Phone Card
-            _InfoCard(label: context.l10n.phone, value: phone),
+                    // 3. Phone Card
+                    _InfoCard(label: context.l10n.phone, value: phone),
 
-            // 4. Address Card
-            _InfoCard(label: context.l10n.address, value: address),
+                    // 4. Address Card
+                    _InfoCard(label: context.l10n.address, value: address),
 
-            // 5. Company Type Card
-            _InfoCard(label: context.l10n.companyType, value: companyType),
+                    // 5. Company Type Card
+                    _InfoCard(
+                      label: context.l10n.companyType,
+                      value: companyType,
+                    ),
 
-            AppSpacing.xl.h,
+                    Spacer(),
+                    AppSpacing.xl.h,
 
-            // Edit Information Button
-            AppButton(
-              text: context.l10n.editInformation,
-              size: ButtonSize.large,
-              onPressed: () {
-                context.push(AppRoutes.companyEditProfile);
-              },
+                    // Edit Information Button
+                    AppButton(
+                      text: context.l10n.editInformation,
+                      size: ButtonSize.large,
+                      onPressed: () {
+                        context.push(AppRoutes.companyEditProfile);
+                      },
+                    ),
+                    AppSpacing.huge.h,
+                  ],
+                ),
+              ),
             ),
-            AppSpacing.xxl.h,
-          ],
-        ),
+          );
+        },
       ),
     );
   }

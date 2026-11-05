@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:guardup/app/routes/app_routes.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '/core/constants/app_radius.dart';
@@ -43,7 +45,7 @@ class CompanyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return WrapperCard(
-      onTap: onTap,
+      onTap: onTap ?? ()=>context.push(AppRoutes.companyDetails),
       borderRadius: AppRadius.xxl,
       padding: AppSpacing.mlg.allPadding,
       child: Row(
@@ -172,7 +174,7 @@ class CompanyCard extends StatelessWidget {
               AppSpacing.xs.w,
               Text(
                 '${company.activeGuards} Guards Active',
-                style: context.textTheme.labelSmall?.semiBold().colour(
+                style: context.textTheme.labelSmall?.colour(
                   context.colors.success,
                 ),
               ),
@@ -195,7 +197,7 @@ class CompanyCard extends StatelessWidget {
           backgroundColor: context.colors.primary.withValues(alpha: 0.08),
           foregroundColor: context.colors.primary,
           borderRadius: AppRadius.sm.toBorderRadius,
-          onPressed: onBookNow,
+          onPressed: onBookNow ?? () => context.push(AppRoutes.customerBooking, extra: company),
         ),
       ],
     );
@@ -212,7 +214,7 @@ class CompanyCard extends StatelessWidget {
         AppSpacing.xxs.w,
         Text(
           company.rating.toStringAsFixed(1),
-          style: context.textTheme.labelSmall?.bold(),
+          style: context.textTheme.labelSmall,
         ),
         Text(
           '  •  ',

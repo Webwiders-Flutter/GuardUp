@@ -146,7 +146,7 @@ class _BodyguardAvailabilityWidgetState
         py: AppSpacing.sm,
         child: Text(
           'Day Off',
-          style: context.textTheme.labelSmall?.bold().colour(
+          style: context.textTheme.labelSmall?.colour(
             context.colors.onPrimaryContainer,
           ),
         ),

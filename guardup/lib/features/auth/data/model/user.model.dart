@@ -28,4 +28,22 @@ abstract class UserModel with _$UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) =>
       _$UserModelFromJson(json);
+
+  static List<UserModel> get fakeData => const [
+    UserModel(
+      id: 'usr_vikram',
+      name: 'Vikram Singh',
+      role: UserRole.guard,
+    ),
+    UserModel(
+      id: 'usr_marcus',
+      name: 'Marcus Sterling',
+      role: UserRole.guard,
+    ),
+    UserModel(
+      id: 'usr_customer_1',
+      name: 'Sara Khan',
+      role: UserRole.customer,
+    ),
+  ];
 }

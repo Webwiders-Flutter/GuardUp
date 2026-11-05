@@ -119,7 +119,7 @@ class GuardAboutBookingCard extends StatelessWidget {
                           width: 9,
                           height: 9,
                           decoration: BoxDecoration(
-                            color: context.colors.gold,
+                            color: context.colors.primary,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -128,8 +128,7 @@ class GuardAboutBookingCard extends StatelessWidget {
                           'BOOKING DETAILS',
                           style: context.textTheme.titleSmall
                               ?.bold()
-                              .copyWith(letterSpacing: 0.8)
-                              .colour(context.colors.onSurface),
+                              .copyWith(letterSpacing: 0.8),
                         ),
                       ],
                     ),
@@ -141,10 +140,10 @@ class GuardAboutBookingCard extends StatelessWidget {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: context.colors.gold.withValues(alpha: 0.12),
+                        color: context.colors.primary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(AppRadius.full),
                         border: Border.all(
-                          color: context.colors.gold.withValues(alpha: 0.5),
+                          color: context.colors.primary.withValues(alpha: 0.5),
                           width: 0.8,
                         ),
                       ),
@@ -153,9 +152,8 @@ class GuardAboutBookingCard extends StatelessWidget {
                         style: context.textTheme.labelSmall
                             ?.copyWith(
                               fontSize: 10,
-                              fontWeight: FontWeight.w600,
                             )
-                            .colour(context.colors.gold),
+                            .colour(context.colors.primary),
                       ),
                     ),
                   ],
@@ -307,7 +305,7 @@ class GuardAboutBookingCard extends StatelessWidget {
                           Text(
                             '\$${totalBaseRate.toStringAsFixed(2)}',
                             style: context.textTheme.titleMedium?.bold().colour(
-                              context.colors.gold,
+                              context.colors.primary,
                             ),
                           ),
                         ],
@@ -336,9 +334,8 @@ class GuardAboutBookingCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
         decoration: BoxDecoration(
-          // color: context.colors.surfaceDim,
           borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: Colors.white, width: 1),
+          border: Border.all(color: context.colors.outlineVariant, width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -358,9 +355,7 @@ class GuardAboutBookingCard extends StatelessWidget {
                     value,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: context.textTheme.labelMedium?.bold().colour(
-                      context.colors.onSurface,
-                    ),
+                    style: context.textTheme.labelMedium,
                   ),
                 ),
                 Icon(
@@ -368,7 +363,7 @@ class GuardAboutBookingCard extends StatelessWidget {
                       ? Icons.access_time_rounded
                       : Icons.calendar_today_rounded,
                   size: 14,
-                  color: context.colors.gold,
+                  color: context.colors.primary,
                 ),
               ],
             ),
