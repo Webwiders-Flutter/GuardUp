@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:guardup/features/body_guard/presentation/screens/guard_detail.screen.dart';
 
 import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
@@ -164,6 +165,14 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen> {
                 itemBuilder: (context, guard, index) {
                   return BodyGuardCard(
                     bodyguard: guard,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => GuardDetailScreen(),
+                        ),
+                      );
+                    },
                     // onTap: () => _handleEditBodyguard(guard),
                     onEdit: () => _handleEditBodyguard(guard),
                   );

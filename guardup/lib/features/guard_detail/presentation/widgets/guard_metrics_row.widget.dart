@@ -121,7 +121,10 @@ class GuardMetricsRowWidget extends StatelessWidget {
       px: AppSpacing.xs,
       borderRadius: BorderRadius.circular(AppRadius.md),
       // color: context.colors.onPrimary,
-      border: Border.all(color: Colors.white, width: 1),
+      border: Border.all(
+        color: Colors.white.withValues(alpha: 0.7),
+        width: 0.9,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
