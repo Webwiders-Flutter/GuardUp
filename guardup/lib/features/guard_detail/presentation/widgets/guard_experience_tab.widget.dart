@@ -52,7 +52,7 @@ class GuardExperienceTabWidget extends StatelessWidget {
                     Icon(
                       CupertinoIcons.briefcase,
                       size: 18,
-                      color: context.colors.gold,
+                      color: context.colors.primary,
                     ),
                   ],
                 ),
@@ -60,7 +60,7 @@ class GuardExperienceTabWidget extends StatelessWidget {
                 Text(
                   yearsExperience,
                   style: context.textTheme.headlineSmall?.bold().colour(
-                    context.colors.gold,
+                    context.colors.primary,
                   ),
                 ),
                 AppSpacing.xs.h,
@@ -78,9 +78,7 @@ class GuardExperienceTabWidget extends StatelessWidget {
           // Services Section
           Text(
             'Services',
-            style: context.textTheme.labelLarge?.bold().colour(
-              context.colors.onSurface,
-            ),
+            style: context.textTheme.labelLarge,
           ),
           AppSpacing.sm.h,
 
@@ -103,9 +101,7 @@ class GuardExperienceTabWidget extends StatelessWidget {
                 ),
                 child: Text(
                   service,
-                  style: context.textTheme.labelSmall
-                      ?.copyWith(fontSize: 11)
-                      .colour(context.colors.onSurface),
+                  style: context.textTheme.labelSmall?.copyWith(fontSize: 11),
                 ),
               );
             }).toList(),

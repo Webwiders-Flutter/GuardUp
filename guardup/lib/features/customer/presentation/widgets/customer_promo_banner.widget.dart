@@ -65,10 +65,10 @@ class CustomerPromoBannerWidget extends StatelessWidget {
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: context.colors.gold.withValues(alpha: 0.15),
+                    color: context.colors.primary.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(AppRadius.full),
                     border: Border.all(
-                      color: context.colors.gold.withValues(alpha: 0.4),
+                      color: context.colors.primary.withValues(alpha: 0.4),
                       width: 0.8,
                     ),
                   ),
@@ -78,7 +78,7 @@ class CustomerPromoBannerWidget extends StatelessWidget {
                       Icon(
                         Icons.star_rounded,
                         size: 13,
-                        color: context.colors.gold,
+                        color: context.colors.primary,
                       ),
                       AppSpacing.xxs.w,
                       Text(
@@ -89,7 +89,7 @@ class CustomerPromoBannerWidget extends StatelessWidget {
                               letterSpacing: 0.8,
                               fontWeight: FontWeight.w400,
                             )
-                            .colour(context.colors.gold),
+                            .colour(context.colors.primary),
                       ),
                     ],
                   ),

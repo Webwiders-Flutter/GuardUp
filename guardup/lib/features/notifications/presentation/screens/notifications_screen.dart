@@ -139,7 +139,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                       if (isFirstOfToday) ...[
                         Text(
                           context.l10n.todaySection,
-                          style: context.textTheme.labelMedium?.bold().colour(
+                          style: context.textTheme.labelMedium?.colour(
                             context.colors.primary,
                           ),
                         ),
@@ -148,7 +148,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                         AppSpacing.lg.h,
                         Text(
                           context.l10n.yesterdaySection,
-                          style: context.textTheme.labelMedium?.bold().colour(
+                          style: context.textTheme.labelMedium?.colour(
                             context.colors.primary,
                           ),
                         ),
@@ -198,7 +198,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
               py: AppSpacing.xxs,
               child: Text(
                 context.l10n.unreadCountBadge(unreadCount),
-                style: context.textTheme.labelSmall?.semiBold().colour(
+                style: context.textTheme.labelSmall?.colour(
                   context.colors.primary,
                 ),
               ),

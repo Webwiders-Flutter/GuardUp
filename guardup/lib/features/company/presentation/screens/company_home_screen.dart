@@ -239,7 +239,6 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
                 child: AppTextField.search(
                   controller: _bookingSearchController,
                   size: AppInputSize.small,
-                  style: TextStyle(color: context.colors.onSurface),
                   decoration: InputDecoration(
                     hintText: 'Search by name, clearance, or skill...',
                     enabledBorder: OutlineInputBorder(
@@ -248,14 +247,9 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
                         color: context.colors.outlineVariant,
                       ),
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: AppRadius.xl.toBorderRadius,
-                      borderSide: BorderSide(
-                        color: context.colors.outlineVariant,
-                      ),
+                    fillColor: context.colors.onPrimary,
                     ),
-                    fillColor: context.colors.surface,
-                  ),
+                    style: TextStyle(color: context.colors.onSurface),
                 ),
               ),
               AppSpacing.md.h,

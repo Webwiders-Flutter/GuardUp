@@ -22,10 +22,8 @@ abstract class LicenseAndBadgeModel with _$LicenseAndBadgeModel {
   factory LicenseAndBadgeModel.fromJson(Map<String, dynamic> json) =>
       _$LicenseAndBadgeModelFromJson(json);
 
-  static List<LicenseAndBadgeModel> get fakeData => fakeAuditedLicenses;
-
   /// Curated list of verified licenses matching the bodyguard documents mockup.
-  static List<LicenseAndBadgeModel> get fakeAuditedLicenses => [
+  static List<LicenseAndBadgeModel> get fakeData => [
     LicenseAndBadgeModel(
       id: 'lic_sia',
       name: 'SIA Close Protection License',
@@ -54,48 +52,9 @@ abstract class LicenseAndBadgeModel with _$LicenseAndBadgeModel {
       description: 'High-speed motorcade tactical driving, skid recovery, and PIT avoidance.',
       issuingAuthority: 'Precision Institute',
       customValidity: 'Certified',
-      isVerified: true,
-      icon: Icons.gps_fixed_rounded,
-    ),
-  ];
-
-  /// Curated list of elite bodyguard licenses and certifications.
-  static List<LicenseAndBadgeModel> get fakeLicensesAndBadges => [
-    LicenseAndBadgeModel(
-      id: 'lic_1',
-      name: 'Armed Executive Protection License',
-      description: 'Federal Class-A certification for armed dignitary escort and counter-ambush tactics.',
-      validTill: DateTime(2028, 12, 31),
-      isVerified: true,
-      badgeNumber: 'GUARD-EP-9942',
-      issuingAuthority: 'Security & Intelligence Directorate',
-    ),
-    LicenseAndBadgeModel(
-      id: 'lic_2',
-      name: 'Tactical Defensive Driving (B6 Armored)',
-      description: 'Certified evasive maneuver specialist for heavy armored transport Cadillac & Suburban units.',
       validTill: DateTime(2027, 6, 15),
       isVerified: true,
-      badgeNumber: 'DRV-ARM-4081',
-      issuingAuthority: 'Tactical Mobility Institute',
-    ),
-    LicenseAndBadgeModel(
-      id: 'lic_3',
-      name: 'Trauma First Responder & CPR Level 3',
-      description: 'Field medical response for ballistics, severe bleeding control, and automated external defibrillator operation.',
-      validTill: DateTime(2029, 3, 20),
-      isVerified: true,
-      badgeNumber: 'MED-TCCC-719',
-      issuingAuthority: 'International Emergency Care Council',
-    ),
-    LicenseAndBadgeModel(
-      id: 'lic_4',
-      name: 'Concealed Firearms Carry Permit (CCW)',
-      description: 'Statewide multi-jurisdictional concealed carry endorsement for high-risk details.',
-      validTill: DateTime(2027, 11, 10),
-      isVerified: true,
-      badgeNumber: 'CCW-X8832',
-      issuingAuthority: 'State Law Enforcement Bureau',
+      icon: Icons.gps_fixed_rounded,
     ),
   ];
 }

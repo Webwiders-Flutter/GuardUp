@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:guardup/shared/widgets/sections/app_image.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '/app/routes/app_routes.dart';
@@ -9,9 +8,9 @@ import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
-import '/gen/assets.gen.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/sections/app_appbar.dart';
+import '../widgets/customer_promo_banner.widget.dart';
 
 /// Screen 2: Search & Filter Bodyguards screen allowing customers to filter
 /// by location, category, hourly rate, rating, service type, and company.
@@ -83,21 +82,19 @@ class _SearchBodyguardsScreenState extends State<SearchBodyguardsScreen> {
                       px: 16,
                       py: 12,
                       radius: 12,
-                      color: Color(0xFF141824),
-                      borderColor: Color(0xFF262D3D),
+                      color: context.colors.surface,
+                      borderColor: context.colors.borderColor,
                       child: Row(
                         children: [
                           Icon(
                             Icons.location_on,
-                            color: context.colors.gold,
+                            color: context.colors.primary,
                             size: 19,
                           ),
                           12.w,
                           Text(
                             'Indore, Madhya Pradesh',
-                            style: context.textTheme.bodyMedium
-                                ?.medium()
-                                .colour(context.colors.onSurface),
+                            style: context.textTheme.bodyMedium?.medium(),
                           ),
                         ],
                       ),
@@ -169,7 +166,10 @@ class _SearchBodyguardsScreenState extends State<SearchBodyguardsScreen> {
                     AppSpacing.lg.h,
 
                     // 3. Compact VIP Protection Banner
-                    customerPromoBannerWidget(),
+                    CustomerPromoBannerWidget(
+                      badgeText: 'VIP PROTECTION',
+                      onBookNow: _onSearchPressed,
+                    ),
                     AppSpacing.lg.h,
 
                     // 4. Hourly Rate Filter Card with RangeSlider
@@ -205,14 +205,14 @@ class _SearchBodyguardsScreenState extends State<SearchBodyguardsScreen> {
                                       vertical: 3,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: context.colors.gold.withValues(
+                                      color: context.colors.primary.withValues(
                                         alpha: 0.12,
                                       ),
                                       borderRadius: BorderRadius.circular(
                                         AppRadius.sm,
                                       ),
                                       border: Border.all(
-                                        color: context.colors.gold.withValues(
+                                        color: context.colors.primary.withValues(
                                           alpha: 0.4,
                                         ),
                                         width: 0.8,
@@ -222,10 +222,9 @@ class _SearchBodyguardsScreenState extends State<SearchBodyguardsScreen> {
                                       '\$${range.start.round()} - \$${range.end.round()}',
                                       style: context.textTheme.labelSmall
                                           ?.copyWith(
-                                            fontWeight: FontWeight.w700,
                                             fontSize: 11,
                                           )
-                                          .colour(context.colors.gold),
+                                          .colour(context.colors.primary),
                                     ),
                                   );
                                 },
@@ -412,13 +411,11 @@ class _SearchBodyguardsScreenState extends State<SearchBodyguardsScreen> {
         ),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: context.colors.gold),
+            Icon(icon, size: 20, color: context.colors.primary),
             AppSpacing.sm.w,
             Text(
               title,
-              style: context.textTheme.bodyMedium?.medium().colour(
-                context.colors.onSurface,
-              ),
+              style: context.textTheme.bodyMedium?.medium(),
             ),
             const Spacer(),
             ValueListenableBuilder<String>(
@@ -511,153 +508,6 @@ class _SearchBodyguardsScreenState extends State<SearchBodyguardsScreen> {
           ),
         );
       },
-    );
-  }
-
-  Widget customerPromoBannerWidget() {
-    return QuickContainer(
-      w: double.infinity,
-      borderRadius: BorderRadius.circular(AppRadius.lg),
-      gradient: LinearGradient(
-        colors: [
-          Color(0xFF1A202D).withValues(alpha: 0.85),
-          Color(0xFF0F131C).withValues(alpha: 0.8),
-        ],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      border: Border.all(
-        color: context.colors.primary.withValues(alpha: 0.25),
-        width: 1,
-      ),
-      px: 16,
-      py: 14,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // Left Column: Texts and Button
-          Expanded(
-            flex: 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Badge
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.colors.gold.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(AppRadius.full),
-                    border: Border.all(
-                      color: context.colors.gold.withValues(alpha: 0.4),
-                      width: 0.8,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.star_rounded,
-                        size: 13,
-                        color: context.colors.gold,
-                      ),
-                      AppSpacing.xxs.w,
-                      Text(
-                        'VIP PROTECTION',
-                        style: context.textTheme.labelSmall
-                            ?.copyWith(
-                              fontSize: 9.5,
-                              letterSpacing: 0.8,
-                              fontWeight: FontWeight.w400,
-                            )
-                            .colour(context.colors.gold),
-                      ),
-                    ],
-                  ),
-                ),
-                AppSpacing.xs.h,
-
-                // Title
-                Text(
-                  'Premium Security',
-                  style: context.textTheme.titleSmall?.colour(
-                    context.colors.onSurface,
-                  ),
-                ),
-                03.h,
-                Text(
-                  'For Every Occasion',
-                  style: context.textTheme.bodySmall?.colour(
-                    context.colors.onSurface,
-                  ),
-                ),
-
-                AppSpacing.sm.h,
-
-                // Book Now Button
-                GestureDetector(
-                  onTap: () {},
-                  behavior: HitTestBehavior.opaque,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: context.colors.primaryGradient,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: context.colors.primary.withValues(alpha: 0.25),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Book now',
-                          style: context.textTheme.labelSmall
-                              ?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 11,
-                              )
-                              .colour(context.colors.onPrimary),
-                        ),
-                        AppSpacing.xxs.w,
-                        Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 13,
-                          color: context.colors.onPrimary,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Right: Bodyguard Photo
-          Expanded(
-            flex: 2,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              child: AppImage.asset(
-                height: 100,
-
-                assetPath: Assets.images.profilePicture2.path,
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

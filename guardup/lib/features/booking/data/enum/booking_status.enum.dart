@@ -75,7 +75,6 @@ enum BookingStatus {
   Color badgeBackgroundColor(BuildContext context) {
     switch (this) {
       case BookingStatus.pending:
-        return context.colors.primaryContainer.withValues(alpha: 0.15);
       case BookingStatus.onGoing:
       case BookingStatus.confirmed:
         return context.colors.primary.withValues(alpha: 0.15);
@@ -89,7 +88,6 @@ enum BookingStatus {
   Color badgeBorderColor(BuildContext context) {
     switch (this) {
       case BookingStatus.pending:
-        return context.colors.primaryContainer.withValues(alpha: 0.4);
       case BookingStatus.onGoing:
       case BookingStatus.confirmed:
         return context.colors.primary.withValues(alpha: 0.4);

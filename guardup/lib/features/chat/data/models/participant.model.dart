@@ -23,8 +23,7 @@ abstract class ParticipantModel with _$ParticipantModel {
   factory ParticipantModel.fromJson(Map<String, dynamic> json) =>
       _$ParticipantModelFromJson(json);
 
-  static List<ParticipantModel> get fakeData => fakeParticipants;
-  static List<ParticipantModel> get fakeParticipants => [
+  static List<ParticipantModel> get fakeData => [
     ParticipantModel(
       id: 'usr_vikram',
       name: 'Vikram Singh',

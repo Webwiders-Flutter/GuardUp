@@ -98,7 +98,7 @@ class CustomerBookingDetailsScreen extends StatelessWidget {
                               QuickContainer(
                                 mb: 5,
                                 mr: 5,
-                                borderColor: context.colors.gold.withValues(
+                                borderColor: context.colors.primary.withValues(
                                   alpha: 0.6,
                                 ),
                                 borderWidth: 0.6,
@@ -122,7 +122,7 @@ class CustomerBookingDetailsScreen extends StatelessWidget {
                                 child: Icon(
                                   Icons.check_circle,
                                   size: 18,
-                                  color: context.colors.gold,
+                                  color: context.colors.primary,
                                 ),
                               ),
                             ],
@@ -152,7 +152,7 @@ class CustomerBookingDetailsScreen extends StatelessWidget {
                                         ),
                                       ],
                                     ),
-                                    // Rate in Gold
+                                    // Rate in Primary
                                     Text.rich(
                                       TextSpan(
                                         children: [
@@ -160,7 +160,7 @@ class CustomerBookingDetailsScreen extends StatelessWidget {
                                             text: '\$${hourlyRate.toInt()}',
                                             style: context.textTheme.titleSmall
                                                 ?.bold()
-                                                .colour(context.colors.gold),
+                                                .colour(context.colors.primary),
                                           ),
                                           TextSpan(
                                             text: ' /hr',
@@ -194,7 +194,7 @@ class CustomerBookingDetailsScreen extends StatelessWidget {
                                       'Licensed armed, Corporate visits',
                                       style: context.textTheme.labelSmall
                                           ?.copyWith(fontSize: 10)
-                                          .colour(context.colors.gold),
+                                          .colour(context.colors.primary),
                                     ),
                                   ],
                                 ),
@@ -205,7 +205,7 @@ class CustomerBookingDetailsScreen extends StatelessWidget {
                                     Icon(
                                       Icons.star_rounded,
                                       size: 13,
-                                      color: context.colors.gold,
+                                      color: context.colors.primary,
                                     ),
                                     AppSpacing.xxs.w,
                                     Text(
@@ -317,12 +317,12 @@ class CustomerBookingDetailsScreen extends StatelessWidget {
                                   vertical: 3,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: context.colors.gold.withValues(
+                                  color: context.colors.primary.withValues(
                                     alpha: 0.12,
                                   ),
                                   borderRadius: BorderRadius.circular(4),
                                   border: Border.all(
-                                    color: context.colors.gold.withValues(
+                                    color: context.colors.primary.withValues(
                                       alpha: 0.5,
                                     ),
                                     width: 0.8,
@@ -333,10 +333,9 @@ class CustomerBookingDetailsScreen extends StatelessWidget {
                                   style: context.textTheme.labelSmall
                                       ?.copyWith(
                                         fontSize: 9.5,
-                                        fontWeight: FontWeight.w700,
                                         letterSpacing: 0.5,
                                       )
-                                      .colour(context.colors.gold),
+                                      .colour(context.colors.primary),
                                 ),
                               ),
                             ],
@@ -435,7 +434,7 @@ class CustomerBookingDetailsScreen extends StatelessWidget {
                                 '\$${finalTotal.toStringAsFixed(2)}',
                                 style: context.textTheme.titleLarge
                                     ?.bold()
-                                    .colour(context.colors.gold),
+                                    .colour(context.colors.primary),
                               ),
                             ],
                           ),
@@ -496,7 +495,7 @@ class CustomerBookingDetailsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.colors.surfaceDim,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: Colors.white, width: 1),
+        border: Border.all(color: context.colors.outlineVariant, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -516,12 +515,10 @@ class CustomerBookingDetailsScreen extends StatelessWidget {
                   value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: context.textTheme.labelMedium?.bold().colour(
-                    context.colors.onSurface,
-                  ),
+                  style: context.textTheme.labelMedium,
                 ),
               ),
-              Icon(icon, size: 14, color: context.colors.gold),
+              Icon(icon, size: 14, color: context.colors.primary),
             ],
           ),
         ],

@@ -41,35 +41,45 @@ class BookingScreen extends StatefulWidget {
 class _BookingScreenState extends State<BookingScreen> {
   final _searchController = TextEditingController();
 
-  DateTime _startDate = DateTime(2025, 4, 26);
-  TimeOfDay _startTime = const TimeOfDay(hour: 10, minute: 0);
-
-  DateTime _endDate = DateTime(2025, 4, 26);
-  TimeOfDay _endTime = const TimeOfDay(hour: 14, minute: 0);
-
-  late final Set<String> _selectedGuardIds;
-  String _searchQuery = '';
+  final ValueNotifier<DateTime> _startDateNotifier = ValueNotifier(
+    DateTime(2025, 4, 26),
+  );
+  final ValueNotifier<TimeOfDay> _startTimeNotifier = ValueNotifier(
+    const TimeOfDay(hour: 10, minute: 0),
+  );
+  final ValueNotifier<DateTime> _endDateNotifier = ValueNotifier(
+    DateTime(2025, 4, 26),
+  );
+  final ValueNotifier<TimeOfDay> _endTimeNotifier = ValueNotifier(
+    const TimeOfDay(hour: 14, minute: 0),
+  );
+  late final ValueNotifier<Set<String>> _selectedGuardIdsNotifier;
+  final ValueNotifier<String> _searchQueryNotifier = ValueNotifier('');
 
   @override
   void initState() {
     super.initState();
-    _selectedGuardIds = {
+    _selectedGuardIdsNotifier = ValueNotifier<Set<String>>({
       if (widget.initialBodyguard != null)
         widget.initialBodyguard!.id
       else
         'guard_marcus_sterling',
-    };
+    });
 
     _searchController.addListener(() {
-      setState(() {
-        _searchQuery = _searchController.text.trim().toLowerCase();
-      });
+      _searchQueryNotifier.value = _searchController.text.trim().toLowerCase();
     });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _startDateNotifier.dispose();
+    _startTimeNotifier.dispose();
+    _endDateNotifier.dispose();
+    _endTimeNotifier.dispose();
+    _selectedGuardIdsNotifier.dispose();
+    _searchQueryNotifier.dispose();
     super.dispose();
   }
 
@@ -78,49 +88,47 @@ class _BookingScreenState extends State<BookingScreen> {
   Future<void> _pickStartDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _startDate,
+      initialDate: _startDateNotifier.value,
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
     );
     if (picked != null) {
-      setState(() {
-        _startDate = picked;
-        if (_endDate.isBefore(_startDate)) {
-          _endDate = _startDate;
-        }
-      });
+      _startDateNotifier.value = picked;
+      if (_endDateNotifier.value.isBefore(picked)) {
+        _endDateNotifier.value = picked;
+      }
     }
   }
 
   Future<void> _pickStartTime() async {
     final picked = await showTimePicker(
       context: context,
-      initialTime: _startTime,
+      initialTime: _startTimeNotifier.value,
     );
     if (picked != null) {
-      setState(() => _startTime = picked);
+      _startTimeNotifier.value = picked;
     }
   }
 
   Future<void> _pickEndDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _endDate,
-      firstDate: _startDate,
+      initialDate: _endDateNotifier.value,
+      firstDate: _startDateNotifier.value,
       lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
     );
     if (picked != null) {
-      setState(() => _endDate = picked);
+      _endDateNotifier.value = picked;
     }
   }
 
   Future<void> _pickEndTime() async {
     final picked = await showTimePicker(
       context: context,
-      initialTime: _endTime,
+      initialTime: _endTimeNotifier.value,
     );
     if (picked != null) {
-      setState(() => _endTime = picked);
+      _endTimeNotifier.value = picked;
     }
   }
 
@@ -128,18 +136,18 @@ class _BookingScreenState extends State<BookingScreen> {
 
   int get _calculatedHours {
     final start = DateTime(
-      _startDate.year,
-      _startDate.month,
-      _startDate.day,
-      _startTime.hour,
-      _startTime.minute,
+      _startDateNotifier.value.year,
+      _startDateNotifier.value.month,
+      _startDateNotifier.value.day,
+      _startTimeNotifier.value.hour,
+      _startTimeNotifier.value.minute,
     );
     final end = DateTime(
-      _endDate.year,
-      _endDate.month,
-      _endDate.day,
-      _endTime.hour,
-      _endTime.minute,
+      _endDateNotifier.value.year,
+      _endDateNotifier.value.month,
+      _endDateNotifier.value.day,
+      _endTimeNotifier.value.hour,
+      _endTimeNotifier.value.minute,
     );
     final diff = end.difference(start).inHours;
     return diff > 0 ? diff : 4;
@@ -160,32 +168,6 @@ class _BookingScreenState extends State<BookingScreen> {
   Widget build(BuildContext context) {
     final effectiveCompany = widget.company ?? CompanyModel.fakeData.first;
     final allGuards = BodyGuardModel.fakeData;
-
-    final filteredGuards = allGuards.where((guard) {
-      if (_searchQuery.isEmpty) return true;
-      final name = guard.user.name.toLowerCase();
-      final clearance = (guard.clearanceLevel ?? '').toLowerCase();
-      final services = guard.serviceTypes
-          .map((s) => s.label.toLowerCase())
-          .join(' ');
-      return name.contains(_searchQuery) ||
-          clearance.contains(_searchQuery) ||
-          services.contains(_searchQuery);
-    }).toList();
-
-    // Cost calculations
-    final selectedGuardsList = allGuards
-        .where((g) => _selectedGuardIds.contains(g.id))
-        .toList();
-    final double primaryRate = selectedGuardsList.isNotEmpty
-        ? selectedGuardsList.first.hourlyRate
-        : 60.0;
-    final int hours = _calculatedHours;
-    final double operativeCost = primaryRate * hours;
-    const double discountAmount = 15.0;
-    final double totalAmount = (operativeCost - discountAmount) > 0
-        ? (operativeCost - discountAmount)
-        : operativeCost;
 
     return Scaffold(
       appBar: const AppAppBar.transparent(
@@ -230,31 +212,47 @@ class _BookingScreenState extends State<BookingScreen> {
               Text(
                 'DATE & TIME',
                 style: context.textTheme.labelMedium
-                    ?.bold()
-                    .copyWith(letterSpacing: 1.2)
+                    ?.copyWith(letterSpacing: 1.2)
                     .colour(context.colors.onSurfaceVariant),
               ),
               AppSpacing.sm.h,
-              _buildDateTimeRow(
-                firstLabel: 'START DATE',
-                firstValue: DateFormat('MMM dd, yyyy').format(_startDate),
-                firstIcon: Icons.calendar_today_outlined,
-                onFirstTap: _pickStartDate,
-                secondLabel: 'START TIME',
-                secondValue: _startTime.format(context),
-                secondIcon: Icons.access_time_rounded,
-                onSecondTap: _pickStartTime,
-              ),
-              AppSpacing.sm.h,
-              _buildDateTimeRow(
-                firstLabel: 'END DATE',
-                firstValue: DateFormat('MMM dd, yyyy').format(_endDate),
-                firstIcon: Icons.calendar_today_outlined,
-                onFirstTap: _pickEndDate,
-                secondLabel: 'END TIME',
-                secondValue: _endTime.format(context),
-                secondIcon: Icons.access_time_rounded,
-                onSecondTap: _pickEndTime,
+              ListenableBuilder(
+                listenable: Listenable.merge([
+                  _startDateNotifier,
+                  _startTimeNotifier,
+                  _endDateNotifier,
+                  _endTimeNotifier,
+                ]),
+                builder: (context, _) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildDateTimeRow(
+                        firstLabel: 'START DATE',
+                        firstValue: DateFormat('MMM dd, yyyy')
+                            .format(_startDateNotifier.value),
+                        firstIcon: Icons.calendar_today_outlined,
+                        onFirstTap: _pickStartDate,
+                        secondLabel: 'START TIME',
+                        secondValue: _startTimeNotifier.value.format(context),
+                        secondIcon: Icons.access_time_rounded,
+                        onSecondTap: _pickStartTime,
+                      ),
+                      AppSpacing.sm.h,
+                      _buildDateTimeRow(
+                        firstLabel: 'END DATE',
+                        firstValue: DateFormat('MMM dd, yyyy')
+                            .format(_endDateNotifier.value),
+                        firstIcon: Icons.calendar_today_outlined,
+                        onFirstTap: _pickEndDate,
+                        secondLabel: 'END TIME',
+                        secondValue: _endTimeNotifier.value.format(context),
+                        secondIcon: Icons.access_time_rounded,
+                        onSecondTap: _pickEndTime,
+                      ),
+                    ],
+                  );
+                },
               ),
               AppSpacing.lg.h,
 
@@ -264,7 +262,6 @@ class _BookingScreenState extends State<BookingScreen> {
               AppTextField.search(
                 controller: _searchController,
                 size: AppInputSize.small,
-                style: TextStyle(color: context.colors.onSurface),
                 decoration: InputDecoration(
                   hintText: 'Search bodyguards near you...',
                   prefixIcon: Icon(
@@ -301,57 +298,96 @@ class _BookingScreenState extends State<BookingScreen> {
                       color: context.colors.outlineVariant,
                     ),
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: AppRadius.xl.toBorderRadius,
-                    borderSide: BorderSide(
-                      color: context.colors.outlineVariant,
-                    ),
-                  ),
-                  fillColor: context.colors.surface,
+                  fillColor: context.colors.onPrimary,
                 ),
+                style: TextStyle(color: context.colors.onSurface),
               ),
               AppSpacing.lg.h,
 
               // ---------------------------------------------------------------
-              // 4. Selectable Bodyguards Operative List
+              // 4. Selectable Bodyguards Operative List & 5. Payment Summary
               // ---------------------------------------------------------------
-              for (final guard in filteredGuards) ...[
-                BodyGuardCard(
-                  bodyguard: guard,
-                  isSelected: _selectedGuardIds.contains(guard.id),
-                  onSelectedChanged: (selected) {
-                    setState(() {
-                      if (selected == true) {
-                        _selectedGuardIds.add(guard.id);
-                      } else {
-                        _selectedGuardIds.remove(guard.id);
-                      }
-                    });
-                  },
-                  onTap: () {
-                    setState(() {
-                      if (_selectedGuardIds.contains(guard.id)) {
-                        _selectedGuardIds.remove(guard.id);
-                      } else {
-                        _selectedGuardIds.add(guard.id);
-                      }
-                    });
-                  },
-                ),
-                AppSpacing.md.h,
-              ],
-              AppSpacing.md.h,
+              ListenableBuilder(
+                listenable: Listenable.merge([
+                  _selectedGuardIdsNotifier,
+                  _searchQueryNotifier,
+                  _startDateNotifier,
+                  _startTimeNotifier,
+                  _endDateNotifier,
+                  _endTimeNotifier,
+                ]),
+                builder: (context, _) {
+                  final query = _searchQueryNotifier.value;
+                  final selectedIds = _selectedGuardIdsNotifier.value;
 
-              // ---------------------------------------------------------------
-              // 5. Payment Summary Card in WrapperCard
-              // ---------------------------------------------------------------
-              _buildPaymentSummaryCard(
-                context: context,
-                primaryRate: primaryRate,
-                hours: hours,
-                operativeCost: operativeCost,
-                discountAmount: discountAmount,
-                totalAmount: totalAmount,
+                  final filteredGuards = allGuards.where((guard) {
+                    if (query.isEmpty) return true;
+                    final name = guard.user.name.toLowerCase();
+                    final clearance = (guard.clearanceLevel ?? '')
+                        .toLowerCase();
+                    final services = guard.serviceTypes
+                        .map((s) => s.label.toLowerCase())
+                        .join(' ');
+                    return name.contains(query) ||
+                        clearance.contains(query) ||
+                        services.contains(query);
+                  }).toList();
+
+                  final selectedGuardsList = allGuards
+                      .where((g) => selectedIds.contains(g.id))
+                      .toList();
+                  final double primaryRate = selectedGuardsList.isNotEmpty
+                      ? selectedGuardsList.first.hourlyRate
+                      : 60.0;
+                  final int hours = _calculatedHours;
+                  final double operativeCost = primaryRate * hours;
+                  const double discountAmount = 15.0;
+                  final double totalAmount =
+                      (operativeCost - discountAmount) > 0
+                      ? (operativeCost - discountAmount)
+                      : operativeCost;
+
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final guard in filteredGuards) ...[
+                        BodyGuardCard(
+                          bodyguard: guard,
+                          isSelected: selectedIds.contains(guard.id),
+                          onSelectedChanged: (selected) {
+                            final updated = Set<String>.from(selectedIds);
+                            if (selected == true) {
+                              updated.add(guard.id);
+                            } else {
+                              updated.remove(guard.id);
+                            }
+                            _selectedGuardIdsNotifier.value = updated;
+                          },
+                          onTap: () {
+                            final updated = Set<String>.from(selectedIds);
+                            if (updated.contains(guard.id)) {
+                              updated.remove(guard.id);
+                            } else {
+                              updated.add(guard.id);
+                            }
+                            _selectedGuardIdsNotifier.value = updated;
+                          },
+                        ),
+                        AppSpacing.md.h,
+                      ],
+                      AppSpacing.md.h,
+
+                      _buildPaymentSummaryCard(
+                        context: context,
+                        primaryRate: primaryRate,
+                        hours: hours,
+                        operativeCost: operativeCost,
+                        discountAmount: discountAmount,
+                        totalAmount: totalAmount,
+                      ),
+                    ],
+                  );
+                },
               ),
               AppSpacing.xl.h,
             ],
@@ -459,8 +495,7 @@ class _BookingScreenState extends State<BookingScreen> {
               Text(
                 'PAYMENT SUMMARY',
                 style: context.textTheme.labelMedium
-                    ?.bold()
-                    .copyWith(letterSpacing: 1.2)
+                    ?.copyWith(letterSpacing: 1.2)
                     .colour(context.colors.onSurfaceVariant),
               ),
 
@@ -475,7 +510,7 @@ class _BookingScreenState extends State<BookingScreen> {
                 ),
                 child: Text(
                   'EXECUTIVE TIER',
-                  style: context.textTheme.labelSmall?.bold().colour(
+                  style: context.textTheme.labelSmall?.colour(
                     context.colors.primary,
                   ),
                 ),
@@ -518,7 +553,7 @@ class _BookingScreenState extends State<BookingScreen> {
                     color: context.colors.success.withValues(alpha: 0.15),
                     child: Text(
                       '20% Discount',
-                      style: context.textTheme.labelSmall?.semiBold().colour(
+                      style: context.textTheme.labelSmall?.colour(
                         context.colors.success,
                       ),
                     ),
@@ -535,7 +570,7 @@ class _BookingScreenState extends State<BookingScreen> {
                     ),
                     child: Text(
                       'Gold Sentinel',
-                      style: context.textTheme.labelSmall?.semiBold().colour(
+                      style: context.textTheme.labelSmall?.colour(
                         context.colors.success,
                       ),
                     ),

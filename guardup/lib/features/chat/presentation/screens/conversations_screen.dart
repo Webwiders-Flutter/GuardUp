@@ -29,8 +29,8 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
   final _searchController = TextEditingController();
   late final _paginationController = PaginationController<ConversationModel>(
     initialState: PaginationState<ConversationModel>(
-      items: ConversationModel.fakeConversations,
-      total: ConversationModel.fakeConversations.length,
+      items: ConversationModel.fakeData,
+      total: ConversationModel.fakeData.length,
       status: ApiState.success(null),
     ),
   );
@@ -61,7 +61,6 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
               child: AppTextField.search(
                 controller: _searchController,
                 size: .small,
-                style: TextStyle(color: context.colors.onSurface),
                 decoration: InputDecoration(
                   hintText: context.l10n.searchConversationsHint,
                   enabledBorder: OutlineInputBorder(
@@ -70,14 +69,9 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                       color: context.colors.outlineVariant,
                     ),
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: AppRadius.xl.toBorderRadius,
-                    borderSide: BorderSide(
-                      color: context.colors.outlineVariant,
+                  fillColor: context.colors.onPrimary,
                     ),
-                  ),
-                  fillColor: context.colors.surface,
-                ),
+                    style: TextStyle(color: context.colors.onSurface),
               ),
             ),
             AppSpacing.xxl.h,

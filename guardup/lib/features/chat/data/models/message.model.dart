@@ -26,10 +26,8 @@ abstract class MessageModel with _$MessageModel {
   factory MessageModel.fromJson(Map<String, dynamic> json) =>
       _$MessageModelFromJson(json);
 
-  static List<MessageModel> get fakeData => fakeEscortChatMessages;
-
   /// Curated fake messages matching the live escort chat thread screenshot.
-  static List<MessageModel> get fakeEscortChatMessages => [
+  static List<MessageModel> get fakeData => [
     MessageModel(
       id: 'chat_msg_1',
       conversationId: 'conv_1',

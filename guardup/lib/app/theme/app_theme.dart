@@ -30,7 +30,6 @@ class AppTheme {
       extensions: const [
         AppThemeColors(
           primaryContainer: AppColors.primaryContainer,
-          gold: AppColors.gold,
           surfaceDim: AppColors.surfaceDim,
           surfaceContainer: AppColors.surfaceContainer,
           surfaceContainerHigh: AppColors.surfaceContainerHigh,
@@ -188,7 +187,7 @@ class AppTheme {
         alignLabelWithHint: true,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.lg,
-          vertical: AppSpacing.mlg,
+          vertical: AppSpacing.lg,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.sm),

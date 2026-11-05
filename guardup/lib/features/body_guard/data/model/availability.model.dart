@@ -21,8 +21,7 @@ abstract class AvailabilityModel with _$AvailabilityModel {
   factory AvailabilityModel.fromJson(Map<String, dynamic> json) =>
       _$AvailabilityModelFromJson(json);
 
-  static List<AvailabilityModel> get fakeData => fakeWeeklySchedule;
-  static List<AvailabilityModel> get fakeWeeklySchedule => [
+  static List<AvailabilityModel> get fakeData => [
     AvailabilityModel(
       id: 'avail_mon',
       weekDay: WeekDay.monday,

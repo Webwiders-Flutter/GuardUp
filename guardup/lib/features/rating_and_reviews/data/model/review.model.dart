@@ -25,10 +25,8 @@ abstract class ReviewModel with _$ReviewModel {
   factory ReviewModel.fromJson(Map<String, dynamic> json) =>
       _$ReviewModelFromJson(json);
 
-  static List<ReviewModel> get fakeData => fakeBodyguardReviews;
-
-  /// Curated list of verified client reviews matching the bodyguard profile design.
-  static List<ReviewModel> get fakeBodyguardReviews => [
+  /// Curated list of verified client reviews matching the GuardUp design.
+  static List<ReviewModel> get fakeData => [
     ReviewModel(
       id: 'rev_elena',
       from: UserModel(
@@ -71,10 +69,6 @@ abstract class ReviewModel with _$ReviewModel {
       createdAt: DateTime.now().subtract(const Duration(days: 21)),
       bookingId: 'VIP Private Event',
     ),
-  ];
-
-  /// Curated list of verified client reviews for bodyguards.
-  static List<ReviewModel> get fakeReviews => [
     ReviewModel(
       id: 'rev_1',
       from: UserModel(
@@ -114,46 +108,6 @@ abstract class ReviewModel with _$ReviewModel {
       createdAt: DateTime(2026, 4, 15),
       bookingId: 'BK-2026-8812',
       customFormattedDate: '15 Apr 2026',
-    ),
-    ReviewModel(
-      id: 'rev_3',
-      from: UserModel(
-        id: 'usr_alex',
-        name: 'Alexander Vance',
-        profileImageUrl: Assets.images.profilePicture.path,
-        role: UserRole.customer,
-      ),
-      to: UserModel(
-        id: 'usr_david',
-        name: 'David Sterling',
-        profileImageUrl: Assets.images.profilePicture.path,
-        role: UserRole.guard,
-      ),
-      rating: 4.8,
-      reviewDescription: 'Outstanding airport tarmac escort and executive route planning. David cleared Terminal 4 VIP corridors in advance and ensured our private transit was zero-delay.',
-      createdAt: DateTime(2026, 4, 5),
-      bookingId: 'BK-2026-7490',
-      customFormattedDate: '05 Apr 2026',
-    ),
-    ReviewModel(
-      id: 'rev_4',
-      from: UserModel(
-        id: 'usr_elena',
-        name: 'Elena Rostova',
-        profileImageUrl: Assets.images.profilePicture2.path,
-        role: UserRole.customer,
-      ),
-      to: UserModel(
-        id: 'usr_carlos',
-        name: 'Carlos Sterling',
-        profileImageUrl: Assets.images.profilePicture2.path,
-        role: UserRole.guard,
-      ),
-      rating: 5.0,
-      reviewDescription: 'Top-tier close protection specialist. Carlos demonstrated military-grade discipline and was always three steps ahead with venue emergency exits and perimeter safety.',
-      createdAt: DateTime(2026, 3, 28),
-      bookingId: 'BK-2026-6204',
-      customFormattedDate: '28 Mar 2026',
     ),
   ];
 }

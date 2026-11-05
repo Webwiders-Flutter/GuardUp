@@ -6,7 +6,9 @@ import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
-import '../../data/model/customer_home_data.dart';
+import '/gen/assets.gen.dart';
+
+typedef _ServiceCategory = ({String id, String title, String icon});
 
 /// Horizontal row of service categories with interactive selection.
 class CustomerServicesRowWidget extends StatelessWidget {
@@ -21,10 +23,27 @@ class CustomerServicesRowWidget extends StatelessWidget {
     this.onViewAll,
   });
 
+  static final List<_ServiceCategory> _categories = [
+    (id: 'all', title: 'All', icon: Assets.svg.docPage.path),
+    (
+      id: 'premium_car',
+      title: 'Premium car',
+      icon: Assets.svg.verifiedShieldBadge.path,
+    ),
+    (
+      id: 'licensed_armed',
+      title: 'Licensed armed',
+      icon: Assets.svg.checked.path,
+    ),
+    (
+      id: 'corporate_visits',
+      title: 'Corporate visits',
+      icon: Assets.svg.building.path,
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    final categories = CustomerServiceCategory.defaultCategories;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -43,9 +62,9 @@ class CustomerServicesRowWidget extends StatelessWidget {
               behavior: HitTestBehavior.opaque,
               child: Text(
                 'View all',
-                style: context.textTheme.labelSmall
-                    ?.copyWith(fontWeight: FontWeight.w600)
-                    .colour(context.colors.gold),
+                style: context.textTheme.labelSmall?.colour(
+                  context.colors.primary,
+                ),
               ),
             ),
           ],
@@ -58,12 +77,11 @@ class CustomerServicesRowWidget extends StatelessWidget {
           builder: (context, selectedId, _) {
             return Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: categories.map((cat) {
+              children: _categories.map((cat) {
                 final isSelected = cat.id == selectedId;
                 return GestureDetector(
                   onTap: () {
                     selectedCategoryIdNotifier.value = cat.id;
-                    // onCategorySelected?.call(cat.id);
                   },
                   behavior: HitTestBehavior.opaque,
                   child: Column(
@@ -77,14 +95,13 @@ class CustomerServicesRowWidget extends StatelessWidget {
                         gradient: isSelected
                             ? context.colors.primaryGradient
                             : null,
-                        color: isSelected ? null : Color(0xff191B23),
+                        color: isSelected ? null : context.colors.surface,
                         border: Border.all(
                           color: isSelected
                               ? context.colors.primary
-                              : Color(0xff32353D),
+                              : context.colors.borderColor,
                           width: 1,
                         ),
-
                         shadows: isSelected
                             ? [
                                 BoxShadow(
@@ -114,7 +131,7 @@ class CustomerServicesRowWidget extends StatelessWidget {
                             ?.copyWith(
                               fontSize: 10.5,
                               fontWeight: isSelected
-                                  ? FontWeight.w600
+                                  ? null
                                   : FontWeight.w400,
                             )
                             .colour(

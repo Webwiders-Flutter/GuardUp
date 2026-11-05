@@ -87,7 +87,6 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen> {
                     child: AppTextField.search(
                       controller: _searchController,
                       size: AppInputSize.small,
-                      style: TextStyle(color: context.colors.onSurface),
                       decoration: InputDecoration(
                         hintText: 'Search bodyguards near you...',
                         enabledBorder: OutlineInputBorder(
@@ -96,14 +95,9 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen> {
                             color: context.colors.outlineVariant,
                           ),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: AppRadius.xl.toBorderRadius,
-                          borderSide: BorderSide(
-                            color: context.colors.outlineVariant,
-                          ),
-                        ),
-                        fillColor: context.colors.surface,
+                        fillColor: context.colors.onPrimary,
                       ),
+                      style: TextStyle(color: context.colors.onSurface),
                     ),
                   ),
                   AppSpacing.sm.w,

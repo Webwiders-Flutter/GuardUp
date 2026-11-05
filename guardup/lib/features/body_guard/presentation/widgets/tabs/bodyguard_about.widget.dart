@@ -327,18 +327,15 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
                             color: context.colors.outlineVariant,
                           ),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: AppRadius.lg.toBorderRadius,
-                          borderSide: BorderSide(
-                            color: context.colors.outlineVariant,
-                          ),
-                        ),
+                        
+                        
                         suffixIcon: Icon(
                           Icons.keyboard_arrow_down_rounded,
                           color: context.colors.onSurfaceVariant,
                         ),
                         fillColor: context.colors.onPrimary,
                       ),
+                      style: TextStyle(color: context.colors.onSurface),
                     );
                   },
                   items: availableServices

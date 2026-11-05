@@ -84,13 +84,13 @@ final class AppTextTheme {
       fontSize: 14,
       fontWeight: FontWeight.w400,
       letterSpacing: 0.1,
-      height: 1.2,
+      height: 1.6,
     ),
     bodySmall: TextStyle(
       fontSize: 12,
       fontWeight: FontWeight.w400,
       letterSpacing: 0.1,
-      height: 1,
+      height: 1.5,
     ),
 
     // ================= LABEL (Buttons, Badges, Tech Pills) =================

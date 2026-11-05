@@ -1,20 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:guardup/shared/widgets/navigation/app_tab_bar.dart';
+import 'package:quick_container/quick_container.dart';
 
 import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
+import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
+import '/core/extensions/number.extension.dart';
 import '/core/extensions/spacing.extension.dart';
+import '/core/extensions/textstyle_extension.dart';
+import '/core/state/api_state.dart';
+import '/features/auth/auth.dart';
+import '/features/body_guard/body_guard.dart';
+import '/features/company/company.dart';
+import '/shared/widgets/inputs/app_text_field.dart';
+import '/shared/widgets/navigation/app_tab_bar.dart';
+import '/shared/widgets/pagination/app_pagination.dart';
+import '/shared/widgets/pagination/pagination.controller.dart';
+import '/shared/widgets/pagination/pagination.state.dart';
 import '/shared/widgets/sections/app_appbar.dart';
-import '../../data/model/customer_home_data.dart';
-import '../widgets/customer_bodyguard_card.widget.dart';
-import '../widgets/customer_company_card.widget.dart';
-import '../widgets/customer_search_bar.widget.dart';
 
-/// Screen 3: All Bodyguards & Security Roster listing screen with search,
-/// Solo vs Company mode toggling, and complete operative credentials.
+/// All Bodyguards & Security Roster listing screen featuring live search,
+/// Solo vs Company mode toggling with [AppTabBar.pill], and paginated feeds using [AppPagination].
 class BodyguardsListScreen extends StatefulWidget {
   const BodyguardsListScreen({super.key});
 
@@ -25,10 +33,15 @@ class BodyguardsListScreen extends StatefulWidget {
 class _BodyguardsListScreenState extends State<BodyguardsListScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _quickFilterTabController;
+  final TextEditingController _searchController = TextEditingController();
 
   static const List<String> _quickFilters = ['Solo', 'Company'];
 
-  final TextEditingController _searchController = TextEditingController();
+  static final List<BodyGuardModel> _allBodyguards = BodyGuardModel.fakeData;
+  static final List<CompanyModel> _allCompanies = CompanyModel.fakeData;
+
+  late final PaginationController<BodyGuardModel> _guardsPaginationController;
+  late final PaginationController<CompanyModel> _companiesPaginationController;
 
   @override
   void initState() {
@@ -37,13 +50,91 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
       length: _quickFilters.length,
       vsync: this,
     );
+
+    _guardsPaginationController = PaginationController<BodyGuardModel>(
+      initialState: PaginationState<BodyGuardModel>(
+        items: _allBodyguards,
+        total: _allBodyguards.length,
+        status: const ApiState.success(null),
+      ),
+    );
+
+    _companiesPaginationController = PaginationController<CompanyModel>(
+      initialState: PaginationState<CompanyModel>(
+        items: _allCompanies,
+        total: _allCompanies.length,
+        status: const ApiState.success(null),
+      ),
+    );
+
+    _searchController.addListener(_handleSearch);
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_handleSearch);
+    _searchController.dispose();
+    _quickFilterTabController.dispose();
+    _guardsPaginationController.dispose();
+    _companiesPaginationController.dispose();
+    super.dispose();
+  }
+
+  void _handleSearch() {
+    final query = _searchController.text.trim().toLowerCase();
+
+    if (query.isEmpty) {
+      _guardsPaginationController.updateState(
+        _guardsPaginationController.value.copyWith(
+          items: _allBodyguards,
+          total: _allBodyguards.length,
+        ),
+      );
+      _companiesPaginationController.updateState(
+        _companiesPaginationController.value.copyWith(
+          items: _allCompanies,
+          total: _allCompanies.length,
+        ),
+      );
+      return;
+    }
+
+    // Filter Bodyguards
+    final filteredGuards = _allBodyguards.where((guard) {
+      final name = guard.user.name.toLowerCase();
+      final clearance = (guard.clearanceLevel ?? '').toLowerCase();
+      final services = guard.serviceTypes
+          .map((s) => s.label.toLowerCase())
+          .join(' ');
+      return name.contains(query) ||
+          clearance.contains(query) ||
+          services.contains(query);
+    }).toList();
+
+    _guardsPaginationController.updateState(
+      _guardsPaginationController.value.copyWith(
+        items: filteredGuards,
+        total: filteredGuards.length,
+      ),
+    );
+
+    // Filter Companies
+    final filteredCompanies = _allCompanies.where((company) {
+      final name = company.name.toLowerCase();
+      final bookings = company.bookingsCount.toLowerCase();
+      return name.contains(query) || bookings.contains(query);
+    }).toList();
+
+    _companiesPaginationController.updateState(
+      _companiesPaginationController.value.copyWith(
+        items: filteredCompanies,
+        total: filteredCompanies.length,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final allBodyguards = CustomerBodyguardItem.sampleBodyguards;
-    final allCompanies = CustomerCompanyItem.sampleCompanies;
-
     return Scaffold(
       backgroundColor: context.colors.transparent,
       appBar: AppAppBar.transparent(
@@ -54,43 +145,72 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
       ),
       body: Column(
         children: [
-          // Top Fixed Search and Toggle Bar
+          // Top Search & Mode Switcher
           Padding(
             padding: context.horizontalEdgeInsets,
             child: Column(
               children: [
                 AppSpacing.sm.h,
 
-                // Search Input
-                CustomerSearchBarWidget(
+                // Search Input with Luxury Tune/Filter Prefix
+                AppTextField.search(
                   controller: _searchController,
-                  hintText: 'Search by name, clearance, or skill...',
-                  onFilterTap: () {
-                    context.push(AppRoutes.searchBodyguards);
-                  },
+                  size: AppInputSize.small,
+                  decoration: InputDecoration(
+                    hintText: 'Search by name, clearance, or skill...',
+                    prefixIcon: Padding(
+                      padding: const EdgeInsets.only(
+                        left: AppSpacing.sm,
+                        right: AppSpacing.xs,
+                      ),
+                      child: QuickContainer(
+                        w: 36,
+                        h: 36,
+                        radius: AppRadius.md,
+                        color: context.colors.primary.withValues(alpha: 0.12),
+                        border: Border.all(
+                          color: context.colors.primary.withValues(alpha: 0.35),
+                          width: 1.0,
+                        ),
+                        alignment: Alignment.center,
+                        child: Icon(
+                          Icons.tune_rounded,
+                          color: context.colors.primary,
+                          size: AppSizes.iconSm,
+                        ),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: AppRadius.xl.toBorderRadius,
+                      borderSide: BorderSide(
+                        color: context.colors.outlineVariant,
+                      ),
+                    ),
+                   fillColor: context.colors.onPrimary,
+                    ),
+                    style: TextStyle(color: context.colors.onSurface),
                 ),
                 AppSpacing.md.h,
+
+                // Solo vs Company Pill Tabs
                 AppTabBar.pill(
                   controller: _quickFilterTabController,
                   tabNames: _quickFilters,
                   radius: AppRadius.sm,
                   height: 38,
-                  onTap: (index) {
-                    // Handle filter selection
-                  },
                 ),
                 AppSpacing.md.h,
               ],
             ),
           ),
 
-          // Dynamic Bodyguard / Company List View
+          // Tab Content Views
           Expanded(
             child: TabBarView(
               controller: _quickFilterTabController,
               children: [
-                soloGuardsList(allBodyguards),
-                companiesList(allCompanies),
+                _buildSoloGuardsList(context),
+                _buildCompaniesList(context),
               ],
             ),
           ),
@@ -99,50 +219,80 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
     );
   }
 
-  Widget companiesList(List<CustomerCompanyItem> companies) {
-    return ListView.separated(
+  // ── Solo Bodyguards Tab (AppPagination + BodyGuardCard) ────────────────────
+
+  Widget _buildSoloGuardsList(BuildContext context) {
+    return AppPagination<BodyGuardModel>.list(
+      controller: _guardsPaginationController,
       padding: context.horizontalEdgeInsets.add(
         const EdgeInsets.only(bottom: AppSpacing.xxl),
       ),
-      itemCount: companies.length,
       separatorBuilder: (context, index) => AppSpacing.md.h,
-      itemBuilder: (context, index) {
-        final comp = companies[index];
-        return CustomerCompanyCardWidget(
-          company: comp,
+      emptyBuilder: (context) => Center(
+        child: Padding(
+          padding: AppSpacing.xl.allPadding,
+          child: Text(
+            'No bodyguards found.',
+            style: context.textTheme.bodyMedium?.colour(
+              context.colors.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
+      itemBuilder: (context, guard, index) {
+        return BodyGuardCard(
+          bodyguard: guard,
+          role: UserRole.customer,
           onTap: () {
-            context.push(AppRoutes.companyInformation);
+            context.push(
+              AppRoutes.customerBodyguardProfile,
+              extra: guard,
+            );
           },
           onBookNow: () {
-            context.push(AppRoutes.companyInformation);
+            context.push(
+              AppRoutes.customerBooking,
+              extra: guard,
+            );
           },
         );
       },
     );
   }
 
-  Widget soloGuardsList(List<CustomerBodyguardItem> guards) {
-    return ListView.separated(
+  // ── Companies Tab (AppPagination + CompanyCard) ────────────────────────────
+
+  Widget _buildCompaniesList(BuildContext context) {
+    return AppPagination<CompanyModel>.list(
+      controller: _companiesPaginationController,
       padding: context.horizontalEdgeInsets.add(
         const EdgeInsets.only(bottom: AppSpacing.xxl),
       ),
-      itemCount: guards.length,
       separatorBuilder: (context, index) => AppSpacing.md.h,
-      itemBuilder: (context, index) {
-        final guardItem = guards[index];
-        return CustomerBodyguardCardWidget(
-          item: guardItem,
-          isCompact: false,
+      emptyBuilder: (context) => Center(
+        child: Padding(
+          padding: AppSpacing.xl.allPadding,
+          child: Text(
+            'No companies found.',
+            style: context.textTheme.bodyMedium?.colour(
+              context.colors.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
+      itemBuilder: (context, comp, index) {
+        return CompanyCard(
+          company: comp,
           onTap: () {
             context.push(
-              AppRoutes.customerBodyguardProfile,
-              extra: guardItem.model,
+              AppRoutes.companyDetails,
+              extra: comp,
             );
           },
           onBookNow: () {
             context.push(
-              AppRoutes.customerBodyguardProfile,
-              extra: guardItem.model,
+              AppRoutes.customerBooking,
+              extra: comp,
             );
           },
         );
