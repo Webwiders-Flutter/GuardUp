@@ -45,6 +45,7 @@ class AppTheme {
           warningContainer: AppColors.warningContainer,
           info: AppColors.info,
           infoContainer: AppColors.infoContainer,
+          borderColor: AppColors.borderColor,
         ),
       ],
       scaffoldBackgroundColor: AppColors.transparent,

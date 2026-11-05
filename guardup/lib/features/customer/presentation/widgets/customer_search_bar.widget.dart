@@ -39,11 +39,9 @@ class CustomerSearchBarWidget extends StatelessWidget {
         h: 52,
         px: AppSpacing.md,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        color: context.colors.surfaceContainer.withValues(alpha: 0.9),
+        color: context.colors.onPrimary.withValues(alpha: 0.9),
         border: Border.all(
-          color:
-              borderColor ??
-              context.colors.outlineVariant.withValues(alpha: 0.6),
+          color: borderColor ?? context.colors.borderColor,
           width: 1,
         ),
         child: Row(
@@ -74,6 +72,7 @@ class CustomerSearchBarWidget extends StatelessWidget {
                       controller: controller,
                       readOnly: readOnly,
                       onChanged: onChanged,
+
                       style: context.textTheme.bodyMedium?.colour(
                         context.colors.onSurface,
                       ),
@@ -81,6 +80,7 @@ class CustomerSearchBarWidget extends StatelessWidget {
                       decoration: InputDecoration(
                         isDense: true,
                         hintText: hintText,
+                        fillColor: Colors.transparent,
                         hintStyle: context.textTheme.bodyMedium?.colour(
                           context.colors.onSurfaceVariant.withValues(
                             alpha: 0.7,

@@ -18,6 +18,7 @@ final class AppColors {
 
   /// Vibrant Accent Gold (#E5A93C)
   static const Color gold = Color(0xFFE5A93C);
+  static const Color borderColor = Color(0xFF32353D);
 
   /// High-contrast label on primary (#191B23)
   static const Color onPrimary = Color(0xFF191B23);

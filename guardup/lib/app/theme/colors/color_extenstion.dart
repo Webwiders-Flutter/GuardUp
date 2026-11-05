@@ -18,6 +18,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
   final Color warningContainer;
   final Color info;
   final Color infoContainer;
+  final Color borderColor;
 
   const AppThemeColors({
     required this.primaryContainer,
@@ -36,6 +37,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     required this.warningContainer,
     required this.info,
     required this.infoContainer,
+    required this.borderColor,
   });
 
   @override
@@ -56,6 +58,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     Color? warningContainer,
     Color? info,
     Color? infoContainer,
+    Color? borderColor,
   }) {
     return AppThemeColors(
       primaryContainer: primaryContainer ?? this.primaryContainer,
@@ -74,6 +77,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
       warningContainer: warningContainer ?? this.warningContainer,
       info: info ?? this.info,
       infoContainer: infoContainer ?? this.infoContainer,
+      borderColor: borderColor ?? this.borderColor,
     );
   }
 
@@ -88,6 +92,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
         t,
       )!,
       gold: Color.lerp(gold, other.gold, t)!,
+      borderColor: Color.lerp(borderColor, other.borderColor, t)!,
       surfaceDim: Color.lerp(surfaceDim, other.surfaceDim, t)!,
       surfaceContainer: Color.lerp(
         surfaceContainer,

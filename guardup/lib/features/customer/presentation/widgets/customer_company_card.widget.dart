@@ -29,8 +29,8 @@ class CustomerCompanyCardWidget extends StatelessWidget {
         w: double.infinity,
         p: AppSpacing.md,
         borderRadius: BorderRadius.circular(24),
-        color: const Color(0xff191B23),
-        border: Border.all(color: const Color(0xff32353D), width: 1),
+        color: context.colors.onPrimary,
+        border: Border.all(color: context.colors.borderColor, width: 1),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -67,16 +67,16 @@ class CustomerCompanyCardWidget extends StatelessWidget {
                   Row(
                     children: [
                       QuickContainer(
-                        px: 5,
+                        px: 6,
                         py: 4,
                         radius: 30,
-                        color: Color(0xFF32353D).withValues(alpha: 0.2),
+                        color: Color(0xFF32353D).withValues(alpha: 0.4),
                         child: Row(
                           children: [
                             Icon(
                               Icons.circle,
                               color: context.colors.success,
-                              size: 10,
+                              size: 8,
                             ),
                             AppSpacing.xxs.w,
                             Text(
