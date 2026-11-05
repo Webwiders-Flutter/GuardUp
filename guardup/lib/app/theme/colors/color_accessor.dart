@@ -25,6 +25,7 @@ class AppThemeAccessor {
 
   /// Vibrant Accent Gold (#E5A93C)
   Color get gold => _extra.gold;
+  Color get borderColor => _extra.borderColor;
 
   /// Semantic alias for [gold] (#E5A93C)
   Color get accentGold => _extra.gold;

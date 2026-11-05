@@ -18,6 +18,7 @@ final class AppColors {
 
   /// Vibrant Accent Gold (#E5A93C)
   static const Color gold = Color(0xFFE5A93C);
+  static const Color borderColor = Color(0xFF32353D);
 
   /// Semantic alias for [gold] (#E5A93C)
   static const Color accentGold = gold;

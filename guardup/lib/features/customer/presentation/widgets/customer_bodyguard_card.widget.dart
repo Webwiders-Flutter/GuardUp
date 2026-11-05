@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:guardup/shared/widgets/buttons/app_button.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '/core/constants/app_radius.dart';
@@ -37,222 +38,14 @@ class CustomerBodyguardCardWidget extends StatelessWidget {
         w: double.infinity,
         p: AppSpacing.md,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        // color: Color(0xFF161B26).withValues(alpha: 0.9),
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF1A202D).withValues(alpha: 0.8),
-            Color(0xFF0F131C).withValues(alpha: 0.9),
-          ],
-        ),
+        color: context.colors.onPrimary,
+
         border: Border.all(
-          color: context.colors.outlineVariant.withValues(alpha: 0.5),
+          color: context.colors.borderColor.withValues(alpha: 0.5),
           width: 1,
         ),
-        child: isCompact
-            ? _buildHomeCard(context, guard, rateInt)
-            : _buildListCard(context, guard, rateInt),
+        child: _buildListCard(context, guard, rateInt),
       ),
-    );
-  }
-
-  /// Compact card used in Screen 1 (Home Top Bodyguards)
-  Widget _buildHomeCard(BuildContext context, dynamic guard, int rateInt) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Bodyguard Image
-            ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              child: SizedBox(
-                width: 68,
-                height: 68,
-                child: AppImage.asset(
-                  assetPath:
-                      guard.user.profileImageUrl ??
-                      Assets.images.profilePicture.path,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            AppSpacing.md.w,
-
-            // Details
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            guard.user.name,
-                            style: context.textTheme.titleSmall?.bold().colour(
-                              context.colors.onSurface,
-                            ),
-                          ),
-                          AppSpacing.xxs.w,
-                          Assets.svg.verifiedShieldBadge.svg(
-                            width: 14,
-                            height: 14,
-                            colorFilter: ColorFilter.mode(
-                              context.colors.primary,
-                              BlendMode.srcIn,
-                            ),
-                          ),
-                        ],
-                      ),
-                      // Rating Badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.xs,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: context.colors.primary.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(AppRadius.sm),
-                          border: Border.all(
-                            color: context.colors.primary.withValues(
-                              alpha: 0.4,
-                            ),
-                            width: 0.8,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.star_rounded,
-                              size: 13,
-                              color: context.colors.primary,
-                            ),
-                            AppSpacing.xxs.w,
-                            Text(
-                              guard.rating.toStringAsFixed(1),
-                              style: context.textTheme.labelSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 11,
-                                  )
-                                  .colour(context.colors.primary),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  AppSpacing.xxs.h,
-
-                  Text(
-                    'Licensed armed, Corporate visits',
-                    style: context.textTheme.bodySmall
-                        ?.copyWith(fontSize: 11)
-                        .colour(context.colors.onSurfaceVariant),
-                  ),
-                  AppSpacing.xs.h,
-
-                  // Tags
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    children: item.tagLabels.map((tag) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: context.colors.surfaceDim,
-                          borderRadius: BorderRadius.circular(AppRadius.xs),
-                          border: Border.all(
-                            color: context.colors.outlineVariant.withValues(
-                              alpha: 0.5,
-                            ),
-                            width: 0.8,
-                          ),
-                        ),
-                        child: Text(
-                          tag,
-                          style: context.textTheme.labelSmall
-                              ?.copyWith(fontSize: 9.5)
-                              .colour(context.colors.onSurfaceVariant),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-
-        AppSpacing.sm.h,
-        Divider(
-          color: context.colors.outlineVariant.withValues(alpha: 0.3),
-          height: 1,
-        ),
-        AppSpacing.sm.h,
-
-        // Price & Book Now Row
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                Text(
-                  '\$$rateInt',
-                  style: context.textTheme.titleMedium?.bold().colour(
-                    context.colors.onSurface,
-                  ),
-                ),
-                AppSpacing.xxs.w,
-                Text(
-                  '/hr',
-                  style: context.textTheme.bodySmall?.colour(
-                    context.colors.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-            GestureDetector(
-              onTap: onBookNow,
-              behavior: HitTestBehavior.opaque,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg,
-                  vertical: 7,
-                ),
-                decoration: BoxDecoration(
-                  gradient: context.colors.primaryGradient,
-                  borderRadius: BorderRadius.circular(AppRadius.full),
-                  boxShadow: [
-                    BoxShadow(
-                      color: context.colors.primary.withValues(alpha: 0.25),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Text(
-                  'Book Now',
-                  style: context.textTheme.labelSmall
-                      ?.copyWith(fontWeight: FontWeight.w700, fontSize: 11)
-                      .colour(context.colors.onPrimary),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
     );
   }
 
@@ -265,64 +58,83 @@ class CustomerBodyguardCardWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Bodyguard Image
-            ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              child: SizedBox(
-                width: 76,
-                height: 84,
-                child: AppImage.asset(
-                  assetPath:
-                      guard.user.profileImageUrl ??
-                      Assets.images.profilePicture.path,
-                  fit: BoxFit.cover,
+            Stack(
+              alignment: .bottomRight,
+              children: [
+                QuickContainer(
+                  mr: 8,
+                  mb: 8,
+                  w: 80,
+                  h: 95,
+                  border: Border.all(
+                    color: context.colors.gold.withValues(alpha: 0.4),
+                  ),
+                  radius: 16,
+                  clipBehavior: .hardEdge,
+                  p: 1,
+                  child: AppImage.asset(
+                    assetPath:
+                        guard.user.profileImageUrl ??
+                        Assets.images.profilePicture.path,
+                    fit: BoxFit.cover,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
                 ),
-              ),
+                AppImage.svgAsset(
+                  assetPath: Assets.svg.verifiedBadge.path,
+
+                  width: 30,
+                ),
+              ],
             ),
-            AppSpacing.md.w,
+            AppSpacing.ssm.w,
 
             // Details Column
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  AppSpacing.xs.h,
                   // Status & Price Row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       // Availability Status Badge
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color:
-                                  item.availabilityStatus
-                                      .toLowerCase()
-                                      .contains('tomorrow')
-                                  ? context.colors.warning
-                                  : context.colors.success,
-                              shape: BoxShape.circle,
+                      QuickContainer(
+                        px: 8,
+                        py: 2.5,
+                        radius: 30,
+                        border: Border.all(
+                          color: context.colors.success.withValues(alpha: 0.6),
+
+                          width: 0.5,
+                        ),
+                        color: context.colors.success.withValues(alpha: 0.1),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.circle,
+                              size: 8,
+                              color: context.colors.success,
                             ),
-                          ),
-                          AppSpacing.xs.w,
-                          Text(
-                            item.availabilityStatus,
-                            style: context.textTheme.labelSmall
-                                ?.copyWith(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.w600,
-                                )
-                                .colour(
-                                  item.availabilityStatus
-                                          .toLowerCase()
-                                          .contains('tomorrow')
-                                      ? context.colors.warning
-                                      : context.colors.success,
-                                ),
-                          ),
-                        ],
+                            AppSpacing.xs.w,
+                            Text(
+                              item.availabilityStatus,
+                              style: context.textTheme.labelSmall
+                                  ?.copyWith(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                  )
+                                  .colour(
+                                    item.availabilityStatus
+                                            .toLowerCase()
+                                            .contains('tomorrow')
+                                        ? context.colors.warning
+                                        : context.colors.success,
+                                  ),
+                            ),
+                          ],
+                        ),
                       ),
 
                       // Price in Gold
@@ -333,12 +145,13 @@ class CustomerBodyguardCardWidget extends StatelessWidget {
                               text: '\$$rateInt',
                               style: context.textTheme.titleSmall
                                   ?.bold()
-                                  .copyWith(color: context.colors.primary),
+                                  .copyWith(color: context.colors.gold),
                             ),
                             TextSpan(
                               text: ' /hr',
                               style: context.textTheme.labelSmall?.copyWith(
-                                color: context.colors.onSurfaceVariant,
+                                color: context.colors.onSurfaceVariant
+                                    .withValues(alpha: 0.6),
                                 fontSize: 10,
                               ),
                             ),
@@ -347,7 +160,7 @@ class CustomerBodyguardCardWidget extends StatelessWidget {
                       ),
                     ],
                   ),
-                  AppSpacing.xxs.h,
+                  AppSpacing.xs.h,
 
                   // Name
                   Text(
@@ -358,7 +171,7 @@ class CustomerBodyguardCardWidget extends StatelessWidget {
                       context.colors.onSurface,
                     ),
                   ),
-                  AppSpacing.xxs.h,
+                  AppSpacing.xs.h,
 
                   // Specialties
                   Text(
@@ -367,9 +180,9 @@ class CustomerBodyguardCardWidget extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: context.textTheme.bodySmall
                         ?.copyWith(fontSize: 11)
-                        .colour(context.colors.onSurfaceVariant),
+                        .colour(context.colors.gold),
                   ),
-                  AppSpacing.xs.h,
+                  AppSpacing.sm.h,
 
                   // Stats row: Rating, Reviews, Exp
                   Row(
@@ -389,7 +202,7 @@ class CustomerBodyguardCardWidget extends StatelessWidget {
                             )
                             .colour(context.colors.onSurface),
                       ),
-                      AppSpacing.xs.w,
+                      AppSpacing.sm.w,
                       Text(
                         '•',
                         style: TextStyle(
@@ -397,14 +210,14 @@ class CustomerBodyguardCardWidget extends StatelessWidget {
                           fontSize: 10,
                         ),
                       ),
-                      AppSpacing.xs.w,
+                      AppSpacing.sm.w,
                       Text(
                         '${guard.reviewCount} reviews',
                         style: context.textTheme.labelSmall
                             ?.copyWith(fontSize: 10.5)
                             .colour(context.colors.onSurfaceVariant),
                       ),
-                      AppSpacing.xs.w,
+                      AppSpacing.sm.w,
                       Text(
                         '•',
                         style: TextStyle(
@@ -427,18 +240,17 @@ class CustomerBodyguardCardWidget extends StatelessWidget {
           ],
         ),
 
-        AppSpacing.sm.h,
+        Divider(color: context.colors.borderColor, height: 10),
+        06.h,
 
-        // Full Width Book Now Button
         GestureDetector(
           onTap: onBookNow,
           behavior: HitTestBehavior.opaque,
           child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 9),
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 13),
             decoration: BoxDecoration(
               gradient: context.colors.primaryGradient,
-              borderRadius: BorderRadius.circular(AppRadius.md),
+              borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
                   color: context.colors.primary.withValues(alpha: 0.2),
@@ -449,6 +261,7 @@ class CustomerBodyguardCardWidget extends StatelessWidget {
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: .min,
               children: [
                 Text(
                   'Book Now',

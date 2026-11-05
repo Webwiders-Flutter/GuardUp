@@ -13,6 +13,7 @@ import '/features/booking/booking.dart';
 import '/features/chat/chat.dart';
 import '/features/company/company.dart';
 import '/features/customer/customer.dart';
+import '/features/guard_detail/guard_detail.dart';
 import '/features/legal/legal.dart';
 import '/features/notifications/notifications.dart';
 import '/features/payments/payments.dart';
@@ -160,6 +161,13 @@ final class AppRouter {
         builder: (context, state) {
           final guard = state.extra as BodyGuardModel?;
           return BodyGuardProfileScreen(bodyguard: guard);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.customerBodyguardProfile,
+        builder: (context, state) {
+          final guard = state.extra as BodyGuardModel?;
+          return CustomerBodygaurdProfileScreen(bodyguard: guard);
         },
       ),
       GoRoute(

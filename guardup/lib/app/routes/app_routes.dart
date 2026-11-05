@@ -39,6 +39,8 @@ final class AppRoutes {
   static const notifications = '/notifications';
   static const searchBodyguards = '/search-bodyguards';
   static const allBodyguards = '/all-bodyguards';
+  static const customerBodyguardProfile = '/customer-bodyguard-profile';
+  static const customerBookingDetails = '/customer-booking-details';
   static const bookings = '/bookings';
   static const chat = '/chat';
   static const chatDetail = '/chat-detail';
