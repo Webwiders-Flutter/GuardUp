@@ -12,6 +12,7 @@ import '/features/body_guard/body_guard.dart';
 import '/features/booking/booking.dart';
 import '/features/chat/chat.dart';
 import '/features/company/company.dart';
+import '/features/customer/customer.dart';
 import '/features/legal/legal.dart';
 import '/features/notifications/notifications.dart';
 import '/features/payments/payments.dart';
@@ -56,7 +57,7 @@ final class AppRouter {
       // Current route is valid.
       return null;
     },
-    
+
     routes: [
       GoRoute(
         path: AppRoutes.splash,
@@ -149,6 +150,14 @@ final class AppRouter {
       GoRoute(
         path: AppRoutes.notifications,
         builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.searchBodyguards,
+        builder: (context, state) => const SearchBodyguardsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.allBodyguards,
+        builder: (context, state) => const BodyguardsListScreen(),
       ),
       GoRoute(
         path: AppRoutes.bookings,

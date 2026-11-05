@@ -30,6 +30,7 @@ class AppTheme {
       extensions: const [
         AppThemeColors(
           primaryContainer: AppColors.primaryContainer,
+          gold: AppColors.gold,
           surfaceDim: AppColors.surfaceDim,
           surfaceContainer: AppColors.surfaceContainer,
           surfaceContainerHigh: AppColors.surfaceContainerHigh,

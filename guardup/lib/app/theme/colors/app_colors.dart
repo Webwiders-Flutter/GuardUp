@@ -8,13 +8,19 @@ final class AppColors {
   AppColors._();
 
   // ------------------------------------------------------------
-  // Primary Gold Palette (#EDCC73, #AC7F42)
+  // Primary Gold Palette (#EDCC73, #AC7F42, #E5A93C)
   // ------------------------------------------------------------
   /// Luxury Primary Gold (#EDCC73)
   static const Color primary = Color(0xFFEDCC73);
 
   /// Deep Gold / Bronze Primary Container (#AC7F42)
   static const Color primaryContainer = Color(0xFFAC7F42);
+
+  /// Vibrant Accent Gold (#E5A93C)
+  static const Color gold = Color(0xFFE5A93C);
+
+  /// Semantic alias for [gold] (#E5A93C)
+  static const Color accentGold = gold;
 
   /// High-contrast label on primary (#191B23)
   static const Color onPrimary = Color(0xFF191B23);

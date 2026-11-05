@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/features/booking/booking.dart';
 import 'package:guardup/features/chat/chat.dart';
+import 'package:guardup/features/customer/customer.dart';
 import 'package:guardup/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:quick_container/quick_container.dart';
 
@@ -138,14 +139,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
             IndexedStack(
               index: currentIndex,
               children: [
-                Center(
-                  child: Text(
-                    context.l10n.navHome,
-                    style: context.textTheme.headlineMedium?.copyWith(
-                      color: context.colors.onSurface,
-                    ),
-                  ),
-                ),
+                const CustomerHomeScreen(),
                 const BookingsScreen(),
                 const ConversationsScreen(),
                 const NotificationsScreen(),

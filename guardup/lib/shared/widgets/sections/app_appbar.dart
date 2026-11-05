@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:guardup/app/routes/app_routes.dart';
+import 'package:guardup/gen/assets.gen.dart';
+import 'package:quick_container/quick_container.dart';
 
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
@@ -179,7 +182,54 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ...?actions,
         if (showNotificationIcon)
-          const Icon(Icons.notifications_active_outlined),
+          IconButton(
+            onPressed:
+                onNotificationTap ??
+                () => context.push(AppRoutes.notifications),
+            icon: QuickContainer(
+              w: 40,
+              h: 40,
+              shape: QuickContainerShape.circle,
+              color: context.colors.surfaceContainer,
+              border: Border.all(
+                color: context.colors.outlineVariant.withValues(alpha: 0.7),
+                width: 1,
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Assets.svg.notificationBell.svg(
+                    width: 20,
+                    height: 20,
+                    colorFilter: ColorFilter.mode(
+                      context.colors.primary,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                  Positioned(
+                    top: 10,
+                    right: 12,
+                    child: Container(
+                      width: 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        color: context.colors.primary,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: context.colors.primary.withValues(
+                              alpha: 0.6,
+                            ),
+                            blurRadius: 4,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
       ],
       bottom: bottom,
       title: align == AlignTitle.right ? null : titleNode,

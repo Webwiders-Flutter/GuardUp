@@ -37,6 +37,8 @@ final class AppRoutes {
   static const reviewAndRatings = '/review-and-ratings';
   static const businessDocuments = '/business-documents';
   static const notifications = '/notifications';
+  static const searchBodyguards = '/search-bodyguards';
+  static const allBodyguards = '/all-bodyguards';
   static const bookings = '/bookings';
   static const chat = '/chat';
   static const chatDetail = '/chat-detail';

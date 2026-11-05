@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 @immutable
 class AppThemeColors extends ThemeExtension<AppThemeColors> {
   final Color primaryContainer;
+  final Color gold;
   final Color surfaceDim;
   final Color surfaceContainer;
   final Color surfaceContainerHigh;
@@ -20,6 +21,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
 
   const AppThemeColors({
     required this.primaryContainer,
+    required this.gold,
     required this.surfaceDim,
     required this.surfaceContainer,
     required this.surfaceContainerHigh,
@@ -39,6 +41,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
   @override
   AppThemeColors copyWith({
     Color? primaryContainer,
+    Color? gold,
     Color? surfaceDim,
     Color? surfaceContainer,
     Color? surfaceContainerHigh,
@@ -56,6 +59,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
   }) {
     return AppThemeColors(
       primaryContainer: primaryContainer ?? this.primaryContainer,
+      gold: gold ?? this.gold,
       surfaceDim: surfaceDim ?? this.surfaceDim,
       surfaceContainer: surfaceContainer ?? this.surfaceContainer,
       surfaceContainerHigh: surfaceContainerHigh ?? this.surfaceContainerHigh,
@@ -80,6 +84,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     return AppThemeColors(
       primaryContainer:
           Color.lerp(primaryContainer, other.primaryContainer, t)!,
+      gold: Color.lerp(gold, other.gold, t)!,
       surfaceDim: Color.lerp(surfaceDim, other.surfaceDim, t)!,
       surfaceContainer:
           Color.lerp(surfaceContainer, other.surfaceContainer, t)!,
