@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:quick_container/quick_container.dart';
-
 import '/app/routes/app_routes.dart';
-import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';

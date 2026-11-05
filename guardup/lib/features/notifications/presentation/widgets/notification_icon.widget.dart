@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/app/routes/app_routes.dart';
+import 'package:guardup/core/constants/app_spacing.dart';
 import 'package:guardup/core/extensions/context.extension.dart';
+import 'package:quick_container/quick_container.dart';
 
 /// A standard notification icon action widget (e.g. for app bars, navigation headers).
 /// Automatically observes the live unread count and renders an indicator badge.
@@ -37,7 +39,7 @@ class NotificationIconWidget extends StatelessWidget {
     this.onTap,
     this.icon = Icons.notifications_outlined,
     this.iconColor,
-    this.iconSize = 28,
+    this.iconSize = 22,
     this.tooltip = 'Notifications',
     this.count,
     this.badgeColor,
@@ -51,10 +53,17 @@ class NotificationIconWidget extends StatelessWidget {
     final button = IconButton(
       padding: EdgeInsets.zero,
       visualDensity: .compact,
-      icon: Icon(
-        icon,
-        color: iconColor ?? context.colors.onSurface,
-        size: iconSize,
+      icon: QuickContainer(
+        shape: .circle,
+        borderColor: context.colors.primary,
+        borderWidth: 0.2,
+        p: AppSpacing.sm,
+        color: context.colors.surface,
+        child: Icon(
+          icon,
+          color: iconColor ?? context.colors.primary,
+          size: iconSize,
+        ),
       ),
       onPressed: onTap ?? () => context.push(AppRoutes.notifications),
       tooltip: tooltip,

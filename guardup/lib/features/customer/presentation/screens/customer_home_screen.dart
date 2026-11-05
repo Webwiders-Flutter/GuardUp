@@ -13,10 +13,8 @@ import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '../../data/model/customer_home_data.dart';
-import '../widgets/customer_bodyguard_card.widget.dart';
 import '../widgets/customer_company_card.widget.dart';
 import '../widgets/customer_header.widget.dart';
-import '../widgets/customer_promo_banner.widget.dart';
 import '../widgets/customer_search_bar.widget.dart';
 import '../widgets/customer_services_row.widget.dart';
 

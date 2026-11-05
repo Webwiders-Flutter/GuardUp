@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../enum/transaction_status.enum.dart';
 import '../enum/transaction_type.enum.dart';
 
 part 'transaction.model.freezed.dart';
@@ -15,6 +16,7 @@ abstract class TransactionModel with _$TransactionModel {
     required TransactionType type,
     required String title,
     required DateTime dateTime,
+    @Default(TransactionStatus.completed) TransactionStatus status,
     String? bookingId,
     String? formattedDate,
     String? referenceId,

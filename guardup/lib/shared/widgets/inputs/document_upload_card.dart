@@ -9,6 +9,7 @@ import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
+import '/features/body_guard/data/enum/document_status.enum.dart';
 import '/shared/widgets/feedbacks/widgets/app_file_preview.dart';
 import '../sections/app_image.dart';
 import '../sections/wrapper_card.dart';
@@ -55,6 +56,18 @@ class DocumentUploadCard extends StatelessWidget {
   /// When true, hides Change and Upload actions and only allows viewing/previewing the document.
   final bool isReadOnly;
 
+  /// Whether to show the file name row and allow document previewing.
+  /// Defaults to `true`. When `false`:
+  /// - Hides the "View" action button
+  /// - Disables card tap previewing
+  /// - Hides the file status/filename row below the document title
+  final bool showPreview;
+
+  /// Verification status for the document.
+  /// When provided, displays a status pill badge ("Verified", "Pending", "Rejected")
+  /// styled with semantic colors retrieved directly from [DocumentStatus].
+  final DocumentStatus? status;
+
   /// Explicitly control whether to show the "Upload" button instead of "+".
   /// If null, automatically shown when [onUpload] is provided.
   final bool? showUploadButton;
@@ -98,6 +111,8 @@ class DocumentUploadCard extends StatelessWidget {
     this.iconWidget,
     this.isLoading = false,
     this.isReadOnly = false,
+    this.showPreview = true,
+    this.status,
     this.showUploadButton,
     this.onPick,
     this.onUpload,
@@ -169,7 +184,7 @@ class DocumentUploadCard extends StatelessWidget {
     final bool hasDescription =
         description != null && description!.trim().isNotEmpty;
 
-    final VoidCallback? tapCallback = isReadOnly && _hasFile
+    final VoidCallback? tapCallback = isReadOnly && _hasFile && showPreview
         ? () => _handlePreview(context)
         : (!_hasFile && !isReadOnly ? onPick : null);
 
@@ -191,7 +206,7 @@ class DocumentUploadCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _buildTitleRow(context),
-                  if (_hasFile) ...[
+                  if (_hasFile && showPreview) ...[
                     AppSpacing.xxs.h,
                     _buildFileStatusRow(context),
                   ] else if (hasDescription) ...[
@@ -287,10 +302,11 @@ class DocumentUploadCard extends StatelessWidget {
     final double containerSize = hasDescription ? 52.0 : 44.0;
     final double iconSize = hasDescription ? 28.0 : 22.0;
 
-    if (_hasFile) {
+    // If a custom icon is provided and preview is disabled, show the custom icon instead of file type or preview
+    if (_hasFile && (showPreview || icon == null)) {
       if (_isImage) {
         return GestureDetector(
-          onTap: () => _handlePreview(context),
+          onTap: showPreview ? () => _handlePreview(context) : null,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(AppRadius.md),
             child: SizedBox(
@@ -304,7 +320,7 @@ class DocumentUploadCard extends StatelessWidget {
 
       if (_isPdf) {
         return GestureDetector(
-          onTap: () => _handlePreview(context),
+          onTap: showPreview ? () => _handlePreview(context) : null,
           child: QuickContainer(
             w: containerSize,
             h: containerSize,
@@ -325,7 +341,7 @@ class DocumentUploadCard extends StatelessWidget {
       }
 
       return GestureDetector(
-        onTap: () => _handlePreview(context),
+        onTap: showPreview ? () => _handlePreview(context) : null,
         child: QuickContainer(
           w: containerSize,
           h: containerSize,
@@ -441,7 +457,7 @@ class DocumentUploadCard extends StatelessWidget {
   }
 
   /// Builds the right-side action ("+" button, "Upload" button with icon,
-  /// "View" button with icon, or loading spinner).
+  /// "View" button with icon, status badge, or loading spinner).
   Widget _buildTrailingActions(BuildContext context) {
     if (isLoading) {
       return SizedBox(
@@ -454,24 +470,25 @@ class DocumentUploadCard extends StatelessWidget {
       );
     }
 
+    final statusBadge =
+        status != null ? _buildStatusBadge(context, status!) : null;
+
     if (isReadOnly && !_hasFile) {
-      return const SizedBox.shrink();
+      return statusBadge ?? const SizedBox.shrink();
     }
 
     if (_hasFile) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildActionButton(
-            context: context,
-            label: viewLabel,
-            icon: Icons.visibility_outlined,
-            onTap: () => _handlePreview(context),
-          ),
-          if (!isReadOnly) ...[
-            AppSpacing.xxs.h,
-            GestureDetector(
+      final viewButton = showPreview
+          ? _buildActionButton(
+              context: context,
+              label: viewLabel,
+              icon: Icons.visibility_outlined,
+              onTap: () => _handlePreview(context),
+            )
+          : null;
+
+      final changeButton = !isReadOnly
+          ? GestureDetector(
               onTap: onPick,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -490,17 +507,74 @@ class DocumentUploadCard extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
+            )
+          : null;
+
+      if (viewButton == null && changeButton == null) {
+        return statusBadge ?? const SizedBox.shrink();
+      }
+
+      final buttonStack = Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ?viewButton,
+          if (changeButton != null) ...[
+            if (viewButton != null) AppSpacing.xxs.h,
+            changeButton,
           ],
+        ],
+      );
+
+      if (statusBadge != null) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            buttonStack,
+            AppSpacing.sm.w,
+            statusBadge,
+          ],
+        );
+      }
+
+      return buttonStack;
+    }
+
+    // When no file is selected:
+    final actionButton = _buildAddButton(context);
+    if (statusBadge != null) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          actionButton,
+          AppSpacing.sm.w,
+          statusBadge,
         ],
       );
     }
 
-    // When no file is selected:
-    // If showUploadButton is true or onUpload is provided, render "Upload" button with icon
+    return actionButton;
+  }
 
-    // Default "+" action button
-    return _buildAddButton(context);
+  /// Builds the status pill badge (e.g. "Verified", "Pending", "Rejected").
+  Widget _buildStatusBadge(BuildContext context, DocumentStatus status) {
+    final color = status.badgeColor(context);
+    final bgColor = status.badgeBackgroundColor(context);
+    final borderColor = status.badgeBorderColor(context);
+
+    return QuickContainer(
+      px: 14,
+      py: 6,
+      radius: AppRadius.full,
+      color: bgColor,
+      border: Border.all(color: borderColor, width: 1.0),
+      child: Text(
+        status.label,
+        style: context.textTheme.labelSmall?.semiBold().colour(color),
+      ),
+    );
   }
 
   /// Action button with outline border, leading icon, and gold text (used for "Upload" and "View").

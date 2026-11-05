@@ -147,10 +147,6 @@ extension StringMaskingExtension on String {
     return words.map((w) => w[0].toUpperCase()).join();
   }
 
-  String initials({int limit = 2, int? charLength}) {
-    return getInitials(charLength: charLength ?? limit);
-  }
-
   // =========================================================
   // SAFE PARSERS
   // =========================================================

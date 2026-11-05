@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/shared/widgets/sections/app_image.dart';
@@ -13,7 +12,6 @@ import '/core/extensions/textstyle_extension.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/sections/app_appbar.dart';
-import '../widgets/customer_promo_banner.widget.dart';
 
 /// Screen 2: Search & Filter Bodyguards screen allowing customers to filter
 /// by location, category, hourly rate, rating, service type, and company.

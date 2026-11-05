@@ -120,9 +120,9 @@ class BookingCard extends StatelessWidget {
           _isCustomer
               ? _buildCustomerViewHeader(context)
               : _buildGuardViewHeader(context),
-          AppSpacing.md.h,
+          AppSpacing.sm.h,
           Divider(color: context.colors.outline, thickness: 0.2),
-          AppSpacing.md.h,
+          AppSpacing.smd.h,
 
           // -------------------------------------------------------------------
           // 2. Middle Section (Schedule, Tracking / Location, Reference #)
@@ -145,9 +145,9 @@ class BookingCard extends StatelessWidget {
           // 4. Dynamic Bottom Action Buttons
           // -------------------------------------------------------------------
           if (_hasBottomActions) ...[
-            AppSpacing.md.h,
+            AppSpacing.smd.h,
             Divider(color: context.colors.outline, thickness: 0.2),
-            AppSpacing.md.h,
+            AppSpacing.smd.h,
             _buildActionButtons(context),
           ],
         ],
@@ -178,16 +178,14 @@ class BookingCard extends StatelessWidget {
                     width: 20.wPercent(context),
                     height: 11.hPercent(context),
                     fit: BoxFit.cover,
-                          borderRadius: AppRadius.sm.toBorderRadius,
-
+                    borderRadius: AppRadius.sm.toBorderRadius,
                   )
                 : AppImage.asset(
                     assetPath: avatarUrl ?? Assets.images.profilePicture.path,
                     width: 20.wPercent(context),
                     height: 11.hPercent(context),
                     fit: BoxFit.cover,
-                          borderRadius: AppRadius.sm.toBorderRadius,
-
+                    borderRadius: AppRadius.sm.toBorderRadius,
                   ),
             if (isVerified)
               Positioned(
@@ -458,7 +456,7 @@ class BookingCard extends StatelessWidget {
               booking.scheduleLabel ??
               '${booking.startDateTime.readableDate} • ${booking.startDateTime.time12h} – ${booking.endDateTime.time12h}',
         ),
-        AppSpacing.sm.h,
+        AppSpacing.md.h,
         _buildInfoRow(
           context: context,
           icon: Assets.svg.location.svg(
@@ -471,7 +469,7 @@ class BookingCard extends StatelessWidget {
           ),
           text: booking.pickupAddress ?? 'Yorkville Plaza, Toronto, ON',
         ),
-        AppSpacing.sm.h,
+        AppSpacing.md.h,
         _buildInfoRow(
           context: context,
           icon: Assets.svg.docPage.svg(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/features/auth/presentation/screens/admin_approval_screen.dart';
 
@@ -139,9 +140,79 @@ final class AppRouter {
         path: AppRoutes.adminApproval,
         builder: (context, state) => const AdminApprovalScreen(),
       ),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return MainNavigationScreen(navigationShell: navigationShell);
+        },
+        branches: [
+          // Branch 0: Home (Role-based dashboard)
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.home,
+                builder: (context, state) => BlocBuilder<AuthBloc, AuthState>(
+                  bloc: sl.isRegistered<AuthBloc>() ? sl<AuthBloc>() : null,
+                  builder: (context, authState) {
+                    if (authState.sessionRole == UserRole.company) {
+                      return const CompanyHomeScreen();
+                    } else if (authState.sessionRole == UserRole.guard) {
+                      return const BodyGuardHomeScreen();
+                    }
+                    return const CustomerHomeScreen();
+                  },
+                ),
+              ),
+            ],
+          ),
+
+          // Branch 1: Bookings
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.bookings,
+                builder: (context, state) => const BookingsScreen(),
+              ),
+            ],
+          ),
+
+          // Branch 2: Chat
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.chat,
+                builder: (context, state) => const ConversationsScreen(),
+              ),
+            ],
+          ),
+
+          // Branch 3: Alerts / Notifications
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.notifications,
+                builder: (context, state) => const NotificationsScreen(),
+              ),
+            ],
+          ),
+
+          // Branch 4: Profile
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.profile,
+                builder: (context, state) => const ProfileScreen(),
+              ),
+            ],
+          ),
+        ],
+      ),
       GoRoute(
-        path: AppRoutes.home,
-        builder: (context, state) => const MainNavigationScreen(),
+        path: AppRoutes.companyHome,
+        builder: (context, state) => const CompanyHomeScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.bodyguardHome,
+        builder: (context, state) => const BodyGuardHomeScreen(),
       ),
       GoRoute(
         path: AppRoutes.editProfile,
@@ -154,6 +225,13 @@ final class AppRouter {
       GoRoute(
         path: AppRoutes.companyInformation,
         builder: (context, state) => const CompanyInformationScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.companyDetails,
+        builder: (context, state) {
+          final company = state.extra as CompanyModel?;
+          return CompanyDetailsScreen(company: company);
+        },
       ),
       GoRoute(
         path: AppRoutes.bodyguardInformation,
@@ -171,24 +249,12 @@ final class AppRouter {
         builder: (context, state) => const MyWalletScreen(),
       ),
       GoRoute(
-        path: AppRoutes.notifications,
-        builder: (context, state) => const NotificationsScreen(),
-      ),
-      GoRoute(
         path: AppRoutes.searchBodyguards,
         builder: (context, state) => const SearchBodyguardsScreen(),
       ),
       GoRoute(
         path: AppRoutes.allBodyguards,
-        builder: (context, state) => const BodyguardsListScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.bookings,
-        builder: (context, state) => const BookingsScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.chat,
-        builder: (context, state) => const ConversationsScreen(),
+        builder: (context, state) => const CompanyBodyguardsScreen(),
       ),
       GoRoute(
         path: AppRoutes.chatDetail,
@@ -225,6 +291,23 @@ final class AppRouter {
         path: AppRoutes.termsAndConditions,
         builder: (context, state) =>
             const LegalContentScreen(type: ContentType.terms),
+      ),
+      GoRoute(
+        path: AppRoutes.customerBooking,
+        builder: (context, state) {
+          final extra = state.extra;
+          CompanyModel? company;
+          BodyGuardModel? guard;
+          if (extra is CompanyModel) {
+            company = extra;
+          } else if (extra is BodyGuardModel) {
+            guard = extra;
+          } else if (extra is ({CompanyModel? company, BodyGuardModel? guard})) {
+            company = extra.company;
+            guard = extra.guard;
+          }
+          return BookingScreen(company: company, initialBodyguard: guard);
+        },
       ),
       GoRoute(
         path: AppRoutes.contactUs,

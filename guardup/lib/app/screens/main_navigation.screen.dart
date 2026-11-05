@@ -1,18 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:guardup/features/booking/booking.dart';
-import 'package:guardup/features/chat/chat.dart';
-import 'package:guardup/features/customer/customer.dart';
-import 'package:guardup/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:quick_container/quick_container.dart';
-
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/logger/app_logger.dart';
-import '../../features/auth/presentation/screens/profile_screen.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/feedbacks/widgets/app_popup.dart';
 
@@ -29,9 +23,9 @@ class _NavItemData {
 }
 
 class MainNavigationScreen extends StatefulWidget {
-  final StatefulNavigationShell? navigationShell;
+  final StatefulNavigationShell navigationShell;
 
-  const MainNavigationScreen({super.key, this.navigationShell});
+  const MainNavigationScreen({super.key, required this.navigationShell});
 
   @override
   State<MainNavigationScreen> createState() => _MainNavigationScreenState();
@@ -39,10 +33,7 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen>
     with WidgetsBindingObserver {
-  int _internalIndex = 0;
-
-  int get _currentIndex =>
-      widget.navigationShell?.currentIndex ?? _internalIndex;
+  int get _currentIndex => widget.navigationShell.currentIndex;
 
   List<_NavItemData> _getNavItems(BuildContext context) {
     final l10n = context.l10n;
@@ -102,16 +93,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
   }
 
   void _onTap(int branchIndex) {
-    if (widget.navigationShell != null) {
-      widget.navigationShell!.goBranch(
-        branchIndex,
-        initialLocation: branchIndex == widget.navigationShell!.currentIndex,
-      );
-    } else {
-      setState(() {
-        _internalIndex = branchIndex;
-      });
-    }
+    widget.navigationShell.goBranch(
+      branchIndex,
+      initialLocation: branchIndex == widget.navigationShell.currentIndex,
+    );
   }
 
   @override
@@ -133,18 +118,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
         }
       },
       child: Scaffold(
-        body:
-            widget.navigationShell ??
-            IndexedStack(
-              index: currentIndex,
-              children: [
-                const CustomerHomeScreen(),
-                const BookingsScreen(),
-                const ConversationsScreen(),
-                const NotificationsScreen(),
-                const ProfileScreen(),
-              ],
-            ),
+        body: widget.navigationShell,
         bottomNavigationBar: QuickContainer(
           color: context.colors.transparent,
           py: AppSpacing.sm,

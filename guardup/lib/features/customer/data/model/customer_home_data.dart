@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 import '/features/body_guard/data/model/body_guard.model.dart';
 import '/features/auth/data/model/user.model.dart';
 import '/features/auth/data/enum/user_role.enum.dart';
@@ -22,22 +20,22 @@ class CustomerServiceCategory {
     CustomerServiceCategory(
       id: 'all',
       title: 'All',
-      icon: Assets.svg.menu.path,
+      icon: Assets.svg.docPage.path,
     ),
     CustomerServiceCategory(
       id: 'premium_car',
       title: 'Premium car',
-      icon: Assets.svg.car.path,
+      icon: Assets.svg.verifiedShieldBadge.path,
     ),
     CustomerServiceCategory(
       id: 'licensed_armed',
       title: 'Licensed armed',
-      icon: Assets.svg.check.path,
+      icon: Assets.svg.checked.path,
     ),
     CustomerServiceCategory(
       id: 'corporate_visits',
       title: 'Corporate visits',
-      icon: Assets.svg.visit.path,
+      icon: Assets.svg.building.path,
     ),
   ];
 }

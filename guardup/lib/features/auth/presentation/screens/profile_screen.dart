@@ -33,7 +33,7 @@ class ProfileScreen extends StatelessWidget {
     return BlocBuilder<AuthBloc, AuthState>(
       bloc: sl<AuthBloc>(),
       builder: (context, state) {
-        final role = state.sessionRole ?? UserRole.guard;
+        final role = state.sessionRole;
 
         return Scaffold(
           appBar: AppAppBar.transparent(
@@ -57,7 +57,8 @@ class ProfileScreen extends StatelessWidget {
                   onTap: () {
                     switch (role) {
                       case .company:
-                        context.push(AppRoutes.companyInformation);
+                        // context.push(AppRoutes.companyInformation);
+                        context.push(AppRoutes.companyDetails);
                       case .guard:
                         context.push(AppRoutes.bodyguardInformation);
                       default:

@@ -20,9 +20,13 @@ final class AppRoutes {
   static const adminApproval = '/admin-approval';
   static const blocked = '/blocked';
   static const home = '/home';
+  static const profile = '/profile';
+  static const companyHome = '/company-home';
+  static const bodyguardHome = '/bodyguard-home';
   static const editProfile = '/edit-profile';
   static const companyEditProfile = '/company-edit-profile';
   static const companyInformation = '/company-information';
+  static const companyDetails = '/company-details';
   static const bodyguardInformation = '/bodyguard-information';
   static const bodyguardDetails = bodyguardInformation;
   static const changePassword = '/change-password';
@@ -39,6 +43,8 @@ final class AppRoutes {
   static const notifications = '/notifications';
   static const searchBodyguards = '/search-bodyguards';
   static const allBodyguards = '/all-bodyguards';
+  static const customerBooking = '/customer-booking';
+  static const createBooking = customerBooking;
   static const bookings = '/bookings';
   static const chat = '/chat';
   static const chatDetail = '/chat-detail';

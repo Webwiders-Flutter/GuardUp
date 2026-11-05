@@ -65,7 +65,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   }
 
   void _handleContinue() {
-    final role = sl<AuthBloc>().state.sessionRole ?? UserRole.customer;
+    final role = sl<AuthBloc>().state.sessionRole;
     switch (role) {
       case UserRole.customer:
         context.go(

@@ -1,5 +1,6 @@
 export 'data/model/customer_home_data.dart';
 export 'presentation/screens/customer_home_screen.dart';
+export 'presentation/screens/booking_screen.dart';
 export 'presentation/screens/search_bodyguards_screen.dart';
 export 'presentation/screens/bodyguards_list_screen.dart';
 export 'presentation/widgets/customer_bodyguard_card.widget.dart';

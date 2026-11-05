@@ -96,6 +96,7 @@ class AppPagination<T> extends StatefulWidget {
     Widget Function(BuildContext context, VoidCallback onRetry)?
     loadMoreErrorBuilder,
     bool enablePullToRefresh = true,
+    bool shrinkWrap = false,
   }) {
     return AppPagination<T>(
       key: key,
@@ -113,8 +114,12 @@ class AppPagination<T> extends StatefulWidget {
       builder: (scrollController, internalItemBuilder, itemCount) {
         if (separatorBuilder != null) {
           return ListView.separated(
-            controller: scrollController,
-            physics: physics ?? const AlwaysScrollableScrollPhysics(),
+            controller: shrinkWrap ? null : scrollController,
+            shrinkWrap: shrinkWrap,
+            physics: physics ??
+                (shrinkWrap
+                    ? const NeverScrollableScrollPhysics()
+                    : const AlwaysScrollableScrollPhysics()),
             padding: padding,
             itemCount: itemCount,
             separatorBuilder: (context, index) {
@@ -133,8 +138,12 @@ class AppPagination<T> extends StatefulWidget {
         }
 
         return ListView.builder(
-          controller: scrollController,
-          physics: physics ?? const AlwaysScrollableScrollPhysics(),
+          controller: shrinkWrap ? null : scrollController,
+          shrinkWrap: shrinkWrap,
+          physics: physics ??
+              (shrinkWrap
+                  ? const NeverScrollableScrollPhysics()
+                  : const AlwaysScrollableScrollPhysics()),
           padding: padding,
           itemCount: itemCount,
           itemBuilder: internalItemBuilder,
