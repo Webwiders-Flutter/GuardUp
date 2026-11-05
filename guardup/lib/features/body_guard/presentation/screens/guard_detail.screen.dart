@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:guardup/features/company/company.dart';
+import 'package:guardup/features/company/presentation/widgets/company_card.dart';
 import 'package:guardup/features/customer/customer.dart';
 import 'package:guardup/shared/widgets/buttons/app_button.dart';
 import 'package:guardup/shared/widgets/sections/app_image.dart';
@@ -88,8 +90,8 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
                       isVerified: true,
                     ),
                     AppSpacing.xlg.h,
-                    CustomerCompanyCardWidget(
-                      company: CustomerCompanyItem(
+                    CompanyCard(
+                      company: CompanyModel(
                         id: '2',
                         name: 'SecurePro Security Ltd.',
                         initials: 'SP',
@@ -123,7 +125,7 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
             AppTabBar.underline(
               controller: _tabController,
               tabNames: _tabs,
-              indicatorColor: context.colors.gold,
+              indicatorColor: context.colors.primary,
               dividerColor: context.colors.outlineVariant,
               height: 40,
             ),
@@ -157,7 +159,7 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
               children: [
                 Icon(
                   Icons.calendar_month_rounded,
-                  color: context.colors.gold,
+                  color: context.colors.primary,
                   size: 16,
                 ),
                 12.w,
@@ -181,14 +183,14 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
                 px: 8,
                 py: 2,
                 radius: 15,
-                color: context.colors.gold.withValues(alpha: 0.1),
-                borderColor: context.colors.gold,
+                color: context.colors.primary.withValues(alpha: 0.1),
+                borderColor: context.colors.primary,
                 borderWidth: 0.2,
                 child: Text(
                   '4 Audited',
                   style: context.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w500,
-                    color: context.colors.gold,
+                    color: context.colors.primary,
                     fontSize: 10,
                   ),
                 ),
@@ -233,7 +235,7 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
                             Spacer(),
                             Icon(
                               Icons.check_circle_sharp,
-                              color: context.colors.gold,
+                              color: context.colors.primary,
                               size: 13,
                             ),
                             02.w,
@@ -241,7 +243,7 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
                               'Verified',
                               style: context.textTheme.bodySmall?.copyWith(
                                 // fontWeight: FontWeight.w600,
-                                color: context.colors.gold,
+                                color: context.colors.primary,
                                 fontSize: 10,
                               ),
                             ),
