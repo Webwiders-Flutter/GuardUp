@@ -57,8 +57,7 @@ class ProfileScreen extends StatelessWidget {
                   onTap: () {
                     switch (role) {
                       case .company:
-                        // context.push(AppRoutes.companyInformation);
-                        context.push(AppRoutes.companyDetails);
+                        context.push(AppRoutes.companyInformation);
                       case .guard:
                         context.push(AppRoutes.bodyguardInformation);
                       default:

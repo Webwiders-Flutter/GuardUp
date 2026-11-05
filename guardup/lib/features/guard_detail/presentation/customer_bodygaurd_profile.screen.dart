@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/features/customer/customer.dart';
 
-import '/app/routes/app_routes.dart';
-import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
@@ -14,7 +12,6 @@ import '/shared/widgets/navigation/app_tab_bar.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import 'customer_booking_details.screen.dart';
 import 'widgets/guard_about_booking_card.dart';
-import 'widgets/guard_company_affiliation_card.dart';
 import 'widgets/guard_experience_tab.widget.dart';
 import 'widgets/guard_metrics_row.widget.dart';
 import 'widgets/guard_profile_header.widget.dart';

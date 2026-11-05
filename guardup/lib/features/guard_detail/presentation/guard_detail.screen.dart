@@ -11,9 +11,6 @@ import '/features/body_guard/data/model/body_guard.model.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/navigation/app_tab_bar.dart';
 import '/shared/widgets/sections/app_appbar.dart';
-import 'customer_booking_details.screen.dart';
-import 'widgets/guard_about_booking_card.dart';
-import 'widgets/guard_metrics_row.widget.dart';
 
 /// Customer View: Comprehensive operative profile screen with bio, booking duration
 /// calculator, credentials, client reviews, and sticky booking action bar.
