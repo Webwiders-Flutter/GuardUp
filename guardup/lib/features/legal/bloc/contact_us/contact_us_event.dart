@@ -18,4 +18,3 @@ class SubmitContactUsRequested extends ContactUsEvent {
   @override
   List<Object?> get props => [submission];
 }
-

@@ -430,4 +430,3 @@ class _ConnectivityPill extends StatelessWidget {
     );
   }
 }
-

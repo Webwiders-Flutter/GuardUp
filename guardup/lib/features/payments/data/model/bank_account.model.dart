@@ -1,42 +1,33 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'bank_account.model.freezed.dart';
+part 'bank_account.model.g.dart';
+
 /// Model representing a user's or company's saved bank account.
-class BankAccount {
-  final String id;
-  final String accountNumber;
-  final String accountHolder;
-  final String bankName;
-  final String branch;
-  final String ifscCode;
-  final String? branchAddress;
-
-  const BankAccount({
-    required this.id,
-    required this.accountNumber,
-    required this.accountHolder,
-    required this.bankName,
-    required this.branch,
-    required this.ifscCode,
-    this.branchAddress,
-  });
-
-
-  BankAccount copyWith({
-    String? id,
-    String? accountNumber,
-    String? accountHolder,
-    String? bankName,
-    String? branch,
-    String? ifscCode,
+@freezed
+abstract class BankAccount with _$BankAccount {
+  const factory BankAccount({
+    required String id,
+    required String accountNumber,
+    required String accountHolder,
+    required String bankName,
+    required String branch,
+    required String ifscCode,
     String? branchAddress,
-  }) {
-    return BankAccount(
-      id: id ?? this.id,
-      accountNumber: accountNumber ?? this.accountNumber,
-      accountHolder: accountHolder ?? this.accountHolder,
-      bankName: bankName ?? this.bankName,
-      branch: branch ?? this.branch,
-      ifscCode: ifscCode ?? this.ifscCode,
-      branchAddress: branchAddress ?? this.branchAddress,
-    );
-  }
-}
+  }) = _BankAccount;
 
+  factory BankAccount.fromJson(Map<String, dynamic> json) =>
+      _$BankAccountFromJson(json);
+
+  static List<BankAccount> get fakeData => const [
+    BankAccount(
+      id: '1',
+      accountNumber: '1234567890129875',
+      accountHolder: 'Rock Smith',
+      bankName: 'Bank Name',
+      branch: 'indore',
+      ifscCode: 'WORD6589',
+      branchAddress: 'indore',
+    ),
+  ];
+}

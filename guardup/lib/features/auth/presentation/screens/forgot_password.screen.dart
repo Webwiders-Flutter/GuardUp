@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
@@ -22,13 +20,7 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _emailController;
-
-  @override
-  void initState() {
-    super.initState();
-    _emailController = TextEditingController();
-  }
+  final _emailController = TextEditingController();
 
   @override
   void dispose() {
@@ -38,13 +30,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   void _handleSubmit() {
     // if (!(_formKey.currentState?.validate() ?? false)) return;
-    context.push(AppRoutes.verifyOtp);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.transparent,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {

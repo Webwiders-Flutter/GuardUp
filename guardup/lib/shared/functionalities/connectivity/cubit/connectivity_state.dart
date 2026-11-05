@@ -1,10 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum ConnectivityStatus {
-  initial,
-  connected,
-  disconnected,
-}
+enum ConnectivityStatus { initial, connected, disconnected }
 
 class ConnectivityState extends Equatable {
   final ConnectivityStatus status;
@@ -19,10 +15,7 @@ class ConnectivityState extends Equatable {
   bool get isDisconnected => status == ConnectivityStatus.disconnected;
   bool get isInitial => status == ConnectivityStatus.initial;
 
-  ConnectivityState copyWith({
-    ConnectivityStatus? status,
-    bool? isChecking,
-  }) {
+  ConnectivityState copyWith({ConnectivityStatus? status, bool? isChecking}) {
     return ConnectivityState(
       status: status ?? this.status,
       isChecking: isChecking ?? this.isChecking,
@@ -32,4 +25,3 @@ class ConnectivityState extends Equatable {
   @override
   List<Object?> get props => [status, isChecking];
 }
-

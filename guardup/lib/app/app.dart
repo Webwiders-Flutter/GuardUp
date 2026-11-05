@@ -20,15 +20,9 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider<AuthBloc>.value(
-          value: sl<AuthBloc>(),
-        ),
-        BlocProvider<LanguageCubit>(
-          create: (_) => sl<LanguageCubit>(),
-        ),
-        BlocProvider<ConnectivityCubit>(
-          create: (_) => sl<ConnectivityCubit>(),
-        ),
+        BlocProvider<AuthBloc>.value(value: sl<AuthBloc>()),
+        BlocProvider<LanguageCubit>(create: (_) => sl<LanguageCubit>()),
+        BlocProvider<ConnectivityCubit>(create: (_) => sl<ConnectivityCubit>()),
       ],
       child: BlocBuilder<LanguageCubit, LanguageState>(
         builder: (context, languageState) {

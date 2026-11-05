@@ -5,6 +5,7 @@ import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
+import '/core/extensions/datetime.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
@@ -70,7 +71,8 @@ class NotificationCard extends StatelessWidget {
 
                     // Timestamp
                     Text(
-                      notification.timeAgoFormatted,
+                      (notification.data['timeAgo'] as String?) ??
+                          notification.createdAt.timeAgo,
                       style: context.textTheme.labelSmall?.colour(
                         context.colors.onSurfaceVariant.withValues(alpha: 0.7),
                       ),
@@ -94,8 +96,7 @@ class NotificationCard extends StatelessWidget {
                 Text(
                   notification.body,
                   style: context.textTheme.bodySmall
-                      ?.regular()
-                      .colour(context.colors.onSurfaceVariant)
+                      ?.colour(context.colors.onSurfaceVariant)
                       .lineHeight(1.35),
                 ),
               ],

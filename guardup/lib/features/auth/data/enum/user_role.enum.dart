@@ -72,6 +72,17 @@ enum UserRole {
     }
   }
 
+  String profileTitle(AppLocalizations l10n) {
+    switch (this) {
+      case UserRole.guard:
+        return l10n.bodyguardProfile;
+      case UserRole.company:
+        return l10n.companyProfile;
+      case UserRole.customer:
+        return l10n.customerProfile;
+    }
+  }
+
   Color color(BuildContext context) {
     final colors = context.colors;
     switch (this) {

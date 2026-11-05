@@ -18,11 +18,7 @@ class TransactionDateFilter extends StatelessWidget {
   /// Optional tap handler for opening the date picker or sort sheet.
   final VoidCallback? onTap;
 
-  const TransactionDateFilter({
-    super.key,
-    this.selectedValue,
-    this.onTap,
-  });
+  const TransactionDateFilter({super.key, this.selectedValue, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -41,8 +37,8 @@ class TransactionDateFilter extends StatelessWidget {
 
         // QuickContainer Date Pill
         QuickContainer(
-        onTap: onTap,
-        borderRadius: AppRadius.sm.toBorderRadius,
+          onTap: onTap,
+          borderRadius: AppRadius.sm.toBorderRadius,
           radius: AppRadius.sm,
           color: context.colors.onSurface,
           px: AppSpacing.smd,

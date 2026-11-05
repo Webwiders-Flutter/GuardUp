@@ -26,73 +26,20 @@ class ConversationsScreen extends StatefulWidget {
 }
 
 class _ConversationsScreenState extends State<ConversationsScreen> {
-  late final TextEditingController _searchController;
-  late final PaginationController<ConversationModel> _paginationController;
-  late final ValueNotifier<List<ConversationModel>> _allConversationsNotifier;
-
-  @override
-  void initState() {
-    super.initState();
-    _searchController = TextEditingController();
-
-    final initialList = ConversationModel.fakeConversations;
-    _allConversationsNotifier = ValueNotifier<List<ConversationModel>>(
-      initialList,
-    );
-
-    _paginationController = PaginationController<ConversationModel>(
-      initialState: PaginationState<ConversationModel>(
-        items: initialList,
-        total: initialList.length,
-        status: const ApiState.success(null),
-      ),
-      onRefresh: _handleRefresh,
-      onLoadMore: _handleLoadMore,
-    );
-  }
+  final _searchController = TextEditingController();
+  late final _paginationController = PaginationController<ConversationModel>(
+    initialState: PaginationState<ConversationModel>(
+      items: ConversationModel.fakeConversations,
+      total: ConversationModel.fakeConversations.length,
+      status: ApiState.success(null),
+    ),
+  );
 
   @override
   void dispose() {
     _searchController.dispose();
     _paginationController.dispose();
-    _allConversationsNotifier.dispose();
     super.dispose();
-  }
-
-  void _handleSearchChanged(String query) {
-    final trimmed = query.trim().toLowerCase();
-    final allItems = _allConversationsNotifier.value;
-
-    final filtered = trimmed.isEmpty
-        ? allItems
-        : allItems.where((c) {
-            final matchesTitle = c.title.toLowerCase().contains(trimmed);
-            final matchesSnippet = c.snippet.toLowerCase().contains(trimmed);
-            final matchesClearance = c.participants.any(
-              (p) => (p.clearanceLevel ?? '').toLowerCase().contains(trimmed),
-            );
-            return matchesTitle || matchesSnippet || matchesClearance;
-          }).toList();
-
-    _paginationController.updateState(
-      PaginationState<ConversationModel>(
-        items: filtered,
-        total: filtered.length,
-        status: const ApiState.success(null),
-      ),
-    );
-  }
-
-  Future<void> _handleRefresh() async {
-    await Future.delayed(const Duration(milliseconds: 600));
-    if (!mounted) return;
-
-    _handleSearchChanged(_searchController.text);
-  }
-
-  Future<void> _handleLoadMore() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
   }
 
   void _handleOpenConversation(ConversationModel conversation) {
@@ -102,7 +49,6 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.transparent,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -115,6 +61,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
               child: AppTextField.search(
                 controller: _searchController,
                 size: .small,
+                style: TextStyle(color: context.colors.onSurface),
                 decoration: InputDecoration(
                   hintText: context.l10n.searchConversationsHint,
                   enabledBorder: OutlineInputBorder(
@@ -131,7 +78,6 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                   ),
                   fillColor: context.colors.surface,
                 ),
-                onChanged: _handleSearchChanged,
               ),
             ),
             AppSpacing.xxl.h,

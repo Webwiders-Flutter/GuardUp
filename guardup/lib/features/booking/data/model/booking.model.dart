@@ -1,215 +1,55 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+import '../../../../gen/assets.gen.dart';
 import '/features/auth/auth.dart';
 import '/features/body_guard/body_guard.dart';
-import '/gen/assets.gen.dart';
 import '../enum/booking_status.enum.dart';
 
+part 'booking.model.freezed.dart';
+part 'booking.model.g.dart';
+
 /// Comprehensive model representing a client security booking or bodyguard dispatch mission.
-class BookingModel {
-  final String id;
-  final String bookingNumber;
-  final DateTime startDateTime;
-  final DateTime endDateTime;
-  final BodyGuardModel bodyguard;
-  final UserModel customer;
-  final BookingStatus status;
-  final GuardService? serviceType;
-  final String? pickupAddress;
-  final String? destinationAddress;
-  final double? hourlyRate;
-  final double? totalAmount;
-  final String currency;
-  final String? scheduleLabel;
-  final String? specialInstructions;
-  final DateTime createdAt;
-
-  const BookingModel({
-    required this.id,
-    required this.bookingNumber,
-    required this.startDateTime,
-    required this.endDateTime,
-    required this.bodyguard,
-    required this.customer,
-    required this.status,
-    this.serviceType,
-    this.pickupAddress,
-    this.destinationAddress,
-    this.hourlyRate,
-    this.totalAmount,
-    this.currency = 'USD',
-    this.scheduleLabel,
-    this.specialInstructions,
-    required this.createdAt,
-  });
-
-  /// Duration of the security assignment in fractional hours.
-  double get durationInHours {
-    final diffMinutes = endDateTime.difference(startDateTime).inMinutes;
-    return diffMinutes > 0 ? diffMinutes / 60.0 : 0.0;
-  }
-
-  /// Formatted duration string (e.g. "4 Hours", "2.5 Hours").
-  String get formattedDuration {
-    final hours = durationInHours;
-    if (hours.truncateToDouble() == hours) {
-      final intHours = hours.toInt();
-      return '$intHours ${intHours == 1 ? 'Hour' : 'Hours'}';
-    }
-    return '${hours.toStringAsFixed(1)} Hours';
-  }
-
-  /// Effective hourly rate (falls back to bodyguard rate or $60).
-  double get effectiveHourlyRate => hourlyRate ?? bodyguard.hourlyRate;
-
-  /// Readable display date representation (e.g. "12 Jun 2026").
-  String get formattedDate {
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
-    final monthStr = months[startDateTime.month - 1];
-    return '${startDateTime.day.toString().padLeft(2, '0')} $monthStr ${startDateTime.year}';
-  }
-
-  /// Formatted time window (e.g. "2:00 PM – 6:00 PM").
-  String get formattedTimeRange {
-    return '${_formatTime(startDateTime)} – ${_formatTime(endDateTime)}';
-  }
-
-  /// Formatted full schedule row (e.g. "Tomorrow, Apr 28 • 2:00 PM – 6:00 PM").
-  String get formattedSchedule {
-    if (scheduleLabel != null && scheduleLabel!.isNotEmpty) {
-      return scheduleLabel!;
-    }
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
-    final now = DateTime.now();
-    final tomorrow = now.add(const Duration(days: 1));
-    String prefix;
-    if (startDateTime.year == now.year &&
-        startDateTime.month == now.month &&
-        startDateTime.day == now.day) {
-      prefix = 'Today, ';
-    } else if (startDateTime.year == tomorrow.year &&
-        startDateTime.month == tomorrow.month &&
-        startDateTime.day == tomorrow.day) {
-      prefix = 'Tomorrow, ';
-    } else {
-      prefix = '';
-    }
-    final monthDay = '${months[startDateTime.month - 1]} ${startDateTime.day}';
-    return '$prefix$monthDay • $formattedTimeRange';
-  }
-
-  static String _formatTime(DateTime dateTime) {
-    int hour = dateTime.hour;
-    final period = hour >= 12 ? 'PM' : 'AM';
-    hour = hour % 12;
-    if (hour == 0) hour = 12;
-    final minute = dateTime.minute.toString().padLeft(2, '0');
-    return '$hour:$minute $period';
-  }
-
-  BookingModel copyWith({
-    String? id,
-    String? bookingNumber,
-    DateTime? startDateTime,
-    DateTime? endDateTime,
-    BodyGuardModel? bodyguard,
-    UserModel? customer,
-    BookingStatus? status,
+@freezed
+abstract class BookingModel with _$BookingModel {
+  const factory BookingModel({
+    required String id,
+    required String bookingNumber,
+    required DateTime startDateTime,
+    required DateTime endDateTime,
+    required BodyGuardModel bodyguard,
+    required UserModel customer,
+    required BookingStatus status,
     GuardService? serviceType,
-    String? serviceTitle,
     String? pickupAddress,
     String? destinationAddress,
     double? hourlyRate,
     double? totalAmount,
-    String? currency,
+    @Default('USD') String currency,
     String? scheduleLabel,
     String? specialInstructions,
-    DateTime? createdAt,
-  }) {
-    return BookingModel(
-      id: id ?? this.id,
-      bookingNumber: bookingNumber ?? this.bookingNumber,
-      startDateTime: startDateTime ?? this.startDateTime,
-      endDateTime: endDateTime ?? this.endDateTime,
-      bodyguard: bodyguard ?? this.bodyguard,
-      customer: customer ?? this.customer,
-      status: status ?? this.status,
-      serviceType: serviceType ?? this.serviceType,
-      pickupAddress: pickupAddress ?? this.pickupAddress,
-      destinationAddress: destinationAddress ?? this.destinationAddress,
-      hourlyRate: hourlyRate ?? this.hourlyRate,
-      totalAmount: totalAmount ?? this.totalAmount,
-      currency: currency ?? this.currency,
-      scheduleLabel: scheduleLabel ?? this.scheduleLabel,
-      specialInstructions: specialInstructions ?? this.specialInstructions,
-      createdAt: createdAt ?? this.createdAt,
-    );
-  }
+    String? bodyguardSpecialization,
+    String? trackingStatusText,
+    double? customerRating,
+    String? customerReviewText,
+    required DateTime createdAt,
+  }) = _BookingModel;
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'bookingNumber': bookingNumber,
-      'startDateTime': startDateTime.toIso8601String(),
-      'endDateTime': endDateTime.toIso8601String(),
-      'bodyguard': bodyguard.toJson(),
-      'customer': customer.toJson(),
-      'status': status.apiValue,
-      if (serviceType != null) 'serviceType': serviceType!.apiValue,
-      if (pickupAddress != null) 'pickupAddress': pickupAddress,
-      if (destinationAddress != null) 'destinationAddress': destinationAddress,
-      if (hourlyRate != null) 'hourlyRate': hourlyRate,
-      if (totalAmount != null) 'totalAmount': totalAmount,
-      'currency': currency,
-      if (scheduleLabel != null) 'scheduleLabel': scheduleLabel,
-      if (specialInstructions != null) 'specialInstructions': specialInstructions,
-      'createdAt': createdAt.toIso8601String(),
-    };
-  }
+  factory BookingModel.fromJson(Map<String, dynamic> json) =>
+      _$BookingModelFromJson(json);
 
-  factory BookingModel.fromJson(Map<String, dynamic> json) {
-    return BookingModel(
-      id: json['id'] as String? ?? '',
-      bookingNumber: json['bookingNumber'] as String? ?? '',
-      startDateTime: DateTime.tryParse(json['startDateTime'] as String? ?? '') ??
-          DateTime.now(),
-      endDateTime: DateTime.tryParse(json['endDateTime'] as String? ?? '') ??
-          DateTime.now().add(const Duration(hours: 4)),
-      bodyguard: BodyGuardModel.fromJson(
-        json['bodyguard'] as Map<String, dynamic>,
-      ),
-      customer: UserModel.fromJson(
-        json['customer'] as Map<String, dynamic>,
-      ),
-      status: BookingStatus.fromApiValue(json['status'] as String?),
-      serviceType: GuardService.tryFromApiValue(json['serviceType'] as String?),
-      pickupAddress: json['pickupAddress'] as String?,
-      destinationAddress: json['destinationAddress'] as String?,
-      hourlyRate: (json['hourlyRate'] as num?)?.toDouble(),
-      totalAmount: (json['totalAmount'] as num?)?.toDouble(),
-      currency: json['currency'] as String? ?? 'USD',
-      scheduleLabel: json['scheduleLabel'] as String?,
-      specialInstructions: json['specialInstructions'] as String?,
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ??
-          DateTime.now(),
-    );
-  }
+  static List<BookingModel> get fakeData => fakeCustomerBookings;
 
   // ---------------------------------------------------------------------------
-  // Fake Mock Bookings Matching UI Reference Designs
+  // Guard-View Fake Mock Bookings
   // ---------------------------------------------------------------------------
 
-  /// Pending confirmation booking (Card 1 in UI mockups).
+  /// Pending confirmation booking (Card 1 in Guard mockups).
   static BookingModel get fakePendingBooking => BookingModel(
     id: 'bk_pending_001',
     bookingNumber: '#9878213',
     startDateTime: DateTime.now().add(const Duration(days: 1)),
     endDateTime: DateTime.now().add(const Duration(days: 1, hours: 4)),
-    bodyguard: BodyGuardModel.fakeBodyGuard,
+    bodyguard: BodyGuardModel.fakeData.first,
     customer: UserModel(
       id: 'usr_deepak',
       name: 'Deepak Pandey',
@@ -223,13 +63,13 @@ class BookingModel {
     createdAt: DateTime.now().subtract(const Duration(hours: 2)),
   );
 
-  /// Running / ongoing active mission (Card 2 in UI mockups).
+  /// Running / ongoing active mission (Card 2 in Guard mockups).
   static BookingModel get fakeOngoingBooking => BookingModel(
     id: 'bk_ongoing_002',
     bookingNumber: '#9878213',
     startDateTime: DateTime.now().add(const Duration(days: 1)),
     endDateTime: DateTime.now().add(const Duration(days: 1, hours: 4)),
-    bodyguard: BodyGuardModel.fakeBodyGuard,
+    bodyguard: BodyGuardModel.fakeData.first,
     customer: UserModel(
       id: 'usr_marco',
       name: 'Marco Michel',
@@ -243,13 +83,13 @@ class BookingModel {
     createdAt: DateTime.now().subtract(const Duration(hours: 5)),
   );
 
-  /// Completed protection assignment (Card 3 in UI mockups).
+  /// Completed protection assignment (Card 3 in Guard mockups).
   static BookingModel get fakeCompletedBooking => BookingModel(
     id: 'bk_completed_003',
     bookingNumber: '#9878213',
     startDateTime: DateTime.now().add(const Duration(days: 1)),
     endDateTime: DateTime.now().add(const Duration(days: 1, hours: 4)),
-    bodyguard: BodyGuardModel.fakeBodyGuard,
+    bodyguard: BodyGuardModel.fakeData.first,
     customer: UserModel(
       id: 'usr_harry',
       name: 'Harry Porter',
@@ -263,20 +103,17 @@ class BookingModel {
     createdAt: DateTime.now().subtract(const Duration(days: 1)),
   );
 
-  /// Curated list of 18 mock bookings matching the UI mockups and counts.
+  /// 18 mock bookings for the Guard perspective.
   static List<BookingModel> get fakeBookings => [
-    // Top 3 featured cards matching design mockup
     fakePendingBooking,
     fakeOngoingBooking,
     fakeCompletedBooking,
-
-    // Additional Running (Ongoing) Bookings
     BookingModel(
       id: 'bk_run_004',
       bookingNumber: '#9878214',
       startDateTime: DateTime.now().subtract(const Duration(hours: 2)),
       endDateTime: DateTime.now().add(const Duration(hours: 3)),
-      bodyguard: BodyGuardModel.fakeBodyGuard,
+      bodyguard: BodyGuardModel.fakeData.first,
       customer: UserModel(
         id: 'usr_elena',
         name: 'Elena Rostova',
@@ -294,7 +131,7 @@ class BookingModel {
       bookingNumber: '#9878215',
       startDateTime: DateTime.now().subtract(const Duration(minutes: 45)),
       endDateTime: DateTime.now().add(const Duration(hours: 4)),
-      bodyguard: BodyGuardModel.fakeBodyGuard,
+      bodyguard: BodyGuardModel.fakeData.first,
       customer: UserModel(
         id: 'usr_marcus',
         name: 'Marcus Sterling',
@@ -312,7 +149,7 @@ class BookingModel {
       bookingNumber: '#9878216',
       startDateTime: DateTime.now().subtract(const Duration(hours: 1)),
       endDateTime: DateTime.now().add(const Duration(hours: 5)),
-      bodyguard: BodyGuardModel.fakeBodyGuard,
+      bodyguard: BodyGuardModel.fakeData.first,
       customer: UserModel(
         id: 'usr_lucas',
         name: 'Lucas Silva',
@@ -325,14 +162,12 @@ class BookingModel {
       pickupAddress: 'Four Seasons Hotel, Yorkville, Toronto',
       createdAt: DateTime.now().subtract(const Duration(hours: 2)),
     ),
-
-    // Additional Pending Bookings
     BookingModel(
       id: 'bk_pen_007',
       bookingNumber: '#9878217',
       startDateTime: DateTime.now().add(const Duration(days: 2)),
       endDateTime: DateTime.now().add(const Duration(days: 2, hours: 6)),
-      bodyguard: BodyGuardModel.fakeBodyGuard,
+      bodyguard: BodyGuardModel.fakeData.first,
       customer: UserModel(
         id: 'usr_sophia',
         name: 'Sophia Vance',
@@ -350,7 +185,7 @@ class BookingModel {
       bookingNumber: '#9878218',
       startDateTime: DateTime.now().add(const Duration(days: 3)),
       endDateTime: DateTime.now().add(const Duration(days: 3, hours: 5)),
-      bodyguard: BodyGuardModel.fakeBodyGuard,
+      bodyguard: BodyGuardModel.fakeData.first,
       customer: UserModel(
         id: 'usr_alex',
         name: 'Alexander Cross',
@@ -368,7 +203,7 @@ class BookingModel {
       bookingNumber: '#9878219',
       startDateTime: DateTime.now().add(const Duration(days: 3, hours: 2)),
       endDateTime: DateTime.now().add(const Duration(days: 3, hours: 8)),
-      bodyguard: BodyGuardModel.fakeBodyGuard,
+      bodyguard: BodyGuardModel.fakeData.first,
       customer: UserModel(
         id: 'usr_liam',
         name: 'Liam Chen',
@@ -386,7 +221,7 @@ class BookingModel {
       bookingNumber: '#9878220',
       startDateTime: DateTime.now().add(const Duration(days: 4)),
       endDateTime: DateTime.now().add(const Duration(days: 4, hours: 4)),
-      bodyguard: BodyGuardModel.fakeBodyGuard,
+      bodyguard: BodyGuardModel.fakeData.first,
       customer: UserModel(
         id: 'usr_olivia',
         name: 'Olivia Davis',
@@ -404,7 +239,7 @@ class BookingModel {
       bookingNumber: '#9878221',
       startDateTime: DateTime.now().add(const Duration(days: 5)),
       endDateTime: DateTime.now().add(const Duration(days: 5, hours: 6)),
-      bodyguard: BodyGuardModel.fakeBodyGuard,
+      bodyguard: BodyGuardModel.fakeData.first,
       customer: UserModel(
         id: 'usr_noah',
         name: 'Noah Martin',
@@ -417,14 +252,12 @@ class BookingModel {
       pickupAddress: 'Private Residence, Forest Hill, Toronto',
       createdAt: DateTime.now().subtract(const Duration(hours: 12)),
     ),
-
-    // Additional Completed Bookings
     BookingModel(
       id: 'bk_comp_012',
       bookingNumber: '#9878222',
       startDateTime: DateTime.now().subtract(const Duration(days: 2)),
       endDateTime: DateTime.now().subtract(const Duration(days: 2, hours: -4)),
-      bodyguard: BodyGuardModel.fakeBodyGuard,
+      bodyguard: BodyGuardModel.fakeData.first,
       customer: UserModel(
         id: 'usr_carlos',
         name: 'Carlos Sterling',
@@ -442,7 +275,7 @@ class BookingModel {
       bookingNumber: '#9878223',
       startDateTime: DateTime.now().subtract(const Duration(days: 3)),
       endDateTime: DateTime.now().subtract(const Duration(days: 3, hours: -5)),
-      bodyguard: BodyGuardModel.fakeBodyGuard,
+      bodyguard: BodyGuardModel.fakeData.first,
       customer: UserModel(
         id: 'usr_david',
         name: 'David Miller',
@@ -460,7 +293,7 @@ class BookingModel {
       bookingNumber: '#9878224',
       startDateTime: DateTime.now().subtract(const Duration(days: 4)),
       endDateTime: DateTime.now().subtract(const Duration(days: 4, hours: -3)),
-      bodyguard: BodyGuardModel.fakeBodyGuard,
+      bodyguard: BodyGuardModel.fakeData.first,
       customer: UserModel(
         id: 'usr_emma',
         name: 'Emma Watson',
@@ -478,7 +311,7 @@ class BookingModel {
       bookingNumber: '#9878225',
       startDateTime: DateTime.now().subtract(const Duration(days: 5)),
       endDateTime: DateTime.now().subtract(const Duration(days: 5, hours: -8)),
-      bodyguard: BodyGuardModel.fakeBodyGuard,
+      bodyguard: BodyGuardModel.fakeData.first,
       customer: UserModel(
         id: 'usr_james',
         name: 'James Wilson',
@@ -496,7 +329,7 @@ class BookingModel {
       bookingNumber: '#9878226',
       startDateTime: DateTime.now().subtract(const Duration(days: 6)),
       endDateTime: DateTime.now().subtract(const Duration(days: 6, hours: -4)),
-      bodyguard: BodyGuardModel.fakeBodyGuard,
+      bodyguard: BodyGuardModel.fakeData.first,
       customer: UserModel(
         id: 'usr_isabella',
         name: 'Isabella Rossi',
@@ -514,7 +347,7 @@ class BookingModel {
       bookingNumber: '#9878227',
       startDateTime: DateTime.now().subtract(const Duration(days: 7)),
       endDateTime: DateTime.now().subtract(const Duration(days: 7, hours: -6)),
-      bodyguard: BodyGuardModel.fakeBodyGuard,
+      bodyguard: BodyGuardModel.fakeData.first,
       customer: UserModel(
         id: 'usr_ethan',
         name: 'Ethan Hunt',
@@ -532,7 +365,7 @@ class BookingModel {
       bookingNumber: '#9878228',
       startDateTime: DateTime.now().subtract(const Duration(days: 8)),
       endDateTime: DateTime.now().subtract(const Duration(days: 8, hours: -5)),
-      bodyguard: BodyGuardModel.fakeBodyGuard,
+      bodyguard: BodyGuardModel.fakeData.first,
       customer: UserModel(
         id: 'usr_mia',
         name: 'Mia Taylor',
@@ -544,6 +377,216 @@ class BookingModel {
       scheduleLabel: 'Monday, Apr 20 • 3:00 PM – 8:00 PM',
       pickupAddress: 'Bloor-Yorkville Heritage Area, Toronto',
       createdAt: DateTime.now().subtract(const Duration(days: 9)),
+    ),
+  ];
+
+  // ---------------------------------------------------------------------------
+  // Customer-View Fake Mock Bookings Matching New UI Mockup
+  // ---------------------------------------------------------------------------
+
+  /// Card 1 in Customer Mockup: Vikram Singh (Completed, needs review)
+  static BookingModel get fakeCustomerVikram => BookingModel(
+    id: 'bk_cust_001',
+    bookingNumber: '#9878213',
+    startDateTime: DateTime(2025, 4, 24, 14, 0),
+    endDateTime: DateTime(2025, 4, 24, 18, 0),
+    bodyguard: BodyGuardModel(
+      id: 'guard_vikram',
+      user: UserModel(
+        id: 'usr_vikram',
+        name: 'Vikram Singh',
+        profileImageUrl: Assets.images.profilePicture.path,
+        role: UserRole.guard,
+      ),
+      hourlyRate: 60.0,
+      bio: 'Executive security specialist.',
+      rating: 4.9,
+      reviewCount: 128,
+      experienceYears: 5,
+      clearanceLevel: 'Licensed armed, Corporate visits',
+      isVerified: true,
+    ),
+    customer: const UserModel(
+      id: 'usr_me',
+      name: 'Client Account',
+      role: UserRole.customer,
+    ),
+    status: BookingStatus.completed,
+    hourlyRate: 60.0,
+    bodyguardSpecialization: 'Licensed armed, Corporate visits',
+    scheduleLabel: 'Apr 24, 2025 • 2:00 PM – 6:00 PM',
+    pickupAddress: 'Yorkville Plaza, Toronto, ON',
+    createdAt: DateTime(2025, 4, 20),
+  );
+
+  /// Card 2 in Customer Mockup: Rahul Patel (Running with live tracking)
+  static BookingModel get fakeCustomerRahul => BookingModel(
+    id: 'bk_cust_002',
+    bookingNumber: '#9878214',
+    startDateTime: DateTime.now().subtract(const Duration(hours: 1)),
+    endDateTime: DateTime.now().add(const Duration(hours: 3)),
+    bodyguard: BodyGuardModel(
+      id: 'guard_rahul',
+      user: UserModel(
+        id: 'usr_rahul',
+        name: 'Rahul Patel',
+        profileImageUrl: Assets.images.profilePicture2.path,
+        role: UserRole.guard,
+      ),
+      hourlyRate: 60.0,
+      bio: 'Close protection operative.',
+      rating: 4.9,
+      reviewCount: 128,
+      experienceYears: 5,
+      clearanceLevel: 'Licensed armed, Corporate visits',
+      isVerified: true,
+    ),
+    customer: const UserModel(
+      id: 'usr_me',
+      name: 'Client Account',
+      role: UserRole.customer,
+    ),
+    status: BookingStatus.onGoing,
+    hourlyRate: 60.0,
+    bodyguardSpecialization: 'Licensed armed, Corporate visits',
+    trackingStatusText: 'Started 10:00 AM • ETA 1:00 PM',
+    pickupAddress: 'Yorkville Plaza, Toronto, ON',
+    createdAt: DateTime.now().subtract(const Duration(hours: 4)),
+  );
+
+  /// Card 3 in Customer Mockup: Siwa Patel (Completed with submitted review)
+  static BookingModel get fakeCustomerSiwa => BookingModel(
+    id: 'bk_cust_003',
+    bookingNumber: '#9878215',
+    startDateTime: DateTime.now().subtract(const Duration(days: 1)),
+    endDateTime: DateTime.now().subtract(const Duration(days: 1, hours: -4)),
+    bodyguard: BodyGuardModel(
+      id: 'guard_siwa',
+      user: UserModel(
+        id: 'usr_siwa',
+        name: 'Siwa Patel',
+        profileImageUrl: Assets.images.profilePicture.path,
+        role: UserRole.guard,
+      ),
+      hourlyRate: 60.0,
+      bio: 'Senior dignitary bodyguard.',
+      rating: 4.9,
+      reviewCount: 128,
+      experienceYears: 7,
+      clearanceLevel: 'Licensed armed, Corporate visits',
+      isVerified: true,
+    ),
+    customer: const UserModel(
+      id: 'usr_me',
+      name: 'Client Account',
+      role: UserRole.customer,
+    ),
+    status: BookingStatus.completed,
+    hourlyRate: 60.0,
+    bodyguardSpecialization: 'Licensed armed, Corporate visits',
+    scheduleLabel: 'Today, Apr 18 • 2:00 PM – 6:00 PM',
+    pickupAddress: 'Yorkville Plaza, Toronto, ON',
+    customerRating: 4.0,
+    customerReviewText: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since 1916, when designers at Letraset and",
+    createdAt: DateTime.now().subtract(const Duration(days: 2)),
+  );
+
+  /// Curated customer-perspective mock bookings list.
+  static List<BookingModel> get fakeCustomerBookings => [
+    fakeCustomerVikram,
+    fakeCustomerRahul,
+    fakeCustomerSiwa,
+    // Additional running
+    BookingModel(
+      id: 'bk_cust_004',
+      bookingNumber: '#9878216',
+      startDateTime: DateTime.now().subtract(const Duration(minutes: 30)),
+      endDateTime: DateTime.now().add(const Duration(hours: 2)),
+      bodyguard: BodyGuardModel(
+        id: 'guard_marcus',
+        user: UserModel(
+          id: 'usr_marcus',
+          name: 'Marcus Sterling',
+          profileImageUrl: Assets.images.profilePicture.path,
+          role: UserRole.guard,
+        ),
+        hourlyRate: 60.0,
+        bio: 'Tactical motorcade specialist.',
+        rating: 4.85,
+        reviewCount: 94,
+        experienceYears: 6,
+        clearanceLevel: 'Licensed armed, Corporate visits',
+        isVerified: true,
+      ),
+      customer: const UserModel(id: 'usr_me', name: 'Client Account'),
+      status: BookingStatus.onGoing,
+      hourlyRate: 60.0,
+      bodyguardSpecialization: 'Tactical Motorcade Escort',
+      trackingStatusText: 'Started 11:30 AM • ETA 2:30 PM',
+      pickupAddress: 'The Ritz-Carlton, Wellington St, Toronto',
+      createdAt: DateTime.now().subtract(const Duration(hours: 3)),
+    ),
+    // Additional pending
+    BookingModel(
+      id: 'bk_cust_005',
+      bookingNumber: '#9878217',
+      startDateTime: DateTime.now().add(const Duration(days: 1)),
+      endDateTime: DateTime.now().add(const Duration(days: 1, hours: 5)),
+      bodyguard: BodyGuardModel(
+        id: 'guard_david',
+        user: UserModel(
+          id: 'usr_david',
+          name: 'David Sterling',
+          profileImageUrl: Assets.images.profilePicture2.path,
+          role: UserRole.guard,
+        ),
+        hourlyRate: 60.0,
+        bio: 'Dignitary protection.',
+        rating: 4.92,
+        reviewCount: 110,
+        experienceYears: 8,
+        clearanceLevel: 'Licensed armed, Corporate visits',
+        isVerified: true,
+      ),
+      customer: const UserModel(id: 'usr_me', name: 'Client Account'),
+      status: BookingStatus.pending,
+      hourlyRate: 60.0,
+      bodyguardSpecialization: 'Licensed armed, Corporate visits',
+      scheduleLabel: 'Tomorrow, Apr 29 • 1:00 PM – 6:00 PM',
+      pickupAddress: 'Four Seasons Hotel, Yorkville, Toronto',
+      createdAt: DateTime.now().subtract(const Duration(hours: 1)),
+    ),
+    // Additional completed
+    BookingModel(
+      id: 'bk_cust_006',
+      bookingNumber: '#9878218',
+      startDateTime: DateTime.now().subtract(const Duration(days: 3)),
+      endDateTime: DateTime.now().subtract(const Duration(days: 3, hours: -4)),
+      bodyguard: BodyGuardModel(
+        id: 'guard_carlos',
+        user: UserModel(
+          id: 'usr_carlos',
+          name: 'Carlos Sterling',
+          profileImageUrl: Assets.images.profilePicture.path,
+          role: UserRole.guard,
+        ),
+        hourlyRate: 60.0,
+        bio: 'Armed executive escort.',
+        rating: 4.88,
+        reviewCount: 88,
+        experienceYears: 6,
+        clearanceLevel: 'Licensed armed, Corporate visits',
+        isVerified: true,
+      ),
+      customer: const UserModel(id: 'usr_me', name: 'Client Account'),
+      status: BookingStatus.completed,
+      hourlyRate: 60.0,
+      bodyguardSpecialization: 'Licensed armed, Corporate visits',
+      scheduleLabel: 'Sunday, Apr 20 • 12:00 PM – 4:00 PM',
+      pickupAddress: 'Financial District, Bay St, Toronto',
+      customerRating: 5.0,
+      customerReviewText: 'Carlos was exceptionally professional, alert, and provided outstanding protection during our executive board meetings.',
+      createdAt: DateTime.now().subtract(const Duration(days: 4)),
     ),
   ];
 }

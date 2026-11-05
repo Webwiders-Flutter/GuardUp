@@ -158,10 +158,7 @@ class _CustomImagePickerSheetState extends State<AppMediaPickerSheet> {
           p: AppSpacing.md,
           color: context.colors.surfaceContainer.withValues(alpha: 0.72),
           radius: AppRadius.lg,
-          border: Border.all(
-            color: context.colors.outlineVariant,
-            width: 1,
-          ),
+          border: Border.all(color: context.colors.outlineVariant, width: 1),
           child: Row(
             children: [
               QuickContainer(
@@ -177,10 +174,7 @@ class _CustomImagePickerSheetState extends State<AppMediaPickerSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: context.textTheme.titleMedium?.bold(),
-                    ),
+                    Text(title, style: context.textTheme.titleMedium?.bold()),
                     AppSpacing.xs.h,
                     Text(
                       subtitle,

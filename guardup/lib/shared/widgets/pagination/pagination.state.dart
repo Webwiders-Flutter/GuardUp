@@ -42,4 +42,3 @@ sealed class PaginationState<T> with _$PaginationState<T> {
     return items.isNotEmpty && items.length < pageSize;
   }
 }
-

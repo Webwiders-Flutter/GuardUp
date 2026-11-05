@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:guardup/app/routes/app_routes.dart';
+import 'package:guardup/core/extensions/datetime.extension.dart';
 import 'package:guardup/shared/widgets/buttons/app_button.dart';
 
 import '/core/constants/app_radius.dart';
@@ -8,7 +11,6 @@ import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/core/state/api_state.dart';
-import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/navigation/app_tab_bar.dart';
 import '/shared/widgets/pagination/app_pagination.dart';
 import '/shared/widgets/pagination/pagination.controller.dart';
@@ -34,7 +36,6 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   late final PaginationController<NotificationModel> _paginationController;
-  late final ValueNotifier<List<NotificationModel>> _notificationsNotifier;
   late final ValueNotifier<int> _unreadCountNotifier;
 
   @override
@@ -43,10 +44,6 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     _tabController = TabController(length: 4, vsync: this);
 
     final initialList = NotificationModel.fakeData;
-    _notificationsNotifier = ValueNotifier<List<NotificationModel>>(
-      initialList,
-    );
-
     final unreadCount = initialList.where((n) => !n.isRead).length;
     _unreadCountNotifier = ValueNotifier<int>(unreadCount);
 
@@ -56,8 +53,6 @@ class _NotificationsScreenState extends State<NotificationsScreen>
         total: initialList.length,
         status: const ApiState.success(null),
       ),
-      onRefresh: _handleRefresh,
-      onLoadMore: _handleLoadMore,
     );
   }
 
@@ -65,7 +60,6 @@ class _NotificationsScreenState extends State<NotificationsScreen>
   void dispose() {
     _tabController.dispose();
     _paginationController.dispose();
-    _notificationsNotifier.dispose();
     _unreadCountNotifier.dispose();
     super.dispose();
   }
@@ -77,87 +71,21 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     context.l10n.accountTab,
   ];
 
-  void _handleTabChanged(int index) {
-    final allItems = _notificationsNotifier.value;
-    List<NotificationModel> filtered;
-
-    switch (index) {
-      case 1:
-        filtered = allItems
-            .where((n) => n.type.category == NotificationCategory.booking)
-            .toList();
-        break;
-      case 2:
-        filtered = allItems
-            .where((n) => n.type.category == NotificationCategory.payment)
-            .toList();
-        break;
-      case 3:
-        filtered = allItems
-            .where((n) => n.type.category == NotificationCategory.account)
-            .toList();
-        break;
-      case 0:
-      default:
-        filtered = allItems;
-        break;
-    }
-
-    _paginationController.updateState(
-      PaginationState<NotificationModel>(
-        items: filtered,
-        total: filtered.length,
-        status: const ApiState.success(null),
-      ),
-    );
-  }
-
-  Future<void> _handleRefresh() async {
-    await Future.delayed(const Duration(milliseconds: 600));
-    if (!mounted) return;
-
-    _handleTabChanged(_tabController.index);
-  }
-
-  Future<void> _handleLoadMore() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
-  }
-
   void _handleMarkAllAsRead() {
-    final updatedList = _notificationsNotifier.value
-        .map((n) => n.copyWith(isRead: true))
-        .toList();
-
-    _notificationsNotifier.value = updatedList;
-    _unreadCountNotifier.value = 0;
-
-    _handleTabChanged(_tabController.index);
-
-    AppSnackbar.success(context.l10n.allMarkedAsRead, context: context);
+    // Clickflow handler: no dynamic mutations needed
   }
 
   void _handleNotificationTap(NotificationModel notification) {
-    if (!notification.isRead) {
-      final updatedList = _notificationsNotifier.value.map((n) {
-        if (n.id == notification.id) {
-          return n.copyWith(isRead: true);
-        }
-        return n;
-      }).toList();
-
-      _notificationsNotifier.value = updatedList;
-      final newUnread = updatedList.where((n) => !n.isRead).length;
-      _unreadCountNotifier.value = newUnread;
-
-      _handleTabChanged(_tabController.index);
+    if (notification.type.category == NotificationCategory.booking) {
+      context.push(AppRoutes.bookings);
+    } else if (notification.type.category == NotificationCategory.payment) {
+      context.push(AppRoutes.myWallet);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.transparent,
       appBar: AppAppBar.transparent(
         alignTitle: .left,
         titleWidget: _buildAppBarTitle(context),
@@ -184,7 +112,6 @@ class _NotificationsScreenState extends State<NotificationsScreen>
               child: AppTabBar.pill(
                 controller: _tabController,
                 tabNames: _tabs(context),
-                onTap: _handleTabChanged,
               ),
             ),
             AppSpacing.md.h,
@@ -197,12 +124,13 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                 separatorBuilder: (context, index) => AppSpacing.md.h,
                 itemBuilder: (context, notification, index) {
                   final items = _paginationController.value.items;
-                  final isFirstOfToday = index == 0 && notification.isToday;
+                  final isFirstOfToday =
+                      index == 0 && notification.createdAt.isToday;
                   final isFirstOfYesterday =
-                      (index == 0 && !notification.isToday) ||
+                      (index == 0 && !notification.createdAt.isToday) ||
                       (index > 0 &&
-                          items[index - 1].isToday &&
-                          !notification.isToday);
+                          items[index - 1].createdAt.isToday &&
+                          !notification.createdAt.isToday);
 
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,

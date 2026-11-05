@@ -226,10 +226,7 @@ class DocumentUploadCard extends StatelessWidget {
         Flexible(
           child: Text(
             title,
-            style: context.textTheme.bodyLarge
-                ?.decreaseSize(1)
-                .semiBold()
-                ,
+            style: context.textTheme.bodyLarge?.decreaseSize(1).semiBold(),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),

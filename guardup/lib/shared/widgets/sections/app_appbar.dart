@@ -124,18 +124,15 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
         (title != null
             ? Text(
                 title!,
-                style:
-                    (context.textTheme.titleMedium?.bold() ??
-                            context.textTheme.titleLarge ??
-                            const TextStyle())
-                        .semiBold()
-                        .copyWith(
-                          fontSize: fontSize,
-                          color:
-                              foregroundColor ??
-                              (theme.appBarTheme.foregroundColor ??
-                                  context.colors.onSurface),
-                        ),
+                style: (context.textTheme.titleLarge ?? const TextStyle())
+                    .semiBold()
+                    .copyWith(
+                      fontSize: fontSize,
+                      color:
+                          foregroundColor ??
+                          (theme.appBarTheme.foregroundColor ??
+                              context.colors.onSurface),
+                    ),
               )
             : null);
 

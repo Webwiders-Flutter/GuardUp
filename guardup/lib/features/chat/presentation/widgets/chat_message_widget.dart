@@ -6,6 +6,7 @@ import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
+import '/core/extensions/datetime.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/gen/assets.gen.dart';
@@ -67,7 +68,7 @@ class ChatMessageWidget extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                message.displayTime,
+                message.customFormattedTime ?? message.createdAt.chatTime,
                 style: context.textTheme.labelSmall?.colour(
                   context.colors.onSurfaceVariant,
                 ),
@@ -131,8 +132,7 @@ class ChatMessageWidget extends StatelessWidget {
                         spans: [
                           AppTextSpan(
                             text: message.content,
-                            style: context.textTheme.bodySmall
-                                ?.increaseSize(1),
+                            style: context.textTheme.bodySmall?.increaseSize(1),
                           ),
                           AppTextSpan(
                             text: message.highlightedText!,
@@ -146,8 +146,7 @@ class ChatMessageWidget extends StatelessWidget {
                     else
                       Text(
                         message.content,
-                        style: context.textTheme.bodySmall
-                            ?.increaseSize(1),
+                        style: context.textTheme.bodySmall?.increaseSize(1),
                       ),
 
                     // Optional Vehicle Identification Badge
@@ -204,7 +203,7 @@ class ChatMessageWidget extends StatelessWidget {
         Padding(
           padding: EdgeInsets.only(left: AppSizes.avatarSm + AppSpacing.sm),
           child: Text(
-            message.displayTime,
+            message.customFormattedTime ?? message.createdAt.chatTime,
             style: context.textTheme.labelSmall?.colour(
               context.colors.onSurfaceTertiary,
             ),

@@ -47,6 +47,17 @@ enum NotificationType {
     );
   }
 
+  static NotificationType? tryFromApiValue(String? value) {
+    if (value == null) return null;
+    try {
+      return NotificationType.values.firstWhere(
+        (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// The SVG icon corresponding to this notification type.
   SvgGenImage get svgIcon {
     switch (this) {
@@ -90,10 +101,40 @@ enum NotificationType {
 
 /// Category tabs for filtering notifications.
 enum NotificationCategory {
-  all,
-  booking,
-  payment,
-  account;
+  @JsonValue('ALL')
+  all('ALL'),
+
+  @JsonValue('BOOKING')
+  booking('BOOKING'),
+
+  @JsonValue('PAYMENT')
+  payment('PAYMENT'),
+
+  @JsonValue('ACCOUNT')
+  account('ACCOUNT');
+
+  final String apiValue;
+
+  const NotificationCategory(this.apiValue);
+
+  static NotificationCategory fromApiValue(String? value) {
+    if (value == null) return NotificationCategory.all;
+    return NotificationCategory.values.firstWhere(
+      (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
+      orElse: () => NotificationCategory.all,
+    );
+  }
+
+  static NotificationCategory? tryFromApiValue(String? value) {
+    if (value == null) return null;
+    try {
+      return NotificationCategory.values.firstWhere(
+        (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
 
   String get label {
     switch (this) {
@@ -108,4 +149,3 @@ enum NotificationCategory {
     }
   }
 }
-

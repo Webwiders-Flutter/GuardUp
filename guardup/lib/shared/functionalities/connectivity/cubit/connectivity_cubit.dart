@@ -10,8 +10,8 @@ class ConnectivityCubit extends Cubit<ConnectivityState> {
   StreamSubscription<bool>? _subscription;
 
   ConnectivityCubit({ConnectivityService? service})
-      : _service = service ?? ConnectivityServiceImpl(),
-        super(const ConnectivityState()) {
+    : _service = service ?? ConnectivityServiceImpl(),
+      super(const ConnectivityState()) {
     _init();
   }
 
@@ -71,4 +71,3 @@ class ConnectivityCubit extends Cubit<ConnectivityState> {
     return super.close();
   }
 }
-

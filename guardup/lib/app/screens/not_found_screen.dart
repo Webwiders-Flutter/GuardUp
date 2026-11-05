@@ -395,7 +395,7 @@ class _NotFoundPainter extends CustomPainter {
         style: textTheme.titleLarge
             ?.weight(FontWeight.w900)
             .colour(colors.onSurface)
-            .size(AppSpacing.lg)
+            .decreaseSize(2)
             .lineHeight(1),
       ),
       textDirection: TextDirection.ltr,
@@ -415,7 +415,7 @@ class _NotFoundPainter extends CustomPainter {
         style: textTheme.displayLarge
             ?.weight(FontWeight.w900)
             .colour(colors.primary.withValues(alpha: 0.07))
-            .size((AppSpacing.xxxl * 2) - 6)
+            .increaseSize(1)
             .lineHeight(1)
             .textSpacing(-2),
       ),

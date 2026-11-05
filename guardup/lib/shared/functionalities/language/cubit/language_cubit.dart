@@ -12,8 +12,8 @@ class LanguageCubit extends Cubit<LanguageState> {
   final LocalStorage _storage;
 
   LanguageCubit({LocalStorage? storage})
-      : _storage = storage ?? PrefsStorageService.instance,
-        super(const LanguageState(isLoading: true)) {
+    : _storage = storage ?? PrefsStorageService.instance,
+      super(const LanguageState(isLoading: true)) {
     loadSavedLanguage();
   }
 

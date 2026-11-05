@@ -208,8 +208,9 @@ class _DialogHeader extends StatelessWidget {
         vertical: AppSpacing.md,
       ),
       decoration: BoxDecoration(
-        border:
-            Border(bottom: BorderSide(color: colors.outlineVariant, width: 1)),
+        border: Border(
+          bottom: BorderSide(color: colors.outlineVariant, width: 1),
+        ),
       ),
       child: Row(
         children: [

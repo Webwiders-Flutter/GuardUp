@@ -302,8 +302,10 @@ final class Validators {
       return context.l10n.pleaseEnterOrSelectVehicleNumber;
     }
 
-    final trimmed =
-        value.trim().toUpperCase().replaceAll(RegExp(r'[\s\-]'), '');
+    final trimmed = value.trim().toUpperCase().replaceAll(
+      RegExp(r'[\s\-]'),
+      '',
+    );
 
     if (!AppRegex.vehicleNumber.hasMatch(trimmed)) {
       return context.l10n.enterValidVehicleNumber;

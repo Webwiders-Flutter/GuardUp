@@ -1,4 +1,5 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import '/core/constants/app_constants.dart';
 
 import 'config.dart';
@@ -38,5 +39,4 @@ final class DevConfig implements AppConfig {
   @override
   bool get enableLogging =>
       dotenv.maybeGet('ENABLE_LOGGING')?.toLowerCase() == 'true' || true;
-
 }

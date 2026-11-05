@@ -6,6 +6,7 @@ import 'package:quick_container/quick_container.dart';
 
 import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
+import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
@@ -27,17 +28,6 @@ import '../../data/enum/user_role.enum.dart';
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
-  String _getAppBarTitle(BuildContext context, UserRole role) {
-    switch (role) {
-      case UserRole.guard:
-        return context.l10n.bodyguardProfile;
-      case UserRole.company:
-        return context.l10n.companyProfile;
-      case UserRole.customer:
-        return context.l10n.customerProfile;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
@@ -46,13 +36,10 @@ class ProfileScreen extends StatelessWidget {
         final role = state.sessionRole ?? UserRole.guard;
 
         return Scaffold(
-          backgroundColor: context.colors.transparent,
           appBar: AppAppBar.transparent(
-            title: _getAppBarTitle(context, role),
+            title: role.profileTitle(context.l10n),
             alignTitle: .left,
-            actions: [
-              NotificationIconWidget(count: 5),
-            ],
+            actions: [NotificationIconWidget(count: 5)],
           ),
           body: SingleChildScrollView(
             padding: context.horizontalEdgeInsets,
@@ -116,7 +103,9 @@ class ProfileScreen extends StatelessWidget {
                   _ProfileMenuCard(
                     title: context.l10n.reviewAndRatings,
                     icon: Icons.star_outline_rounded,
-                    onTap: () {},
+                    onTap: () {
+                      context.push(AppRoutes.bodyguardInformation);
+                    },
                   ),
                 ] else if (role == UserRole.company) ...[
                   _ProfileMenuCard(
@@ -282,7 +271,7 @@ class _ProfileCard extends StatelessWidget {
                       p: 2.5,
                       child: Icon(
                         Icons.check_rounded,
-                        size: 10,
+                        size: AppSizes.iconTiny,
                         color: context.colors.surface,
                       ),
                     ),
@@ -318,13 +307,13 @@ class _ProfileCard extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.star_rounded,
-                      size: 16,
+                      size: AppSizes.iconSm,
                       color: context.colors.primary,
                     ),
                     AppSpacing.xxs.w,
                     Text(
                       rating.toStringAsFixed(1),
-                      style: context.textTheme.labelSmall?.bold().colour(
+                      style: context.textTheme.labelSmall?.colour(
                         context.colors.primary,
                       ),
                     ),
@@ -406,7 +395,7 @@ class _ProfileMenuCard extends StatelessWidget {
             Icon(
               icon,
               color: textColor ?? context.colors.onSurfaceVariant,
-              size: 20,
+              size: AppSizes.iconMd,
             ),
             AppSpacing.md.w,
           ],
@@ -421,7 +410,7 @@ class _ProfileMenuCard extends StatelessWidget {
           Icon(
             Icons.chevron_right_rounded,
             color: textColor ?? context.colors.onSurfaceVariant,
-            size: 22,
+            size: AppSizes.iconLg,
           ),
         ],
       ),

@@ -6,6 +6,7 @@ import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
+import '/core/extensions/datetime.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/gen/assets.gen.dart';
@@ -71,7 +72,7 @@ class TransactionCard extends StatelessWidget {
                   AppRichText(
                     spans: [
                       AppTextSpan(
-                        text: '${transaction.amountFormatted} ',
+                        text: '${transaction.amount.toUsd} ',
                         style: context.textTheme.bodyMedium?.semiBold().colour(
                           iconColor,
                         ),
@@ -98,7 +99,8 @@ class TransactionCard extends StatelessWidget {
                       ),
                       AppSpacing.xs.w,
                       Text(
-                        transaction.displayDate,
+                        transaction.formattedDate ??
+                            transaction.dateTime.formattedDateTime,
                         style: context.textTheme.bodySmall?.colour(
                           context.colors.onSurfaceVariant,
                         ),

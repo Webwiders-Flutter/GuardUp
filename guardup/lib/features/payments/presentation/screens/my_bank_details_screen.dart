@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:guardup/core/extensions/string.extension.dart';
 import 'package:quick_container/quick_container.dart';
 
+import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
@@ -9,7 +11,6 @@ import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/core/utils/validators.dart';
 import '/shared/widgets/buttons/app_button.dart';
-import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
@@ -26,11 +27,11 @@ class MyBankDetailsScreen extends StatefulWidget {
 class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  late final TextEditingController _accountNumberController;
-  late final TextEditingController _accountHolderController;
-  late final TextEditingController _bankNameController;
-  late final TextEditingController _branchController;
-  late final TextEditingController _ifscCodeController;
+  final _accountNumberController = TextEditingController();
+  final _accountHolderController = TextEditingController();
+  final _bankNameController = TextEditingController();
+  final _branchController = TextEditingController();
+  final _ifscCodeController = TextEditingController();
 
   final ValueNotifier<List<BankAccount>> _accountsNotifier =
       ValueNotifier<List<BankAccount>>([
@@ -46,16 +47,6 @@ class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
       ]);
 
   @override
-  void initState() {
-    super.initState();
-    _accountNumberController = TextEditingController();
-    _accountHolderController = TextEditingController();
-    _bankNameController = TextEditingController();
-    _branchController = TextEditingController();
-    _ifscCodeController = TextEditingController();
-  }
-
-  @override
   void dispose() {
     _accountNumberController.dispose();
     _accountHolderController.dispose();
@@ -67,33 +58,12 @@ class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
   }
 
   void _handleAddAccount() {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-
-    final newAccount = BankAccount(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      accountNumber: _accountNumberController.text.trim(),
-      accountHolder: _accountHolderController.text.trim(),
-      bankName: _bankNameController.text.trim(),
-      branch: _branchController.text.trim(),
-      ifscCode: _ifscCodeController.text.trim().toUpperCase(),
-      branchAddress: _branchController.text.trim(),
-    );
-
-    _accountsNotifier.value = [..._accountsNotifier.value, newAccount];
-
-    _accountNumberController.clear();
-    _accountHolderController.clear();
-    _bankNameController.clear();
-    _branchController.clear();
-    _ifscCodeController.clear();
-
-    AppSnackbar.success('Bank account added successfully', context: context);
+    context.pop();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.transparent,
       appBar: AppAppBar.transparent(title: context.l10n.myBankDetailsTitle),
       body: SingleChildScrollView(
         padding: context.horizontalEdgeInsets,
@@ -180,9 +150,7 @@ class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
 
               AppTextField(
                 controller: _ifscCodeController,
-                decoration: InputDecoration(
-                  hintText: context.l10n.ifscCode,
-                ),
+                decoration: InputDecoration(hintText: context.l10n.ifscCode),
                 textCapitalization: TextCapitalization.characters,
                 textInputAction: TextInputAction.done,
                 validator: (value) => Validators.ifsc(context, value),
@@ -232,8 +200,8 @@ class BankAccountCard extends StatelessWidget {
                 children: [
                   // Edit Button
                   QuickContainer(
-                    w: 28,
-                    h: 28,
+                    w: AppSizes.iconMdl,
+                    h: AppSizes.iconMdl,
                     shape: QuickContainerShape.circle,
                     color: context.colors.primaryContainer.withValues(
                       alpha: 0.5,
@@ -241,7 +209,7 @@ class BankAccountCard extends StatelessWidget {
                     alignment: Alignment.center,
                     child: Icon(
                       Icons.edit_rounded,
-                      size: 14,
+                      size: AppSizes.iconXs,
                       color: context.colors.primary,
                     ),
                   ),
@@ -249,14 +217,14 @@ class BankAccountCard extends StatelessWidget {
 
                   // Delete Button
                   QuickContainer(
-                    w: 28,
-                    h: 28,
+                    w: AppSizes.iconMdl,
+                    h: AppSizes.iconMdl,
                     shape: QuickContainerShape.circle,
                     color: context.colors.errorContainer.withValues(alpha: 0.3),
                     alignment: Alignment.center,
                     child: Icon(
                       Icons.delete_outline_rounded,
-                      size: 14,
+                      size: AppSizes.iconXs,
                       color: context.colors.error,
                     ),
                   ),

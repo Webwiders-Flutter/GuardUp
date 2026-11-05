@@ -5,6 +5,7 @@ import 'package:quick_container/quick_container.dart';
 
 import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
+import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
@@ -57,26 +58,12 @@ class _BodyGuardUploadDocumentsScreenState
   }
 
   void _handleSubmit() {
-    // final docs = _documentsNotifier.value;
-    // final missingRequired = GuardDocType.values
-    //     .where((d) => d.isRequired && !docs.containsKey(d))
-    //     .toList();
-
-    // if (missingRequired.isNotEmpty) {
-    //   AppSnackbar.warning(
-    //     'Please upload all required documents before submitting.',
-    //     context: context,
-    //   );
-    //   return;
-    // }
-
     context.push(AppRoutes.registrationFee);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.transparent,
       appBar: AppAppBar.transparent(
         title: context.l10n.uploadDocuments,
         alignTitle: .center,
@@ -95,7 +82,7 @@ class _BodyGuardUploadDocumentsScreenState
               alignment: Alignment.center,
               child: Icon(
                 Icons.help_outline_rounded,
-                size: 18,
+                size: AppSizes.iconSmd,
                 color: context.colors.onSurfaceVariant,
               ),
             ),
@@ -144,9 +131,7 @@ class _BodyGuardUploadDocumentsScreenState
                           // 2. Main Heading
                           Text(
                             'Verification Credentials',
-                            style: context.textTheme.headlineMedium
-                                ?.bold()
-                                ,
+                            style: context.textTheme.headlineMedium?.bold(),
                           ),
                           AppSpacing.sm.h,
 
@@ -171,7 +156,7 @@ class _BodyGuardUploadDocumentsScreenState
                             ),
                             iconWidget: Icon(
                               Icons.info_outline,
-                              size: 16,
+                              size: AppSizes.iconSm,
                               color: context.colors.onSurfaceVariant,
                             ),
                             selectedFilePath: docs[GuardDocType.idProof]?.path,
@@ -192,7 +177,7 @@ class _BodyGuardUploadDocumentsScreenState
                             ),
                             iconWidget: Icon(
                               Icons.check_circle_rounded,
-                              size: 16,
+                              size: AppSizes.iconSm,
                               color: context.colors.success,
                             ),
                             selectedFilePath:
@@ -262,7 +247,7 @@ class _BodyGuardUploadDocumentsScreenState
                                   alignment: Alignment.center,
                                   child: Icon(
                                     Icons.lock_outline_rounded,
-                                    size: 18,
+                                    size: AppSizes.iconSmd,
                                     color: context.colors.primary,
                                   ),
                                 ),
@@ -296,7 +281,7 @@ class _BodyGuardUploadDocumentsScreenState
                             text: 'Submit for Review',
                             trailing: Icon(
                               Icons.arrow_forward_rounded,
-                              size: 20,
+                              size: AppSizes.iconMd,
                               color: context.colors.onPrimary,
                             ),
                             size: ButtonSize.large,

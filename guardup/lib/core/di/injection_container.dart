@@ -14,19 +14,19 @@ Future<void> initDependencies() async {
   // ------------------------------------------------------------
   // Storage & Core Services
   // ------------------------------------------------------------
-  sl.registerLazySingleton<LocalStorage>(
-    () => PrefsStorageService.instance,
-  );
+  sl.registerLazySingleton<LocalStorage>(() => PrefsStorageService.instance);
 
   // ------------------------------------------------------------
   // Auth
   // ------------------------------------------------------------
   sl.registerLazySingleton<AuthBloc>(
     () => AuthBloc(
-      authRepository:
-          sl.isRegistered<AuthRepository>() ? sl<AuthRepository>() : null,
-      userRepository:
-          sl.isRegistered<UserRepository>() ? sl<UserRepository>() : null,
+      authRepository: sl.isRegistered<AuthRepository>()
+          ? sl<AuthRepository>()
+          : null,
+      userRepository: sl.isRegistered<UserRepository>()
+          ? sl<UserRepository>()
+          : null,
     ),
   );
 

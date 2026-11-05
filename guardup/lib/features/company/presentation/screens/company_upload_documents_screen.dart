@@ -5,6 +5,7 @@ import 'package:guardup/features/auth/auth.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '/app/routes/app_routes.dart';
+import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
@@ -51,7 +52,6 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.transparent,
       appBar: AppAppBar.transparent(
         title: sl<AuthBloc>().state.isAuthenticated
             ? context.l10n.businessDocuments
@@ -73,73 +73,22 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
                         children: [
                           AppSpacing.lg.h,
 
-                          // 1. Business Registration
-                          DocumentUploadCard(
-                            title: CompanyDocType.businessRegistration.label(
-                              context.l10n,
-                            ),
-                            icon: Icon(
-                              CompanyDocType.businessRegistration.icon,
-                              color: context.colors.primary,
-                              size: 24,
-                            ),
-                            selectedFilePath:
-                                docs[CompanyDocType.businessRegistration]?.path,
-                            onPick: () => _pickDocument(
-                              CompanyDocType.businessRegistration,
-                            ),
-                          ),
-                          AppSpacing.md.h,
-
-                          // 2. Government ID (Admin)
-                          DocumentUploadCard(
-                            title: CompanyDocType.governmentId.label(
-                              context.l10n,
-                            ),
-                            icon: Icon(
-                              CompanyDocType.governmentId.icon,
-                              color: context.colors.primary,
-                              size: 24,
-                            ),
-                            selectedFilePath:
-                                docs[CompanyDocType.governmentId]?.path,
-                            onPick: () =>
-                                _pickDocument(CompanyDocType.governmentId),
-                          ),
-                          AppSpacing.md.h,
-
-                          // 3. Company Logo
-                          DocumentUploadCard(
-                            title: CompanyDocType.companyLogo.label(
-                              context.l10n,
-                            ),
-                            icon: Icon(
-                              CompanyDocType.companyLogo.icon,
-                              color: context.colors.primary,
-                              size: 24,
-                            ),
-                            selectedFilePath:
-                                docs[CompanyDocType.companyLogo]?.path,
-                            onPick: () =>
-                                _pickDocument(CompanyDocType.companyLogo),
-                          ),
-                          AppSpacing.md.h,
-
-                          // 4. Additional Documents
-                          DocumentUploadCard(
-                            title: CompanyDocType.additionalDocuments.label(
-                              context.l10n,
-                            ),
-                            icon: Icon(
-                              CompanyDocType.additionalDocuments.icon,
-                              color: context.colors.primary,
-                              size: 24,
-                            ),
-                            onUpload: () {},
-                            selectedFilePath:
-                                docs[CompanyDocType.additionalDocuments]?.path,
-                            onPick: () => _pickDocument(
-                              CompanyDocType.additionalDocuments,
+                          ...CompanyDocType.values.map(
+                            (x) => Column(
+                              mainAxisSize: .min,
+                              children: [
+                                DocumentUploadCard(
+                                  title: x.label(context.l10n),
+                                  icon: Icon(
+                                    x.icon,
+                                    color: context.colors.primary,
+                                    size: AppSizes.iconLg,
+                                  ),
+                                  selectedFilePath: docs[x]?.path,
+                                  onPick: () => _pickDocument(x),
+                                ),
+                                AppSpacing.md.h,
+                              ],
                             ),
                           ),
 
@@ -152,7 +101,7 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
                             size: ButtonSize.large,
                             onPressed: _handleSubmit,
                           ),
-                          AppSpacing.huge.h,
+                          AppSpacing.xl.h,
                         ],
                       );
                     },

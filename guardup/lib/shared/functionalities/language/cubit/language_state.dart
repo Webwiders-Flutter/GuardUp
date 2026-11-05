@@ -17,10 +17,7 @@ class LanguageState extends Equatable {
   bool get isArabic => language == LanguageType.arabic;
   bool get isEnglish => language == LanguageType.english;
 
-  LanguageState copyWith({
-    LanguageType? language,
-    bool? isLoading,
-  }) {
+  LanguageState copyWith({LanguageType? language, bool? isLoading}) {
     return LanguageState(
       language: language ?? this.language,
       isLoading: isLoading ?? this.isLoading,

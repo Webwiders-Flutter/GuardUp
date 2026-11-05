@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:guardup/core/constants/app_sizes.dart';
 
 import '/app/routes/app_routes.dart';
 import '/core/constants/app_spacing.dart';
@@ -29,21 +30,12 @@ class _CompanyCompleteProfileScreenState
     extends State<CompanyCompleteProfileScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  late final TextEditingController _companyNameController;
-  late final TextEditingController _emailController;
-  late final TextEditingController _phoneController;
-  late final SelectionController<BusinessType> _businessTypeController;
-
-  @override
-  void initState() {
-    super.initState();
-    _companyNameController = TextEditingController();
-    _emailController = TextEditingController();
-    _phoneController = TextEditingController();
-    _businessTypeController = SelectionController<BusinessType>.single(
-      allowDeselect: false,
-    );
-  }
+  final _companyNameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _businessTypeController = SelectionController<BusinessType>.single(
+    allowDeselect: false,
+  );
 
   @override
   void dispose() {
@@ -62,7 +54,6 @@ class _CompanyCompleteProfileScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.transparent,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -151,7 +142,7 @@ class _CompanyCompleteProfileScreenState
                                   data: e.label(context.l10n),
                                   icon: Icon(
                                     e.icon,
-                                    size: 18,
+                                    size: AppSizes.iconSmd,
                                     color: e.color(context),
                                   ),
                                 ),
@@ -163,8 +154,7 @@ class _CompanyCompleteProfileScreenState
                               : null,
                         ),
 
-                        const Spacer(),
-                        AppSpacing.xl.h,
+                        AppSpacing.huge.h,
 
                         // 7. Next Button pinned to bottom
                         AppButton(
@@ -172,7 +162,8 @@ class _CompanyCompleteProfileScreenState
                           size: ButtonSize.large,
                           onPressed: _handleNext,
                         ),
-                        AppSpacing.huge.h,
+                        const Spacer(),
+                        AppSpacing.xl.h,
                       ],
                     ),
                   ),

@@ -9,7 +9,6 @@ import '/core/extensions/textstyle_extension.dart';
 import '/shared/widgets/sections/app_image.dart';
 import 'selection.controller.dart';
 
-
 /// A compact, luxury-styled selectable chip/segment widget powered by [SelectionController].
 ///
 /// Features the signature gold primary gradient when selected and a sleek dark container
@@ -90,11 +89,7 @@ class AppSelectableChip<T> extends StatelessWidget {
             color: foregroundColor,
           );
         } else if (effectiveLeading == null && icon != null) {
-          effectiveLeading = Icon(
-            icon,
-            size: 20,
-            color: foregroundColor,
-          );
+          effectiveLeading = Icon(icon, size: 20, color: foregroundColor);
         }
 
         return QuickContainer(
@@ -109,10 +104,7 @@ class AppSelectableChip<T> extends StatelessWidget {
               : context.colors.surfaceContainer.withValues(alpha: 0.72),
           border: isSelected
               ? null
-              : Border.all(
-                  color: context.colors.outlineVariant,
-                  width: 1,
-                ),
+              : Border.all(color: context.colors.outlineVariant, width: 1),
           onTap: enabled
               ? () {
                   controller.toggle(value);
@@ -133,9 +125,7 @@ class AppSelectableChip<T> extends StatelessWidget {
                 child: Text(
                   label,
                   style: context.textTheme.bodyMedium
-                      ?.weight(
-                        isSelected ? FontWeight.w700 : FontWeight.w600,
-                      )
+                      ?.weight(isSelected ? FontWeight.w700 : FontWeight.w600)
                       .colour(foregroundColor),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -148,5 +138,3 @@ class AppSelectableChip<T> extends StatelessWidget {
     );
   }
 }
-
-

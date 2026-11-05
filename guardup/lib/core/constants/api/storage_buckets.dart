@@ -5,5 +5,4 @@ final class StorageBuckets {
 
 final class StorageFolders {
   const StorageFolders._();
-
 }

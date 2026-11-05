@@ -1,115 +1,31 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+import '../../../../gen/assets.gen.dart';
 import '/features/auth/auth.dart';
-import '/gen/assets.gen.dart';
+
+part 'review.model.freezed.dart';
+part 'review.model.g.dart';
 
 /// Represents a client feedback or operative rating record.
-class ReviewModel {
-  final String id;
-  final UserModel from;
-  final UserModel to;
-  final double rating;
-  final String reviewDescription;
-  final DateTime createdAt;
-  final String? bookingId;
-  final String? customFormattedDate;
-  final String? serviceTag;
-  final String? customFormattedTimeAgo;
-
-  const ReviewModel({
-    required this.id,
-    required this.from,
-    required this.to,
-    required this.rating,
-    required this.reviewDescription,
-    required this.createdAt,
-    this.bookingId,
-    this.customFormattedDate,
-    this.serviceTag,
-    this.customFormattedTimeAgo,
-  });
-
-  /// Readable display date representation (e.g. "28 Apr 2026").
-  String get displayDate {
-    if (customFormattedDate != null && customFormattedDate!.isNotEmpty) {
-      return customFormattedDate!;
-    }
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
-    final monthStr = months[createdAt.month - 1];
-    return '${createdAt.day} $monthStr ${createdAt.year}';
-  }
-
-  /// Relative human-readable time (e.g. "2 days ago").
-  String get timeAgo {
-    if (customFormattedTimeAgo != null && customFormattedTimeAgo!.isNotEmpty) {
-      return customFormattedTimeAgo!;
-    }
-    final diff = DateTime.now().difference(createdAt);
-    if (diff.inDays >= 30) {
-      final months = (diff.inDays / 30).floor();
-      return '$months ${months == 1 ? 'month' : 'months'} ago';
-    } else if (diff.inDays >= 7) {
-      final weeks = (diff.inDays / 7).floor();
-      return '$weeks ${weeks == 1 ? 'week' : 'weeks'} ago';
-    } else if (diff.inDays > 0) {
-      return '${diff.inDays} ${diff.inDays == 1 ? 'day' : 'days'} ago';
-    } else if (diff.inHours > 0) {
-      return '${diff.inHours} ${diff.inHours == 1 ? 'hour' : 'hours'} ago';
-    } else if (diff.inMinutes > 0) {
-      return '${diff.inMinutes} ${diff.inMinutes == 1 ? 'minute' : 'minutes'} ago';
-    }
-    return 'Just now';
-  }
-
-  ReviewModel copyWith({
-    String? id,
-    UserModel? from,
-    UserModel? to,
-    double? rating,
-    String? reviewDescription,
-    DateTime? createdAt,
+@freezed
+abstract class ReviewModel with _$ReviewModel {
+  const factory ReviewModel({
+    required String id,
+    required UserModel from,
+    required UserModel to,
+    required double rating,
+    required String reviewDescription,
+    required DateTime createdAt,
     String? bookingId,
     String? customFormattedDate,
-  }) {
-    return ReviewModel(
-      id: id ?? this.id,
-      from: from ?? this.from,
-      to: to ?? this.to,
-      rating: rating ?? this.rating,
-      reviewDescription: reviewDescription ?? this.reviewDescription,
-      createdAt: createdAt ?? this.createdAt,
-      bookingId: bookingId ?? this.bookingId,
-      customFormattedDate: customFormattedDate ?? this.customFormattedDate,
-    );
-  }
+    String? serviceTag,
+    String? customFormattedTimeAgo,
+  }) = _ReviewModel;
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'from': from.toJson(),
-      'to': to.toJson(),
-      'rating': rating,
-      'reviewDescription': reviewDescription,
-      'createdAt': createdAt.toIso8601String(),
-      if (bookingId != null) 'bookingId': bookingId,
-      if (customFormattedDate != null) 'customFormattedDate': customFormattedDate,
-    };
-  }
+  factory ReviewModel.fromJson(Map<String, dynamic> json) =>
+      _$ReviewModelFromJson(json);
 
-  factory ReviewModel.fromJson(Map<String, dynamic> json) {
-    return ReviewModel(
-      id: json['id'] as String? ?? '',
-      from: UserModel.fromJson(json['from'] as Map<String, dynamic>),
-      to: UserModel.fromJson(json['to'] as Map<String, dynamic>),
-      rating: (json['rating'] as num?)?.toDouble() ?? 5.0,
-      reviewDescription: json['reviewDescription'] as String? ?? '',
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ??
-          DateTime.now(),
-      bookingId: json['bookingId'] as String?,
-      customFormattedDate: json['customFormattedDate'] as String?,
-    );
-  }
+  static List<ReviewModel> get fakeData => fakeBodyguardReviews;
 
   /// Curated list of verified client reviews matching the bodyguard profile design.
   static List<ReviewModel> get fakeBodyguardReviews => [
@@ -241,4 +157,3 @@ class ReviewModel {
     ),
   ];
 }
-

@@ -4,6 +4,7 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:quick_container/quick_container.dart';
 
+import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
@@ -12,7 +13,6 @@ import '/core/extensions/string.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/core/utils/validators.dart';
 import '/shared/widgets/buttons/app_button.dart';
-import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_dropdown.dart';
 import '/shared/widgets/inputs/app_media_picker_sheet.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
@@ -34,25 +34,16 @@ class CompanyEditProfileScreen extends StatefulWidget {
 class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  late final TextEditingController _companyNameController;
-  late final TextEditingController _emailController;
-  late final TextEditingController _phoneController;
-  late final SelectionController<BusinessType> _businessTypeController;
+  final _companyNameController = TextEditingController(
+    text: 'SecurePro Security Ltd.',
+  );
+  final _emailController = TextEditingController(text: 'contact@securepro.com');
+  final _phoneController = TextEditingController(text: '9876543210');
+  final _businessTypeController = SelectionController<BusinessType>.single(
+    initial: BusinessType.pvtLtd,
+    allowDeselect: false,
+  );
   final ValueNotifier<XFile?> _logoImageNotifier = ValueNotifier<XFile?>(null);
-
-  @override
-  void initState() {
-    super.initState();
-    _companyNameController = TextEditingController(
-      text: 'SecurePro Security Ltd.',
-    );
-    _emailController = TextEditingController(text: 'contact@securepro.com');
-    _phoneController = TextEditingController(text: '9876543210');
-    _businessTypeController = SelectionController<BusinessType>.single(
-      initial: BusinessType.pvtLtd,
-      allowDeselect: false,
-    );
-  }
 
   @override
   void dispose() {
@@ -81,18 +72,13 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
   }
 
   void _handleSave() {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-    AppSnackbar.success('Profile updated successfully', context: context);
     context.pop();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.transparent,
-      appBar: AppAppBar.transparent(
-        title: context.l10n.editProfileTitle,
-      ),
+      appBar: AppAppBar.transparent(title: context.l10n.editProfileTitle),
       body: SingleChildScrollView(
         padding: context.horizontalEdgeInsets,
         child: Form(
@@ -112,8 +98,8 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
                       children: [
                         // Circular Avatar with Gold Ring Border
                         QuickContainer(
-                          w: 96,
-                          h: 96,
+                          w: AppSizes.avatarColossal,
+                          h: AppSizes.avatarColossal,
                           shape: QuickContainerShape.circle,
                           border: Border.all(
                             color: context.colors.primary,
@@ -127,8 +113,8 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
                                 child: logoImage != null
                                     ? AppImage.xFile(
                                         xFile: logoImage,
-                                        width: 92,
-                                        height: 92,
+                                        width: AppSizes.avatarColossal - 4,
+                                        height: AppSizes.avatarColossal - 4,
                                         fit: BoxFit.cover,
                                         onTap: _handleChangePhoto,
                                       )
@@ -165,14 +151,14 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
                           child: GestureDetector(
                             onTap: _handleChangePhoto,
                             child: QuickContainer(
-                              w: 28,
-                              h: 28,
+                              w: AppSizes.iconMdl,
+                              h: AppSizes.iconMdl,
                               shape: QuickContainerShape.circle,
                               color: context.colors.primary,
                               alignment: Alignment.center,
                               child: Icon(
                                 Icons.camera_alt,
-                                size: 15,
+                                size: AppSizes.iconSm,
                                 color: context.colors.surface,
                               ),
                             ),
@@ -192,16 +178,14 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
                             final name = textVal.text.trim();
                             return Text(
                               name.isEmpty ? 'SecurePro Security Ltd.' : name,
-                              style: context.textTheme.titleMedium
-                                  ?.bold()
-                                  ,
+                              style: context.textTheme.titleMedium?.bold(),
                             );
                           },
                         ),
                         AppSpacing.xs.w,
                         Icon(
                           Icons.check_circle_rounded,
-                          size: 16,
+                          size: AppSizes.iconSm,
                           color: context.colors.primary,
                         ),
                       ],
@@ -217,7 +201,7 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
                   Icon(
                     Icons.business_center_outlined,
                     color: context.colors.primary,
-                    size: 20,
+                    size: AppSizes.iconMd,
                   ),
                   AppSpacing.xs.w,
                   Text(
@@ -279,7 +263,7 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
                               data: e.label(context.l10n),
                               icon: Icon(
                                 e.icon,
-                                size: 18,
+                                size: AppSizes.iconSmd,
                                 color: e.color(context),
                               ),
                             ),

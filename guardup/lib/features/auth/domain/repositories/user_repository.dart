@@ -20,14 +20,10 @@ abstract class UserRepository {
   Future<UserModel?> getUserProfile(String userId);
 
   /// Creates a new user profile record.
-  Future<void> createUserProfile({
-    required UserModel user,
-  });
+  Future<void> createUserProfile({required UserModel user});
 
   /// Updates an existing user's profile data.
-  Future<void> updateUserProfile({
-    required UserModel user,
-  });
+  Future<void> updateUserProfile({required UserModel user});
 
   /// Updates specific profile fields without overwriting the entire model.
   Future<void> updateProfileFields({
@@ -57,8 +53,7 @@ abstract class UserRepository {
   Future<String> uploadProfile({
     required String userId,
     required FileUploadRequest request,
-  }) =>
-      uploadProfileImage(userId: userId, request: request);
+  }) => uploadProfileImage(userId: userId, request: request);
 
   /// Deletes a user profile image from storage by its URL.
   Future<void> deleteProfileImage({
@@ -82,4 +77,3 @@ abstract class UserRepository {
     );
   }
 }
-

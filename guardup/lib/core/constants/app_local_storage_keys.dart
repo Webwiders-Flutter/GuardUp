@@ -4,5 +4,4 @@ final class AppLocalStorageKeys {
   static const language = "language";
   static const hasOnboardingDone = "hasOnboardingDone";
   static const recentLocations = "recent_locations";
-
 }

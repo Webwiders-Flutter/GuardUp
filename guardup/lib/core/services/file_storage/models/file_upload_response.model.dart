@@ -1,4 +1,3 @@
-
 /// Generic metadata representation for a stored file across any storage provider.
 class StorageItem {
   const StorageItem({

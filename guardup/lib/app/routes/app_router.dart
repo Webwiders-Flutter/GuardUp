@@ -107,9 +107,32 @@ final class AppRouter {
         path: AppRoutes.paymentSuccess,
         builder: (context, state) {
           final extra = state.extra;
-          return PaymentSuccessScreen(
-            args: extra is PaymentSuccessArgs ? extra : null,
-          );
+          if (extra
+              is ({
+                TransactionModel? transaction,
+                UserModel? user,
+                String? buttonText,
+                VoidCallback? onTap,
+              })) {
+            return PaymentSuccessScreen(
+              transaction: extra.transaction,
+              user: extra.user,
+              buttonText: extra.buttonText,
+              onTap: extra.onTap,
+            );
+          }
+          if (extra is Map<String, dynamic>) {
+            return PaymentSuccessScreen(
+              transaction: extra['transaction'] as TransactionModel?,
+              user: extra['user'] as UserModel?,
+              buttonText: extra['buttonText'] as String?,
+              onTap: extra['onTap'] as VoidCallback?,
+            );
+          }
+          if (extra is TransactionModel) {
+            return PaymentSuccessScreen(transaction: extra);
+          }
+          return const PaymentSuccessScreen();
         },
       ),
       GoRoute(

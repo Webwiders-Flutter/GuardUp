@@ -1,26 +1,24 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '/gen/assets.gen.dart';
 
-/// Represents a membership tier available in GuardUp.
-class PlanModel {
-  final String id;
-  final String title;
-  final double monthlyPrice;
-  final int discountPercentage;
-  final String? badge;
-  final bool isActive;
-  final SvgGenImage? featureIcon;
-  final List<String> features;
+part 'plan.model.freezed.dart';
 
-  const PlanModel({
-    required this.id,
-    required this.title,
-    required this.monthlyPrice,
-    required this.discountPercentage,
-    this.badge,
-    this.isActive = false,
-    this.featureIcon,
-    required this.features,
-  });
+/// Represents a membership tier available in GuardUp.
+@freezed
+abstract class PlanModel with _$PlanModel {
+  const PlanModel._();
+
+  const factory PlanModel({
+    required String id,
+    required String title,
+    required double monthlyPrice,
+    required int discountPercentage,
+    String? badge,
+    @Default(false) bool isActive,
+    SvgGenImage? featureIcon,
+    @Default([]) List<String> features,
+  }) = _PlanModel;
 
   /// Calculates the savings amount for a given base booking amount.
   double calculateSavings(double bookingAmount) {
@@ -31,6 +29,8 @@ class PlanModel {
   double calculatePayable(double bookingAmount) {
     return bookingAmount - calculateSavings(bookingAmount);
   }
+
+  static List<PlanModel> get fakeData => fakePlans;
 
   /// Default production plans matching the exact GuardUp membership tiers and screenshots.
   static List<PlanModel> get fakePlans => [
@@ -71,12 +71,4 @@ class PlanModel {
       ],
     ),
   ];
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is PlanModel && runtimeType == other.runtimeType && id == other.id;
-
-  @override
-  int get hashCode => id.hashCode;
 }

@@ -1,52 +1,29 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:guardup/features/auth/auth.dart';
 
 import '/gen/assets.gen.dart';
 
+part 'participant.model.freezed.dart';
+part 'participant.model.g.dart';
+
 /// Represents a user or operative participating in a conversation.
-class ParticipantModel {
-  final String id;
-  final String name;
-  final String? avatarUrl;
-  final bool isVerified;
-  final UserRole role;
-  final bool isOnline;
-  final DateTime? lastSeen;
-  final String? clearanceLevel;
-
-  const ParticipantModel({
-    required this.id,
-    required this.name,
-    this.avatarUrl,
-    this.isVerified = false,
-    this.role = UserRole.guard,
-    this.isOnline = false,
-    this.lastSeen,
-    this.clearanceLevel,
-  });
-
-  ParticipantModel copyWith({
-    String? id,
-    String? name,
+@freezed
+abstract class ParticipantModel with _$ParticipantModel {
+  const factory ParticipantModel({
+    required String id,
+    required String name,
     String? avatarUrl,
-    bool? isVerified,
-    UserRole? role,
-    bool? isOnline,
+    @Default(false) bool isVerified,
+    @Default(UserRole.guard) UserRole role,
+    @Default(false) bool isOnline,
     DateTime? lastSeen,
     String? clearanceLevel,
-  }) {
-    return ParticipantModel(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      avatarUrl: avatarUrl ?? this.avatarUrl,
-      isVerified: isVerified ?? this.isVerified,
-      role: role ?? this.role,
-      isOnline: isOnline ?? this.isOnline,
-      lastSeen: lastSeen ?? this.lastSeen,
-      clearanceLevel: clearanceLevel ?? this.clearanceLevel,
-    );
-  }
+  }) = _ParticipantModel;
 
-  /// Curated fake participants matching the mockup operative roster.
+  factory ParticipantModel.fromJson(Map<String, dynamic> json) =>
+      _$ParticipantModelFromJson(json);
+
+  static List<ParticipantModel> get fakeData => fakeParticipants;
   static List<ParticipantModel> get fakeParticipants => [
     ParticipantModel(
       id: 'usr_vikram',

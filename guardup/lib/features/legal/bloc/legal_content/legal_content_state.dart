@@ -7,19 +7,12 @@ import '../../data/model/legal_content.model.dart';
 class LegalContentState extends Equatable {
   final ApiState<LegalContentModel> contentState;
 
-  const LegalContentState({
-    this.contentState = const ApiState.initial(),
-  });
+  const LegalContentState({this.contentState = const ApiState.initial()});
 
-  LegalContentState copyWith({
-    ApiState<LegalContentModel>? contentState,
-  }) {
-    return LegalContentState(
-      contentState: contentState ?? this.contentState,
-    );
+  LegalContentState copyWith({ApiState<LegalContentModel>? contentState}) {
+    return LegalContentState(contentState: contentState ?? this.contentState);
   }
 
   @override
   List<Object?> get props => [contentState];
 }
-

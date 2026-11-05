@@ -1,105 +1,34 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '/gen/assets.gen.dart';
 import '../enums/conversation_type.enum.dart';
 import '../enums/message_status.enum.dart';
 import 'message.model.dart';
 import 'participant.model.dart';
 
+part 'conversation.model.freezed.dart';
+part 'conversation.model.g.dart';
+
 /// Represents a chat thread between users or operatives.
-class ConversationModel {
-  final String id;
-  final String title;
-  final String? avatarUrl;
-  final bool isVerified;
-  final ConversationType type;
-  final List<ParticipantModel> participants;
-  final MessageModel? lastMessage;
-  final int unreadCount;
-  final DateTime updatedAt;
-  final String? customFormattedTime;
-
-  const ConversationModel({
-    required this.id,
-    required this.title,
-    this.avatarUrl,
-    this.isVerified = false,
-    this.type = ConversationType.direct,
-    this.participants = const [],
-    this.lastMessage,
-    this.unreadCount = 0,
-    required this.updatedAt,
-    this.customFormattedTime,
-  });
-
-  /// Readable snippet text from the last message.
-  String get snippet => lastMessage?.content ?? '';
-
-  /// Formatted relative or calendar timestamp matching design.
-  String get displayTime {
-    if (customFormattedTime != null && customFormattedTime!.isNotEmpty) {
-      return customFormattedTime!;
-    }
-
-    final now = DateTime.now();
-    if (updatedAt.year == now.year &&
-        updatedAt.month == now.month &&
-        updatedAt.day == now.day) {
-      final hour = updatedAt.hour > 12
-          ? updatedAt.hour - 12
-          : (updatedAt.hour == 0 ? 12 : updatedAt.hour);
-      final minute = updatedAt.minute.toString().padLeft(2, '0');
-      final period = updatedAt.hour >= 12 ? 'PM' : 'AM';
-      return '$hour:$minute $period';
-    }
-
-    final yesterday = now.subtract(const Duration(days: 1));
-    if (updatedAt.year == yesterday.year &&
-        updatedAt.month == yesterday.month &&
-        updatedAt.day == yesterday.day) {
-      return 'Yesterday';
-    }
-
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
-    return '${months[updatedAt.month - 1]} ${updatedAt.day}';
-  }
-
-  /// Whether the conversation occurred today.
-  bool get isToday {
-    final now = DateTime.now();
-    return updatedAt.year == now.year &&
-        updatedAt.month == now.month &&
-        updatedAt.day == now.day;
-  }
-
-  ConversationModel copyWith({
-    String? id,
-    String? title,
+@freezed
+abstract class ConversationModel with _$ConversationModel {
+  const factory ConversationModel({
+    required String id,
+    required String title,
     String? avatarUrl,
-    bool? isVerified,
-    ConversationType? type,
-    List<ParticipantModel>? participants,
+    @Default(false) bool isVerified,
+    @Default(ConversationType.direct) ConversationType type,
+    @Default([]) List<ParticipantModel> participants,
     MessageModel? lastMessage,
-    int? unreadCount,
-    DateTime? updatedAt,
+    @Default(0) int unreadCount,
+    required DateTime updatedAt,
     String? customFormattedTime,
-  }) {
-    return ConversationModel(
-      id: id ?? this.id,
-      title: title ?? this.title,
-      avatarUrl: avatarUrl ?? this.avatarUrl,
-      isVerified: isVerified ?? this.isVerified,
-      type: type ?? this.type,
-      participants: participants ?? this.participants,
-      lastMessage: lastMessage ?? this.lastMessage,
-      unreadCount: unreadCount ?? this.unreadCount,
-      updatedAt: updatedAt ?? this.updatedAt,
-      customFormattedTime: customFormattedTime ?? this.customFormattedTime,
-    );
-  }
+  }) = _ConversationModel;
 
-  /// Curated fake conversations matching the exact screen mockup.
+  factory ConversationModel.fromJson(Map<String, dynamic> json) =>
+      _$ConversationModelFromJson(json);
+
+  static List<ConversationModel> get fakeData => fakeConversations;
   static List<ConversationModel> get fakeConversations {
     final now = DateTime.now();
     final yesterday = now.subtract(const Duration(days: 1));
@@ -252,4 +181,3 @@ class ConversationModel {
     ];
   }
 }
-

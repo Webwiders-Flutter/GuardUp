@@ -17,7 +17,6 @@ import '/features/auth/bloc/auth_bloc.dart';
 import '/features/auth/bloc/auth_event.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/buttons/app_button.dart';
-import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/sections/app_image.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
@@ -30,7 +29,7 @@ class EmailVerificationScreen extends StatefulWidget {
 
 class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   Timer? _countdownTimer;
-  final ValueNotifier<int> _secondsRemainingNotifier = ValueNotifier<int>(
+  final _secondsRemainingNotifier = ValueNotifier<int>(
     AppConstants.resendSeconds,
   );
 
@@ -88,10 +87,6 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   void _handleResendEmail() {
     if (_secondsRemainingNotifier.value > 0) return;
     _startCountdown();
-    AppSnackbar.success(
-      context.l10n.emailVerificationSubtitle,
-      context: context,
-    );
   }
 
   void _handleLogout() {
@@ -102,7 +97,6 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.transparent,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {

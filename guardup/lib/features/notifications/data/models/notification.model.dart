@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '/core/extensions/number.extension.dart';
 import '../enums/notification_type.enum.dart';
 
 part 'notification.model.freezed.dart';
@@ -42,48 +43,6 @@ sealed class NotificationModel with _$NotificationModel {
       return bodyHi!;
     }
     return body;
-  }
-
-  /// Display formatted relative time (e.g. '5 min ago', 'Yesterday, 6:45 PM')
-  String get timeAgoFormatted {
-    if (data.containsKey('timeAgo')) {
-      return data['timeAgo'] as String;
-    }
-    final now = DateTime.now();
-    final difference = now.difference(createdAt);
-
-    if (createdAt.year == now.year &&
-        createdAt.month == now.month &&
-        createdAt.day == now.day) {
-      if (difference.inMinutes < 60) {
-        final mins = difference.inMinutes.clamp(1, 59);
-        return '$mins min ago';
-      }
-      final hours = difference.inHours;
-      return '$hours ${hours == 1 ? "hr" : "hrs"} ago';
-    }
-
-    final yesterday = now.subtract(const Duration(days: 1));
-    if (createdAt.year == yesterday.year &&
-        createdAt.month == yesterday.month &&
-        createdAt.day == yesterday.day) {
-      final hour = createdAt.hour > 12
-          ? createdAt.hour - 12
-          : (createdAt.hour == 0 ? 12 : createdAt.hour);
-      final minute = createdAt.minute.toString().padLeft(2, '0');
-      final period = createdAt.hour >= 12 ? 'PM' : 'AM';
-      return 'Yesterday, $hour:$minute $period';
-    }
-
-    return '${createdAt.day}/${createdAt.month}/${createdAt.year}';
-  }
-
-  /// Whether this notification was created today.
-  bool get isToday {
-    final now = DateTime.now();
-    return createdAt.year == now.year &&
-        createdAt.month == now.month &&
-        createdAt.day == now.day;
   }
 
   /// Factory providing realistic sample data for skeleton loading or previews.
@@ -148,7 +107,8 @@ sealed class NotificationModel with _$NotificationModel {
         id: 'notif_3',
         type: NotificationType.payoutProcessed,
         title: 'Payout Processed',
-        body: 'Your payout of \$250 has been processed successfully to your bank account.',
+        body:
+            'Your payout of ${250.toUsd} has been processed successfully to your bank account.',
         isRead: true,
         createdAt: now.subtract(const Duration(hours: 1)),
         data: const {'timeAgo': '1 hr ago'},
@@ -168,7 +128,13 @@ sealed class NotificationModel with _$NotificationModel {
         title: 'Profile Update',
         body: 'Your profile has been updated succesfully.',
         isRead: true,
-        createdAt: DateTime(yesterday.year, yesterday.month, yesterday.day, 18, 45),
+        createdAt: DateTime(
+          yesterday.year,
+          yesterday.month,
+          yesterday.day,
+          18,
+          45,
+        ),
         data: const {'timeAgo': 'Yesterday, 6:45 PM'},
       ),
       NotificationModel.fake(
@@ -177,7 +143,13 @@ sealed class NotificationModel with _$NotificationModel {
         title: 'Booking Reminder',
         body: 'You have a confirmed booking tomorrow at 11:00 AM.',
         isRead: true,
-        createdAt: DateTime(yesterday.year, yesterday.month, yesterday.day, 14, 30),
+        createdAt: DateTime(
+          yesterday.year,
+          yesterday.month,
+          yesterday.day,
+          14,
+          30,
+        ),
         data: const {'timeAgo': 'Yesterday, 2:30 PM'},
       ),
     ];

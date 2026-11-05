@@ -39,17 +39,17 @@ sealed class ApiState<T> extends Equatable {
 
   /// Returns the current or previous data if available, otherwise `null`.
   T? get dataOrNull => switch (this) {
-        ApiSuccess<T>(:final data) => data,
-        ApiLoading<T>(:final previousData) => previousData,
-        ApiFailure<T>(:final previousData) => previousData,
-        _ => null,
-      };
+    ApiSuccess<T>(:final data) => data,
+    ApiLoading<T>(:final previousData) => previousData,
+    ApiFailure<T>(:final previousData) => previousData,
+    _ => null,
+  };
 
   /// Returns the failure message if in [ApiFailure], otherwise `null`.
   String? get errorMessageOrNull => switch (this) {
-        ApiFailure<T>(:final message) => message,
-        _ => null,
-      };
+    ApiFailure<T>(:final message) => message,
+    _ => null,
+  };
 
   /// Functional pattern matcher covering all states exhaustively.
   R when<R>({
@@ -62,11 +62,7 @@ sealed class ApiState<T> extends Equatable {
       ApiInitial<T>() => initial(),
       ApiLoading<T>(:final previousData) => loading(previousData),
       ApiSuccess<T>(:final data) => success(data),
-      ApiFailure<T>(
-        :final message,
-        :final error,
-        :final previousData,
-      ) =>
+      ApiFailure<T>(:final message, :final error, :final previousData) =>
         failure(message, error, previousData),
     };
   }
@@ -83,13 +79,8 @@ sealed class ApiState<T> extends Equatable {
       ApiInitial<T>() => initial != null ? initial() : orElse(),
       ApiLoading<T>(:final previousData) =>
         loading != null ? loading(previousData) : orElse(),
-      ApiSuccess<T>(:final data) =>
-        success != null ? success(data) : orElse(),
-      ApiFailure<T>(
-        :final message,
-        :final error,
-        :final previousData,
-      ) =>
+      ApiSuccess<T>(:final data) => success != null ? success(data) : orElse(),
+      ApiFailure<T>(:final message, :final error, :final previousData) =>
         failure != null ? failure(message, error, previousData) : orElse(),
     };
   }
@@ -140,4 +131,3 @@ final class ApiFailure<T> extends ApiState<T> {
   @override
   List<Object?> get props => [message, error, previousData];
 }
-

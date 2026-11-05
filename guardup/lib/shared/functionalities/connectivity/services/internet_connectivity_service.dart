@@ -14,9 +14,8 @@ class ConnectivityServiceImpl implements ConnectivityService {
   StreamController<bool>? _controller;
   StreamSubscription<List<ConnectivityResult>>? _subscription;
 
-  ConnectivityServiceImpl({
-    Connectivity? connectivity,
-  }) : _connectivity = connectivity ?? Connectivity();
+  ConnectivityServiceImpl({Connectivity? connectivity})
+    : _connectivity = connectivity ?? Connectivity();
 
   @override
   Future<bool> isConnected() async {
@@ -32,7 +31,8 @@ class ConnectivityServiceImpl implements ConnectivityService {
   }
 
   bool _isNone(List<ConnectivityResult> results) {
-    return results.isEmpty || results.every((r) => r == ConnectivityResult.none);
+    return results.isEmpty ||
+        results.every((r) => r == ConnectivityResult.none);
   }
 
   Future<bool> _checkInternetAccess() async {
@@ -49,7 +49,9 @@ class ConnectivityServiceImpl implements ConnectivityService {
   Stream<bool> get onConnectionChanged {
     _controller ??= StreamController<bool>.broadcast(
       onListen: () {
-        _subscription = _connectivity.onConnectivityChanged.listen((results) async {
+        _subscription = _connectivity.onConnectivityChanged.listen((
+          results,
+        ) async {
           if (_isNone(results)) {
             _controller?.add(false);
           } else {
@@ -74,4 +76,3 @@ class ConnectivityServiceImpl implements ConnectivityService {
     _controller = null;
   }
 }
-

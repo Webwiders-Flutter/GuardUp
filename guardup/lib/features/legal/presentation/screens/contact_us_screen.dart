@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 
+import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
@@ -11,7 +12,6 @@ import '/core/extensions/textstyle_extension.dart';
 import '/core/utils/validators.dart';
 import '/features/legal/legal.dart';
 import '/shared/widgets/buttons/app_button.dart';
-import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/misc/app_input_label.dart';
 import '/shared/widgets/sections/app_appbar.dart';
@@ -40,19 +40,10 @@ class _ContactUsView extends StatefulWidget {
 class _ContactUsViewState extends State<_ContactUsView> {
   final _formKey = GlobalKey<FormState>();
 
-  late final TextEditingController _nameController;
-  late final TextEditingController _emailController;
-  late final TextEditingController _phoneController;
-  late final TextEditingController _messageController;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController();
-    _emailController = TextEditingController();
-    _phoneController = TextEditingController();
-    _messageController = TextEditingController();
-  }
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _messageController = TextEditingController();
 
   @override
   void dispose() {
@@ -64,17 +55,7 @@ class _ContactUsViewState extends State<_ContactUsView> {
   }
 
   void _handleSubmit() {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-
-    final submission = ContactUsSubmission(
-      fullName: _nameController.text.trim(),
-      email: _emailController.text.trim(),
-      mobileNumber: _phoneController.text.trim(),
-      message: _messageController.text.trim(),
-      submittedAt: DateTime.now(),
-    );
-
-    context.read<ContactUsBloc>().add(SubmitContactUsRequested(submission));
+    context.pop();
   }
 
   @override
@@ -85,23 +66,13 @@ class _ContactUsViewState extends State<_ContactUsView> {
       listener: (context, state) {
         final submissionState = state.submissionState;
         if (submissionState.isSuccess) {
-          AppSnackbar.success(
-            submissionState.dataOrNull ?? 'Message sent successfully',
-            context: context,
-          );
           context.pop();
-        } else if (submissionState.isFailure) {
-          AppSnackbar.error(
-            submissionState.errorMessageOrNull ?? 'Failed to send message',
-            context: context,
-          );
         }
       },
       builder: (context, state) {
         final isLoading = state.submissionState.isLoading;
 
         return Scaffold(
-          backgroundColor: context.colors.transparent,
           appBar: AppAppBar.transparent(title: context.l10n.contactUs),
           body: SingleChildScrollView(
             padding: context.horizontalEdgeInsets,
@@ -135,7 +106,7 @@ class _ContactUsViewState extends State<_ContactUsView> {
                           child: Icon(
                             Icons.support_agent_rounded,
                             color: context.colors.primary,
-                            size: 26,
+                            size: AppSizes.iconLg,
                           ),
                         ),
                         AppSpacing.md.w,
@@ -146,9 +117,7 @@ class _ContactUsViewState extends State<_ContactUsView> {
                             children: [
                               Text(
                                 context.l10n.contactUs,
-                                style: context.textTheme.titleMedium
-                                    ?.bold()
-                                    ,
+                                style: context.textTheme.titleMedium?.bold(),
                               ),
                               AppSpacing.xxs.h,
                               Text(

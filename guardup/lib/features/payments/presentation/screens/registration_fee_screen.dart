@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:guardup/core/constants/app_sizes.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '/app/routes/app_routes.dart';
@@ -11,10 +12,12 @@ import '/core/extensions/number.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/gen/assets.gen.dart';
+import '/features/auth/auth.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
-import 'payment_success_screen.dart';
+import '../../data/enum/transaction_type.enum.dart';
+import '../../data/model/transaction.model.dart';
 
 /// Screen presenting the one-time registration fee for verification and priority onboarding.
 class RegistrationFeeScreen extends StatelessWidget {
@@ -23,10 +26,9 @@ class RegistrationFeeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.transparent,
       appBar: AppAppBar.transparent(
         alignTitle: .center,
-        titleWidget: Assets.svg.appBanner.svg(height: 24),
+        titleWidget: Assets.svg.appBanner.svg(height: AppSizes.iconLg),
       ),
       body: SafeArea(
         child: LayoutBuilder(
@@ -53,11 +55,12 @@ class RegistrationFeeScreen extends StatelessWidget {
                           children: [
                             // 1. Dollar Coin Badge
                             QuickContainer(
-                              w: 58,
-                              h: 58,
+                              w: AppSizes.iconGiant,
+                              h: AppSizes.iconGiant,
                               radius: AppRadius.full,
-                              color: context.colors.surfaceContainerHigh
-                                  .withValues(alpha: 0.8),
+                              color: context.colors.primary.withValues(
+                                alpha: 0.15,
+                              ),
                               border: Border.all(
                                 color: context.colors.primary.withValues(
                                   alpha: 0.45,
@@ -66,8 +69,8 @@ class RegistrationFeeScreen extends StatelessWidget {
                               ),
                               alignment: Alignment.center,
                               child: Assets.svg.dollar.svg(
-                                width: 26,
-                                height: 26,
+                                width: AppSizes.iconLg,
+                                height: AppSizes.iconLg,
                               ),
                             ),
                             AppSpacing.lg.h,
@@ -78,7 +81,6 @@ class RegistrationFeeScreen extends StatelessWidget {
                               textAlign: TextAlign.center,
                               style: context.textTheme.titleMedium
                                   ?.bold()
-                                  
                                   .textSpacing(0.8),
                             ),
                             AppSpacing.xs.h,
@@ -88,8 +90,7 @@ class RegistrationFeeScreen extends StatelessWidget {
                               context.l10n.registrationFeeSubtitle,
                               textAlign: TextAlign.center,
                               style: context.textTheme.bodySmall
-                                  ?.regular()
-                                  .colour(context.colors.onSurfaceVariant)
+                                  ?.colour(context.colors.onSurfaceVariant)
                                   .lineHeight(1.35),
                             ),
                             AppSpacing.xxl.h,
@@ -105,15 +106,14 @@ class RegistrationFeeScreen extends StatelessWidget {
                                   style: context.textTheme.headlineLarge
                                       ?.bold()
                                       .colour(context.colors.primary)
-                                      .size(36)
+                                      .increaseSize(4)
                                       .lineHeight(1.0),
                                 ),
                                 AppSpacing.xs.w,
                                 Text(
                                   '/ ${context.l10n.lifetime}',
                                   style: context.textTheme.labelMedium
-                                      ?.regular()
-                                      .colour(context.colors.onSurfaceVariant)
+                                      ?.colour(context.colors.onSurfaceVariant)
                                       .textSpacing(0.8),
                                 ),
                               ],
@@ -125,19 +125,13 @@ class RegistrationFeeScreen extends StatelessWidget {
                               px: AppSpacing.lg,
                               py: AppSpacing.sm,
                               radius: AppRadius.round,
-                              color: context.colors.successContainer,
-                              border: Border.all(
-                                color: context.colors.success.withValues(
-                                  alpha: 0.4,
-                                ),
-                                width: 1,
-                              ),
+                              color: Colors.black,
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(
                                     Icons.verified_user_outlined,
-                                    size: 15,
+                                    size: AppSizes.iconSm,
                                     color: context.colors.success,
                                   ),
                                   AppSpacing.xs.w,
@@ -159,15 +153,28 @@ class RegistrationFeeScreen extends StatelessWidget {
                               makeItGlow: true,
                               onPressed: () => context.push(
                                 AppRoutes.paymentSuccess,
-                                extra: PaymentSuccessArgs(
-                                  referenceId: '#GD - 884920',
-                                  companyOrOperativeName:
-                                      'SecurePro Security Ltd.',
-                                  companyInitials: 'SP',
-                                  scheduleText: 'Today, 2:00 PM – 4:00 PM',
-                                  amountText: r'$49',
-                                  discountNote:
-                                      context.l10n.incMembershipDiscount,
+                                extra: (
+                                  transaction: TransactionModel(
+                                    id: '884920',
+                                    referenceId: '#GD - 884920',
+                                    bookingId: '#GD - 884920',
+                                    amount: 49.0,
+                                    currency: 'USD',
+                                    type: TransactionType.debit,
+                                    title: 'Registration Fee',
+                                    gateway: 'Stripe Verified',
+                                    scheduleText: 'Today, 2:00 PM – 4:00 PM',
+                                    dateTime: DateTime.now(),
+                                    discountNote:
+                                        context.l10n.incMembershipDiscount,
+                                  ),
+                                  user: const UserModel(
+                                    id: 'usr_securepro',
+                                    name: 'SecurePro Security Ltd.',
+                                    profileImageUrl: null,
+                                    role: UserRole.company,
+                                  ),
+                                  buttonText: context.l10n.next,
                                   onTap: () =>
                                       context.go(AppRoutes.adminApproval),
                                 ),
@@ -189,8 +196,7 @@ class RegistrationFeeScreen extends StatelessWidget {
                                 Text(
                                   'stripe',
                                   style: context.textTheme.titleSmall
-                                      ?.textSpacing(-0.2)
-                                      ,
+                                      ?.textSpacing(-0.2),
                                 ),
                               ],
                             ),
