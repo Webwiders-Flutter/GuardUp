@@ -17,6 +17,8 @@ import '/shared/widgets/sections/wrapper_card.dart';
 
 /// Screen allowing users to update their account password credentials.
 class ChangePasswordScreen extends StatefulWidget {
+  static const route = '/change-password';
+
   const ChangePasswordScreen({super.key});
 
   @override

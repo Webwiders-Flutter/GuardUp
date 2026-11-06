@@ -133,7 +133,7 @@ class AppButton extends StatelessWidget {
       fontSize: 12,
     ),
     ButtonSize.medium: (
-      height: AppSizes.buttonMd,
+      height: AppSizes.buttonMd + AppSpacing.sm,
       padding: AppSpacing.lg.xPadding,
       fontSize: 15,
     ),

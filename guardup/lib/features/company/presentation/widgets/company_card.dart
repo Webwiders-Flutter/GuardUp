@@ -183,24 +183,25 @@ class CompanyCard extends StatelessWidget {
         ),
         const Spacer(),
 
-        AppButton(
-          text: 'Book now',
-          isFlexible: true,
-          type: ButtonType.secondaryPrimary,
-          size: ButtonSize.small,
-          height: 23,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          border: BorderSide(
-            color: context.colors.primary.withValues(alpha: 0.35),
-            width: 0.8,
+        if (onBookNow != null)
+          AppButton(
+            text: 'Book now',
+            isFlexible: true,
+            type: ButtonType.secondaryPrimary,
+            size: ButtonSize.small,
+            height: 23,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            border: BorderSide(
+              color: context.colors.primary.withValues(alpha: 0.35),
+              width: 0.8,
+            ),
+            backgroundColor: context.colors.primary.withValues(alpha: 0.08),
+            foregroundColor: context.colors.primary,
+            borderRadius: AppRadius.sm.toBorderRadius,
+            onPressed:
+                onBookNow ??
+                () => context.push(AppRoutes.customerBooking, extra: company),
           ),
-          backgroundColor: context.colors.primary.withValues(alpha: 0.08),
-          foregroundColor: context.colors.primary,
-          borderRadius: AppRadius.sm.toBorderRadius,
-          onPressed:
-              onBookNow ??
-              () => context.push(AppRoutes.customerBooking, extra: company),
-        ),
       ],
     );
   }

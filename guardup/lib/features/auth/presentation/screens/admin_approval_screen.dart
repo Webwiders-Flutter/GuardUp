@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:guardup/core/di/injection_container.dart';
 import 'package:guardup/shared/widgets/sections/wrapper_card.dart';
 import 'package:quick_container/quick_container.dart';
 
@@ -20,6 +21,8 @@ import '../../bloc/auth_event.dart';
 
 /// Screen displaying the application status / review stage for onboarding operatives & companies.
 class AdminApprovalScreen extends StatelessWidget {
+  static const route = '/admin-approval';
+
   const AdminApprovalScreen({super.key});
 
   @override
@@ -144,6 +147,9 @@ class AdminApprovalScreen extends StatelessWidget {
                         text: context.l10n.checkStatus,
 
                         onPressed: () {
+                          context.read<AuthBloc>().add(
+                            AuthProfileChanged(sl<AuthBloc>().state.user),
+                          );
                           context.go(AppRoutes.home);
                         },
                       ),

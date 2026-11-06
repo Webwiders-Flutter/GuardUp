@@ -19,6 +19,8 @@ import '/shared/widgets/sections/wrapper_card.dart';
 
 /// Screen allowing users to send inquiries or security dispatch messages.
 class ContactUsScreen extends StatelessWidget {
+  static const route = '/contact-us';
+
   const ContactUsScreen({super.key});
 
   @override

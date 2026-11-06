@@ -17,6 +17,8 @@ import '/shared/widgets/sections/app_image.dart';
 
 /// Screen 4: Final Booking Details & Payment Summary review screen before payment authorization.
 class CustomerBookingDetailsScreen extends StatelessWidget {
+  static const route = '/customer-booking-details';
+
   final BodyGuardModel? bodyguard;
   final DateTime startDate;
   final TimeOfDay startTime;

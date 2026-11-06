@@ -13,7 +13,6 @@ import '/core/extensions/textstyle_extension.dart';
 import '/core/state/api_state.dart';
 import '/features/auth/auth.dart';
 import '/features/booking/booking.dart';
-import '/features/notifications/presentation/widgets/notification_icon.widget.dart';
 import '/features/payments/payments.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/buttons/app_button.dart';
@@ -30,6 +29,8 @@ import '/shared/widgets/sections/wrapper_card.dart';
 /// - Latest bookings feed powered by [AppPagination] and [BookingCard] (guard perspective)
 /// - Transaction history feed powered by [AppPagination] and [TransactionCard.card]
 class BodyGuardHomeScreen extends StatefulWidget {
+  static const route = '/bodyguard-home';
+
   const BodyGuardHomeScreen({super.key});
 
   @override
@@ -88,18 +89,12 @@ class _BodyGuardHomeScreenState extends State<BodyGuardHomeScreen> {
         automaticallyImplyLeading: false,
         alignTitle: .left,
         titleWidget: _buildAppBarTitle(context),
+        showNotificationIcon: true,
         bottom: PreferredSize(
           preferredSize: Size(double.infinity, 2),
-          child: QuickContainer(color: context.colors.outlineVariant, h: 1),
+          child: QuickContainer(color: context.colors.outlineVariant, h: 0.5),
         ),
-        actions: [
-          _buildOnlineStatusBadge(context),
-          AppSpacing.sm.w,
-          const Padding(
-            padding: EdgeInsets.only(right: AppSpacing.sm),
-            child: NotificationIconWidget(count: 3),
-          ),
-        ],
+        actions: [_buildOnlineStatusBadge(context)],
       ),
       body: SafeArea(
         child: SingleChildScrollView(

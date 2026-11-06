@@ -23,6 +23,8 @@ import '../widgets/body_guard_card.dart';
 /// Screen presenting all company or platform bodyguards with search,
 /// pagination, and management actions (Add, Edit, Delete).
 class CompanyBodyguardsScreen extends StatefulWidget {
+  static const route = '/all-bodyguards';
+
   const CompanyBodyguardsScreen({super.key});
 
   @override
@@ -161,12 +163,7 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen> {
                   return BodyGuardCard(
                     bodyguard: guard,
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => GuardDetailScreen(),
-                        ),
-                      );
+                      context.push(GuardDetailScreen.route, extra: guard);
                     },
                     // onTap: () => _handleEditBodyguard(guard),
                     onEdit: () => _handleEditBodyguard(guard),

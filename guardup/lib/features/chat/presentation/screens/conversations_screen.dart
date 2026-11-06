@@ -22,6 +22,8 @@ import '../widgets/conversation_card.dart';
 
 /// Screen displaying active chat conversations with real-time search and infinite pagination.
 class ConversationsScreen extends StatefulWidget {
+  static const route = '/chat';
+
   const ConversationsScreen({super.key});
 
   @override

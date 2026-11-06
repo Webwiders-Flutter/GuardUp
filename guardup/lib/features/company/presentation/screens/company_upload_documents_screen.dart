@@ -17,6 +17,8 @@ import '/shared/widgets/sections/app_appbar.dart';
 import '../../data/enum/company_doc_type.enum.dart';
 
 class UploadDocumentsScreen extends StatefulWidget {
+  static const route = '/upload-documents';
+
   const UploadDocumentsScreen({super.key});
 
   @override

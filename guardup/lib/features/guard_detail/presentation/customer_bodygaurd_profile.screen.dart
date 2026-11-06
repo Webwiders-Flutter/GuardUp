@@ -21,6 +21,8 @@ import 'widgets/guard_reviews_tab.widget.dart';
 /// Customer View: Comprehensive operative profile screen with bio, booking duration
 /// calculator, credentials, client reviews, and sticky booking action bar.
 class CustomerBodygaurdProfileScreen extends StatefulWidget {
+  static const route = '/customer-bodyguard-profile';
+
   final BodyGuardModel? bodyguard;
 
   const CustomerBodygaurdProfileScreen({super.key, this.bodyguard});

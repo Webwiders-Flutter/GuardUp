@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:guardup/features/auth/presentation/screens/admin_approval_screen.dart';
 
-import '/app/routes/app_routes.dart';
 import '/app/routes/auth_refresh_listenable.dart';
 import '/app/screens/main_navigation.screen.dart';
 import '/app/screens/not_found_screen.dart';
@@ -34,26 +32,28 @@ final class AppRouter {
 
   static final GoRouter router = GoRouter(
     navigatorKey: rootNavigatorKey,
-    initialLocation: AppRoutes.splash,
+    initialLocation: SplashScreen.route,
     refreshListenable: refreshListenable,
     errorBuilder: (context, state) => const NotFoundScreen(),
     redirect: (context, state) async {
       final location = state.matchedLocation;
       final authState = sl<AuthBloc>().state;
 
-      final isSplash = location == AppRoutes.splash;
+      final isSplash = location == SplashScreen.route;
       // ------------------------------------------------------------
       // 1. Session is unknown (App bootstrap / Splash)
       // ------------------------------------------------------------
       if (authState.isUnknown) {
-        return isSplash ? null : AppRoutes.splash;
+        return isSplash ? null : SplashScreen.route;
       }
 
       // ------------------------------------------------------------
       // 2. Once bootstrap is complete, route away from splash
       // ------------------------------------------------------------
       if (isSplash) {
-        return authState.isAuthenticated ? AppRoutes.home : AppRoutes.login;
+        return authState.isAuthenticated
+            ? CustomerHomeScreen.route
+            : LoginScreen.route;
       }
 
       // Current route is valid.
@@ -62,51 +62,51 @@ final class AppRouter {
 
     routes: [
       GoRoute(
-        path: AppRoutes.splash,
+        path: SplashScreen.route,
         builder: (context, state) => const SplashScreen(),
       ),
       GoRoute(
-        path: AppRoutes.selectRole,
+        path: SelectRoleScreen.route,
         builder: (context, state) => const SelectRoleScreen(),
       ),
       GoRoute(
-        path: AppRoutes.companyProfile,
+        path: CompanyCompleteProfileScreen.route,
         builder: (context, state) => const CompanyCompleteProfileScreen(),
       ),
       GoRoute(
-        path: AppRoutes.bodyguardProfile,
+        path: BodyGuardCompleteProfileScreen.route,
         builder: (context, state) => const BodyGuardCompleteProfileScreen(),
       ),
       GoRoute(
-        path: AppRoutes.bodyguardUploadDocuments,
+        path: BodyGuardUploadDocumentsScreen.route,
         builder: (context, state) => const BodyGuardUploadDocumentsScreen(),
       ),
       GoRoute(
-        path: AppRoutes.login,
+        path: LoginScreen.route,
         builder: (context, state) => const LoginScreen(),
       ),
       GoRoute(
-        path: AppRoutes.signup,
+        path: SignUpScreen.route,
         builder: (context, state) => const SignUpScreen(),
       ),
       GoRoute(
-        path: AppRoutes.forgotPassword,
+        path: ForgotPasswordScreen.route,
         builder: (context, state) => const ForgotPasswordScreen(),
       ),
       GoRoute(
-        path: AppRoutes.emailVerification,
+        path: EmailVerificationScreen.route,
         builder: (context, state) => const EmailVerificationScreen(),
       ),
       GoRoute(
-        path: AppRoutes.uploadDocuments,
+        path: UploadDocumentsScreen.route,
         builder: (context, state) => const UploadDocumentsScreen(),
       ),
       GoRoute(
-        path: AppRoutes.registrationFee,
+        path: RegistrationFeeScreen.route,
         builder: (context, state) => const RegistrationFeeScreen(),
       ),
       GoRoute(
-        path: AppRoutes.paymentSuccess,
+        path: PaymentSuccessScreen.route,
         builder: (context, state) {
           final extra = state.extra;
           if (extra
@@ -138,7 +138,7 @@ final class AppRouter {
         },
       ),
       GoRoute(
-        path: AppRoutes.adminApproval,
+        path: AdminApprovalScreen.route,
         builder: (context, state) => const AdminApprovalScreen(),
       ),
       StatefulShellRoute.indexedStack(
@@ -150,7 +150,7 @@ final class AppRouter {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: AppRoutes.home,
+                path: CustomerHomeScreen.route,
                 builder: (context, state) => BlocBuilder<AuthBloc, AuthState>(
                   bloc: sl.isRegistered<AuthBloc>() ? sl<AuthBloc>() : null,
                   builder: (context, authState) {
@@ -178,7 +178,7 @@ final class AppRouter {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: AppRoutes.bookings,
+                path: BookingsScreen.route,
                 builder: (context, state) => const BookingsScreen(),
               ),
             ],
@@ -210,7 +210,7 @@ final class AppRouter {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: AppRoutes.notifications,
+                path: NotificationsScreen.route,
                 builder: (context, state) => const NotificationsScreen(),
               ),
             ],
@@ -220,7 +220,7 @@ final class AppRouter {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: AppRoutes.profile,
+                path: ProfileScreen.route,
                 builder: (context, state) => const ProfileScreen(),
               ),
             ],
@@ -228,79 +228,86 @@ final class AppRouter {
         ],
       ),
       GoRoute(
-        path: AppRoutes.companyHome,
+        path: CompanyHomeScreen.route,
         builder: (context, state) => const CompanyHomeScreen(),
       ),
       GoRoute(
-        path: AppRoutes.bodyguardHome,
+        path: BodyGuardHomeScreen.route,
         builder: (context, state) => const BodyGuardHomeScreen(),
       ),
       GoRoute(
-        path: AppRoutes.editProfile,
+        path: EditProfileScreen.route,
         builder: (context, state) => const EditProfileScreen(),
       ),
       GoRoute(
-        path: AppRoutes.companyEditProfile,
+        path: CompanyEditProfileScreen.route,
         builder: (context, state) => const CompanyEditProfileScreen(),
       ),
       GoRoute(
-        path: AppRoutes.companyInformation,
+        path: CompanyInformationScreen.route,
         builder: (context, state) => const CompanyInformationScreen(),
       ),
       GoRoute(
-        path: AppRoutes.customerBodyGuard,
+        path: BodyguardsListScreen.route,
         builder: (context, state) => const BodyguardsListScreen(),
       ),
       GoRoute(
-        path: AppRoutes.companyDetails,
+        path: CompanyDetailsScreen.route,
         builder: (context, state) {
           final company = state.extra as CompanyModel?;
           return CompanyDetailsScreen(company: company);
         },
       ),
       GoRoute(
-        path: AppRoutes.bodyguardInformation,
+        path: BodyGuardProfileScreen.route,
         builder: (context, state) {
           final guard = state.extra as BodyGuardModel?;
           return BodyGuardProfileScreen(bodyguard: guard);
         },
       ),
       GoRoute(
-        path: AppRoutes.customerBodyguardProfile,
+        path: CustomerBodygaurdProfileScreen.route,
         builder: (context, state) {
           final guard = state.extra as BodyGuardModel?;
           return CustomerBodygaurdProfileScreen(bodyguard: guard);
         },
       ),
       GoRoute(
-        path: AppRoutes.myBankDetails,
+        path: GuardDetailScreen.route,
+        builder: (context, state) {
+          final guard = state.extra as BodyGuardModel?;
+          return GuardDetailScreen(bodyguard: guard);
+        },
+      ),
+      GoRoute(
+        path: MyBankDetailsScreen.route,
         builder: (context, state) => const MyBankDetailsScreen(),
       ),
       GoRoute(
-        path: AppRoutes.myWallet,
+        path: MyWalletScreen.route,
         builder: (context, state) => const MyWalletScreen(),
       ),
       GoRoute(
-        path: AppRoutes.searchBodyguards,
+        path: SearchBodyguardsScreen.route,
         builder: (context, state) => const SearchBodyguardsScreen(),
       ),
       GoRoute(
-        path: AppRoutes.allBodyguards,
+        path: CompanyBodyguardsScreen.route,
         builder: (context, state) => const CompanyBodyguardsScreen(),
       ),
       GoRoute(
-        path: AppRoutes.chatDetail,
+        path: ChatScreen.route,
         builder: (context, state) {
           final conversation = state.extra as ConversationModel?;
           return ChatScreen(conversation: conversation);
         },
       ),
       GoRoute(
-        path: AppRoutes.changePassword,
+        path: ChangePasswordScreen.route,
         builder: (context, state) => const ChangePasswordScreen(),
       ),
       GoRoute(
-        path: AppRoutes.membershipPlans,
+        path: MembershipPlansScreen.route,
         builder: (context, state) {
           final extra = state.extra;
           if (extra is MembershipPlanArgs) {
@@ -315,17 +322,17 @@ final class AppRouter {
         },
       ),
       GoRoute(
-        path: AppRoutes.privacyPolicy,
+        path: LegalContentScreen.privacyPolicyRoute,
         builder: (context, state) =>
             const LegalContentScreen(type: ContentType.privacyPolicy),
       ),
       GoRoute(
-        path: AppRoutes.termsAndConditions,
+        path: LegalContentScreen.termsRoute,
         builder: (context, state) =>
             const LegalContentScreen(type: ContentType.terms),
       ),
       GoRoute(
-        path: AppRoutes.customerBooking,
+        path: BookingScreen.route,
         builder: (context, state) {
           final extra = state.extra;
           CompanyModel? company;
@@ -334,7 +341,8 @@ final class AppRouter {
             company = extra;
           } else if (extra is BodyGuardModel) {
             guard = extra;
-          } else if (extra is ({CompanyModel? company, BodyGuardModel? guard})) {
+          } else if (extra
+              is ({CompanyModel? company, BodyGuardModel? guard})) {
             company = extra.company;
             guard = extra.guard;
           }
@@ -342,7 +350,7 @@ final class AppRouter {
         },
       ),
       GoRoute(
-        path: AppRoutes.customerBookingDetails,
+        path: CustomerBookingDetailsScreen.route,
         builder: (context, state) {
           final extra = state.extra;
           if (extra is Map<String, dynamic>) {
@@ -378,7 +386,7 @@ final class AppRouter {
         },
       ),
       GoRoute(
-        path: AppRoutes.bookingConfirmed,
+        path: CustomerBookingConfirmedScreen.route,
         builder: (context, state) {
           final extra = state.extra;
           if (extra is Map<String, dynamic>) {
@@ -403,7 +411,7 @@ final class AppRouter {
         },
       ),
       GoRoute(
-        path: AppRoutes.contactUs,
+        path: ContactUsScreen.route,
         builder: (context, state) => const ContactUsScreen(),
       ),
     ],

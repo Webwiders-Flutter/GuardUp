@@ -21,6 +21,8 @@ import '../../data/model/transaction.model.dart';
 
 /// Screen presenting the one-time registration fee for verification and priority onboarding.
 class RegistrationFeeScreen extends StatelessWidget {
+  static const route = '/registration-fee';
+
   const RegistrationFeeScreen({super.key});
 
   @override

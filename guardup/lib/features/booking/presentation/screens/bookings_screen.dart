@@ -35,6 +35,8 @@ import '../widgets/booking_card.widget.dart';
 ///   Displays client-centric booking cards with accept/reject request actions
 ///   and telemetry sharing.
 class BookingsScreen extends StatefulWidget {
+  static const route = '/bookings';
+
   const BookingsScreen({super.key});
 
   @override

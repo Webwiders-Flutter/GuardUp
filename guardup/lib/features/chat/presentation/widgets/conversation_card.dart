@@ -120,7 +120,7 @@ class ConversationCard extends StatelessWidget {
                       child: Text(
                         conversation.lastMessage?.content ?? '',
                         style: context.textTheme.bodySmall?.colour(
-                          context.colors.onSurfaceVariant,
+                          context.colors.onSurfaceTertiary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

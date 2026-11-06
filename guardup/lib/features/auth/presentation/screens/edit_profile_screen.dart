@@ -23,6 +23,8 @@ import '/shared/widgets/selection/app_selectable_chip.dart';
 import '/shared/widgets/selection/selection.controller.dart';
 
 class EditProfileScreen extends StatefulWidget {
+  static const route = '/edit-profile';
+
   const EditProfileScreen({super.key});
 
   @override

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '/app/routes/app_routes.dart';
+import 'my_bank_details_screen.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
@@ -19,6 +19,8 @@ import '../widgets/wallet_balance_card.dart';
 /// Screen displaying user's digital wallet, balance card, and paginated
 /// transaction history.
 class MyWalletScreen extends StatefulWidget {
+  static const route = '/my-wallet';
+
   const MyWalletScreen({super.key});
 
   @override
@@ -50,11 +52,11 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
   }
 
   void _handleWithdraw() {
-    context.push(AppRoutes.myBankDetails);
+    context.push(MyBankDetailsScreen.route);
   }
 
   void _handleAddBankAccount() {
-    context.push(AppRoutes.myBankDetails);
+    context.push(MyBankDetailsScreen.route);
   }
 
   @override
@@ -63,6 +65,7 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
       appBar: AppAppBar.transparent(
         title: context.l10n.myWalletTitle,
         showBackIcon: true,
+        fontSize: 14,
       ),
       body: SafeArea(
         child: AppPagination<TransactionModel>.list(
@@ -101,7 +104,7 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
           onWithdraw: _handleWithdraw,
           onAddBankAccount: _handleAddBankAccount,
         ),
-        AppSpacing.xl.h,
+        AppSpacing.lg.h,
 
         // Transaction History Header + Date Filter (QuickContainer)
         Padding(

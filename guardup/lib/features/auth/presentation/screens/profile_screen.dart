@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:guardup/features/notifications/presentation/widgets/notification_icon.widget.dart';
+import 'package:guardup/features/company/company.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '/app/routes/app_routes.dart';
@@ -26,6 +26,8 @@ import '/shared/widgets/sections/wrapper_card.dart';
 import '../../data/enum/user_role.enum.dart';
 
 class ProfileScreen extends StatelessWidget {
+  static const route = '/profile';
+
   const ProfileScreen({super.key});
 
   @override
@@ -39,31 +41,36 @@ class ProfileScreen extends StatelessWidget {
           appBar: AppAppBar.transparent(
             title: role.profileTitle(context.l10n),
             alignTitle: .left,
-            actions: [NotificationIconWidget(count: 5)],
           ),
           body: SingleChildScrollView(
             padding: context.horizontalEdgeInsets,
             child: Column(
               children: [
                 // 1. Profile Header Card
-                _ProfileCard(
-                  name: 'Michael Carter',
-                  specialization: 'Licensed armed, Corporate visits',
-                  rating: 4.8,
-                  location: 'Toronto, ON',
-                  hourlyRate: 60,
-                  avatarAssetPath: Assets.images.profilePicture.path,
-                  isVerified: true,
-                  onTap: () {
-                    switch (role) {
-                      case .company:
-                        context.push(AppRoutes.companyInformation);
-                      case .guard:
-                        context.push(AppRoutes.bodyguardInformation);
-                      default:
-                    }
-                  },
-                ),
+                if (sl<AuthBloc>().state.sessionRole == .company)
+                  CompanyCard(
+                    company: CompanyModel.fakeData.first,
+                    onTap: () => context.push(AppRoutes.companyInformation),
+                  )
+                else
+                  _ProfileCard(
+                    name: 'Michael Carter',
+                    specialization: 'Licensed armed, Corporate visits',
+                    rating: 4.8,
+                    location: 'Toronto, ON',
+                    hourlyRate: 60,
+                    avatarAssetPath: Assets.images.profilePicture.path,
+                    isVerified: true,
+                    onTap: () {
+                      switch (role) {
+                        case .company:
+                          context.push(AppRoutes.companyInformation);
+                        case .guard:
+                          context.push(AppRoutes.bodyguardInformation);
+                        default:
+                      }
+                    },
+                  ),
                 AppSpacing.xl.h,
 
                 // 2. Edit Profile Menu Card
@@ -87,6 +94,13 @@ class ProfileScreen extends StatelessWidget {
                 // 3. Role-Specific Menu Cards
                 if (role == UserRole.guard) ...[
                   _ProfileMenuCard(
+                    title: context.l10n.personalInformation,
+                    icon: Icons.person,
+                    onTap: () {
+                      context.push(AppRoutes.bodyguardInformation);
+                    },
+                  ),
+                  _ProfileMenuCard(
                     title: context.l10n.myWallet,
                     icon: Icons.account_balance_wallet_outlined,
                     onTap: () {
@@ -108,6 +122,13 @@ class ProfileScreen extends StatelessWidget {
                     },
                   ),
                 ] else if (role == UserRole.company) ...[
+                  _ProfileMenuCard(
+                    title: context.l10n.companyInformation,
+                    icon: Icons.person_outline_rounded,
+                    onTap: () {
+                      context.push(AppRoutes.companyInformation);
+                    },
+                  ),
                   _ProfileMenuCard(
                     title: context.l10n.myWallet,
                     icon: Icons.account_balance_wallet_outlined,
@@ -401,7 +422,7 @@ class _ProfileMenuCard extends StatelessWidget {
           ],
           Expanded(
             child: Text(
-              title,
+              title.toUpperCase(),
               style: context.textTheme.labelLarge
                   ?.colour(textColor ?? context.colors.onSurface)
                   .textSpacing(0.6),

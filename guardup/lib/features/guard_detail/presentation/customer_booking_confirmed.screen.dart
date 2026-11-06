@@ -21,6 +21,8 @@ import '/shared/widgets/sections/app_image.dart';
 /// Screen 6: Booking Confirmed Screen displaying verified badge, bodyguard summary,
 /// booking ID reference, and quick navigation to chat or live operative tracking.
 class CustomerBookingConfirmedScreen extends StatelessWidget {
+  static const route = '/booking-confirmed';
+
   final BodyGuardModel? bodyguard;
   final String? guardName;
   final String? guardPhoto;

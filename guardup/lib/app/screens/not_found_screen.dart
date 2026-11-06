@@ -13,6 +13,8 @@ import '/shared/widgets/buttons/app_button.dart';
 
 /// 404 Not Found screen displayed when a requested route doesn't exist.
 class NotFoundScreen extends StatefulWidget {
+  static const route = '/not-found';
+
   const NotFoundScreen({super.key});
 
   @override

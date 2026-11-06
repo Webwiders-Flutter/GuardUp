@@ -1,18 +1,20 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/core/constants/app_radius.dart';
 import 'package:guardup/core/extensions/number.extension.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:quick_container/quick_container.dart';
 
+import '../../../../core/di/injection_container.dart';
+import '../../../auth/bloc/auth_bloc.dart';
 import '/app/routes/app_routes.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
-import '/core/extensions/string.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/core/utils/validators.dart';
 import '/shared/widgets/buttons/app_button.dart';
@@ -33,6 +35,8 @@ import '../../data/enum/guard_service.enum.dart';
 /// - Theming & Tokens: strict adherence to [context.colors], [context.textTheme], and [AppSpacing].
 /// - Form Layout: [LayoutBuilder] + [ConstrainedBox] + [IntrinsicHeight] + [Spacer] onboarding pattern.
 class BodyGuardCompleteProfileScreen extends StatefulWidget {
+  static const route = '/bodyguard-profile';
+
   const BodyGuardCompleteProfileScreen({super.key});
 
   @override
@@ -103,8 +107,12 @@ class _BodyGuardCompleteProfileScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppAppBar.transparent(
-        title: context.l10n.profileSetupTitle,
-        alignTitle: .center,
+        title: sl<AuthBloc>().state.isAuthenticated
+            ? context.l10n.addBodyguard
+            : context.l10n.profileSetupTitle,
+        fontSize: 14,
+        
+        alignTitle: sl<AuthBloc>().state.isAuthenticated ? .right : .center,
       ),
       body: SafeArea(
         child: LayoutBuilder(
@@ -121,102 +129,132 @@ class _BodyGuardCompleteProfileScreenState
                       children: [
                         AppSpacing.xxl.h,
 
-                        // 1. Profile Picture (copied directly from Edit Profile UI)
+                        // 1. Profile Picture (Dashed Circular Border Picker)
                         Center(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Stack(
                                 clipBehavior: Clip.none,
+                                alignment: Alignment.center,
                                 children: [
-                                  // Circular Avatar with Gold Ring Border
-                                  QuickContainer(
-                                    w: AppSizes.avatarColossal,
-                                    h: AppSizes.avatarColossal,
-                                    shape: QuickContainerShape.circle,
-                                    border: Border.all(
-                                      color: context.colors.primary,
-                                      width: 2.5,
-                                    ),
-                                    p: 2,
-                                    child: ValueListenableBuilder<XFile?>(
-                                      valueListenable: _profileImageNotifier,
-                                      builder: (context, profileImage, _) {
-                                        return ClipOval(
-                                          child: profileImage != null
-                                              ? AppImage.xFile(
-                                                  xFile: profileImage,
-                                                  width:
-                                                      AppSizes.avatarColossal -
-                                                      4,
-                                                  height:
-                                                      AppSizes.avatarColossal -
-                                                      4,
-                                                  fit: BoxFit.cover,
-                                                  onTap: _handleChangePhoto,
-                                                )
-                                              : ValueListenableBuilder<
-                                                  TextEditingValue
-                                                >(
-                                                  valueListenable:
-                                                      _fullNameController,
-                                                  builder: (context, textVal, _) {
-                                                    return QuickContainer(
-                                                      color: context
-                                                          .colors
-                                                          .surfaceContainer,
-                                                      alignment:
-                                                          Alignment.center,
-                                                      onTap: _handleChangePhoto,
-                                                      child: Text(
-                                                        textVal.text
-                                                            .getInitials(),
-                                                        style: context
-                                                            .textTheme
-                                                            .headlineMedium
-                                                            ?.bold()
-                                                            .colour(
-                                                              context
-                                                                  .colors
-                                                                  .primary,
-                                                            ),
-                                                      ),
-                                                    );
-                                                  },
-                                                ),
-                                        );
-                                      },
+                                  GestureDetector(
+                                    onTap: _handleChangePhoto,
+                                    behavior: HitTestBehavior.opaque,
+                                    child: CustomPaint(
+                                      painter: _DashedCirclePainter(
+                                        color: context.colors.primary,
+                                        strokeWidth: 1,
+                                        dashLength: 7.5,
+                                        gapLength: 6.0,
+                                      ),
+                                      child: Container(
+                                        width: 110,
+                                        height: 110,
+                                        alignment: Alignment.center,
+                                        child: Container(
+                                          width: 100,
+                                          height: 100,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: context.colors.onPrimary,
+                                          ),
+                                          child: ValueListenableBuilder<XFile?>(
+                                            valueListenable:
+                                                _profileImageNotifier,
+                                            builder: (context, profileImage, _) {
+                                              if (profileImage != null) {
+                                                return ClipOval(
+                                                  child: AppImage.xFile(
+                                                    xFile: profileImage,
+                                                    width: 108,
+                                                    height: 108,
+                                                    fit: BoxFit.cover,
+                                                  ),
+                                                );
+                                              }
+
+                                              return Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(
+                                                    Icons
+                                                        .person_outline_rounded,
+                                                    size: 38,
+                                                    color:
+                                                        context.colors.outline,
+                                                  ),
+                                                  6.h,
+                                                  Text(
+                                                    'Add Photo',
+                                                    style: context
+                                                        .textTheme
+                                                        .labelSmall
+                                                        ?.regular()
+                                                        .copyWith(
+                                                          fontSize: 10.0,
+                                                          letterSpacing: 0.2,
+                                                        )
+                                                        .colour(
+                                                          context
+                                                              .colors
+                                                              .primary,
+                                                        ),
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                   ),
 
-                                  // Camera Icon Badge
+                                  // Plus Icon Badge at Bottom Right
                                   Positioned(
-                                    right: 0,
+                                    right: 2,
                                     bottom: 2,
                                     child: GestureDetector(
                                       onTap: _handleChangePhoto,
-                                      child: QuickContainer(
-                                        w: AppSizes.iconMdl,
-                                        h: AppSizes.iconMdl,
-                                        shape: QuickContainerShape.circle,
-                                        color: context.colors.primary,
+                                      child: Container(
+                                        width: 28,
+                                        height: 28,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color:
+                                              context.colors.primaryContainer,
+                                          border: Border.all(
+                                            color: context.colors.surface,
+                                            width: 3.5,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(
+                                                alpha: 0.35,
+                                              ),
+                                              blurRadius: 4,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
                                         alignment: Alignment.center,
                                         child: Icon(
-                                          Icons.camera_alt,
-                                          size: AppSizes.iconSm,
-                                          color: context.colors.surface,
+                                          Icons.add_rounded,
+                                          size: 22,
+                                          color: context.colors.onPrimary,
                                         ),
                                       ),
                                     ),
                                   ),
                                 ],
                               ),
-                              AppSpacing.sm.h,
+                              AppSpacing.smd.h,
                               Text(
                                 context.l10n.uploadPortraitGuidance,
                                 style: context.textTheme.labelMedium
                                     ?.regular()
-                                    .colour(context.colors.onSurfaceVariant),
+                                    .colour(context.colors.outline),
                                 textAlign: TextAlign.center,
                               ),
                             ],
@@ -312,7 +350,7 @@ class _BodyGuardCompleteProfileScreenState
                                   ],
                                 ),
                                 if (selectedServices.isNotEmpty) ...[
-                                  AppSpacing.sm.h,
+                                  AppSpacing.lg.h,
                                   Wrap(
                                     spacing: AppSpacing.sm,
                                     runSpacing: AppSpacing.sm,
@@ -325,7 +363,7 @@ class _BodyGuardCompleteProfileScreenState
                                     }).toList(),
                                   ),
                                 ],
-                                AppSpacing.sm.h,
+                                AppSpacing.lg.h,
                                 AppDropdown<GuardService>(
                                   controller: _serviceDropdownController,
                                   hintText: context.l10n.selectService,
@@ -420,5 +458,64 @@ class _BodyGuardCompleteProfileScreenState
         ),
       ),
     );
+  }
+}
+
+/// Custom painter that draws a thick, bold circular dashed border.
+class _DashedCirclePainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double dashLength;
+  final double gapLength;
+
+  const _DashedCirclePainter({
+    required this.color,
+    this.strokeWidth = 4.5,
+    this.dashLength = 10.5,
+    this.gapLength = 6.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.butt;
+
+    final radius = (size.width - strokeWidth) / 2;
+    final center = Offset(size.width / 2, size.height / 2);
+    final circumference = 2 * math.pi * radius;
+
+    final dashCount = (circumference / (dashLength + gapLength)).floor();
+    if (dashCount == 0) return;
+
+    final totalDashLength = dashCount * dashLength;
+    final totalGapLength = circumference - totalDashLength;
+    final actualGap = totalGapLength / dashCount;
+
+    final dashAngle = dashLength / radius;
+    final gapAngle = actualGap / radius;
+
+    // Center one dash segment directly at 12 o'clock
+    double currentAngle = -math.pi / 2 - (dashAngle / 2);
+    for (int i = 0; i < dashCount; i++) {
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        currentAngle,
+        dashAngle,
+        false,
+        paint,
+      );
+      currentAngle += dashAngle + gapAngle;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedCirclePainter oldDelegate) {
+    return oldDelegate.color != color ||
+        oldDelegate.strokeWidth != strokeWidth ||
+        oldDelegate.dashLength != dashLength ||
+        oldDelegate.gapLength != gapLength;
   }
 }

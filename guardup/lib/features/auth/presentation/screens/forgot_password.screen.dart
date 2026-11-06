@@ -12,6 +12,8 @@ import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/sections/app_image.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
+  static const route = '/forgotPassword';
+
   const ForgotPasswordScreen({super.key});
 
   @override

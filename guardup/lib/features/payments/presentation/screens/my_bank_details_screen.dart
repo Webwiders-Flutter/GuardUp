@@ -18,6 +18,8 @@ import '../../data/model/bank_account.model.dart';
 
 /// Screen allowing bodyguards and companies to manage their bank account details.
 class MyBankDetailsScreen extends StatefulWidget {
+  static const route = '/my-bank-details';
+
   const MyBankDetailsScreen({super.key});
 
   @override

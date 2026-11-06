@@ -20,6 +20,8 @@ import '../../data/model/transaction.model.dart';
 
 /// Screen displaying a luxury payment confirmation receipt matching GuardUp design standards.
 class PaymentSuccessScreen extends StatelessWidget {
+  static const route = '/payment-success';
+
   final TransactionModel? transaction;
   final UserModel? user;
   final String? buttonText;
@@ -117,22 +119,41 @@ class PaymentSuccessScreen extends StatelessWidget {
                       AppSpacing.xl.h,
 
                       // 2. Heading: "Payment Successful!"
-                      Text(
-                        context.l10n.paymentSuccessTitle,
-                        textAlign: TextAlign.center,
-                        style: context.textTheme.headlineLarge?.semiBold(),
-                      ),
-                      AppSpacing.xs.h,
+                      QuickContainer(
+                        shadows: [
+                          // Upward subtle success glow radiating above the card
+                          BoxShadow(
+                            color: context.colors.success.withValues(
+                              alpha: 0.30,
+                            ),
+                            blurRadius: 120,
+                            spreadRadius: 8,
+                            offset: Offset(0, 10),
+                          ),
+                        ],
+                        child: Column(
+                          mainAxisSize: .min,
+                          children: [
+                            Text(
+                              context.l10n.paymentSuccessTitle,
+                              textAlign: TextAlign.center,
+                              style: context.textTheme.headlineLarge
+                                  ?.semiBold(),
+                            ),
+                            AppSpacing.xs.h,
 
-                      // 3. Subtitle: "Your Booking has been confirmed."
-                      Text(
-                        context.l10n.bookingConfirmedSubtitle,
-                        textAlign: TextAlign.center,
-                        style: context.textTheme.bodyMedium?.colour(
-                          context.colors.onSurfaceVariant,
+                            // 3. Subtitle: "Your Booking has been confirmed."
+                            Text(
+                              context.l10n.bookingConfirmedSubtitle,
+                              textAlign: TextAlign.center,
+                              style: context.textTheme.bodyMedium?.colour(
+                                context.colors.onSurfaceVariant,
+                              ),
+                            ),
+                            AppSpacing.xl.h,
+                          ],
                         ),
                       ),
-                      AppSpacing.xl.h,
 
                       // 4. Receipt Details Card via WrapperCard (Upward success glow + visible dividers)
                       WrapperCard(
@@ -141,17 +162,7 @@ class PaymentSuccessScreen extends StatelessWidget {
                           vertical: AppSpacing.xxxl,
                         ),
                         borderWidth: 1.2,
-                        shadows: [
-                          // Upward subtle success glow radiating above the card
-                          BoxShadow(
-                            color: context.colors.success.withValues(
-                              alpha: 0.20,
-                            ),
-                            blurRadius: 20,
-                            spreadRadius: 2,
-                            offset: const Offset(0, -12),
-                          ),
-                        ],
+
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,

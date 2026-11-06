@@ -13,6 +13,8 @@ import '/shared/widgets/sections/wrapper_card.dart';
 
 /// Screen presenting read-only company details.
 class CompanyInformationScreen extends StatelessWidget {
+  static const route = '/company-information';
+
   final String companyName;
   final String email;
   final String phone;
@@ -31,7 +33,10 @@ class CompanyInformationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppAppBar.transparent(title: context.l10n.companyInformation),
+      appBar: AppAppBar.transparent(
+        title: context.l10n.companyInformation,
+        fontSize: 14,
+      ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           return SingleChildScrollView(
@@ -70,7 +75,7 @@ class CompanyInformationScreen extends StatelessWidget {
 
                     // Edit Information Button
                     AppButton(
-                      text: context.l10n.editInformation,
+                      text: context.l10n.update,
 
                       onPressed: () {
                         context.push(AppRoutes.companyEditProfile);

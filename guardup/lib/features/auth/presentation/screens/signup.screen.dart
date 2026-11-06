@@ -13,6 +13,8 @@ import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/misc/app_rich_text.dart';
 
 class SignUpScreen extends StatefulWidget {
+  static const route = '/signup';
+
   const SignUpScreen({super.key});
 
   @override

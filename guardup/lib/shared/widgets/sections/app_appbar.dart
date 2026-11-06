@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/app/routes/app_routes.dart';
+import 'package:guardup/core/extensions/spacing.extension.dart';
 import 'package:guardup/gen/assets.gen.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/shared/widgets/buttons/back_button.dart';
@@ -165,16 +165,19 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
             ],
           );
         }
-        return shouldShowBack ? BackIcon(onTap: onBackTap) : null;
+        return shouldShowBack
+            ? Row(
+                children: [
+                  context.horizontalScreenPadding.w,
+                  BackIcon(onTap: onBackTap),
+                ],
+              )
+            : null;
       }(),
       actions: [
         if (align == AlignTitle.right && titleNode != null)
           Padding(
-            padding: EdgeInsets.only(
-              right: (actions == null || actions!.isEmpty)
-                  ? AppSpacing.md
-                  : AppSpacing.sm,
-            ),
+            padding: context.horizontalEdgeInsets,
             child: Center(child: titleNode),
           ),
         ...?actions,

@@ -24,6 +24,8 @@ import '../../data/enum/business_type.enum.dart';
 
 /// Screen allowing a company to view and edit its profile details.
 class CompanyEditProfileScreen extends StatefulWidget {
+  static const route = '/company-edit-profile';
+
   const CompanyEditProfileScreen({super.key});
 
   @override
@@ -78,7 +80,10 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppAppBar.transparent(title: context.l10n.editProfileTitle),
+      appBar: AppAppBar.transparent(
+        title: context.l10n.editProfileTitle,
+        fontSize: 14,
+      ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           return SingleChildScrollView(
@@ -94,6 +99,13 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
 
                     // 1. Avatar Card with Monogram / Logo, Camera Badge & Company Name
                     WrapperCard(
+                      borderColor: context.colors.surface.withValues(
+                        alpha: 0.7,
+                      ),
+                      backgroundColor: context.colors.surface.withValues(
+                        alpha: 0.7,
+                      ),
+                      padding: AppSpacing.xxl.allPadding,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -229,6 +241,8 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
 
                     // 3. Company Information Form Fields Card
                     WrapperCard(
+                      borderColor: context.colors.surface,
+
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [

@@ -15,6 +15,8 @@ import '../widgets/customer_promo_banner.widget.dart';
 /// Screen 2: Search & Filter Bodyguards screen allowing customers to filter
 /// by location, category, hourly rate, rating, service type, and company.
 class SearchBodyguardsScreen extends StatefulWidget {
+  static const route = '/search-bodyguards';
+
   const SearchBodyguardsScreen({super.key});
 
   @override

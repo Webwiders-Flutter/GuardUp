@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:guardup/core/extensions/number.extension.dart';
+import 'package:quick_container/quick_container.dart';
 
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
@@ -23,7 +24,7 @@ class WalletBalanceCard extends StatelessWidget {
 
   const WalletBalanceCard({
     super.key,
-    this.balance = 250.0,
+    this.balance = 250.50,
     this.onWithdraw,
     this.onAddBankAccount,
   });
@@ -31,72 +32,63 @@ class WalletBalanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: 5.wPercent(context).lPadding,
-      child: Stack(
-        children: [
-          // Luxury gold balance background SVG
-          Positioned.fill(
-            right: -12.wPercent(context),
-
-            child: Assets.svg.balanceBackground.svg(fit: BoxFit.cover),
-          ),
-
-          // Card Content
-          Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: AppSpacing.massive,
-              vertical: AppSpacing.huge,
+      padding: 3.wPercent(context).lPadding,
+      child: QuickContainer(
+        py: AppSpacing.xl,
+        px: AppSpacing.huge,
+        image: DecorationImage(
+          image: AssetImage(Assets.png.balanceBackground.path),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Balance Label
+            Text(
+              context.l10n.balance,
+              style: context.textTheme.titleSmall
+                  ?.regular()
+                  .colour(context.colors.onSurface.withValues(alpha: 0.85))
+                  .increaseSize(1),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+            AppSpacing.md.h,
+
+            // Balance Value
+            Text(
+              "${balance.toUsd} USD",
+              style: context.textTheme.headlineMedium?.bold(),
+            ),
+            AppSpacing.sm.h,
+
+            // Action Buttons Row
+            Row(
               children: [
-                // Balance Label
-                Text(
-                  context.l10n.balance,
-                  style: context.textTheme.titleLarge?.colour(
-                    context.colors.onSurface.withValues(alpha: 0.85),
+                // Withdraw Button (White background, Dark text)
+                Expanded(
+                  child: AppButton(
+                    text: context.l10n.withdraw,
+                    size: ButtonSize.normal,
+                    backgroundColor: context.colors.onSurface,
+                    foregroundColor: context.colors.onPrimary,
+                    onPressed: onWithdraw,
                   ),
                 ),
-                AppSpacing.xs.h,
+                AppSpacing.sm.w,
 
-                // Balance Value
-                Text(
-                  balance.toUsd,
-                  style: context.textTheme.headlineMedium?.bold(),
-                ),
-                AppSpacing.md.h,
-
-                // Action Buttons Row
-                Row(
-                  children: [
-                    // Withdraw Button (White background, Dark text)
-                    Expanded(
-                      child: AppButton(
-                        text: context.l10n.withdraw,
-                        size: ButtonSize.normal,
-                        backgroundColor: context.colors.onSurface,
-                        foregroundColor: context.colors.onPrimary,
-                        onPressed: onWithdraw,
-                      ),
-                    ),
-                    AppSpacing.sm.w,
-
-                    // Add Bank Account Button (Elevated surface container, White text)
-                    Expanded(
-                      child: AppButton(
-                        text: context.l10n.addBankAccount,
-                        size: ButtonSize.normal,
-                        type: .secondaryOff,
-                        onPressed: onAddBankAccount,
-                      ),
-                    ),
-                  ],
+                // Add Bank Account Button (Elevated surface container, White text)
+                Expanded(
+                  child: AppButton(
+                    text: context.l10n.addBankAccount,
+                    size: ButtonSize.normal,
+                    type: .secondaryOff,
+                    onPressed: onAddBankAccount,
+                  ),
                 ),
               ],
             ),
-          ),
-        ],
+            AppSpacing.md.h,
+          ],
+        ),
       ),
     );
   }

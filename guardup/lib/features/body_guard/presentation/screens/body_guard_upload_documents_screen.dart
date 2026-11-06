@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:quick_container/quick_container.dart';
 
+import '../../../../core/di/injection_container.dart';
+import '../../../auth/bloc/auth_bloc.dart';
 import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
@@ -26,6 +28,8 @@ import '../../data/enum/guard_doc_type.enum.dart';
 /// - Component Reuse: [DocumentUploadCard], [AppButton], [AppAppBar], [AppRichText].
 /// - Theming: strictly uses context extensions ([context.colors], [context.textTheme], [AppSpacing]).
 class BodyGuardUploadDocumentsScreen extends StatefulWidget {
+  static const route = '/bodyguard-upload-documents';
+
   const BodyGuardUploadDocumentsScreen({super.key});
 
   @override
@@ -58,6 +62,10 @@ class _BodyGuardUploadDocumentsScreenState
   }
 
   void _handleSubmit() {
+    if (sl<AuthBloc>().state.isAuthenticated) {
+      context.push(AppRoutes.adminApproval);
+      return;
+    }
     context.push(AppRoutes.registrationFee);
   }
 
@@ -66,28 +74,34 @@ class _BodyGuardUploadDocumentsScreenState
     return Scaffold(
       appBar: AppAppBar.transparent(
         title: context.l10n.uploadDocuments,
-        alignTitle: .center,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: AppSpacing.md),
-            child: QuickContainer(
-              w: 36,
-              h: 36,
-              shape: QuickContainerShape.circle,
-              color: context.colors.surfaceContainerHigh.withValues(alpha: 0.5),
-              border: Border.all(
-                color: context.colors.outlineVariant.withValues(alpha: 0.6),
-                width: 1,
-              ),
-              alignment: Alignment.center,
-              child: Icon(
-                Icons.help_outline_rounded,
-                size: AppSizes.iconSmd,
-                color: context.colors.onSurfaceVariant,
-              ),
-            ),
-          ),
-        ],
+        alignTitle: sl<AuthBloc>().state.isAuthenticated ? .right : .center,
+        actions: sl<AuthBloc>().state.isAuthenticated
+            ? []
+            : [
+                Padding(
+                  padding: const EdgeInsets.only(right: AppSpacing.md),
+                  child: QuickContainer(
+                    w: 36,
+                    h: 36,
+                    shape: QuickContainerShape.circle,
+                    color: context.colors.surfaceContainerHigh.withValues(
+                      alpha: 0.5,
+                    ),
+                    border: Border.all(
+                      color: context.colors.outlineVariant.withValues(
+                        alpha: 0.6,
+                      ),
+                      width: 1,
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(
+                      Icons.help_outline_rounded,
+                      size: AppSizes.iconSmd,
+                      color: context.colors.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
       ),
       body: SafeArea(
         child: LayoutBuilder(
