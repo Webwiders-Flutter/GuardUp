@@ -53,11 +53,15 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final operativeName = widget.conversation?.title ?? 'Vikaram Singh';
+    final operativeName = widget.conversation?.title ?? 'Vikram Singh';
     final operativeAvatar =
         widget.conversation?.avatarUrl ?? Assets.images.profilePicture2.path;
+    final operativeSubtitle =
+        widget.conversation?.customFormattedTime ??
+        context.l10n.activeEscortSubtitle;
 
     return Scaffold(
+      backgroundColor: context.colors.transparent,
       appBar: AppAppBar.transparent(
         showBackIcon: true,
         alignTitle: AlignTitle.left,
@@ -101,7 +105,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     ],
                   ),
                   Text(
-                    context.l10n.activeEscortSubtitle,
+                    operativeSubtitle,
                     style: context.textTheme.labelSmall
                         ?.colour(context.colors.primary)
                         .decreaseSize(3),

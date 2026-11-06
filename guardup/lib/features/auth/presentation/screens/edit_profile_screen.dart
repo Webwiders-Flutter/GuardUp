@@ -88,6 +88,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               AppSpacing.xl.h,
               // 1. Avatar Card with Camera Badge & Name
               WrapperCard(
+                borderColor: context.colors.transparent,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -160,10 +161,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           style: context.textTheme.titleMedium?.bold(),
                         ),
                         AppSpacing.xs.w,
-                        Icon(
-                          Icons.check_circle_rounded,
-                          size: AppSizes.iconSm,
-                          color: context.colors.primary,
+                        AppImage.svgAsset(
+                          assetPath: Assets.svg.verifiedBadge.path,
+                          width: 25,
                         ),
                       ],
                     ),
@@ -191,6 +191,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
               // 3. Personal Information Form Fields Card
               WrapperCard(
+                borderColor: context.colors.transparent,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -263,11 +264,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ],
                 ),
               ),
-              AppSpacing.xl.h,
+              70.h,
 
               // 4. Save Changes Primary Button
               AppButton(text: context.l10n.saveChanges, onPressed: _handleSave),
-              AppSpacing.md.h,
+              AppSpacing.lg.h,
 
               // 5. Cancel Secondary Button
               AppButton(

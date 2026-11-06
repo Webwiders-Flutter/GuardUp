@@ -76,7 +76,7 @@ class CustomerPromoBannerWidget extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        Icons.star_rounded,
+                        Icons.auto_awesome,
                         size: 13,
                         color: context.colors.primary,
                       ),
@@ -130,7 +130,7 @@ class CustomerPromoBannerWidget extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       gradient: context.colors.primaryGradient,
-                      borderRadius: BorderRadius.circular(AppRadius.full),
+                      borderRadius: BorderRadius.circular(08),
                       boxShadow: [
                         BoxShadow(
                           color: context.colors.primary.withValues(alpha: 0.25),

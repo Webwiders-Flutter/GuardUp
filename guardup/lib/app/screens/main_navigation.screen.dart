@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
+
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
@@ -14,11 +15,13 @@ class _NavItemData {
   final String label;
   final SvgGenImage svg;
   final int branchIndex;
+  final double? size;
 
   const _NavItemData({
     required this.label,
     required this.svg,
     required this.branchIndex,
+    this.size,
   });
 }
 
@@ -44,7 +47,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
         svg: Assets.svg.calender,
         branchIndex: 1,
       ),
-      _NavItemData(label: l10n.navChat, svg: Assets.svg.chat, branchIndex: 2),
+      _NavItemData(
+        label: l10n.navChat,
+        svg: Assets.svg.message,
+        branchIndex: 2,
+      ),
       _NavItemData(
         label: l10n.navAlerts,
         svg: Assets.svg.notificationBell,
@@ -149,8 +156,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           item.svg.svg(
-                            width: 24,
-                            height: 24,
+                            width: item.size ?? 23,
+                            height: item.size ?? 23,
                             colorFilter: ColorFilter.mode(
                               activeColor,
                               BlendMode.srcIn,

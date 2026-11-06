@@ -109,83 +109,86 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               AppSpacing.lg.h,
 
               // 2. Form Fields
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Old Password Field
-                  AppFieldLabel(
-                    text: context.l10n.oldPassword,
-                    isRequired: true,
-                  ),
-                  AppSpacing.xs.h,
-                  AppTextField.password(
-                    controller: _oldPasswordController,
-                    decoration: InputDecoration(
-                      hintText: context.l10n.oldPassword,
-                      fillColor: context.colors.onPrimary,
+              WrapperCard(
+                borderColor: context.colors.transparent,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Old Password Field
+                    AppFieldLabel(
+                      text: context.l10n.oldPassword,
+                      isRequired: true,
                     ),
-                    style: TextStyle(color: context.colors.onSurface),
-                    textInputAction: TextInputAction.next,
-                    validator: (value) => Validators.password(context, value),
-                  ),
-                  AppSpacing.lg.h,
-
-                  // New Password Field
-                  AppFieldLabel(
-                    text: context.l10n.newPassword,
-                    isRequired: true,
-                  ),
-                  AppSpacing.xs.h,
-                  AppTextField.password(
-                    controller: _newPasswordController,
-                    decoration: InputDecoration(
-                      hintText: context.l10n.newPassword,
-                      fillColor: context.colors.onPrimary,
+                    AppSpacing.xs.h,
+                    AppTextField.password(
+                      controller: _oldPasswordController,
+                      decoration: InputDecoration(
+                        hintText: context.l10n.oldPassword,
+                        // fillColor: context.colors.onPrimary,
+                      ),
+                      style: TextStyle(color: context.colors.onSurface),
+                      textInputAction: TextInputAction.next,
+                      validator: (value) => Validators.password(context, value),
                     ),
-                    style: TextStyle(color: context.colors.onSurface),
-                    textInputAction: TextInputAction.next,
-                    validator: (value) => Validators.password(context, value),
-                  ),
-                  AppSpacing.lg.h,
+                    AppSpacing.lg.h,
 
-                  // Confirm Password Field
-                  AppFieldLabel(
-                    text: context.l10n.confirmPassword,
-                    isRequired: true,
-                  ),
-                  AppSpacing.xs.h,
-                  AppTextField.password(
-                    controller: _confirmPasswordController,
-                    decoration: InputDecoration(
-                      hintText: context.l10n.confirmPassword,
-                      fillColor: context.colors.onPrimary,
+                    // New Password Field
+                    AppFieldLabel(
+                      text: context.l10n.newPassword,
+                      isRequired: true,
                     ),
-                    style: TextStyle(color: context.colors.onSurface),
-                    textInputAction: TextInputAction.done,
-                    validator: (value) => Validators.confirmPassword(
-                      context,
-                      value,
-                      _newPasswordController.text,
+                    AppSpacing.xs.h,
+                    AppTextField.password(
+                      controller: _newPasswordController,
+                      decoration: InputDecoration(
+                        hintText: context.l10n.newPassword,
+                        // fillColor: context.colors.onPrimary,
+                      ),
+                      style: TextStyle(color: context.colors.onSurface),
+                      textInputAction: TextInputAction.next,
+                      validator: (value) => Validators.password(context, value),
                     ),
-                    onFieldSubmitted: (_) => _handleUpdatePassword(),
-                  ),
-                  AppSpacing.xl.h,
+                    AppSpacing.lg.h,
 
-                  // Submit / Update Password Button
-                  ValueListenableBuilder<bool>(
-                    valueListenable: _isLoadingNotifier,
-                    builder: (context, isLoading, _) {
-                      return AppButton(
-                        text: context.l10n.updatePassword,
+                    // Confirm Password Field
+                    AppFieldLabel(
+                      text: context.l10n.confirmPassword,
+                      isRequired: true,
+                    ),
+                    AppSpacing.xs.h,
+                    AppTextField.password(
+                      controller: _confirmPasswordController,
+                      decoration: InputDecoration(
+                        hintText: context.l10n.confirmPassword,
+                        // fillColor: context.colors.onPrimary,
+                      ),
+                      style: TextStyle(color: context.colors.onSurface),
+                      textInputAction: TextInputAction.done,
+                      validator: (value) => Validators.confirmPassword(
+                        context,
+                        value,
+                        _newPasswordController.text,
+                      ),
+                      onFieldSubmitted: (_) => _handleUpdatePassword(),
+                    ),
+                    AppSpacing.xl.h,
 
-                        isLoading: isLoading,
-                        onPressed: isLoading ? null : _handleUpdatePassword,
-                      );
-                    },
-                  ),
-                ],
+                    // Submit / Update Password Button
+                  ],
+                ),
               ),
-              AppSpacing.xxl.h,
+              100.h,
+              ValueListenableBuilder<bool>(
+                valueListenable: _isLoadingNotifier,
+                builder: (context, isLoading, _) {
+                  return AppButton(
+                    text: context.l10n.updatePassword,
+
+                    isLoading: isLoading,
+                    onPressed: isLoading ? null : _handleUpdatePassword,
+                  );
+                },
+              ),
             ],
           ),
         ),

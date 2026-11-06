@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '/app/routes/app_routes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
@@ -75,14 +76,7 @@ class CustomerHeaderWidget extends StatelessWidget {
                   ),
                 ),
                 AppSpacing.xs.w,
-                Assets.svg.verifiedShieldBadge.svg(
-                  width: 16,
-                  height: 16,
-                  colorFilter: ColorFilter.mode(
-                    context.colors.primary,
-                    BlendMode.srcIn,
-                  ),
-                ),
+                Assets.svg.verifiedShieldBadge.svg(width: 16, height: 16),
               ],
             ),
             AppSpacing.xxs.h,

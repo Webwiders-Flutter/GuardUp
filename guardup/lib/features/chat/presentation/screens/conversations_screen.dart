@@ -14,6 +14,9 @@ import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/pagination/app_pagination.dart';
 import '/shared/widgets/pagination/pagination.controller.dart';
 import '/shared/widgets/pagination/pagination.state.dart';
+import '/core/di/injection_container.dart';
+import '/features/auth/auth.dart';
+import 'guard_chat_list_screen.dart';
 import '../../data/models/conversation.model.dart';
 import '../widgets/conversation_card.dart';
 
@@ -48,6 +51,15 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final role = (sl.isRegistered<AuthBloc>()
+            ? sl<AuthBloc>().state.sessionRole
+            : null) ??
+        UserRole.customer;
+
+    if (role == UserRole.guard) {
+      return const GuardChatListScreen();
+    }
+
     return Scaffold(
       body: SafeArea(
         child: Column(

@@ -140,6 +140,7 @@ class AppTextField extends StatefulWidget {
   final VoidCallback? onEditingComplete;
   final VoidCallback? onSuffixTap;
   final GestureTapCallback? onOutsideTap;
+  final Color? fillColor;
 
   const AppTextField({
     super.key,
@@ -183,6 +184,7 @@ class AppTextField extends StatefulWidget {
     this.onEditingComplete,
     this.onSuffixTap,
     this.onOutsideTap,
+    this.fillColor,
   });
 
   // ── Lightweight Convenience Factories ──────────────────────────────────────
@@ -862,6 +864,7 @@ class _AppTextFieldState extends State<AppTextField> {
 
     return baseDecoration.copyWith(
       prefixIcon: resolvedPrefixIcon,
+      fillColor: widget.fillColor,
       suffixIcon: resolvedSuffixIcon,
       prefixIconConstraints: isPhonePrefix
           ? const BoxConstraints(minWidth: 0, minHeight: 0)
@@ -925,6 +928,7 @@ class _AppTextFieldState extends State<AppTextField> {
       enabled: widget.enabled,
       autofocus: widget.autofocus,
       expands: widget.expands,
+
       autocorrect: _isPassword ? false : widget.autocorrect,
       enableSuggestions: _isPassword ? false : widget.enableSuggestions,
       enableInteractiveSelection: widget.enableInteractiveSelection,

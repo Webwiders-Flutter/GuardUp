@@ -197,9 +197,10 @@ class _RateExperienceWidgetState extends State<RateExperienceWidget> {
           Text(
             'Rate Your Experience',
             textAlign: TextAlign.center,
-            style: context.textTheme.headlineMedium?.bold().colour(
-              context.colors.primary,
-            ),
+            style: context.textTheme.headlineMedium
+                ?.bold()
+                .colour(context.colors.primary)
+                .decreaseSize(2),
           ),
           AppSpacing.lg.h,
 
@@ -336,6 +337,7 @@ class _RateExperienceWidgetState extends State<RateExperienceWidget> {
             decoration: const InputDecoration(hintText: 'Type here.....'),
             maxLines: 4,
             minLines: 4,
+            fillColor: Color(0xFF3C3C3C),
           ),
           AppSpacing.xl.h,
 

@@ -5,6 +5,7 @@ export 'data/models/conversation.model.dart';
 export 'data/models/message.model.dart';
 export 'data/models/participant.model.dart';
 export 'presentation/screens/conversations_screen.dart';
+export 'presentation/screens/guard_chat_list_screen.dart';
 export 'presentation/screens/chat_screen.dart';
 export 'presentation/widgets/conversation_card.dart';
 export 'presentation/widgets/chat_message_widget.dart';

@@ -37,10 +37,18 @@ class _CustomerBodygaurdProfileScreenState
 
   static const List<String> _tabs = ['About', 'Experience', 'Reviews (48)'];
 
-  final ValueNotifier<DateTime> _startDateNotifier = ValueNotifier(DateTime(2025, 4, 26));
-  final ValueNotifier<TimeOfDay> _startTimeNotifier = ValueNotifier(const TimeOfDay(hour: 10, minute: 0));
-  final ValueNotifier<DateTime> _endDateNotifier = ValueNotifier(DateTime(2025, 4, 26));
-  final ValueNotifier<TimeOfDay> _endTimeNotifier = ValueNotifier(const TimeOfDay(hour: 14, minute: 0));
+  final ValueNotifier<DateTime> _startDateNotifier = ValueNotifier(
+    DateTime(2025, 4, 26),
+  );
+  final ValueNotifier<TimeOfDay> _startTimeNotifier = ValueNotifier(
+    const TimeOfDay(hour: 10, minute: 0),
+  );
+  final ValueNotifier<DateTime> _endDateNotifier = ValueNotifier(
+    DateTime(2025, 4, 26),
+  );
+  final ValueNotifier<TimeOfDay> _endTimeNotifier = ValueNotifier(
+    const TimeOfDay(hour: 14, minute: 0),
+  );
 
   int get _durationHours {
     final start = DateTime(
@@ -81,7 +89,9 @@ class _CustomerBodygaurdProfileScreenState
   }
 
   Future<void> _pickDate({required bool isStart}) async {
-    final initialDate = isStart ? _startDateNotifier.value : _endDateNotifier.value;
+    final initialDate = isStart
+        ? _startDateNotifier.value
+        : _endDateNotifier.value;
     final picked = await showDatePicker(
       context: context,
       initialDate: initialDate,
@@ -115,7 +125,9 @@ class _CustomerBodygaurdProfileScreenState
   }
 
   Future<void> _pickTime({required bool isStart}) async {
-    final initialTime = isStart ? _startTimeNotifier.value : _endTimeNotifier.value;
+    final initialTime = isStart
+        ? _startTimeNotifier.value
+        : _endTimeNotifier.value;
     final picked = await showTimePicker(
       context: context,
       initialTime: initialTime,
@@ -144,19 +156,32 @@ class _CustomerBodygaurdProfileScreenState
   }
 
   void _onBookNowPressed() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => CustomerBookingDetailsScreen(
-          bodyguard: widget.bodyguard,
-          startDate: _startDateNotifier.value,
-          startTime: _startTimeNotifier.value,
-          endDate: _endDateNotifier.value,
-          endTime: _endTimeNotifier.value,
-          durationHours: _durationHours,
-          hourlyRate: _hourlyRate,
-        ),
+    context.push(
+      AppRoutes.customerBookingDetails,
+      extra: CustomerBookingDetailsScreen(
+        bodyguard: widget.bodyguard,
+        startDate: _startDateNotifier.value,
+        startTime: _startTimeNotifier.value,
+        endDate: _endDateNotifier.value,
+        endTime: _endTimeNotifier.value,
+        durationHours: _durationHours,
+        hourlyRate: _hourlyRate,
       ),
     );
+
+    // Navigator.of(context).push(
+    //   MaterialPageRoute(
+    //     builder: (context) => CustomerBookingDetailsScreen(
+    //       bodyguard: widget.bodyguard,
+    //       startDate: _startDateNotifier.value,
+    //       startTime: _startTimeNotifier.value,
+    //       endDate: _endDateNotifier.value,
+    //       endTime: _endTimeNotifier.value,
+    //       durationHours: _durationHours,
+    //       hourlyRate: _hourlyRate,
+    //     ),
+    //   ),
+    // );
   }
 
   @override
@@ -215,10 +240,7 @@ class _CustomerBodygaurdProfileScreenState
                     Text(
                       'GRAND TOTAL',
                       style: context.textTheme.labelSmall
-                          ?.copyWith(
-                            fontSize: 9.5,
-                            letterSpacing: 0.8,
-                          )
+                          ?.copyWith(fontSize: 9.5, letterSpacing: 0.8)
                           .colour(context.colors.onSurfaceVariant),
                     ),
                     AppSpacing.xxs.h,
@@ -236,7 +258,9 @@ class _CustomerBodygaurdProfileScreenState
                         Text(
                           ' / $_durationHours hrs',
                           style: context.textTheme.bodySmall?.colour(
-                            context.colors.onSurfaceVariant.withValues(alpha: 0.6),
+                            context.colors.onSurfaceVariant.withValues(
+                              alpha: 0.6,
+                            ),
                           ),
                         ),
                       ],
@@ -348,6 +372,7 @@ class _CustomerBodygaurdProfileScreenState
             AppTabBar.underline(
               controller: _tabController,
               tabNames: _tabs,
+              isScrollable: true,
               indicatorColor: context.colors.primary,
               dividerColor: context.colors.outlineVariant,
               height: 40,
@@ -368,8 +393,7 @@ class _CustomerBodygaurdProfileScreenState
                     ]),
                     builder: (context, _) {
                       return GuardAboutBookingCard(
-                        bio:
-                            'Former military officer with 6+ years of security experience. Skilled in close protection, executive security, and risk assessment. Specialized in high-profile VIP transport and perimeter security.',
+                        bio: 'Former military officer with 6+ years of security experience. Skilled in close protection, executive security, and risk assessment. Specialized in high-profile VIP transport and perimeter security.',
                         hourlyRate: _hourlyRate,
                         startDate: _startDateNotifier.value,
                         startTime: _startTimeNotifier.value,

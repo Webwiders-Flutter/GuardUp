@@ -154,12 +154,20 @@ final class AppRouter {
                 builder: (context, state) => BlocBuilder<AuthBloc, AuthState>(
                   bloc: sl.isRegistered<AuthBloc>() ? sl<AuthBloc>() : null,
                   builder: (context, authState) {
-                    if (authState.sessionRole == UserRole.company) {
-                      return const CompanyHomeScreen();
-                    } else if (authState.sessionRole == UserRole.guard) {
-                      return const BodyGuardHomeScreen();
+                    switch (authState.sessionRole) {
+                      case UserRole.company:
+                        return const CompanyHomeScreen(
+                          key: ValueKey(UserRole.company),
+                        );
+                      case UserRole.guard:
+                        return const BodyGuardHomeScreen(
+                          key: ValueKey(UserRole.guard),
+                        );
+                      case UserRole.customer:
+                        return const CustomerHomeScreen(
+                          key: ValueKey(UserRole.customer),
+                        );
                     }
-                    return const CustomerHomeScreen();
                   },
                 ),
               ),
@@ -181,7 +189,19 @@ final class AppRouter {
             routes: [
               GoRoute(
                 path: AppRoutes.chat,
-                builder: (context, state) => const ConversationsScreen(),
+                builder: (context, state) => BlocBuilder<AuthBloc, AuthState>(
+                  bloc: sl.isRegistered<AuthBloc>() ? sl<AuthBloc>() : null,
+                  builder: (context, authState) {
+                    if (authState.sessionRole == UserRole.guard) {
+                      return const GuardChatListScreen(
+                        key: ValueKey(UserRole.guard),
+                      );
+                    }
+                    return const ConversationsScreen(
+                      key: ValueKey('customer_company_chat'),
+                    );
+                  },
+                ),
               ),
             ],
           ),

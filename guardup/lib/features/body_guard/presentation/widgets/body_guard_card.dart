@@ -191,9 +191,11 @@ class BodyGuardCard extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(AppRadius.md),
-              child: SizedBox(
-                width: 78,
-                height: 78,
+              child: QuickContainer(
+                borderColor: context.colors.primary.withValues(alpha: .5),
+                h: 78,
+                w: 78,
+                borderWidth: 0.7,
                 child: isNetworkAvatar
                     ? AppImage.network(imageUrl: avatarUrl, fit: BoxFit.cover)
                     : AppImage.asset(
@@ -395,25 +397,33 @@ class BodyGuardCard extends StatelessWidget {
         Stack(
           clipBehavior: Clip.none,
           children: [
-            isNetworkAvatar
-                ? AppImage.network(
-                    imageUrl: avatarUrl,
-                    width: 22.wPercent(context),
-                    height: 11.hPercent(context),
-                    fit: BoxFit.cover,
-                    borderRadius: AppRadius.sm.toBorderRadius,
-                  )
-                : AppImage.asset(
-                    assetPath: avatarUrl ?? Assets.images.profilePicture.path,
-                    width: 22.wPercent(context),
-                    height: 11.hPercent(context),
-                    fit: BoxFit.cover,
-                    borderRadius: AppRadius.sm.toBorderRadius,
-                  ),
+            QuickContainer(
+              borderColor: context.colors.primary.withValues(alpha: .5),
+              w: 22.wPercent(context),
+              h: 11.hPercent(context),
+              borderWidth: 0.7,
+              borderRadius: AppRadius.sm.toBorderRadius,
+              child: isNetworkAvatar
+                  ? AppImage.network(
+                      imageUrl: avatarUrl,
+                      width: 22.wPercent(context),
+                      height: 11.hPercent(context),
+                      fit: BoxFit.cover,
+                      borderRadius: AppRadius.sm.toBorderRadius,
+                    )
+                  : AppImage.asset(
+                      assetPath: avatarUrl ?? Assets.images.profilePicture.path,
+                      width: 22.wPercent(context),
+                      height: 11.hPercent(context),
+                      fit: BoxFit.cover,
+                      borderRadius: AppRadius.sm.toBorderRadius,
+                    ),
+            ),
+
             if (isVerified)
               Positioned(
-                right: -2,
-                bottom: -2,
+                right: -8,
+                bottom: -8,
                 child: AppImage.svgAsset(
                   assetPath: Assets.svg.verifiedBadge.path,
                   width: 25,

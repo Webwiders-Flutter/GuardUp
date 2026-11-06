@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:guardup/core/di/injection_container.dart';
+import 'package:guardup/features/auth/auth.dart';
+import 'package:guardup/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 
 import '/app/routes/app_routes.dart';
 import '/core/constants/app_spacing.dart';
@@ -34,7 +38,45 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _handleLogin() {
-    // if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    final email = _emailController.text.trim().toLowerCase();
+    final UserRole role;
+
+    if (email == 'company@gmail.com') {
+      role = UserRole.company;
+    } else if (email == 'guard@gmail.com') {
+      role = UserRole.guard;
+    } else if (email == 'customer@gmail.com') {
+      role = UserRole.customer;
+    } else {
+      AppSnackbar.error('Invalid Email');
+      return;
+    }
+
+    final authBloc = sl.isRegistered<AuthBloc>()
+        ? sl<AuthBloc>()
+        : context.read<AuthBloc>();
+
+    // Update role in session
+    authBloc.add(AuthSetSessionRoleRequested(role));
+
+    // Authenticate session with user profile
+    authBloc.add(
+      AuthProfileChanged(
+        UserModel(
+          id: 'mock_${role.name}_user',
+          name: switch (role) {
+            UserRole.company => 'Apex Security Ltd.',
+            UserRole.guard => 'Vikram Singh',
+            UserRole.customer => 'Alex Morgan',
+          },
+          // email: email,
+          role: role,
+        ),
+      ),
+    );
+
     context.go(AppRoutes.home);
   }
 

@@ -439,10 +439,12 @@ class _BookingScreenState extends State<BookingScreen> {
     return Expanded(
       child: WrapperCard(
         onTap: onTap,
+        borderColor: Colors.white,
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
           vertical: AppSpacing.sm + 4,
         ),
+
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
