@@ -99,7 +99,7 @@ class _BodyguardAvailabilityWidgetState
     required bool isHighlighted,
   }) {
     return SizedBox(
-      width: 108,
+      width: 100,
       child: AppTextField(
         controller: controller,
         readOnly: true,
@@ -118,10 +118,10 @@ class _BodyguardAvailabilityWidgetState
           fillColor: context.colors.onSurface,
           contentPadding: EdgeInsets.symmetric(
             horizontal: 0,
-            vertical: AppSpacing.sm,
+            vertical: AppSpacing.ssm,
           ),
           prefixIcon: Padding(
-            padding: const EdgeInsets.only(left: 5.0, right: 5.0),
+            padding: const EdgeInsets.only(left: 5.0, right: 5),
             child: Icon(
               Icons.access_time_filled,
               size: AppSizes.iconSm,
@@ -167,7 +167,7 @@ class _BodyguardAvailabilityWidgetState
       return QuickContainer(
         shape: QuickContainerShape.circle,
         color: context.colors.primary,
-        p: 3,
+        p: 2,
         child: Icon(
           Icons.check_rounded,
           size: AppSizes.iconXs,
@@ -226,11 +226,12 @@ class _BodyguardAvailabilityWidgetState
                 return Padding(
                   padding: AppSpacing.md.bPadding,
                   child: WrapperCard(
-                    padding: AppSpacing.xlg.xPadding + AppSpacing.xl.yPadding,
+                    padding: .symmetric(horizontal: 12, vertical: 20),
                     onTap: () => _selectionController.toggle(day),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
+                        05.w,
                         // Left: Checkbox Icon + Weekday Label
                         _buildSelectionCircle(
                           context: context,
@@ -240,7 +241,9 @@ class _BodyguardAvailabilityWidgetState
                         Expanded(
                           child: Text(
                             day.label,
-                            style: context.textTheme.bodyMedium?.semiBold(),
+                            style: context.textTheme.bodyMedium
+                                ?.semiBold()
+                                .decreaseSize(1),
                           ),
                         ),
                         AppSpacing.xs.w,

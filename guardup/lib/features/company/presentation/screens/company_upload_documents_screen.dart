@@ -58,6 +58,7 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
         title: sl<AuthBloc>().state.isAuthenticated
             ? context.l10n.businessDocuments
             : context.l10n.uploadDocuments,
+        fontSize: 14,
       ),
       body: SafeArea(
         child: LayoutBuilder(

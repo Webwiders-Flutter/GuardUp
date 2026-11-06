@@ -28,7 +28,6 @@ class TransactionCard extends StatelessWidget {
   /// Whether to render inside a [WrapperCard] container.
   final bool inWrapperCard;
 
-
   const TransactionCard({
     super.key,
     required this.transaction,
@@ -37,20 +36,19 @@ class TransactionCard extends StatelessWidget {
   });
 
   /// Named constructor configured for dashboard card presentation.
-  const TransactionCard.card({
-    super.key,
-    required this.transaction,
-    this.onTap,
-  }) : inWrapperCard = true;
+  const TransactionCard.card({super.key, required this.transaction, this.onTap})
+    : inWrapperCard = true;
 
   @override
   Widget build(BuildContext context) {
     final isCredit = transaction.type.isCredit;
 
     // Use centralized semantic color tokens
-    final iconBgColor = isCredit
+    final iconCardBgColor = isCredit
         ? context.colors.successContainer
         : context.colors.errorContainer;
+
+    final iconBgColor = isCredit ? Color(0xFFD8FFDC) : Color(0xFFFFD1E1);
 
     final iconColor = isCredit ? context.colors.success : context.colors.error;
 
@@ -66,8 +64,9 @@ class TransactionCard extends StatelessWidget {
               w: 42,
               h: 42,
               shape: QuickContainerShape.circle,
-              color: iconBgColor,
+              color: iconCardBgColor,
               alignment: Alignment.center,
+              borderColor: iconCardBgColor,
               child: Icon(
                 transaction.type.icon,
                 color: iconColor,
