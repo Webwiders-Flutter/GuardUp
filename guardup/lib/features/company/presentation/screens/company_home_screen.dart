@@ -15,7 +15,6 @@ import '/features/auth/auth.dart';
 import '/features/body_guard/body_guard.dart';
 import '/features/booking/booking.dart';
 import '/features/notifications/presentation/widgets/notification_icon.widget.dart';
-import '/gen/assets.gen.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/pagination/app_pagination.dart';
@@ -42,113 +41,34 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
   late final PaginationController<BookingModel> _bookingsPaginationController;
   late final PaginationController<BodyGuardModel>
   _bodyguardsPaginationController;
-
-  static final List<BookingModel> _defaultCompanyBookings = [
-    BookingModel(
-      id: 'bk_comp_001',
-      bookingNumber: '#9878213',
-      startDateTime: DateTime.now().add(const Duration(days: 1)),
-      endDateTime: DateTime.now().add(const Duration(days: 1, hours: 4)),
-      bodyguard: BodyGuardModel.fakeData.first,
-      customer: UserModel(
-        id: 'usr_deepak_1',
-        name: 'Deepak Pandey',
-        profileImageUrl: Assets.images.profilePicture.path,
-        role: UserRole.customer,
-      ),
-      status: BookingStatus.pending,
-      hourlyRate: 60.0,
-      scheduleLabel: 'Tomorrow, Apr 28 • 2:00 PM – 6:00 PM',
-      pickupAddress: 'Yorkville Plaza, Toronto, ON',
-      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-    ),
-    BookingModel(
-      id: 'bk_comp_002',
-      bookingNumber: '#9878213',
-      startDateTime: DateTime.now(),
-      endDateTime: DateTime.now().add(const Duration(hours: 4)),
-      bodyguard: BodyGuardModel.fakeData.first,
-      customer: UserModel(
-        id: 'usr_deepak_2',
-        name: 'Deepak Pandey',
-        profileImageUrl: Assets.images.profilePicture2.path,
-        role: UserRole.customer,
-      ),
-      status: BookingStatus.onGoing,
-      hourlyRate: 60.0,
-      scheduleLabel: 'Tomorrow, Apr 28 • 2:00 PM – 6:00 PM',
-      pickupAddress: 'Yorkville Plaza, Toronto, ON',
-      createdAt: DateTime.now().subtract(const Duration(hours: 4)),
-    ),
-  ];
-
-  static final List<BodyGuardModel> _defaultCompanyBodyguards =
-      BodyGuardModel.fakeData;
-
   @override
   void initState() {
     super.initState();
 
     _bookingsPaginationController = PaginationController<BookingModel>(
       initialState: PaginationState<BookingModel>(
-        items: _defaultCompanyBookings,
-        total: _defaultCompanyBookings.length,
+        items: BookingModel.fakeData.take(3).toList(),
+        total: 3,
         status: const ApiState.success(null),
       ),
     );
 
     _bodyguardsPaginationController = PaginationController<BodyGuardModel>(
       initialState: PaginationState<BodyGuardModel>(
-        items: _defaultCompanyBodyguards,
-        total: _defaultCompanyBodyguards.length,
+        items: BodyGuardModel.fakeData.take(3).toList(),
+        total: 3,
         status: const ApiState.success(null),
       ),
     );
-
-    _bookingSearchController.addListener(_handleBookingSearch);
   }
 
   @override
   void dispose() {
-    _bookingSearchController.removeListener(_handleBookingSearch);
     _bookingSearchController.dispose();
     _bookingsPaginationController.dispose();
     _bodyguardsPaginationController.dispose();
     super.dispose();
   }
-
-  void _handleBookingSearch() {
-    final query = _bookingSearchController.text.trim().toLowerCase();
-    if (query.isEmpty) {
-      _bookingsPaginationController.updateState(
-        _bookingsPaginationController.value.copyWith(
-          items: _defaultCompanyBookings,
-          total: _defaultCompanyBookings.length,
-        ),
-      );
-      return;
-    }
-
-    final filtered = _defaultCompanyBookings.where((booking) {
-      final customerNameMatches = booking.customer.name.toLowerCase().contains(
-        query,
-      );
-      final bookingNumberMatches = booking.bookingNumber.toLowerCase().contains(
-        query,
-      );
-      final addressMatches =
-          booking.pickupAddress?.toLowerCase().contains(query) ?? false;
-      return customerNameMatches || bookingNumberMatches || addressMatches;
-    }).toList();
-
-    _bookingsPaginationController.updateState(
-      _bookingsPaginationController.value.copyWith(
-        items: filtered,
-        total: filtered.length,
-      ),
-    );
-  }
-
   // ── Clickflow Handlers ─────────────────────────────────────────────────────
 
   void _handleAcceptBooking(BookingModel booking) {}
@@ -248,8 +168,8 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
                       ),
                     ),
                     fillColor: context.colors.onPrimary,
-                    ),
-                    style: TextStyle(color: context.colors.onSurface),
+                  ),
+                  style: TextStyle(color: context.colors.onSurface),
                 ),
               ),
               AppSpacing.md.h,

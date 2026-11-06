@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:guardup/core/constants/app_radius.dart';
+import 'package:guardup/core/extensions/number.extension.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:quick_container/quick_container.dart';
@@ -212,9 +214,9 @@ class _BodyGuardCompleteProfileScreenState
                               AppSpacing.sm.h,
                               Text(
                                 context.l10n.uploadPortraitGuidance,
-                                style: context.textTheme.labelMedium?.colour(
-                                  context.colors.onSurfaceVariant,
-                                ),
+                                style: context.textTheme.labelMedium
+                                    ?.regular()
+                                    .colour(context.colors.onSurfaceVariant),
                                 textAlign: TextAlign.center,
                               ),
                             ],
@@ -230,6 +232,12 @@ class _BodyGuardCompleteProfileScreenState
                           decoration: InputDecoration(
                             hintText: 'Enter Full Name',
                             fillColor: context.colors.onPrimary,
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: AppRadius.md.toBorderRadius,
+                              borderSide: BorderSide(
+                                color: context.colors.outlineVariant,
+                              ),
+                            ),
                           ),
                           style: TextStyle(color: context.colors.onSurface),
                           textInputAction: TextInputAction.next,
@@ -260,6 +268,12 @@ class _BodyGuardCompleteProfileScreenState
                               context.l10n.perHour,
                               style: context.textTheme.bodyMedium?.colour(
                                 context.colors.outline,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: AppRadius.md.toBorderRadius,
+                              borderSide: BorderSide(
+                                color: context.colors.outlineVariant,
                               ),
                             ),
                             fillColor: context.colors.onPrimary,
@@ -326,6 +340,14 @@ class _BodyGuardCompleteProfileScreenState
                                         suffixIcon: Icon(
                                           Icons.expand_more,
                                           color: context.colors.outline,
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              AppRadius.md.toBorderRadius,
+                                          borderSide: BorderSide(
+                                            color:
+                                                context.colors.outlineVariant,
+                                          ),
                                         ),
                                         fillColor: context.colors.onPrimary,
                                       ),

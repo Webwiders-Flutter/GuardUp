@@ -27,9 +27,9 @@ class AppFieldLabel extends StatelessWidget {
         text: text,
         style:
             labelStyle ??
-            context.textTheme.labelLarge
+            context.textTheme.labelMedium
                 ?.medium()
-                .colour(context.colors.outline)
+                .colour(context.colors.onSurface)
                 .textSpacing(0.3),
         children: [
           if (isRequired)
