@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:guardup/features/guard_detail/guard_detail.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '/app/routes/app_routes.dart';
@@ -246,9 +247,21 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
           onTap: () {
             context.push(AppRoutes.customerBodyguardProfile, extra: guard);
           },
-          onBookNow: () {
-            context.push(AppRoutes.customerBooking, extra: guard);
-          },
+          onBookNow: () {},
+          //       onBookNow: () {
+          //         context.push(
+          //   AppRoutes.customerBookingDetails,
+          //   extra: CustomerBookingDetailsScreen(
+          //     bodyguard: widget.bodyguard,
+          //     startDate: _startDateNotifier.value,
+          //     startTime: _startTimeNotifier.value,
+          //     endDate: _endDateNotifier.value,
+          //     endTime: _endTimeNotifier.value,
+          //     durationHours: _durationHours,
+          //     hourlyRate: _hourlyRate,
+          //   ),
+          // );
+          //       },
         );
       },
     );

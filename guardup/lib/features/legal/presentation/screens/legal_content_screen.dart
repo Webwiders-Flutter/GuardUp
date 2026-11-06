@@ -47,7 +47,10 @@ class _LegalContentView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppAppBar.transparent(title: type.label(context.l10n)),
+      appBar: AppAppBar.transparent(
+        title: type.label(context.l10n),
+        fontSize: 14,
+      ),
       body: BlocBuilder<LegalContentBloc, LegalContentState>(
         builder: (context, state) {
           final contentState = state.contentState;

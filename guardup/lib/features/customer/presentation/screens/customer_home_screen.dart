@@ -75,6 +75,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
       appBar: AppAppBar(
         titleWidget: CustomerHeaderWidget(),
         alignTitle: .left,
+        showBackIcon: false,
         showNotificationIcon: true,
       ),
       body: SafeArea(
@@ -136,7 +137,9 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
               AppSpacing.lg.h,
 
               // 4. GUARDUP ELITE Promo Banner
-              CustomerPromoBannerWidget(onBookNow: _navigateToAllBodyguards),
+              CustomerPromoBannerWidget(
+                // onBookNow: _navigateToAllBodyguards
+              ),
               AppSpacing.xl.h,
 
               // 5. SERVICES Row
@@ -228,7 +231,10 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
                   );
                 },
                 onBookNow: () {
-                  context.push(AppRoutes.customerBooking, extra: topBodyguard);
+                  context.push(
+                    AppRoutes.customerBodyguardProfile,
+                    extra: topBodyguard,
+                  );
                 },
               ),
 

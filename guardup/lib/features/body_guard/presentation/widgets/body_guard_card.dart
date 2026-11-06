@@ -189,21 +189,24 @@ class BodyGuardCard extends StatelessWidget {
           alignment: Alignment.topRight,
           clipBehavior: Clip.none,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              child: QuickContainer(
-                borderColor: context.colors.primary.withValues(alpha: .5),
-                h: 78,
-                w: 78,
-                borderWidth: 0.7,
-                child: isNetworkAvatar
-                    ? AppImage.network(imageUrl: avatarUrl, fit: BoxFit.cover)
-                    : AppImage.asset(
-                        assetPath:
-                            avatarUrl ?? Assets.images.profilePicture.path,
-                        fit: BoxFit.cover,
-                      ),
-              ),
+            QuickContainer(
+              borderColor: context.colors.primary.withValues(alpha: .5),
+              h: 78,
+              w: 78,
+              borderWidth: 0.7,
+              radius: 10,
+              clipBehavior: .hardEdge,
+              child: isNetworkAvatar
+                  ? AppImage.network(
+                      imageUrl: avatarUrl,
+                      fit: BoxFit.cover,
+                      borderRadius: .circular(10),
+                    )
+                  : AppImage.asset(
+                      assetPath: avatarUrl ?? Assets.images.profilePicture.path,
+                      fit: BoxFit.cover,
+                      borderRadius: .circular(10),
+                    ),
             ),
             if (isVerified)
               Positioned(
@@ -313,7 +316,7 @@ class BodyGuardCard extends StatelessWidget {
                   );
                 }).toList(),
               ),
-              AppSpacing.sm.h,
+              AppSpacing.ssm.h,
 
               // Row 4: Hourly Rate & Book Now Button
               Row(

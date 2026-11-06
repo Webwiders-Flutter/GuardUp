@@ -115,7 +115,7 @@ class _BookingsScreenState extends State<BookingsScreen>
   }
 
   void _handleOpenChat(BookingModel booking) {
-    context.push(AppRoutes.chat);
+    context.push(AppRoutes.chatDetail);
   }
 
   @override
@@ -143,8 +143,8 @@ class _BookingsScreenState extends State<BookingsScreen>
                     ),
                   ),
                   fillColor: context.colors.onPrimary,
-                    ),
-                    style: TextStyle(color: context.colors.onSurface),
+                ),
+                style: TextStyle(color: context.colors.onSurface),
               ),
             ),
             AppSpacing.md.h,

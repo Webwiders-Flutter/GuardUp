@@ -79,7 +79,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppAppBar.transparent(title: context.l10n.editProfileTitle),
+      appBar: AppAppBar.transparent(
+        title: context.l10n.editProfileTitle,
+        fontSize: 14,
+      ),
       body: SingleChildScrollView(
         padding: context.horizontalEdgeInsets,
         child: Form(

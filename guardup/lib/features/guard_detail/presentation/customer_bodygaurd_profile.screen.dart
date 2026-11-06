@@ -224,7 +224,7 @@ class _CustomerBodygaurdProfileScreenState
           return Container(
             padding: const EdgeInsets.fromLTRB(18, 10, 18, 25),
             decoration: BoxDecoration(
-              color: context.colors.surface,
+              // color: context.colors.surface,
               border: Border(
                 top: BorderSide(
                   color: context.colors.outlineVariant.withValues(alpha: 0.6),

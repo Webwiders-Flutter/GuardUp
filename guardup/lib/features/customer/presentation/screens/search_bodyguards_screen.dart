@@ -170,7 +170,8 @@ class _SearchBodyguardsScreenState extends State<SearchBodyguardsScreen> {
                     // 3. Compact VIP Protection Banner
                     CustomerPromoBannerWidget(
                       badgeText: 'VIP PROTECTION',
-                      onBookNow: _onSearchPressed,
+                      isCompact: true,
+                      // onBookNow: _onSearchPressed,
                     ),
                     AppSpacing.lg.h,
 

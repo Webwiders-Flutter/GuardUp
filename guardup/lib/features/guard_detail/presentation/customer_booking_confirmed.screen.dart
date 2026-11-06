@@ -82,6 +82,7 @@ class CustomerBookingConfirmedScreen extends StatelessWidget {
       appBar: AppAppBar.transparent(
         title: 'Booking confirmed',
         showBackIcon: true,
+        fontSize: 14,
         alignTitle: AlignTitle.right,
         onBackTap: () {
           if (context.canPop()) {

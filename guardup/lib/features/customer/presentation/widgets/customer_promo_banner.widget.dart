@@ -48,8 +48,11 @@ class CustomerPromoBannerWidget extends StatelessWidget {
       ),
       pt: 16,
       pl: 14,
+      pb: isCompact ? 16 : 0,
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: isCompact
+            ? CrossAxisAlignment.center
+            : CrossAxisAlignment.end,
         children: [
           // Left Column: Texts and Button
           Expanded(
@@ -161,7 +164,7 @@ class CustomerPromoBannerWidget extends StatelessWidget {
                     ),
                   ),
                 ),
-                20.h,
+                if (!isCompact) 20.h,
               ],
             ),
           ),
@@ -172,10 +175,12 @@ class CustomerPromoBannerWidget extends StatelessWidget {
           Expanded(
             flex: 2,
             child: AppImage.asset(
-              height: 140,
+              height: isCompact ? 100 : 140,
               assetPath: Assets.images.profilePicture2.path,
               fit: BoxFit.cover,
-              borderRadius: .circular(10),
+              borderRadius: isCompact
+                  ? BorderRadius.circular(8)
+                  : BorderRadius.circular(0),
             ),
           ),
           08.w,

@@ -75,7 +75,10 @@ class _ContactUsViewState extends State<_ContactUsView> {
         final isLoading = state.submissionState.isLoading;
 
         return Scaffold(
-          appBar: AppAppBar.transparent(title: context.l10n.contactUs),
+          appBar: AppAppBar.transparent(
+            title: context.l10n.contactUs,
+            fontSize: 14,
+          ),
           body: SingleChildScrollView(
             padding: context.horizontalEdgeInsets,
             child: Form(

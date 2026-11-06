@@ -126,9 +126,9 @@ class GuardAboutBookingCard extends StatelessWidget {
                         AppSpacing.xs.w,
                         Text(
                           'BOOKING DETAILS',
-                          style: context.textTheme.titleSmall
-                              ?.bold()
-                              .copyWith(letterSpacing: 0.8),
+                          style: context.textTheme.titleSmall?.bold().copyWith(
+                            letterSpacing: 0.8,
+                          ),
                         ),
                       ],
                     ),
@@ -150,9 +150,7 @@ class GuardAboutBookingCard extends StatelessWidget {
                       child: Text(
                         'Instant Confirmation',
                         style: context.textTheme.labelSmall
-                            ?.copyWith(
-                              fontSize: 10,
-                            )
+                            ?.copyWith(fontSize: 10)
                             .colour(context.colors.primary),
                       ),
                     ),
@@ -335,7 +333,7 @@ class GuardAboutBookingCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: context.colors.outlineVariant, width: 1),
+          border: Border.all(color: context.colors.onSurface, width: 0.8),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

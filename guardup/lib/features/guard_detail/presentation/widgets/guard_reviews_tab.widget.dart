@@ -46,83 +46,86 @@ class GuardReviewsTabWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'REVIEW AND RATING',
-          style: context.textTheme.labelMedium
-              ?.bold()
-              .copyWith(letterSpacing: 0.8)
-              .colour(context.colors.onSurfaceVariant),
-        ),
-        AppSpacing.sm.h,
+    return Padding(
+      padding: context.horizontalEdgeInsets,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'REVIEW AND RATING',
+            style: context.textTheme.labelMedium
+                ?.bold()
+                .copyWith(letterSpacing: 0.8)
+                .colour(context.colors.onSurfaceVariant),
+          ),
+          AppSpacing.sm.h,
 
-        ...reviews.map((rev) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: QuickContainer(
-              w: double.infinity,
-              p: AppSpacing.md,
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-              color: context.colors.surfaceContainer,
-              border: Border.all(
-                color: context.colors.outlineVariant.withValues(alpha: 0.5),
-                width: 1,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        rev.authorName,
-                        style: context.textTheme.titleSmall?.bold().colour(
-                          context.colors.onSurface,
+          ...reviews.map((rev) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: QuickContainer(
+                w: double.infinity,
+                p: AppSpacing.md,
+                borderRadius: BorderRadius.circular(AppRadius.lg),
+                color: context.colors.surfaceContainer,
+                border: Border.all(
+                  color: context.colors.outlineVariant.withValues(alpha: 0.5),
+                  width: 1,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          rev.authorName,
+                          style: context.textTheme.titleSmall?.bold().colour(
+                            context.colors.onSurface,
+                          ),
                         ),
-                      ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            rev.rating.toStringAsFixed(1),
-                            style: context.textTheme.labelSmall?.colour(
-                              context.colors.primary,
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              rev.rating.toStringAsFixed(1),
+                              style: context.textTheme.labelSmall?.colour(
+                                context.colors.primary,
+                              ),
                             ),
-                          ),
-                          AppSpacing.xxs.w,
-                          Icon(
-                            Icons.star_rounded,
-                            size: 15,
-                            color: context.colors.primary,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  AppSpacing.xxs.h,
+                            AppSpacing.xxs.w,
+                            Icon(
+                              Icons.star_rounded,
+                              size: 15,
+                              color: context.colors.primary,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    AppSpacing.xxs.h,
 
-                  Text(
-                    rev.timeAndContext,
-                    style: context.textTheme.bodySmall
-                        ?.copyWith(fontSize: 10.5)
-                        .colour(context.colors.onSurfaceVariant),
-                  ),
-                  AppSpacing.sm.h,
+                    Text(
+                      rev.timeAndContext,
+                      style: context.textTheme.bodySmall
+                          ?.copyWith(fontSize: 10.5)
+                          .colour(context.colors.onSurfaceVariant),
+                    ),
+                    AppSpacing.sm.h,
 
-                  Text(
-                    rev.comment,
-                    style: context.textTheme.bodySmall
-                        ?.copyWith(fontSize: 11.5, height: 1.4)
-                        .colour(context.colors.onSurface),
-                  ),
-                ],
+                    Text(
+                      rev.comment,
+                      style: context.textTheme.bodySmall
+                          ?.copyWith(fontSize: 11.5, height: 1.4)
+                          .colour(context.colors.onSurface),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          );
-        }),
-      ],
+            );
+          }),
+        ],
+      ),
     );
   }
 }

@@ -51,7 +51,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppAppBar.transparent(title: context.l10n.changePasswordTitle),
+      appBar: AppAppBar.transparent(
+        title: context.l10n.changePasswordTitle,
+        fontSize: 14,
+      ),
       body: SingleChildScrollView(
         padding: context.horizontalEdgeInsets,
         child: Form(

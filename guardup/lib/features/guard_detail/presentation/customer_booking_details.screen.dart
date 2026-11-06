@@ -64,6 +64,7 @@ class CustomerBookingDetailsScreen extends StatelessWidget {
       backgroundColor: context.colors.transparent,
       appBar: AppAppBar.transparent(
         title: 'Booking Details',
+        fontSize: 14,
         showBackIcon: true,
         alignTitle: AlignTitle.right,
         onBackTap: () => Navigator.of(context).pop(),
