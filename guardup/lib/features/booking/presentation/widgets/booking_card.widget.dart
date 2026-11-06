@@ -120,9 +120,9 @@ class BookingCard extends StatelessWidget {
           _isCustomer
               ? _buildCustomerViewHeader(context)
               : _buildGuardViewHeader(context),
-          AppSpacing.sm.h,
+          AppSpacing.xs.h,
           Divider(color: context.colors.outline, thickness: 0.2),
-          AppSpacing.smd.h,
+          AppSpacing.ssm.h,
 
           // -------------------------------------------------------------------
           // 2. Middle Section (Schedule, Tracking / Location, Reference #)
@@ -218,7 +218,7 @@ class BookingCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildStatusBadge(context),
-              AppSpacing.sm.h,
+              AppSpacing.xs.h,
               Text(
                 guard.user.name,
                 style: context.textTheme.titleMedium?.bold(),
@@ -396,21 +396,21 @@ class BookingCard extends StatelessWidget {
     final isNetworkAvatar = avatarUrl != null && avatarUrl.startsWith('http');
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Circular Customer Avatar
         isNetworkAvatar
             ? AppImage.network(
                 imageUrl: avatarUrl,
-                width: 18.wPercent(context),
-                height: 18.wPercent(context),
+                width: 16.wPercent(context),
+                height: 16.wPercent(context),
                 shape: BoxShape.circle,
                 fit: BoxFit.cover,
               )
             : AppImage.asset(
                 assetPath: avatarUrl ?? Assets.images.profilePicture.path,
-                width: 18.wPercent(context),
-                height: 18.wPercent(context),
+                width: 16.wPercent(context),
+                height: 16.wPercent(context),
                 shape: BoxShape.circle,
                 fit: BoxFit.cover,
               ),
@@ -422,7 +422,13 @@ class BookingCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildStatusBadge(context),
+              Row(
+                mainAxisAlignment: .spaceBetween,
+                children: [
+                  _buildStatusBadge(context),
+                  _buildHourlyRate(context),
+                ],
+              ),
               AppSpacing.xs.h,
               Text(
                 booking.customer.name,
@@ -433,10 +439,8 @@ class BookingCard extends StatelessWidget {
             ],
           ),
         ),
-        AppSpacing.sm.w,
 
         // Hourly Rate (e.g. "$60 /hr")
-        _buildHourlyRate(context),
       ],
     );
   }
@@ -456,12 +460,12 @@ class BookingCard extends StatelessWidget {
               booking.scheduleLabel ??
               '${booking.startDateTime.readableDate} • ${booking.startDateTime.time12h} – ${booking.endDateTime.time12h}',
         ),
-        AppSpacing.md.h,
+        AppSpacing.sm.h,
         _buildInfoRow(
           context: context,
           icon: Assets.svg.location.svg(
-            width: AppSizes.iconSm,
-            height: AppSizes.iconSm,
+            width: AppSizes.iconXs,
+            height: AppSizes.iconXs,
             colorFilter: ColorFilter.mode(
               context.colors.primary,
               BlendMode.srcIn,
@@ -469,7 +473,7 @@ class BookingCard extends StatelessWidget {
           ),
           text: booking.pickupAddress ?? 'Yorkville Plaza, Toronto, ON',
         ),
-        AppSpacing.md.h,
+        AppSpacing.sm.h,
         _buildInfoRow(
           context: context,
           icon: Assets.svg.docPage.svg(
@@ -558,7 +562,9 @@ class BookingCard extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: context.textTheme.bodySmall?.medium(),
+            style: context.textTheme.bodySmall?.colour(
+              context.colors.onSurfaceVariant,
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),

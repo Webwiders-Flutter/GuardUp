@@ -154,7 +154,7 @@ class BodyGuardCard extends StatelessWidget {
 
           if (showActions) ...[
             AppSpacing.md.h,
-            Divider(color: context.colors.outline, thickness: 0.4),
+            Divider(color: context.colors.outline, thickness: 0.2),
             AppSpacing.sm.h,
 
             // -------------------------------------------------------------------
@@ -404,15 +404,15 @@ class BodyGuardCard extends StatelessWidget {
             isNetworkAvatar
                 ? AppImage.network(
                     imageUrl: avatarUrl,
-                    width: 22.wPercent(context),
-                    height: 12.hPercent(context),
+                    width: 80,
+                    height: 96,
                     fit: BoxFit.cover,
                     borderRadius: AppRadius.sm.toBorderRadius,
                   )
                 : AppImage.asset(
                     assetPath: avatarUrl ?? Assets.images.profilePicture.path,
-                    width: 22.wPercent(context),
-                    height: 12.hPercent(context),
+                    width: 80,
+                    height: 96,
                     fit: BoxFit.cover,
                     borderRadius: AppRadius.sm.toBorderRadius,
                   ),
@@ -454,7 +454,7 @@ class BodyGuardCard extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              AppSpacing.xs.h,
+              AppSpacing.xxs.h,
               Text(
                 resolvedSpecialization,
                 style: context.textTheme.bodySmall?.colour(
@@ -474,30 +474,30 @@ class BodyGuardCard extends StatelessWidget {
                   AppSpacing.xxs.w,
                   Text(
                     bodyguard.rating.toStringAsFixed(1),
-                    style: context.textTheme.labelSmall,
+                    style: context.textTheme.labelMedium,
                   ),
                   Text(
-                    '  •  ',
-                    style: context.textTheme.labelSmall?.regular().colour(
+                    '   •   ',
+                    style: context.textTheme.labelMedium?.regular().colour(
                       context.colors.onSurfaceVariant,
                     ),
                   ),
                   Text(
                     '${bodyguard.reviewCount} reviews',
-                    style: context.textTheme.labelSmall?.regular().colour(
+                    style: context.textTheme.labelMedium?.regular().colour(
                       context.colors.onSurfaceVariant,
                     ),
                   ),
                   Text(
-                    '  •  ',
-                    style: context.textTheme.labelSmall?.colour(
+                    '   •   ',
+                    style: context.textTheme.labelMedium?.colour(
                       context.colors.onSurfaceVariant,
                     ),
                   ),
                   Expanded(
                     child: Text(
                       '${bodyguard.experienceYears}+ yrs exp',
-                      style: context.textTheme.labelSmall?.regular().colour(
+                      style: context.textTheme.labelMedium?.regular().colour(
                         context.colors.onSurfaceVariant,
                       ),
                       maxLines: 1,
@@ -583,7 +583,10 @@ class BodyGuardCard extends StatelessWidget {
           ],
           Text(
             effectiveStatus.label,
-            style: context.textTheme.labelSmall?.semiBold().colour(color),
+            style: context.textTheme.labelSmall
+                ?.semiBold()
+                .colour(color)
+                .decreaseSize(1),
           ),
         ],
       ),

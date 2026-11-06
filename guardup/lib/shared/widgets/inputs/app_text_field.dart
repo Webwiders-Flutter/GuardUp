@@ -564,7 +564,7 @@ class AppTextField extends StatefulWidget {
         horizontal: AppSpacing.smd,
         vertical: AppSpacing.sm,
       ),
-      fontSize: 13,
+      fontSize: 12,
       iconSize: AppSizes.iconSmd,
       isDense: true,
     ),

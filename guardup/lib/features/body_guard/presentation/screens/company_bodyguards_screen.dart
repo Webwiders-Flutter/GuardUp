@@ -68,6 +68,7 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen> {
     return Scaffold(
       appBar: const AppAppBar.transparent(
         title: 'All Bodyguards',
+        fontSize: 14,
         showBackIcon: true,
       ),
       body: SafeArea(

@@ -267,7 +267,7 @@ class WrapperCard extends StatelessWidget {
           color: borderColor ?? context.colors.outlineVariant,
           width: borderWidth ?? 1.5,
         );
-    final effectiveRadius = borderRadius ?? AppRadius.lg;
+    final effectiveRadius = borderRadius ?? AppRadius.xxl;
     final effectivePadding = padding ?? AppSpacing.lg.allPadding;
     final effectiveHeaderSpacing = headerSpacing ?? AppSpacing.md;
 
