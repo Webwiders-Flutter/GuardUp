@@ -116,18 +116,21 @@ class _BodyguardAvailabilityWidgetState
           isDense: true,
           filled: true,
           fillColor: context.colors.onSurface,
-          contentPadding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: 0,
+            vertical: AppSpacing.sm,
+          ),
           prefixIcon: Padding(
-            padding: const EdgeInsets.only(left: 8.0, right: 4.0),
+            padding: const EdgeInsets.only(left: 5.0, right: 5.0),
             child: Icon(
-              Icons.access_time_rounded,
-              size: AppSizes.iconXs,
-              color: context.colors.outlineVariant,
+              Icons.access_time_filled,
+              size: AppSizes.iconSm,
+              color: context.colors.outline,
             ),
           ),
           prefixIconConstraints: const BoxConstraints(
-            minWidth: 15,
-            minHeight: 15,
+            maxWidth: 20,
+            maxHeight: 20,
           ),
         ),
       ),

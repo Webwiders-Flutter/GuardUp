@@ -1003,5 +1003,9 @@
   "update": "Update",
   "@update": {
     "description": "Update button label"
+  },
+  "editCompanyProfile": "Edit Company Profile",
+  "@editCompanyProfile": {
+    "description": "Edit company profile screen title"
   }
 }

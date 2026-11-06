@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:guardup/core/di/injection_container.dart';
+import 'package:guardup/features/auth/auth.dart';
 
 import '/app/routes/app_routes.dart';
 import '/core/constants/app_spacing.dart';
@@ -108,7 +110,7 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen>
                   CompanyAboutTab(company: effectiveCompany),
 
                   // Tab 2: Company bodyguard operatives
-                  CompanyBodyguardsTab(),
+                  CompanyBodyguardsTab(role: sl<AuthBloc>().state.sessionRole),
 
                   // Tab 3: Customer reviews and ratings
                   const CompanyReviewsTab(),

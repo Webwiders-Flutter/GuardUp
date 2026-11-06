@@ -227,9 +227,9 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
                     extra: topBodyguard,
                   );
                 },
-                onBookNow: () {
-                  context.push(AppRoutes.customerBooking, extra: topBodyguard);
-                },
+                // onBookNow: () {
+                //   context.push(AppRoutes.customerBooking, extra: topBodyguard);
+                // },
               ),
 
               AppSpacing.xxl.h,

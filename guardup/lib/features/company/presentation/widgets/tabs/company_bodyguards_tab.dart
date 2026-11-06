@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:guardup/app/routes/app_routes.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
@@ -20,9 +20,9 @@ import '/shared/widgets/pagination/pagination.state.dart';
 /// Tab content rendering the list of active bodyguard operatives deployed by the company.
 class CompanyBodyguardsTab extends StatelessWidget {
   final List<BodyGuardModel>? bodyguards;
-  final UserRole? role;
+  final UserRole role;
   final _searchController = TextEditingController();
-  CompanyBodyguardsTab({super.key, this.bodyguards, this.role});
+  CompanyBodyguardsTab({super.key, this.bodyguards, required this.role});
 
   @override
   Widget build(BuildContext context) {
@@ -67,8 +67,8 @@ class CompanyBodyguardsTab extends StatelessWidget {
                 borderSide: BorderSide(color: context.colors.outlineVariant),
               ),
               fillColor: context.colors.onPrimary,
-                    ),
-                    style: TextStyle(color: context.colors.onSurface),
+            ),
+            style: TextStyle(color: context.colors.onSurface),
           ),
           AppSpacing.lg.h,
         ],
@@ -89,9 +89,10 @@ class CompanyBodyguardsTab extends StatelessWidget {
       itemBuilder: (context, guard, index) {
         return BodyGuardCard(
           bodyguard: guard,
-          role: role ?? UserRole.customer,
-          onTap: () => context.push(AppRoutes.bodyguardProfile, extra: guard),
-          onBookNow: () => context.push(AppRoutes.allBodyguards),
+          role: role,
+          onTap: () =>
+              context.push(AppRoutes.customerBodyguardProfile, extra: guard),
+          onBookNow: () => context.push(AppRoutes.customerBookingDetails),
         );
       },
     );

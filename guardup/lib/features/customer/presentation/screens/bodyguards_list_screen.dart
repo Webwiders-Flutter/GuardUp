@@ -247,7 +247,7 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
             context.push(AppRoutes.customerBodyguardProfile, extra: guard);
           },
           onBookNow: () {
-            context.push(AppRoutes.customerBooking, extra: guard);
+            context.push(AppRoutes.customerBookingDetails, extra: guard);
           },
         );
       },

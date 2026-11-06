@@ -84,7 +84,7 @@ class ProfileScreen extends StatelessWidget {
                           context.push(AppRoutes.editProfile);
                           break;
                         case UserRole.company:
-                          context.push(AppRoutes.companyEditProfile);
+                          context.push(AppRoutes.editProfile);
                           break;
                         default:
                       }
