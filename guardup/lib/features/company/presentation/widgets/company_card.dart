@@ -45,7 +45,7 @@ class CompanyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return WrapperCard(
-      onTap: onTap ?? ()=>context.push(AppRoutes.companyDetails),
+      onTap: onTap ?? () => context.push(AppRoutes.companyDetails),
       borderRadius: AppRadius.xxl,
       padding: AppSpacing.mlg.allPadding,
       child: Row(
@@ -67,16 +67,16 @@ class CompanyCard extends StatelessWidget {
               children: [
                 // Top Row: Active Guards Status Badge & Book Now Action / Checkbox
                 _buildTopRow(context),
-                AppSpacing.xs.h,
+                AppSpacing.xxs.h,
 
                 // Company Name
                 Text(
                   company.name,
-                  style: context.textTheme.titleSmall?.semiBold(),
+                  style: context.textTheme.titleSmall,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                AppSpacing.xs.h,
+                AppSpacing.xxs.h,
 
                 // Bottom Meta: Rating, Total Bookings, Experience
                 _buildMetaRow(context),
@@ -156,10 +156,10 @@ class CompanyCard extends StatelessWidget {
         QuickContainer(
           radius: AppRadius.full,
           color: context.colors.success.withValues(alpha: 0.12),
-          border: Border.all(
-            color: context.colors.success.withValues(alpha: 0.25),
-            width: 1.0,
-          ),
+          // border: Border.all(
+          //   color: context.colors.success.withValues(alpha: 0.25),
+          //   width: 1.0,
+          // ),
           px: AppSpacing.sm,
           py: 3.0,
           child: Row(
@@ -188,16 +188,18 @@ class CompanyCard extends StatelessWidget {
           isFlexible: true,
           type: ButtonType.secondaryPrimary,
           size: ButtonSize.small,
-          height: 28,
+          height: 23,
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           border: BorderSide(
             color: context.colors.primary.withValues(alpha: 0.35),
-            width: 1.0,
+            width: 0.8,
           ),
           backgroundColor: context.colors.primary.withValues(alpha: 0.08),
           foregroundColor: context.colors.primary,
           borderRadius: AppRadius.sm.toBorderRadius,
-          onPressed: onBookNow ?? () => context.push(AppRoutes.customerBooking, extra: company),
+          onPressed:
+              onBookNow ??
+              () => context.push(AppRoutes.customerBooking, extra: company),
         ),
       ],
     );
@@ -225,7 +227,7 @@ class CompanyCard extends StatelessWidget {
         Text(
           company.bookingsCount,
           style: context.textTheme.labelSmall?.regular().colour(
-            context.colors.onSurfaceVariant,
+            context.colors.onSurfaceVariant.withValues(alpha: 0.7),
           ),
         ),
         Text(
@@ -238,7 +240,7 @@ class CompanyCard extends StatelessWidget {
           child: Text(
             company.experienceYears,
             style: context.textTheme.labelSmall?.regular().colour(
-              context.colors.onSurfaceVariant,
+              context.colors.primary.withValues(alpha: 0.7),
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

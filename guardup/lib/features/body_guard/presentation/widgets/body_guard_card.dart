@@ -153,9 +153,9 @@ class BodyGuardCard extends StatelessWidget {
           _buildHeader(context),
 
           if (showActions) ...[
-            AppSpacing.md.h,
-            Divider(color: context.colors.outline, thickness: 0.4),
             AppSpacing.sm.h,
+            Divider(color: context.colors.outline, thickness: 0.4),
+            AppSpacing.xxs.h,
 
             // -------------------------------------------------------------------
             // 2. Action Buttons (Edit & Delete for Company/Guard OR Book Now for Customer)
@@ -205,17 +205,11 @@ class BodyGuardCard extends StatelessWidget {
             ),
             if (isVerified)
               Positioned(
-                top: -3,
-                right: -3,
-                child: QuickContainer(
-                  shape: QuickContainerShape.circle,
-                  color: context.colors.primary,
-                  p: 3,
-                  child: Icon(
-                    Icons.check_rounded,
-                    size: 11,
-                    color: context.colors.onPrimary,
-                  ),
+                top: -5,
+                right: -5,
+                child: AppImage.svgAsset(
+                  assetPath: Assets.svg.verifiedBadge.path,
+                  width: 25,
                 ),
               ),
           ],
@@ -405,14 +399,14 @@ class BodyGuardCard extends StatelessWidget {
                 ? AppImage.network(
                     imageUrl: avatarUrl,
                     width: 22.wPercent(context),
-                    height: 12.hPercent(context),
+                    height: 11.hPercent(context),
                     fit: BoxFit.cover,
                     borderRadius: AppRadius.sm.toBorderRadius,
                   )
                 : AppImage.asset(
                     assetPath: avatarUrl ?? Assets.images.profilePicture.path,
                     width: 22.wPercent(context),
-                    height: 12.hPercent(context),
+                    height: 11.hPercent(context),
                     fit: BoxFit.cover,
                     borderRadius: AppRadius.sm.toBorderRadius,
                   ),
@@ -420,20 +414,9 @@ class BodyGuardCard extends StatelessWidget {
               Positioned(
                 right: -2,
                 bottom: -2,
-                child: QuickContainer(
-                  shape: QuickContainerShape.circle,
-                  color: context.colors.surface,
-                  p: 2,
-                  child: QuickContainer(
-                    shape: QuickContainerShape.circle,
-                    color: context.colors.primary,
-                    p: 2,
-                    child: Icon(
-                      Icons.check_rounded,
-                      size: AppSizes.iconTiny,
-                      color: context.colors.onPrimary,
-                    ),
-                  ),
+                child: AppImage.svgAsset(
+                  assetPath: Assets.svg.verifiedBadge.path,
+                  width: 25,
                 ),
               ),
           ],
@@ -446,15 +429,31 @@ class BodyGuardCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildStatusBadge(context),
-              AppSpacing.smd.h,
+              Row(
+                mainAxisAlignment: .spaceBetween,
+                children: [
+                  _buildStatusBadge(context),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      _buildHourlyRate(context),
+                      if (isSelected != null) ...[
+                        AppSpacing.md.w,
+                        _buildCheckbox(context),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+              AppSpacing.ssm.h,
               Text(
                 bodyguard.user.name,
                 style: context.textTheme.titleMedium?.bold(),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              AppSpacing.xs.h,
+              AppSpacing.xxs.h,
               Text(
                 resolvedSpecialization,
                 style: context.textTheme.bodySmall?.colour(
@@ -509,20 +508,8 @@ class BodyGuardCard extends StatelessWidget {
             ],
           ),
         ),
-        AppSpacing.xs.w,
 
         // Hourly Rate (e.g. "$60 /hr") and optional Checkbox
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _buildHourlyRate(context),
-            if (isSelected != null) ...[
-              AppSpacing.md.w,
-              _buildCheckbox(context),
-            ],
-          ],
-        ),
       ],
     );
   }

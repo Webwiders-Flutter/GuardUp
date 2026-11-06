@@ -24,21 +24,13 @@ class CustomerServicesRowWidget extends StatelessWidget {
   });
 
   static final List<_ServiceCategory> _categories = [
-    (id: 'all', title: 'All', icon: Assets.svg.docPage.path),
-    (
-      id: 'premium_car',
-      title: 'Premium car',
-      icon: Assets.svg.verifiedShieldBadge.path,
-    ),
-    (
-      id: 'licensed_armed',
-      title: 'Licensed armed',
-      icon: Assets.svg.checked.path,
-    ),
+    (id: 'all', title: 'All', icon: Assets.svg.menu.path),
+    (id: 'premium_car', title: 'Premium car', icon: Assets.svg.car.path),
+    (id: 'licensed_armed', title: 'Licensed armed', icon: Assets.svg.menu.path),
     (
       id: 'corporate_visits',
       title: 'Corporate visits',
-      icon: Assets.svg.building.path,
+      icon: Assets.svg.visit.path,
     ),
   ];
 
@@ -130,9 +122,7 @@ class CustomerServicesRowWidget extends StatelessWidget {
                         style: context.textTheme.labelSmall
                             ?.copyWith(
                               fontSize: 10.5,
-                              fontWeight: isSelected
-                                  ? null
-                                  : FontWeight.w400,
+                              fontWeight: isSelected ? null : FontWeight.w400,
                             )
                             .colour(
                               isSelected

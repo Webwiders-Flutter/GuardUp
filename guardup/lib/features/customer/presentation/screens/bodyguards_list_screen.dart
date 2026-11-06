@@ -187,7 +187,7 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
                   ),
                   style: TextStyle(color: context.colors.onSurface),
                 ),
-                AppSpacing.md.h,
+                Divider(color: context.colors.outlineVariant, height: 25),
 
                 // Solo vs Company Pill Tabs
                 AppTabBar.pill(
@@ -239,7 +239,7 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
       itemBuilder: (context, guard, index) {
         return BodyGuardCard(
           bodyguard: guard,
-          isCompact: true,
+          isCompact: false,
           role: UserRole.customer,
           onTap: () {
             context.push(AppRoutes.customerBodyguardProfile, extra: guard);

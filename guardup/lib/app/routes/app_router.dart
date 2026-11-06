@@ -322,6 +322,67 @@ final class AppRouter {
         },
       ),
       GoRoute(
+        path: AppRoutes.customerBookingDetails,
+        builder: (context, state) {
+          final extra = state.extra;
+          if (extra is Map<String, dynamic>) {
+            return CustomerBookingDetailsScreen(
+              bodyguard: extra['bodyguard'] as BodyGuardModel?,
+              startDate: extra['startDate'] as DateTime? ?? DateTime.now(),
+              startTime:
+                  extra['startTime'] as TimeOfDay? ??
+                  const TimeOfDay(hour: 10, minute: 0),
+              endDate: extra['endDate'] as DateTime? ?? DateTime.now(),
+              endTime:
+                  extra['endTime'] as TimeOfDay? ??
+                  const TimeOfDay(hour: 14, minute: 0),
+              durationHours: (extra['durationHours'] as num?)?.toInt() ?? 4,
+              hourlyRate: (extra['hourlyRate'] as num?)?.toDouble() ?? 60.0,
+            );
+          }
+          if (extra is BodyGuardModel) {
+            return CustomerBookingDetailsScreen(
+              bodyguard: extra,
+              startDate: DateTime.now(),
+              startTime: const TimeOfDay(hour: 10, minute: 0),
+              endDate: DateTime.now(),
+              endTime: const TimeOfDay(hour: 14, minute: 0),
+            );
+          }
+          return CustomerBookingDetailsScreen(
+            startDate: DateTime.now(),
+            startTime: const TimeOfDay(hour: 10, minute: 0),
+            endDate: DateTime.now(),
+            endTime: const TimeOfDay(hour: 14, minute: 0),
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.bookingConfirmed,
+        builder: (context, state) {
+          final extra = state.extra;
+          if (extra is Map<String, dynamic>) {
+            return CustomerBookingConfirmedScreen(
+              bodyguard: extra['bodyguard'] as BodyGuardModel?,
+              guardName: extra['guardName'] as String?,
+              guardPhoto: extra['guardPhoto'] as String?,
+              startDate: extra['startDate'] as DateTime?,
+              startTime: extra['startTime'] as TimeOfDay?,
+              endDate: extra['endDate'] as DateTime?,
+              endTime: extra['endTime'] as TimeOfDay?,
+              hourlyRate: (extra['hourlyRate'] as num?)?.toDouble(),
+              bookingId: extra['bookingId'] as String?,
+              onChatTap: extra['onChatTap'] as VoidCallback?,
+              onTrackLiveTap: extra['onTrackLiveTap'] as VoidCallback?,
+            );
+          }
+          if (extra is BodyGuardModel) {
+            return CustomerBookingConfirmedScreen(bodyguard: extra);
+          }
+          return const CustomerBookingConfirmedScreen();
+        },
+      ),
+      GoRoute(
         path: AppRoutes.contactUs,
         builder: (context, state) => const ContactUsScreen(),
       ),

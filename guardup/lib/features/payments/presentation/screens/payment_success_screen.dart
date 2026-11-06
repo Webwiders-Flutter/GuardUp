@@ -54,6 +54,7 @@ class PaymentSuccessScreen extends StatelessWidget {
     final effectiveButtonText = buttonText ?? context.l10n.next;
 
     return Scaffold(
+      backgroundColor: context.colors.transparent,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -282,7 +283,7 @@ class PaymentSuccessScreen extends StatelessWidget {
 
                       AppSpacing.huge.h,
 
-                      // 5. Action Button (default "Next", no arrow icon)
+                      // 5. Action Button (default "Next ->")
                       AppButton(
                         text: effectiveButtonText,
                         size: ButtonSize.large,

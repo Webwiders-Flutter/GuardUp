@@ -47,6 +47,8 @@ final class AppRoutes {
   static const createBooking = customerBooking;
   static const customerBodyguardProfile = '/customer-bodyguard-profile';
   static const customerBookingDetails = '/customer-booking-details';
+  static const bookingConfirmed = '/booking-confirmed';
+  static const customerBookingConfirmed = bookingConfirmed;
   static const bookings = '/bookings';
   static const chat = '/chat';
   static const chatDetail = '/chat-detail';

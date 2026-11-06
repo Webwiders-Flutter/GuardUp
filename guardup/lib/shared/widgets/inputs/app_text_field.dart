@@ -253,6 +253,7 @@ class AppTextField extends StatefulWidget {
     TextStyle? style,
     StrutStyle? strutStyle,
     bool enabled = true,
+    bool readOnly = false,
     bool autofocus = false,
     ValueChanged<String>? onChanged,
     VoidCallback? onFocus,
@@ -279,6 +280,7 @@ class AppTextField extends StatefulWidget {
     onTap: onTap,
     onFieldSubmitted: onFieldSubmitted,
     onOutsideTap: onOutsideTap,
+    readOnly: readOnly,
   );
 
   /// Email field with email keyboard and mail icon.

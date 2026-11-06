@@ -86,6 +86,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
               // 2. Search Input Bar (Tapping navigates to Search Bodyguards)
               AppTextField.search(
                 size: AppInputSize.small,
+                readOnly: true,
                 onTap: _navigateToSearch,
                 decoration: InputDecoration(
                   hintText: 'Search bodyguards near you...',

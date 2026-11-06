@@ -212,18 +212,15 @@ class _SearchBodyguardsScreenState extends State<SearchBodyguardsScreen> {
                                         AppRadius.sm,
                                       ),
                                       border: Border.all(
-                                        color: context.colors.primary.withValues(
-                                          alpha: 0.4,
-                                        ),
+                                        color: context.colors.primary
+                                            .withValues(alpha: 0.4),
                                         width: 0.8,
                                       ),
                                     ),
                                     child: Text(
                                       '\$${range.start.round()} - \$${range.end.round()}',
                                       style: context.textTheme.labelSmall
-                                          ?.copyWith(
-                                            fontSize: 11,
-                                          )
+                                          ?.copyWith(fontSize: 11)
                                           .colour(context.colors.primary),
                                     ),
                                   );
@@ -378,6 +375,7 @@ class _SearchBodyguardsScreenState extends State<SearchBodyguardsScreen> {
               ),
               child: AppButton(
                 text: 'Search',
+                height: 45,
                 size: ButtonSize.large,
                 onPressed: _onSearchPressed,
               ),
@@ -413,10 +411,7 @@ class _SearchBodyguardsScreenState extends State<SearchBodyguardsScreen> {
           children: [
             Icon(icon, size: 20, color: context.colors.primary),
             AppSpacing.sm.w,
-            Text(
-              title,
-              style: context.textTheme.bodyMedium?.medium(),
-            ),
+            Text(title, style: context.textTheme.bodyMedium?.medium()),
             const Spacer(),
             ValueListenableBuilder<String>(
               valueListenable: valueNotifier,

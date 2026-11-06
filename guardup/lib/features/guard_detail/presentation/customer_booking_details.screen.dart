@@ -467,6 +467,7 @@ class CustomerBookingDetailsScreen extends StatelessWidget {
               ),
               child: AppButton(
                 text: 'Next',
+                height: 48,
                 size: ButtonSize.large,
                 trailing: Icon(
                   Icons.arrow_forward_rounded,
@@ -474,7 +475,28 @@ class CustomerBookingDetailsScreen extends StatelessWidget {
                   color: context.colors.onPrimary,
                 ),
                 onPressed: () {
-                  context.push(AppRoutes.paymentSuccess);
+                  context.push(
+                    AppRoutes.paymentSuccess,
+                    extra: {
+                      'buttonText': 'Next',
+                      'onTap': () {
+                        context.push(
+                          AppRoutes.bookingConfirmed,
+                          extra: {
+                            'bodyguard': bodyguard,
+                            'guardName': guardName,
+                            'guardPhoto': photoPath,
+                            'startDate': startDate,
+                            'startTime': startTime,
+                            'endDate': endDate,
+                            'endTime': endTime,
+                            'hourlyRate': hourlyRate,
+                            'bookingId': '#GUPT25456',
+                          },
+                        );
+                      },
+                    },
+                  );
                 },
               ),
             ),
