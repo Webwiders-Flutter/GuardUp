@@ -63,6 +63,7 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
       appBar: AppAppBar.transparent(
         title: context.l10n.myWalletTitle,
         showBackIcon: true,
+        fontSize: 14,
       ),
       body: SafeArea(
         child: AppPagination<TransactionModel>.list(
@@ -101,7 +102,7 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
           onWithdraw: _handleWithdraw,
           onAddBankAccount: _handleAddBankAccount,
         ),
-        AppSpacing.xl.h,
+        AppSpacing.lg.h,
 
         // Transaction History Header + Date Filter (QuickContainer)
         Padding(

@@ -64,6 +64,7 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
       appBar: const AppAppBar.transparent(
         title: 'My Profile',
         showBackIcon: true,
+        fontSize: 14,
         alignTitle: AlignTitle.right,
       ),
       body: SafeArea(

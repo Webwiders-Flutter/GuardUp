@@ -109,7 +109,9 @@ class _BodyguardAvailabilityWidgetState
           controller: controller,
           initialTime: _parseTime(controller.text),
         ),
-        style: context.textTheme.labelSmall?.colour(context.colors.surface),
+        style: context.textTheme.labelSmall?.regular().colour(
+          context.colors.outlineVariant,
+        ),
         decoration: InputDecoration(
           isDense: true,
           filled: true,
@@ -120,12 +122,12 @@ class _BodyguardAvailabilityWidgetState
             child: Icon(
               Icons.access_time_rounded,
               size: AppSizes.iconXs,
-              color: context.colors.surface.withValues(alpha: 0.65),
+              color: context.colors.outlineVariant,
             ),
           ),
           prefixIconConstraints: const BoxConstraints(
-            minWidth: 20,
-            minHeight: 20,
+            minWidth: 15,
+            minHeight: 15,
           ),
         ),
       ),

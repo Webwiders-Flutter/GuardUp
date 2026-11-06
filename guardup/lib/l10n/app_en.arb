@@ -995,5 +995,13 @@
   "activeEscortSubtitle": "ACTIVE ESCORT • ESCALADE B6",
   "@activeEscortSubtitle": {
     "description": "Subtitle status in chat appbar"
+  },
+  "addBodyguard": "Add Bodyguard",
+  "@addBodyguard": {
+    "description": "Add bodyguard screen title"
+  },
+  "update": "Update",
+  "@update": {
+    "description": "Update button label"
   }
 }

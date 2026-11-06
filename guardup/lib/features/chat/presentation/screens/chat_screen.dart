@@ -151,11 +151,10 @@ class _ChatScreenState extends State<ChatScreen> {
               padding: context.horizontalEdgeInsets + AppSpacing.md.yPadding,
               child: AppTextField(
                 controller: _messageController,
-                size: AppInputSize.large,
                 textInputAction: TextInputAction.send,
                 onFieldSubmitted: (_) => _handleSend(),
                 style: TextStyle(color: context.colors.onSurface),
-                
+
                 decoration: InputDecoration(
                   hintText: context.l10n.typeMessageHint,
                   fillColor: context.colors.onPrimary,
@@ -167,7 +166,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                     ),
                   ),
-                 
+
                   prefixIcon: IconButton(
                     icon: Icon(
                       Icons.add_rounded,
@@ -182,8 +181,8 @@ class _ChatScreenState extends State<ChatScreen> {
                       onTap: _handleSend,
                       borderRadius: BorderRadius.circular(AppRadius.md),
                       child: QuickContainer(
-                        w: 48,
-                        h: 48,
+                        w: AppSizes.icon2Xl,
+                        h: AppSizes.icon2Xl,
                         radius: AppRadius.md,
                         color: context.colors.primary,
                         child: Icon(

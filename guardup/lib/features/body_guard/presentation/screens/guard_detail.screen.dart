@@ -121,6 +121,7 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
             AppTabBar.underline(
               controller: _tabController,
               tabNames: _tabs,
+              isScrollable: true,
               indicatorColor: context.colors.primary,
               dividerColor: context.colors.outlineVariant,
               height: 40,

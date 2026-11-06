@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 
+import '../../../body_guard/presentation/screens/guard_detail.screen.dart';
 import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
@@ -14,7 +15,6 @@ import '/core/state/api_state.dart';
 import '/features/auth/auth.dart';
 import '/features/body_guard/body_guard.dart';
 import '/features/booking/booking.dart';
-import '/features/notifications/presentation/widgets/notification_icon.widget.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/pagination/app_pagination.dart';
@@ -76,7 +76,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
   void _handleRejectBooking(BookingModel booking) {}
 
   void _handleChatBooking(BookingModel booking) {
-    context.push(AppRoutes.chat);
+    context.go(AppRoutes.chat);
   }
 
   void _handleShareLocation(BookingModel booking) {}
@@ -105,12 +105,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
         automaticallyImplyLeading: false,
         alignTitle: .left,
         titleWidget: _buildAppBarTitle(context),
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: AppSpacing.sm),
-            child: NotificationIconWidget(count: 3),
-          ),
-        ],
+        showNotificationIcon: true,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -256,7 +251,14 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
                 itemBuilder: (context, guard, index) {
                   return BodyGuardCard(
                     bodyguard: guard,
-                    onTap: () => _handleEditBodyguard(guard),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => GuardDetailScreen(),
+                        ),
+                      );
+                    },
                     onEdit: () => _handleEditBodyguard(guard),
                     onDelete: () => _handleDeleteBodyguard(guard),
                   );
