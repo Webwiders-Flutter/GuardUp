@@ -40,7 +40,7 @@ class ProfileScreen extends StatelessWidget {
         return Scaffold(
           appBar: AppAppBar.transparent(
             title: role.profileTitle(context.l10n),
-            fontSize: 14,
+            fontSize: 16,
             showBackIcon: false,
             alignTitle: .left,
           ),

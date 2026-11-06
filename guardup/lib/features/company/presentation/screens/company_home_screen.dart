@@ -77,7 +77,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
   void _handleRejectBooking(BookingModel booking) {}
 
   void _handleChatBooking(BookingModel booking) {
-    context.go(AppRoutes.chat);
+    context.push(AppRoutes.chatDetail);
   }
 
   void _handleShareLocation(BookingModel booking) {}

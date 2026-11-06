@@ -77,7 +77,7 @@ class _BodyGuardHomeScreenState extends State<BodyGuardHomeScreen> {
   void _handleRejectBooking(BookingModel booking) {}
 
   void _handleChatBooking(BookingModel booking) {
-    context.push(AppRoutes.chat);
+    context.push(AppRoutes.chatDetail);
   }
 
   void _handleShareLocation(BookingModel booking) {}

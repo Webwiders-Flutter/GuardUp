@@ -143,28 +143,37 @@ class AdminApprovalScreen extends StatelessWidget {
                       AppSpacing.colossal.h,
 
                       // 5. Logout Button
-                      AppButton(
-                        text: context.l10n.checkStatus,
+                      if (!sl<AuthBloc>().state.isAuthenticated) ...[
+                        AppButton(
+                          text: context.l10n.checkStatus,
 
-                        onPressed: () {
-                          context.read<AuthBloc>().add(
-                            AuthProfileChanged(sl<AuthBloc>().state.user),
-                          );
-                          context.go(AppRoutes.home);
-                        },
-                      ),
-                      AppSpacing.lg.h,
-                      AppButton(
-                        type: .secondaryOff,
-                        text: context.l10n.logoutButton,
+                          onPressed: () {
+                            context.read<AuthBloc>().add(
+                              AuthProfileChanged(sl<AuthBloc>().state.user),
+                            );
+                            context.go(AppRoutes.home);
+                          },
+                        ),
+                        AppSpacing.lg.h,
+                        AppButton(
+                          type: .secondaryOff,
+                          text: context.l10n.logoutButton,
 
-                        onPressed: () {
-                          context.read<AuthBloc>().add(
-                            const AuthSignOutRequested(),
-                          );
-                          context.go(AppRoutes.login);
-                        },
-                      ),
+                          onPressed: () {
+                            context.read<AuthBloc>().add(
+                              const AuthSignOutRequested(),
+                            );
+                            context.go(AppRoutes.login);
+                          },
+                        ),
+                      ] else ...[
+                        AppButton(
+                          text: 'Back to home',
+                          onPressed: () {
+                            context.go(AppRoutes.home);
+                          },
+                        ),
+                      ],
                       AppSpacing.huge.h,
                     ],
                   ),
