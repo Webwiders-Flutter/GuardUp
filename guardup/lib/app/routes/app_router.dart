@@ -17,7 +17,6 @@ import '/features/guard_detail/guard_detail.dart';
 import '/features/legal/legal.dart';
 import '/features/notifications/notifications.dart';
 import '/features/payments/payments.dart';
-import 'app_routes.dart';
 
 final class AppRouter {
   AppRouter._();
