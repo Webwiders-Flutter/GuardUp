@@ -247,21 +247,9 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
           onTap: () {
             context.push(AppRoutes.customerBodyguardProfile, extra: guard);
           },
-          onBookNow: () {},
-          //       onBookNow: () {
-          //         context.push(
-          //   AppRoutes.customerBookingDetails,
-          //   extra: CustomerBookingDetailsScreen(
-          //     bodyguard: widget.bodyguard,
-          //     startDate: _startDateNotifier.value,
-          //     startTime: _startTimeNotifier.value,
-          //     endDate: _endDateNotifier.value,
-          //     endTime: _endTimeNotifier.value,
-          //     durationHours: _durationHours,
-          //     hourlyRate: _hourlyRate,
-          //   ),
-          // );
-          //       },
+          onBookNow: () {
+            context.push(AppRoutes.customerBookingDetails, extra: guard);
+          },
         );
       },
     );

@@ -81,7 +81,7 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppAppBar.transparent(
-        title: context.l10n.editProfileTitle,
+        title: context.l10n.editCompanyProfile,
         fontSize: 14,
       ),
       body: LayoutBuilder(

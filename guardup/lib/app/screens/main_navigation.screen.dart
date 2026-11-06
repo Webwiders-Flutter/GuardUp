@@ -21,8 +21,7 @@ class _NavItemData {
     required this.label,
     required this.svg,
     required this.branchIndex,
-    this.size,
-  });
+  }) : size = null;
 }
 
 class MainNavigationScreen extends StatefulWidget {
