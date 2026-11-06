@@ -26,7 +26,11 @@ class CustomerServicesRowWidget extends StatelessWidget {
   static final List<_ServiceCategory> _categories = [
     (id: 'all', title: 'All', icon: Assets.svg.menu.path),
     (id: 'premium_car', title: 'Premium car', icon: Assets.svg.car.path),
-    (id: 'licensed_armed', title: 'Licensed armed', icon: Assets.svg.menu.path),
+    (
+      id: 'licensed_armed',
+      title: 'Licensed armed',
+      icon: Assets.svg.check.path,
+    ),
     (
       id: 'corporate_visits',
       title: 'Corporate visits',

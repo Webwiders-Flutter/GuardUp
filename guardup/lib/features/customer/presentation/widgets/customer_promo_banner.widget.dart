@@ -175,6 +175,7 @@ class CustomerPromoBannerWidget extends StatelessWidget {
               height: 140,
               assetPath: Assets.images.profilePicture2.path,
               fit: BoxFit.cover,
+              borderRadius: .circular(10),
             ),
           ),
           08.w,
