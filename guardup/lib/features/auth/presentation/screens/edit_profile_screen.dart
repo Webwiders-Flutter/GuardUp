@@ -266,18 +266,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               AppSpacing.xl.h,
 
               // 4. Save Changes Primary Button
-              AppButton(
-                text: context.l10n.saveChanges,
-                size: ButtonSize.large,
-                onPressed: _handleSave,
-              ),
+              AppButton(text: context.l10n.saveChanges, onPressed: _handleSave),
               AppSpacing.md.h,
 
               // 5. Cancel Secondary Button
               AppButton(
                 text: context.l10n.cancel,
                 type: ButtonType.secondaryOff,
-                size: ButtonSize.large,
+
                 onPressed: () => context.pop(),
               ),
               AppSpacing.xxl.h,

@@ -63,7 +63,6 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
         text: 'Edit',
         margin: EdgeInsets.symmetric(horizontal: 15, vertical: 20),
 
-        size: ButtonSize.large,
         onPressed: () {},
       ),
 

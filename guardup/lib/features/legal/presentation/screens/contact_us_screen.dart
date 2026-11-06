@@ -197,7 +197,7 @@ class _ContactUsViewState extends State<_ContactUsView> {
                       // Submit Message Button
                       AppButton(
                         text: context.l10n.submitMessage,
-                        size: ButtonSize.large,
+
                         isLoading: isLoading,
                         onPressed: isLoading ? null : _handleSubmit,
                       ),

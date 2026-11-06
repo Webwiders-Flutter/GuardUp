@@ -94,7 +94,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         // 5. Submit Button pinned to bottom
                         AppButton(
                           text: context.l10n.submit,
-                          size: ButtonSize.large,
+
                           onPressed: _handleSubmit,
                         ),
                         AppSpacing.xl.h,

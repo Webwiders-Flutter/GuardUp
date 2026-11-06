@@ -144,7 +144,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         // 8. Sign Up Primary Button (Has gradient by default)
                         AppButton(
                           text: context.l10n.signUp,
-                          size: ButtonSize.large,
+
                           onPressed: _handleSignUp,
                         ),
 

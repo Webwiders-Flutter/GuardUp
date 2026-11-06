@@ -284,7 +284,7 @@ class _BodyGuardUploadDocumentsScreenState
                               size: AppSizes.iconMd,
                               color: context.colors.onPrimary,
                             ),
-                            size: ButtonSize.large,
+
                             onPressed: _handleSubmit,
                           ),
                           AppSpacing.huge.h,

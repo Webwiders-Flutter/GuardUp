@@ -112,7 +112,7 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
                       // 5. Continue Button pinned to bottom
                       AppButton(
                         text: context.l10n.continueButton,
-                        size: ButtonSize.large,
+
                         onPressed: _handleContinue,
                       ),
                       AppSpacing.xl.h,

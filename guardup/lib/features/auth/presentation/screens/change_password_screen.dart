@@ -122,7 +122,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     controller: _oldPasswordController,
                     decoration: InputDecoration(
                       hintText: context.l10n.oldPassword,
-                     fillColor: context.colors.onPrimary,
+                      fillColor: context.colors.onPrimary,
                     ),
                     style: TextStyle(color: context.colors.onSurface),
                     textInputAction: TextInputAction.next,
@@ -177,7 +177,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     builder: (context, isLoading, _) {
                       return AppButton(
                         text: context.l10n.updatePassword,
-                        size: ButtonSize.large,
+
                         isLoading: isLoading,
                         onPressed: isLoading ? null : _handleUpdatePassword,
                       );

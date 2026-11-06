@@ -117,7 +117,7 @@ Widget build(BuildContext context) {
                     // Bottom Primary Action Button
                     AppButton(
                       text: 'Continue',
-                      size: ButtonSize.large,
+                      
                       onPressed: _handleContinue,
                     ),
                     AppSpacing.xl.h,

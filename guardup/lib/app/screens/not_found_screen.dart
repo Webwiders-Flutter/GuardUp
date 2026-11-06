@@ -151,7 +151,7 @@ class _NotFoundScreenState extends State<NotFoundScreen>
                       AppButton(
                         text: 'Go Back',
                         type: ButtonType.secondaryOff,
-                        size: ButtonSize.large,
+
                         isFlexible: true,
                         onPressed: () {
                           if (context.canPop()) {
@@ -167,7 +167,7 @@ class _NotFoundScreenState extends State<NotFoundScreen>
                         text: 'Go to Dashboard',
                         type: ButtonType.primary,
                         isFlexible: true,
-                        size: ButtonSize.large,
+
                         onPressed: () => context.go(AppRoutes.home),
                       ),
                     ],

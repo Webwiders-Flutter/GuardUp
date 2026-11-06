@@ -143,7 +143,7 @@ class _CompanyCompleteProfileScreenState
                                   icon: Icon(
                                     e.icon,
                                     size: AppSizes.iconSmd,
-                                    color:context.colors.primary
+                                    color: context.colors.primary,
                                   ),
                                 ),
                               )
@@ -159,7 +159,7 @@ class _CompanyCompleteProfileScreenState
                         // 7. Next Button pinned to bottom
                         AppButton(
                           text: context.l10n.next,
-                          size: ButtonSize.large,
+
                           onPressed: _handleNext,
                         ),
                         const Spacer(),

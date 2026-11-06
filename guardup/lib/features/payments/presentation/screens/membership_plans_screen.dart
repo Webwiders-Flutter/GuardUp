@@ -268,7 +268,7 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
 
               return AppButton(
                 text: 'Upgrade your plan',
-                size: ButtonSize.large,
+
                 trailing: const Icon(
                   Icons.arrow_forward_rounded,
                   size: AppSizes.iconSmd,

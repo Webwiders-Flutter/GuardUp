@@ -406,7 +406,7 @@ class _BodyGuardCompleteProfileScreenState
                             size: AppSizes.iconMd,
                             color: context.colors.onPrimary,
                           ),
-                          size: ButtonSize.large,
+
                           onPressed: _handleNext,
                         ),
                         AppSpacing.xxl.h,

@@ -301,7 +301,7 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
                     // 4. Save Changes Primary Button
                     AppButton(
                       text: context.l10n.saveChanges,
-                      size: ButtonSize.large,
+
                       onPressed: _handleSave,
                     ),
                     AppSpacing.md.h,
@@ -310,7 +310,7 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
                     AppButton(
                       text: context.l10n.cancel,
                       type: ButtonType.secondaryOff,
-                      size: ButtonSize.large,
+
                       onPressed: () => context.pop(),
                     ),
                     AppSpacing.huge.h,

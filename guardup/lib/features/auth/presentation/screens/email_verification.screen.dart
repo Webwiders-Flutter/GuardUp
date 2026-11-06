@@ -140,7 +140,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                       // 3. Continue Primary Button
                       AppButton(
                         text: context.l10n.continueButton,
-                        size: ButtonSize.large,
+
                         onPressed: _handleContinue,
                       ),
                       AppSpacing.md.h,

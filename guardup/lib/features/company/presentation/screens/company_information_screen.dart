@@ -71,7 +71,7 @@ class CompanyInformationScreen extends StatelessWidget {
                     // Edit Information Button
                     AppButton(
                       text: context.l10n.editInformation,
-                      size: ButtonSize.large,
+
                       onPressed: () {
                         context.push(AppRoutes.companyEditProfile);
                       },

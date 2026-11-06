@@ -286,7 +286,7 @@ class PaymentSuccessScreen extends StatelessWidget {
                       // 5. Action Button (default "Next ->")
                       AppButton(
                         text: effectiveButtonText,
-                        size: ButtonSize.large,
+
                         onPressed: () {
                           if (onTap != null) {
                             onTap!();

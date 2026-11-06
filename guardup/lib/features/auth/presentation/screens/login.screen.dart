@@ -125,7 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         // 6. Login Primary Button
                         AppButton(
                           text: context.l10n.login,
-                          size: ButtonSize.large,
+
                           onPressed: _handleLogin,
                         ),
 

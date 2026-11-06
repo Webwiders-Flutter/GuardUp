@@ -158,11 +158,7 @@ class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
               AppSpacing.xl.h,
 
               // Add Button
-              AppButton(
-                text: context.l10n.add,
-                size: ButtonSize.large,
-                onPressed: _handleAddAccount,
-              ),
+              AppButton(text: context.l10n.add, onPressed: _handleAddAccount),
               AppSpacing.xxl.h,
             ],
           ),

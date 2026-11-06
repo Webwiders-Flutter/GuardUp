@@ -182,7 +182,7 @@ class _BookingScreenState extends State<BookingScreen> {
               const EdgeInsets.only(top: AppSpacing.sm, bottom: AppSpacing.md),
           child: AppButton(
             text: 'Next',
-            size: ButtonSize.large,
+
             type: ButtonType.primary,
             trailing: Icon(
               Icons.arrow_forward_rounded,

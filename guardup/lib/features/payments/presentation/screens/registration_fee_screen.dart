@@ -149,7 +149,7 @@ class RegistrationFeeScreen extends StatelessWidget {
                             // 6. Pay Now Button (with primary glow)
                             AppButton(
                               text: context.l10n.payNow,
-                              size: ButtonSize.large,
+
                               makeItGlow: true,
                               onPressed: () => context.push(
                                 AppRoutes.paymentSuccess,

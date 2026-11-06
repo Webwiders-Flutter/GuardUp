@@ -98,7 +98,7 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
                           // Upload Documents Button
                           AppButton(
                             text: context.l10n.uploadDocuments,
-                            size: ButtonSize.large,
+
                             onPressed: _handleSubmit,
                           ),
                           AppSpacing.xl.h,

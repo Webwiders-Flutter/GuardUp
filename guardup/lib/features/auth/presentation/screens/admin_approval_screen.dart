@@ -142,7 +142,7 @@ class AdminApprovalScreen extends StatelessWidget {
                       // 5. Logout Button
                       AppButton(
                         text: context.l10n.checkStatus,
-                        size: ButtonSize.large,
+
                         onPressed: () {
                           context.go(AppRoutes.home);
                         },
@@ -151,7 +151,7 @@ class AdminApprovalScreen extends StatelessWidget {
                       AppButton(
                         type: .secondaryOff,
                         text: context.l10n.logoutButton,
-                        size: ButtonSize.large,
+
                         onPressed: () {
                           context.read<AuthBloc>().add(
                             const AuthSignOutRequested(),
