@@ -121,13 +121,15 @@ class AppFilePreviewSheet extends StatelessWidget {
     }
 
     return Navigator.of(context).push<T>(
-      MaterialPageRoute(
-        builder: (_) => _ViewerScreen(
+      PageRouteBuilder<T>(
+        pageBuilder: (_, _, _) => _ViewerScreen(
           title: title,
           file: file,
           fileUrl: fileUrl,
           bytes: bytes,
         ),
+        transitionsBuilder: (_, animation, _, child) =>
+            FadeTransition(opacity: animation, child: child),
       ),
     );
   }

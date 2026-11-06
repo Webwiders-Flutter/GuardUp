@@ -25,3 +25,4 @@ export 'presentation/screens/body_guard_home_screen.dart';
 export 'presentation/screens/body_guard_profile_screen.dart';
 export 'presentation/screens/body_guard_upload_documents_screen.dart';
 export 'presentation/screens/company_bodyguards_screen.dart';
+export 'presentation/screens/guard_detail.screen.dart';

@@ -15,6 +15,8 @@ import '/shared/widgets/misc/app_rich_text.dart';
 import '/shared/widgets/sections/app_image.dart';
 
 class LoginScreen extends StatefulWidget {
+  static const route = '/login';
+
   const LoginScreen({super.key});
 
   @override

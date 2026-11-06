@@ -28,6 +28,8 @@ import '../../data/enum/guard_doc_type.enum.dart';
 /// - Component Reuse: [DocumentUploadCard], [AppButton], [AppAppBar], [AppRichText].
 /// - Theming: strictly uses context extensions ([context.colors], [context.textTheme], [AppSpacing]).
 class BodyGuardUploadDocumentsScreen extends StatefulWidget {
+  static const route = '/bodyguard-upload-documents';
+
   const BodyGuardUploadDocumentsScreen({super.key});
 
   @override

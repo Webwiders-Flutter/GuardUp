@@ -21,6 +21,8 @@ import '../../bloc/auth_event.dart';
 
 /// Screen displaying the application status / review stage for onboarding operatives & companies.
 class AdminApprovalScreen extends StatelessWidget {
+  static const route = '/admin-approval';
+
   const AdminApprovalScreen({super.key});
 
   @override

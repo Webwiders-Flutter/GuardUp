@@ -1,56 +1,80 @@
+import '/app/screens/not_found_screen.dart';
+import '/features/auth/auth.dart';
+import '/features/body_guard/body_guard.dart';
+import '/features/booking/booking.dart';
+import '/features/chat/chat.dart';
+import '/features/company/company.dart';
+import '/features/customer/customer.dart';
+import '/features/guard_detail/guard_detail.dart';
+import '/features/legal/legal.dart';
+import '/features/notifications/notifications.dart';
+import '/features/payments/payments.dart';
+
 final class AppRoutes {
   AppRoutes._();
 
-  //public
-  static const splash = '/';
-  static const selectRole = '/select-role';
-  static const companyProfile = '/company-profile';
-  static const bodyguardProfile = '/bodyguard-profile';
-  static const bodyguardUploadDocuments = '/bodyguard-upload-documents';
-  static const onboarding = '/onboarding';
-  static const login = '/login';
-  static const signup = '/signup';
-  static const register = '/register';
-  static const forgotPassword = '/forgotPassword';
-  static const verifyOtp = '/verifyOtp';
-  static const emailVerification = '/emailVerification';
-  static const uploadDocuments = '/upload-documents';
-  static const registrationFee = '/registration-fee';
-  static const paymentSuccess = '/payment-success';
-  static const adminApproval = '/admin-approval';
-  static const blocked = '/blocked';
-  static const home = '/home';
-  static const profile = '/profile';
-  static const companyHome = '/company-home';
-  static const bodyguardHome = '/bodyguard-home';
-  static const editProfile = '/edit-profile';
-  static const companyEditProfile = '/company-edit-profile';
-  static const companyInformation = '/company-information';
-  static const companyDetails = '/company-details';
-  static const bodyguardInformation = '/bodyguard-information';
-  static const bodyguardDetails = bodyguardInformation;
-  static const changePassword = '/change-password';
-  static const membershipPlans = '/membership-plans';
-  static const privacyPolicy = '/privacy-policy';
-  static const termsAndConditions = '/terms-and-conditions';
-  static const contactUs = '/contact-us';
-  static const deleteAccount = '/delete-account';
-  static const myWallet = '/my-wallet';
-  static const myBankDetails = '/my-bank-details';
-  static const myBank = '/my-bank';
-  static const reviewAndRatings = '/review-and-ratings';
-  static const businessDocuments = '/business-documents';
-  static const notifications = '/notifications';
-  static const searchBodyguards = '/search-bodyguards';
-  static const allBodyguards = '/all-bodyguards';
-  static const customerBooking = '/customer-booking';
-  static const createBooking = customerBooking;
-  static const customerBodyguardProfile = '/customer-bodyguard-profile';
-  static const customerBookingDetails = '/customer-booking-details';
-  static const bookingConfirmed = '/booking-confirmed';
-  static const customerBookingConfirmed = bookingConfirmed;
-  static const bookings = '/bookings';
-  static const chat = '/chat';
-  static const chatDetail = '/chat-detail';
-  static const customerBodyGuard = '/customer-body-guard';
+  // Public / Auth
+  static const splash = SplashScreen.route;
+  static const selectRole = SelectRoleScreen.route;
+  static const login = LoginScreen.route;
+  static const signup = SignUpScreen.route;
+  static const register = signup;
+  static const forgotPassword = ForgotPasswordScreen.route;
+  static const emailVerification = EmailVerificationScreen.route;
+  static const adminApproval = AdminApprovalScreen.route;
+
+  // Onboarding / Profile setup
+  static const companyProfile = CompanyCompleteProfileScreen.route;
+  static const bodyguardProfile = BodyGuardCompleteProfileScreen.route;
+  static const bodyguardUploadDocuments = BodyGuardUploadDocumentsScreen.route;
+  static const uploadDocuments = UploadDocumentsScreen.route;
+  static const registrationFee = RegistrationFeeScreen.route;
+  static const paymentSuccess = PaymentSuccessScreen.route;
+
+  // Shell Tabs / Dashboard
+  static const home = CustomerHomeScreen.route;
+  static const bookings = BookingsScreen.route;
+  static const chat = ConversationsScreen.route;
+  static const notifications = NotificationsScreen.route;
+  static const profile = ProfileScreen.route;
+
+  // Home variants
+  static const companyHome = CompanyHomeScreen.route;
+  static const bodyguardHome = BodyGuardHomeScreen.route;
+
+  // Profiles & Edit
+  static const editProfile = EditProfileScreen.route;
+  static const companyEditProfile = CompanyEditProfileScreen.route;
+  static const companyInformation = CompanyInformationScreen.route;
+  static const companyDetails = CompanyDetailsScreen.route;
+  static const bodyguardInformation = BodyGuardProfileScreen.route;
+  static const changePassword = ChangePasswordScreen.route;
+
+  // Payments / Wallet / Membership
+  static const membershipPlans = MembershipPlansScreen.route;
+  static const myWallet = MyWalletScreen.route;
+  static const myBankDetails = MyBankDetailsScreen.route;
+
+  // Legal / Support
+  static const privacyPolicy = LegalContentScreen.privacyPolicyRoute;
+  static const termsAndConditions = LegalContentScreen.termsRoute;
+  static const contactUs = ContactUsScreen.route;
+
+  // Customer / Bodyguards
+  static const searchBodyguards = SearchBodyguardsScreen.route;
+  static const allBodyguards = CompanyBodyguardsScreen.route;
+  static const customerBodyGuard = BodyguardsListScreen.route;
+  static const customerBodyguardProfile = CustomerBodygaurdProfileScreen.route;
+  static const guardDetail = GuardDetailScreen.route;
+
+  // Booking
+  static const customerBooking = BookingScreen.route;
+  static const customerBookingDetails = CustomerBookingDetailsScreen.route;
+  static const bookingConfirmed = CustomerBookingConfirmedScreen.route;
+
+  // Chat
+  static const chatDetail = ChatScreen.route;
+
+  // Errors
+  static const notFound = NotFoundScreen.route;
 }

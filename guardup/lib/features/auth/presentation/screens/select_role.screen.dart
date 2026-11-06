@@ -19,6 +19,8 @@ import '/shared/widgets/selection/app_selectable_card.dart';
 import '/shared/widgets/selection/selection.controller.dart';
 
 class SelectRoleScreen extends StatefulWidget {
+  static const route = '/select-role';
+
   const SelectRoleScreen({super.key});
 
   @override

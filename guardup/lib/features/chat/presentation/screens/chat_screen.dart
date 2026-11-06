@@ -20,6 +20,8 @@ import '../widgets/chat_message_widget.dart';
 
 /// Screen displaying real-time 1-on-1 operational chat with an assigned operative.
 class ChatScreen extends StatefulWidget {
+  static const route = '/chat-detail';
+
   final ConversationModel? conversation;
 
   const ChatScreen({super.key, this.conversation});

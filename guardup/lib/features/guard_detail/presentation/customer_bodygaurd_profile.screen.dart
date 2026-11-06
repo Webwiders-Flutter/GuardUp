@@ -21,6 +21,8 @@ import 'widgets/guard_reviews_tab.widget.dart';
 /// Customer View: Comprehensive operative profile screen with bio, booking duration
 /// calculator, credentials, client reviews, and sticky booking action bar.
 class CustomerBodygaurdProfileScreen extends StatefulWidget {
+  static const route = '/customer-bodyguard-profile';
+
   final BodyGuardModel? bodyguard;
 
   const CustomerBodygaurdProfileScreen({super.key, this.bodyguard});
@@ -144,18 +146,17 @@ class _CustomerBodygaurdProfileScreenState
   }
 
   void _onBookNowPressed() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => CustomerBookingDetailsScreen(
-          bodyguard: widget.bodyguard,
-          startDate: _startDateNotifier.value,
-          startTime: _startTimeNotifier.value,
-          endDate: _endDateNotifier.value,
-          endTime: _endTimeNotifier.value,
-          durationHours: _durationHours,
-          hourlyRate: _hourlyRate,
-        ),
-      ),
+    context.push(
+      CustomerBookingDetailsScreen.route,
+      extra: {
+        'bodyguard': widget.bodyguard,
+        'startDate': _startDateNotifier.value,
+        'startTime': _startTimeNotifier.value,
+        'endDate': _endDateNotifier.value,
+        'endTime': _endTimeNotifier.value,
+        'durationHours': _durationHours,
+        'hourlyRate': _hourlyRate,
+      },
     );
   }
 

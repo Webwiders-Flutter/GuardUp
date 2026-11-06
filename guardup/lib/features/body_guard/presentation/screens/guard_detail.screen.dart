@@ -15,6 +15,8 @@ import '/shared/widgets/navigation/app_tab_bar.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 
 class GuardDetailScreen extends StatefulWidget {
+  static const route = '/guard-detail';
+
   final BodyGuardModel? bodyguard;
 
   const GuardDetailScreen({super.key, this.bodyguard});

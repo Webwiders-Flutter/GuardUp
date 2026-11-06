@@ -23,6 +23,9 @@ import '../../data/model/legal_content.model.dart';
 /// Screen displaying rich legal content (Privacy Policy, Terms & Conditions, About Us, etc.)
 /// Powered by [LegalContentBloc] and animated with [Skeletonizer] during loading.
 class LegalContentScreen extends StatelessWidget {
+  static const privacyPolicyRoute = '/privacy-policy';
+  static const termsRoute = '/terms-and-conditions';
+
   final ContentType type;
 
   const LegalContentScreen({super.key, required this.type});

@@ -26,6 +26,8 @@ import '../widgets/notification_card.dart';
 /// Notifications screen featuring category tabs, unread count badge,
 /// "Mark all as read" action, and paginated notifications grouped by date.
 class NotificationsScreen extends StatefulWidget {
+  static const route = '/notifications';
+
   const NotificationsScreen({super.key});
 
   @override

@@ -138,7 +138,7 @@
 
 //   void _onBookNowPressed() {
 //     Navigator.of(context).push(
-//       MaterialPageRoute(
+//       PageRoute(
 //         builder: (context) => CustomerBookingDetailsScreen(
 //           bodyguard: widget.bodyguard,
 //           startDate: _startDateNotifier.value,

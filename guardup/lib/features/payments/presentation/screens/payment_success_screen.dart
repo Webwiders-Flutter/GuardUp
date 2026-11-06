@@ -20,6 +20,8 @@ import '../../data/model/transaction.model.dart';
 
 /// Screen displaying a luxury payment confirmation receipt matching GuardUp design standards.
 class PaymentSuccessScreen extends StatelessWidget {
+  static const route = '/payment-success';
+
   final TransactionModel? transaction;
   final UserModel? user;
   final String? buttonText;

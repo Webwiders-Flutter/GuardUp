@@ -24,6 +24,8 @@ import '/shared/widgets/sections/app_appbar.dart';
 /// All Bodyguards & Security Roster listing screen featuring live search,
 /// Solo vs Company mode toggling with [AppTabBar.pill], and paginated feeds using [AppPagination].
 class BodyguardsListScreen extends StatefulWidget {
+  static const route = '/customer-body-guard';
+
   const BodyguardsListScreen({super.key});
 
   @override

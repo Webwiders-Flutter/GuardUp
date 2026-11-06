@@ -19,6 +19,8 @@ import '../../data/enum/business_type.enum.dart';
 
 /// Screen for company registration / entering company details.
 class CompanyCompleteProfileScreen extends StatefulWidget {
+  static const route = '/company-profile';
+
   const CompanyCompleteProfileScreen({super.key});
 
   @override

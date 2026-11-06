@@ -26,6 +26,8 @@ import '/shared/widgets/sections/wrapper_card.dart';
 import '../../data/enum/user_role.enum.dart';
 
 class ProfileScreen extends StatelessWidget {
+  static const route = '/profile';
+
   const ProfileScreen({super.key});
 
   @override
@@ -46,7 +48,10 @@ class ProfileScreen extends StatelessWidget {
               children: [
                 // 1. Profile Header Card
                 if (sl<AuthBloc>().state.sessionRole == .company)
-                  CompanyCard(company: CompanyModel.fakeData.first)
+                  CompanyCard(
+                    company: CompanyModel.fakeData.first,
+                    onTap: () => context.push(AppRoutes.companyInformation),
+                  )
                 else
                   _ProfileCard(
                     name: 'Michael Carter',

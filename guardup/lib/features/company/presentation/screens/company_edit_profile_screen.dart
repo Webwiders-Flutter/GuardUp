@@ -24,6 +24,8 @@ import '../../data/enum/business_type.enum.dart';
 
 /// Screen allowing a company to view and edit its profile details.
 class CompanyEditProfileScreen extends StatefulWidget {
+  static const route = '/company-edit-profile';
+
   const CompanyEditProfileScreen({super.key});
 
   @override

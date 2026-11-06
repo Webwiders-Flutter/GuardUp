@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '../../../body_guard/presentation/screens/guard_detail.screen.dart';
 import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
@@ -29,6 +28,8 @@ import '/shared/widgets/sections/wrapper_card.dart';
 /// - Latest bookings section with live search and paginated feed using [AppPagination] and [BookingCard]
 /// - My bodyguards roster section with paginated feed using [AppPagination] and [BodyGuardCard]
 class CompanyHomeScreen extends StatefulWidget {
+  static const route = '/company-home';
+
   const CompanyHomeScreen({super.key});
 
   @override
@@ -252,12 +253,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
                   return BodyGuardCard(
                     bodyguard: guard,
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => GuardDetailScreen(),
-                        ),
-                      );
+                      context.push(GuardDetailScreen.route, extra: guard);
                     },
                     onEdit: () => _handleEditBodyguard(guard),
                     onDelete: () => _handleDeleteBodyguard(guard),

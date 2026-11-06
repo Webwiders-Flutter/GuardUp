@@ -29,6 +29,8 @@ import '/shared/widgets/sections/wrapper_card.dart';
 /// - Payment summary card with tier badge, operative rates, discounts, and total
 /// - Sticky bottom action button for reservation progression
 class BookingScreen extends StatefulWidget {
+  static const route = '/customer-booking';
+
   final CompanyModel? company;
   final BodyGuardModel? initialBodyguard;
 

@@ -18,6 +18,8 @@ import '../widgets/tabs/bodyguard_reviews.widget.dart';
 /// Bodyguard operational profile screen featuring the profile header card,
 /// underline tabs navigation, and modular tab widgets.
 class BodyGuardProfileScreen extends StatefulWidget {
+  static const route = '/bodyguard-information';
+
   final BodyGuardModel? bodyguard;
 
   const BodyGuardProfileScreen({super.key, this.bodyguard});

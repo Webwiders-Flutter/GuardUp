@@ -65,6 +65,8 @@ typedef MembershipPlanArgs = ({
 });
 
 class MembershipPlansScreen extends StatefulWidget {
+  static const route = '/membership-plans';
+
   final MembershipPlanMode mode;
   final double? bookingAmount;
   final String? operativeName;

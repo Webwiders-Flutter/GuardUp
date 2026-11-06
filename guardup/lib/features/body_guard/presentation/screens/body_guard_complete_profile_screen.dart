@@ -35,6 +35,8 @@ import '../../data/enum/guard_service.enum.dart';
 /// - Theming & Tokens: strict adherence to [context.colors], [context.textTheme], and [AppSpacing].
 /// - Form Layout: [LayoutBuilder] + [ConstrainedBox] + [IntrinsicHeight] + [Spacer] onboarding pattern.
 class BodyGuardCompleteProfileScreen extends StatefulWidget {
+  static const route = '/bodyguard-profile';
+
   const BodyGuardCompleteProfileScreen({super.key});
 
   @override

@@ -22,6 +22,8 @@ import '../widgets/tabs/company_reviews_tab.dart';
 ///   2. Bodyguards (deployed operative roster)
 ///   3. Reviews (client feedback and ratings)
 class CompanyDetailsScreen extends StatefulWidget {
+  static const route = '/company-details';
+
   final CompanyModel? company;
 
   const CompanyDetailsScreen({super.key, this.company});

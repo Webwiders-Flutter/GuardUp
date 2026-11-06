@@ -4,6 +4,8 @@ import '/gen/assets.gen.dart';
 import '/shared/widgets/sections/app_image.dart';
 
 class SplashScreen extends StatelessWidget {
+  static const route = '/';
+
   const SplashScreen({super.key});
 
   @override

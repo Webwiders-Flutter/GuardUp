@@ -20,6 +20,8 @@ import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/sections/app_image.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
+  static const route = '/emailVerification';
+
   const EmailVerificationScreen({super.key});
 
   @override

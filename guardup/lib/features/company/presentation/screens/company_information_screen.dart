@@ -13,6 +13,8 @@ import '/shared/widgets/sections/wrapper_card.dart';
 
 /// Screen presenting read-only company details.
 class CompanyInformationScreen extends StatelessWidget {
+  static const route = '/company-information';
+
   final String companyName;
   final String email;
   final String phone;

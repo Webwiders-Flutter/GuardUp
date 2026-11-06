@@ -29,6 +29,8 @@ import '/shared/widgets/sections/wrapper_card.dart';
 /// - Latest bookings feed powered by [AppPagination] and [BookingCard] (guard perspective)
 /// - Transaction history feed powered by [AppPagination] and [TransactionCard.card]
 class BodyGuardHomeScreen extends StatefulWidget {
+  static const route = '/bodyguard-home';
+
   const BodyGuardHomeScreen({super.key});
 
   @override

@@ -24,6 +24,8 @@ import '../widgets/customer_services_row.widget.dart';
 /// quick filters, elite promo banner, services, top security companies,
 /// and top bodyguards.
 class CustomerHomeScreen extends StatefulWidget {
+  static const route = '/home';
+
   const CustomerHomeScreen({super.key});
 
   @override
