@@ -31,3 +31,7 @@ flutter run
 ### Documentation
 Refer to [system_analysis_and_architecture.md](documentation/system_analysis_and_architecture.md) for full project specifications, flows, and technical details.
 
+For user status changes, push notifications, emails and the related database triggers, see [notifications_and_user_lifecycle.md](documentation/notifications_and_user_lifecycle.md).
+
+For deleting and rejecting users (what is removed, who can do it, security guards), see [user_deletion.md](documentation/user_deletion.md).
+

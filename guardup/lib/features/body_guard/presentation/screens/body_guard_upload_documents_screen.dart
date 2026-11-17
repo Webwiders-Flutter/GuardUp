@@ -141,7 +141,10 @@ class _BodyGuardUploadDocumentsScreenState
     );
 
     if (picked != null && mounted) {
-      _documentsNotifier.value = {..._documentsNotifier.value, doc.id: picked};
+      _documentsNotifier.value = {
+        ..._documentsNotifier.value,
+        doc.docKey: picked,
+      };
     }
   }
 
@@ -154,8 +157,11 @@ class _BodyGuardUploadDocumentsScreenState
 
     // Validate required documents from dynamic docTypes:
     for (final doc in docTypes.where((d) => d.isRequired)) {
-      final hasLocal = localDocs.containsKey(doc.id);
-      final hasRemote = remoteDocs.containsKey(doc.id);
+      final key = doc.docKey;
+      final hasLocal = localDocs.containsKey(key);
+      final hasRemote =
+          remoteDocs.containsKey(key) ||
+          (doc.code.isNotEmpty && remoteDocs.containsKey(doc.code));
       if (!hasLocal && !hasRemote) {
         AppSnackbar.error('Please upload your ${doc.name}');
         return;
@@ -325,11 +331,25 @@ class _BodyGuardUploadDocumentsScreenState
                                           AppSpacing.lg.h,
 
                                           // Dynamic Document Types from Supabase
-                                          ...docTypes.map(
-                                            (doc) => Column(
+                                          ...docTypes.map((doc) {
+                                            final key = doc.docKey;
+                                            final localFile = docs[key];
+                                            final remoteUrl =
+                                                remoteDocs[key] ??
+                                                (doc.code.isNotEmpty
+                                                    ? remoteDocs[doc.code]
+                                                    : null);
+                                            final remoteName =
+                                                remoteNames[key] ??
+                                                (doc.code.isNotEmpty
+                                                    ? remoteNames[doc.code]
+                                                    : null);
+
+                                            return Column(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 DocumentUploadCard(
+                                                  key: ValueKey('doc_$key'),
                                                   title: doc.name,
                                                   description: doc.description,
                                                   icon: Icon(
@@ -341,18 +361,17 @@ class _BodyGuardUploadDocumentsScreenState
                                                   isRequired: doc.isRequired,
                                                   isOptional: !doc.isRequired,
                                                   isLoading: isLoading,
-                                                  initialUrl:
-                                                      remoteDocs[doc.id],
-                                                  fileName: remoteNames[doc.id],
+                                                  initialUrl: remoteUrl,
+                                                  fileName: remoteName,
                                                   selectedFilePath:
-                                                      docs[doc.id]?.path,
+                                                      localFile?.path,
                                                   onPick: () =>
                                                       _pickDocument(doc),
                                                 ),
                                                 AppSpacing.lg.h,
                                               ],
-                                            ),
-                                          ),
+                                            );
+                                          }),
 
                                           // 4. 256-Bit Encrypted & Compliant Security Notice
                                           WrapperCard(

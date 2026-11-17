@@ -75,8 +75,6 @@ class DashboardUserStats {
         return pendingUsers;
       case UserStatus.blocked:
         return blockedUsers;
-      case UserStatus.rejected:
-        return 0;
       case UserStatus.deleted:
         return deletedUsers;
     }

@@ -1,0 +1,17 @@
+# Supabase CLI project config (only the settings GuardUp needs; everything
+# else uses CLI defaults).
+
+project_id = "guardup"
+
+# These functions are called by database triggers with the x-internal-secret
+# header (not a JWT), so the gateway JWT check is disabled. Each function
+# authorizes callers itself in supabase/functions/_shared/auth.ts
+# (internal secret OR an ADMIN user session).
+[functions.send-notification]
+verify_jwt = false
+
+[functions.user-lifecycle-events]
+verify_jwt = false
+
+[functions.purge-user-storage]
+verify_jwt = false
