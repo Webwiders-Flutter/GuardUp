@@ -91,8 +91,7 @@ class _BodyGuardCompleteProfileScreenState
         (authUser?.name != null &&
                 authUser!.name.isNotEmpty &&
                 authUser.name != 'User' &&
-                authUser.name != 'New User' &&
-                authUser.name != 'Vikram Singh')
+                authUser.name != 'New User')
             ? authUser.name
             : (metaName ?? '');
 
@@ -117,7 +116,8 @@ class _BodyGuardCompleteProfileScreenState
         _availableServicesNotifier.value =
             rows.map((r) => ServiceItemModel.fromJson(r)).toList();
       }
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('Error loading services: $e\n$stack');
     } finally {
       if (mounted) {
         _isServicesLoadingNotifier.value = false;
@@ -168,7 +168,9 @@ class _BodyGuardCompleteProfileScreenState
               .where((id) => id.isNotEmpty && activeIds.contains(id))
               .toList();
           _selectedServicesNotifier.value = validServices;
-        } catch (_) {}
+        } catch (e, stack) {
+          debugPrint('Error loading user services: $e\n$stack');
+        }
 
         final dbAvatar = data['profile_image_url'] as String?;
         if (dbAvatar != null &&
@@ -177,7 +179,9 @@ class _BodyGuardCompleteProfileScreenState
           _networkImageUrlNotifier.value = dbAvatar;
         }
       }
-    } catch (_) {}
+    } catch (e, stack) {
+      debugPrint('Error loading existing profile: $e\n$stack');
+    }
   }
 
   @override
@@ -225,23 +229,28 @@ class _BodyGuardCompleteProfileScreenState
     if (_profileImageNotifier.value == null &&
         (_networkImageUrlNotifier.value == null ||
             _networkImageUrlNotifier.value!.isEmpty)) {
-      AppSnackbar.error('Please upload a profile photo');
+      AppSnackbar.error(context.l10n.pleaseUploadProfilePhoto);
       return;
     }
 
     if (_selectedServicesNotifier.value.isEmpty) {
-      AppSnackbar.error('Please select at least one service offered');
+      AppSnackbar.error(context.l10n.pleaseSelectAtLeastOneService);
+      return;
+    }
+
+    final currentUserId = sl.isRegistered<AuthRepository>()
+        ? sl<AuthRepository>().currentUserId
+        : null;
+
+    if (currentUserId == null) {
+      AppSnackbar.error('User session expired. Please sign in again.');
       return;
     }
 
     _isLoadingNotifier.value = true;
 
     try {
-      final currentUserId = sl.isRegistered<AuthRepository>()
-          ? sl<AuthRepository>().currentUserId
-          : null;
-
-      if (currentUserId != null && sl.isRegistered<UserRepository>()) {
+      if (sl.isRegistered<UserRepository>()) {
         String? avatarUrl = _networkImageUrlNotifier.value;
         final pickedAvatar = _profileImageNotifier.value;
         if (pickedAvatar != null && sl.isRegistered<FileStorageService>()) {
@@ -255,7 +264,9 @@ class _BodyGuardCompleteProfileScreenState
                 upsert: true,
               ),
             );
-          } catch (_) {}
+          } catch (e, stack) {
+            debugPrint('Avatar upload failed: $e\n$stack');
+          }
         }
 
         final updatePayload = <String, dynamic>{
@@ -273,32 +284,44 @@ class _BodyGuardCompleteProfileScreenState
           data: updatePayload,
         );
 
-        // Sync services in user_services junction table by service_id (UUID)
-        await Supabase.instance.client
-            .from(DatabaseTables.userServices)
-            .delete()
-            .eq('user_id', currentUserId);
-
-        if (_selectedServicesNotifier.value.isNotEmpty) {
-          final insertPayload = _selectedServicesNotifier.value
-              .map((serviceId) => {
-                    'user_id': currentUserId,
-                    'service_id': serviceId,
-                  })
-              .toList();
-
+        // Atomic sync of services in user_services junction table
+        try {
+          await Supabase.instance.client.rpc(
+            'set_user_services',
+            params: {
+              'p_user_id': currentUserId,
+              'p_service_ids': _selectedServicesNotifier.value,
+            },
+          );
+        } catch (_) {
+          // Fallback to sequential delete + insert if RPC is not yet created
           await Supabase.instance.client
               .from(DatabaseTables.userServices)
-              .insert(insertPayload);
+              .delete()
+              .eq('user_id', currentUserId);
+
+          if (_selectedServicesNotifier.value.isNotEmpty) {
+            final insertPayload = _selectedServicesNotifier.value
+                .map((serviceId) => {
+                      'user_id': currentUserId,
+                      'service_id': serviceId,
+                    })
+                .toList();
+
+            await Supabase.instance.client
+                .from(DatabaseTables.userServices)
+                .insert(insertPayload);
+          }
         }
       }
 
       if (mounted) {
         context.go(AppRoutes.bodyguardUploadDocuments);
       }
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('Failed to save bodyguard profile: $e\n$stack');
       if (mounted) {
-        AppSnackbar.error('Failed to save profile details: $e');
+        AppSnackbar.error('Failed to save profile details. Please try again.');
       }
     } finally {
       if (mounted) {
@@ -422,7 +445,7 @@ class _BodyGuardCompleteProfileScreenState
                                                       ),
                                                       6.h,
                                                       Text(
-                                                        'Add Photo',
+                                                        context.l10n.addPhoto,
                                                         style: context
                                                             .textTheme
                                                             .labelSmall
@@ -505,7 +528,7 @@ class _BodyGuardCompleteProfileScreenState
                         AppTextField(
                           controller: _fullNameController,
                           decoration: InputDecoration(
-                            hintText: 'Enter Full Name',
+                            hintText: context.l10n.enterFullName,
                             fillColor: context.colors.onPrimary,
                             enabledBorder: OutlineInputBorder(
                               borderRadius: AppRadius.md.toBorderRadius,
@@ -527,7 +550,7 @@ class _BodyGuardCompleteProfileScreenState
                         AppTextField(
                           controller: _hourlyRateController,
                           decoration: InputDecoration(
-                            hintText: "Enter Hourly Rate",
+                            hintText: context.l10n.enterHourlyRate,
                             prefix: Padding(
                               padding: const EdgeInsets.only(
                                 left: AppSpacing.xs,
@@ -567,7 +590,7 @@ class _BodyGuardCompleteProfileScreenState
 
                             final rate = double.tryParse(value!.trim());
                             if (rate == null || rate <= 0) {
-                              return 'Please enter an hourly rate greater than 0';
+                              return context.l10n.hourlyRateGreaterThanZero;
                             }
                             return null;
                           },
@@ -719,7 +742,7 @@ class _BodyGuardCompleteProfileScreenState
                             if (requiredError != null) return requiredError;
 
                             if (value!.trim().length < 15) {
-                              return 'Please enter at least 15 characters describing your background';
+                              return context.l10n.bioMinCharacters;
                             }
                             return null;
                           },

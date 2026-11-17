@@ -76,3 +76,29 @@ DO $$ BEGIN
   END IF;
 END $$;
 
+-- 7. Atomic RPC function to sync user services inside a single transaction
+CREATE OR REPLACE FUNCTION public.set_user_services(
+  p_user_id UUID,
+  p_service_ids UUID[]
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  -- Security check: Caller must be the user themselves or service_role
+  IF auth.uid() IS NOT NULL AND auth.uid() != p_user_id THEN
+    RAISE EXCEPTION 'Not authorized to modify services for this user';
+  END IF;
+
+  -- 1. Remove existing services
+  DELETE FROM public.user_services WHERE user_id = p_user_id;
+
+  -- 2. Insert new services atomically
+  IF p_service_ids IS NOT NULL AND array_length(p_service_ids, 1) > 0 THEN
+    INSERT INTO public.user_services (user_id, service_id)
+    SELECT p_user_id, UNNEST(p_service_ids);
+  END IF;
+END;
+$$;

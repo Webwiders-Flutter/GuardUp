@@ -918,6 +918,34 @@
   "@bioBackgroundHint": {
     "description": "Placeholder for bio and background input"
   },
+  "enterFullName": "Enter Full Name",
+  "@enterFullName": {
+    "description": "Hint text for full name field"
+  },
+  "enterHourlyRate": "Enter Hourly Rate",
+  "@enterHourlyRate": {
+    "description": "Hint text for hourly rate field"
+  },
+  "addPhoto": "Add Photo",
+  "@addPhoto": {
+    "description": "Label on dashed circle to add photo"
+  },
+  "pleaseUploadProfilePhoto": "Please upload a profile photo",
+  "@pleaseUploadProfilePhoto": {
+    "description": "Validation error when profile photo is missing"
+  },
+  "pleaseSelectAtLeastOneService": "Please select at least one service offered",
+  "@pleaseSelectAtLeastOneService": {
+    "description": "Validation error when no service is selected"
+  },
+  "hourlyRateGreaterThanZero": "Please enter an hourly rate greater than 0",
+  "@hourlyRateGreaterThanZero": {
+    "description": "Validation error for hourly rate"
+  },
+  "bioMinCharacters": "Please enter at least 15 characters describing your background",
+  "@bioMinCharacters": {
+    "description": "Validation error for bio character length"
+  },
   "myWalletTitle": "My Wallet",
   "@myWalletTitle": {
     "description": "My wallet screen title"
