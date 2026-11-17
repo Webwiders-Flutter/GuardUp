@@ -11,6 +11,7 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/constants/api/database_tables.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../auth/auth.dart';
 import '/app/routes/app_routes.dart';
@@ -32,6 +33,7 @@ import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/selection/selection.dart';
 import '../../data/enum/guard_service.enum.dart';
+import '../../data/model/service_item.model.dart';
 
 /// Screen for bodyguard profile setup / entering professional details.
 ///
@@ -58,9 +60,15 @@ class _BodyGuardCompleteProfileScreenState
   final _hourlyRateController = TextEditingController();
   final _bioController = TextEditingController();
 
-  final _serviceDropdownController = SelectionController<GuardService>.multi(
-    initial: const [],
-  );
+  final _serviceDropdownController = SelectionController<String>.single();
+  final ValueNotifier<List<String>> _selectedServicesNotifier =
+      ValueNotifier<List<String>>([]);
+
+  /// Available active services dynamically fetched from DatabaseTables.services.
+  final ValueNotifier<List<ServiceItemModel>> _availableServicesNotifier =
+      ValueNotifier<List<ServiceItemModel>>([]);
+  final ValueNotifier<bool> _isServicesLoadingNotifier =
+      ValueNotifier<bool>(true);
 
   /// Isolated avatar profile picture notifier matching edit profile UI.
   final ValueNotifier<XFile?> _profileImageNotifier = ValueNotifier<XFile?>(
@@ -90,7 +98,32 @@ class _BodyGuardCompleteProfileScreenState
             : (metaName ?? '');
 
     _fullNameController = TextEditingController(text: initialName);
-    _loadExistingProfile();
+    _initData();
+  }
+
+  Future<void> _initData() async {
+    await _loadServices();
+    await _loadExistingProfile();
+  }
+
+  Future<void> _loadServices() async {
+    try {
+      final rows = await Supabase.instance.client
+          .from(DatabaseTables.services)
+          .select()
+          .eq('is_active', true)
+          .order('display_order', ascending: true);
+
+      if (mounted) {
+        _availableServicesNotifier.value =
+            rows.map((r) => ServiceItemModel.fromJson(r)).toList();
+      }
+    } catch (_) {
+    } finally {
+      if (mounted) {
+        _isServicesLoadingNotifier.value = false;
+      }
+    }
   }
 
   Future<void> _loadExistingProfile() async {
@@ -126,14 +159,13 @@ class _BodyGuardCompleteProfileScreenState
 
         final dbServices = data['services'] as List<dynamic>?;
         if (dbServices != null && dbServices.isNotEmpty) {
-          final servicesList = dbServices
-              .map((s) => GuardService.fromApiValue(s.toString()))
+          final activeCodes =
+              _availableServicesNotifier.value.map((s) => s.code).toSet();
+          final validServices = dbServices
+              .map((s) => s.toString())
+              .where((s) => activeCodes.contains(s))
               .toList();
-          for (final s in servicesList) {
-            if (!_serviceDropdownController.value.contains(s)) {
-              _serviceDropdownController.toggle(s);
-            }
-          }
+          _selectedServicesNotifier.value = validServices;
         }
 
         final dbAvatar = data['profile_image_url'] as String?;
@@ -151,7 +183,10 @@ class _BodyGuardCompleteProfileScreenState
     _fullNameController.dispose();
     _hourlyRateController.dispose();
     _bioController.dispose();
+    _selectedServicesNotifier.dispose();
     _serviceDropdownController.dispose();
+    _availableServicesNotifier.dispose();
+    _isServicesLoadingNotifier.dispose();
     _profileImageNotifier.dispose();
     _networkImageUrlNotifier.dispose();
     _isLoadingNotifier.dispose();
@@ -175,8 +210,9 @@ class _BodyGuardCompleteProfileScreenState
     }
   }
 
-  void _handleRemoveService(GuardService service) {
-    _serviceDropdownController.toggle(service);
+  void _handleRemoveService(String serviceCode) {
+    _selectedServicesNotifier.value =
+        List<String>.from(_selectedServicesNotifier.value)..remove(serviceCode);
   }
 
   Future<void> _handleNext() async {
@@ -191,7 +227,7 @@ class _BodyGuardCompleteProfileScreenState
       return;
     }
 
-    if (_serviceDropdownController.value.isEmpty) {
+    if (_selectedServicesNotifier.value.isEmpty) {
       AppSnackbar.error('Please select at least one service offered');
       return;
     }
@@ -224,9 +260,7 @@ class _BodyGuardCompleteProfileScreenState
           'name': _fullNameController.text.trim(),
           'hourly_rate':
               double.tryParse(_hourlyRateController.text.trim()) ?? 0.0,
-          'services': _serviceDropdownController.value
-              .map((s) => s.apiValue)
-              .toList(),
+          'services': _selectedServicesNotifier.value,
           'bio': _bioController.text.trim(),
         };
         if (avatarUrl != null) {
@@ -520,94 +554,124 @@ class _BodyGuardCompleteProfileScreenState
                         ),
                         AppSpacing.xxl.h,
 
-                        // 4. Services Offered Section (Isolated rebuild with ValueListenableBuilder)
-                        ValueListenableBuilder(
-                          valueListenable: _serviceDropdownController,
-                          builder: (context, selectedServices, _) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                        // 4. Services Offered Section (Dynamically loaded from DatabaseTables.services)
+                        ValueListenableBuilder<List<ServiceItemModel>>(
+                          valueListenable: _availableServicesNotifier,
+                          builder: (context, availableServices, _) {
+                            final activeServices = availableServices
+                                .where((s) => s.isActive)
+                                .toList();
+
+                            return ValueListenableBuilder<List<String>>(
+                              valueListenable: _selectedServicesNotifier,
+                              builder: (context, selectedServices, _) {
+                                final remainingServices = activeServices
+                                    .where(
+                                      (s) => !selectedServices.contains(s.code),
+                                    )
+                                    .toList();
+
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    AppFieldLabel(
-                                      text: context.l10n.servicesOfferedLabel,
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        AppFieldLabel(
+                                          text:
+                                              context.l10n.servicesOfferedLabel,
+                                        ),
+                                        Text(
+                                          context.l10n.selectedServicesCount(
+                                            selectedServices.length,
+                                          ),
+                                          style: context.textTheme.labelSmall
+                                              ?.bold()
+                                              .colour(context.colors.primary),
+                                        ),
+                                      ],
                                     ),
-                                    Text(
-                                      context.l10n.selectedServicesCount(
-                                        selectedServices.length,
+                                    if (selectedServices.isNotEmpty) ...[
+                                      AppSpacing.lg.h,
+                                      Wrap(
+                                        spacing: AppSpacing.sm,
+                                        runSpacing: AppSpacing.sm,
+                                        children: selectedServices.map((code) {
+                                          final serviceModel =
+                                              activeServices.firstWhere(
+                                            (s) => s.code == code,
+                                            orElse: () => ServiceItemModel(
+                                              id: code,
+                                              code: code,
+                                              name: GuardService.tryFromApiValue(
+                                                        code,
+                                                      )?.label ??
+                                                  code,
+                                            ),
+                                          );
+                                          return AppRemovableChip(
+                                            text: serviceModel.name,
+                                            onRemove: () =>
+                                                _handleRemoveService(code),
+                                          );
+                                        }).toList(),
                                       ),
-                                      style: context.textTheme.labelSmall
-                                          ?.bold()
-                                          .colour(context.colors.primary),
+                                    ],
+                                    AppSpacing.lg.h,
+                                    AppDropdown<String>(
+                                      controller: _serviceDropdownController,
+                                      hintText: context.l10n.selectService,
+                                      closeOnSelect: true,
+                                      target: (fieldKey) {
+                                        return AppTextField(
+                                          key: fieldKey,
+                                          readOnly: true,
+                                          decoration: InputDecoration(
+                                            hintText:
+                                                context.l10n.selectService,
+                                            suffixIcon: Icon(
+                                              Icons.expand_more,
+                                              color: context.colors.outline,
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderRadius:
+                                                  AppRadius.md.toBorderRadius,
+                                              borderSide: BorderSide(
+                                                color: context
+                                                    .colors.outlineVariant,
+                                              ),
+                                            ),
+                                            fillColor: context.colors.onPrimary,
+                                          ),
+                                          style: TextStyle(
+                                            color: context.colors.onSurface,
+                                          ),
+                                        );
+                                      },
+                                      items: remainingServices
+                                          .map(
+                                            (e) => DropdownItem<String>(
+                                              id: e.code,
+                                              data: e.name,
+                                            ),
+                                          )
+                                          .toList(),
+                                      onSelected: (code) {
+                                        if (!_selectedServicesNotifier.value
+                                            .contains(code)) {
+                                          _selectedServicesNotifier.value = [
+                                            ..._selectedServicesNotifier.value,
+                                            code,
+                                          ];
+                                        }
+                                        _serviceDropdownController.clear();
+                                      },
                                     ),
                                   ],
-                                ),
-                                if (selectedServices.isNotEmpty) ...[
-                                  AppSpacing.lg.h,
-                                  Wrap(
-                                    spacing: AppSpacing.sm,
-                                    runSpacing: AppSpacing.sm,
-                                    children: selectedServices.map((service) {
-                                      return AppRemovableChip(
-                                        text: service.label,
-                                        onRemove: () =>
-                                            _handleRemoveService(service),
-                                      );
-                                    }).toList(),
-                                  ),
-                                ],
-                                AppSpacing.lg.h,
-                                AppDropdown<GuardService>(
-                                  controller: _serviceDropdownController,
-                                  hintText: context.l10n.selectService,
-                                  closeOnSelect: true,
-                                  target: (fieldKey) {
-                                    return AppTextField(
-                                      key: fieldKey,
-                                      readOnly: true,
-
-                                      decoration: InputDecoration(
-                                        hintText: context.l10n.selectService,
-                                        suffixIcon: Icon(
-                                          Icons.expand_more,
-                                          color: context.colors.outline,
-                                        ),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderRadius:
-                                              AppRadius.md.toBorderRadius,
-                                          borderSide: BorderSide(
-                                            color:
-                                                context.colors.outlineVariant,
-                                          ),
-                                        ),
-                                        fillColor: context.colors.onPrimary,
-                                      ),
-                                      style: TextStyle(
-                                        color: context.colors.onSurface,
-                                      ),
-                                    );
-                                  },
-                                  items: GuardService.values
-                                      .where(
-                                        (s) => !selectedServices.contains(s),
-                                      )
-                                      .map(
-                                        (e) => DropdownItem<GuardService>(
-                                          id: e,
-                                          data: e.label,
-                                          icon: Icon(
-                                            e.icon,
-                                            size: AppSizes.iconSmd,
-                                            color: context.colors.primary,
-                                          ),
-                                        ),
-                                      )
-                                      .toList(),
-                                ),
-                              ],
+                                );
+                              },
                             );
                           },
                         ),

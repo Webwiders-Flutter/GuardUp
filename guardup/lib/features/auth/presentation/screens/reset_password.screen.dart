@@ -69,8 +69,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     if (state.hasError) {
       _isLoadingNotifier.value = false;
       AppSnackbar.error(
-        state.errorMessage ??
-            'Failed to reset password. Please try again.',
+        state.errorMessage ?? 'Failed to reset password. Please try again.',
       );
     } else if (state.operationState.isSuccess) {
       _isLoadingNotifier.value = false;
@@ -141,7 +140,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             decoration: InputDecoration(
                               hintText: context.l10n.newPassword,
                             ),
-                            style: TextStyle(color: context.colors.onSurface),
+                            style: TextStyle(color: Colors.black),
                             textInputAction: TextInputAction.next,
                             validator: (value) =>
                                 Validators.password(context, value),
@@ -159,10 +158,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             decoration: InputDecoration(
                               hintText: context.l10n.confirmPassword,
                             ),
-                            style: TextStyle(color: context.colors.onSurface),
+                            style: TextStyle(color: Colors.black),
                             textInputAction: TextInputAction.done,
-                            validator: (value) =>
-                                Validators.confirmPassword(
+                            validator: (value) => Validators.confirmPassword(
                               context,
                               value,
                               _newPasswordController.text,
@@ -198,4 +196,3 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     );
   }
 }
-

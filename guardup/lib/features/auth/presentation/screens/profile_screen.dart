@@ -145,7 +145,7 @@ class ProfileScreen extends StatelessWidget {
                   },
                 ),
                 _ProfileMenuCard(
-                  title: context.l10n.notifications,
+                  title: context.l10n.notifications.toUpperCase(),
                   icon: Icons.notifications_none_rounded,
                   onTap: () {
                     context.push(AppRoutes.notifications);
@@ -166,7 +166,7 @@ class ProfileScreen extends StatelessWidget {
                   },
                 ),
                 _ProfileMenuCard(
-                  title: context.l10n.contactUs,
+                  title: context.l10n.contactUs.toUpperCase(),
                   icon: Icons.support_agent_outlined,
                   onTap: () {
                     context.push(AppRoutes.contactUs);

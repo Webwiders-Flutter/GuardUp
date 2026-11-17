@@ -4,7 +4,9 @@ import 'package:guardup/core/extensions/number.extension.dart';
 import 'package:guardup/gen/assets.gen.dart';
 import 'package:guardup/shared/widgets/inputs/app_text_field.dart';
 import 'package:quick_container/quick_container.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/core/constants/api/database_tables.dart';
 import '../../../data/enum/guard_service.enum.dart';
 import '../../../data/model/body_guard.model.dart';
 import '/core/constants/app_radius.dart';
@@ -46,6 +48,8 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
   final _isBioExpandedNotifier = ValueNotifier<bool>(false);
   final _dropdownController = SelectionController<GuardService>.single();
   late final ValueNotifier<List<GuardService>> _selectedServicesNotifier;
+  final ValueNotifier<List<GuardService>> _activeServicesNotifier =
+      ValueNotifier<List<GuardService>>([]);
 
   static const String _defaultBio =
       'I am a professional and certified bodyguard with over 8 years of '
@@ -59,13 +63,28 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
         ? widget.services!
         : (widget.bodyguard?.serviceTypes.isNotEmpty == true
             ? widget.bodyguard!.serviceTypes
-            : const [
-                GuardService.vipCloseProtection,
-                GuardService.armedEscort,
-                GuardService.tacticalDriver,
-              ]);
+            : <GuardService>[]);
     _selectedServicesNotifier =
         ValueNotifier<List<GuardService>>(List.from(initialServices));
+    _loadActiveServices();
+  }
+
+  Future<void> _loadActiveServices() async {
+    try {
+      final rows = await Supabase.instance.client
+          .from(DatabaseTables.services)
+          .select()
+          .eq('is_active', true)
+          .order('display_order', ascending: true);
+
+      if (mounted) {
+        final activeServices = rows
+            .map((r) => GuardService.tryFromApiValue(r['code'] as String?))
+            .whereType<GuardService>()
+            .toList();
+        _activeServicesNotifier.value = activeServices;
+      }
+    } catch (_) {}
   }
 
   @override
@@ -79,6 +98,7 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
   void dispose() {
     _isBioExpandedNotifier.dispose();
     _selectedServicesNotifier.dispose();
+    _activeServicesNotifier.dispose();
     _dropdownController.dispose();
     super.dispose();
   }
@@ -304,78 +324,84 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
 
         // Selected Service Chips
         ValueListenableBuilder<List<GuardService>>(
-          valueListenable: _selectedServicesNotifier,
-          builder: (context, selectedServices, _) {
-            final availableServices = GuardService.values
-                .where((s) => !selectedServices.contains(s))
-                .toList();
+          valueListenable: _activeServicesNotifier,
+          builder: (context, activeServices, _) {
+            return ValueListenableBuilder<List<GuardService>>(
+              valueListenable: _selectedServicesNotifier,
+              builder: (context, selectedServices, _) {
+                final pool = activeServices.isNotEmpty
+                    ? activeServices
+                    : GuardService.values;
+                final availableServices = pool
+                    .where((s) => !selectedServices.contains(s))
+                    .toList();
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (selectedServices.isNotEmpty) ...[
-                  Wrap(
-                    spacing: AppSpacing.smd,
-                    runSpacing: AppSpacing.smd,
-                    children: selectedServices.map((service) {
-                      return AppRemovableChip(
-                        text: service.label,
-                        onRemove: () => _handleRemoveService(service),
-                      );
-                    }).toList(),
-                  ),
-                  AppSpacing.md.h,
-                ],
-
-                // Dropdown to add more services
-                AppDropdown<GuardService>(
-                  controller: _dropdownController,
-                  hintText: 'Select Service',
-                  target: (fieldKey) {
-                    return AppTextField(
-                      key: fieldKey,
-                      readOnly: true,
-                      decoration: InputDecoration(
-                        hintText: context.l10n.selectService,
-                        border: OutlineInputBorder(
-                          borderRadius: AppRadius.lg.toBorderRadius,
-                          borderSide: BorderSide(
-                            color: context.colors.outlineVariant,
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: AppRadius.lg.toBorderRadius,
-                          borderSide: BorderSide(
-                            color: context.colors.outlineVariant,
-                          ),
-                        ),
-                        
-                        
-                        suffixIcon: Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: context.colors.onSurfaceVariant,
-                        ),
-                        fillColor: context.colors.onPrimary,
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (selectedServices.isNotEmpty) ...[
+                      Wrap(
+                        spacing: AppSpacing.smd,
+                        runSpacing: AppSpacing.smd,
+                        children: selectedServices.map((service) {
+                          return AppRemovableChip(
+                            text: service.label,
+                            onRemove: () => _handleRemoveService(service),
+                          );
+                        }).toList(),
                       ),
-                      style: TextStyle(color: context.colors.onSurface),
-                    );
-                  },
-                  items: availableServices
-                      .map(
-                        (s) => SelectableItem<GuardService, String>(
-                          id: s,
-                          data: s.label,
-                          icon: Icon(
-                            s.icon,
-                            size: AppSizes.iconSm,
-                            color: context.colors.primary,
+                      AppSpacing.md.h,
+                    ],
+
+                    // Dropdown to add more services
+                    AppDropdown<GuardService>(
+                      controller: _dropdownController,
+                      hintText: 'Select Service',
+                      target: (fieldKey) {
+                        return AppTextField(
+                          key: fieldKey,
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            hintText: context.l10n.selectService,
+                            border: OutlineInputBorder(
+                              borderRadius: AppRadius.lg.toBorderRadius,
+                              borderSide: BorderSide(
+                                color: context.colors.outlineVariant,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: AppRadius.lg.toBorderRadius,
+                              borderSide: BorderSide(
+                                color: context.colors.outlineVariant,
+                              ),
+                            ),
+                            suffixIcon: Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              color: context.colors.onSurfaceVariant,
+                            ),
+                            fillColor: context.colors.onPrimary,
                           ),
-                        ),
-                      )
-                      .toList(),
-                  onSelected: _handleAddService,
-                ),
-              ],
+                          style: TextStyle(color: context.colors.onSurface),
+                        );
+                      },
+                      items: availableServices
+                          .map(
+                            (s) => SelectableItem<GuardService, String>(
+                              id: s,
+                              data: s.label,
+                              icon: Icon(
+                                s.icon,
+                                size: AppSizes.iconSm,
+                                color: context.colors.primary,
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onSelected: _handleAddService,
+                    ),
+                  ],
+                );
+              },
             );
           },
         ),

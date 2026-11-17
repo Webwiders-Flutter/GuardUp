@@ -1,3 +1,5 @@
+// import 'package:flutter/material.dart';
+
 import '../enum/guard_service.enum.dart';
 
 /// Represents a service item managed dynamically by Admin or fallback enum.
@@ -47,63 +49,29 @@ class ServiceItemModel {
   /// Maps to local [GuardService] enum if matching code exists.
   GuardService? get guardService => GuardService.tryFromApiValue(code);
 
-  static List<ServiceItemModel> get defaultList => [
-        const ServiceItemModel(
-          id: 'srv_1',
-          code: 'VIP_CLOSE_PROTECTION',
-          name: 'VIP Close Protection',
-          description: 'Dedicated personal bodyguards for high-profile clients',
-          displayOrder: 1,
-        ),
-        const ServiceItemModel(
-          id: 'srv_2',
-          code: 'ARMED_ESCORT',
-          name: 'Armed Escort',
-          description: 'High-threat transit and armed convoy security',
-          displayOrder: 2,
-        ),
-        const ServiceItemModel(
-          id: 'srv_3',
-          code: 'TACTICAL_DRIVER',
-          name: 'Tactical Driver',
-          description: 'Evasive security driving and executive transport',
-          displayOrder: 3,
-        ),
-        const ServiceItemModel(
-          id: 'srv_4',
-          code: 'EVENT_SECURITY',
-          name: 'Event Security',
-          description: 'Crowd control, perimeter security, and venue access',
-          displayOrder: 4,
-        ),
-        const ServiceItemModel(
-          id: 'srv_5',
-          code: 'RESIDENTIAL_PROTECTION',
-          name: 'Residential Protection',
-          description: 'Estate and private property static guarding',
-          displayOrder: 5,
-        ),
-        const ServiceItemModel(
-          id: 'srv_6',
-          code: 'ASSET_PROTECTION',
-          name: 'Asset Protection',
-          description: 'Valuables and high-value cargo transport protection',
-          displayOrder: 6,
-        ),
-        const ServiceItemModel(
-          id: 'srv_7',
-          code: 'SURVEILLANCE_RECON',
-          name: 'Surveillance Recon',
-          description: 'Counter-surveillance and route threat assessment',
-          displayOrder: 7,
-        ),
-        const ServiceItemModel(
-          id: 'srv_8',
-          code: 'CRISIS_MANAGEMENT',
-          name: 'Crisis Management',
-          description: 'Emergency extraction and crisis response',
-          displayOrder: 8,
-        ),
-      ];
+  // IconData get icon {
+  //   final guard = guardService;
+  //   if (guard != null) return guard.icon;
+  //   switch (code.toUpperCase()) {
+  //     case 'VIP_CLOSE_PROTECTION':
+  //       return Icons.shield_outlined;
+  //     case 'ARMED_ESCORT':
+  //       return Icons.security_rounded;
+  //     case 'TACTICAL_DRIVER':
+  //       return Icons.directions_car_filled_outlined;
+  //     case 'EVENT_SECURITY':
+  //       return Icons.event_seat_rounded;
+  //     case 'RESIDENTIAL_PROTECTION':
+  //       return Icons.home_work_outlined;
+  //     case 'ASSET_PROTECTION':
+  //       return Icons.account_balance_wallet_outlined;
+  //     case 'SURVEILLANCE_RECON':
+  //       return Icons.visibility_outlined;
+  //     case 'CRISIS_MANAGEMENT':
+  //       return Icons.emergency_outlined;
+  //     default:
+  //       return Icons.verified_user_outlined;
+  //   }
+  // }
 }
 

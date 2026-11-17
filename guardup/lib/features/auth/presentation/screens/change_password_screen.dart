@@ -127,11 +127,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     AppSpacing.xs.h,
                     AppTextField.password(
                       controller: _oldPasswordController,
+
                       decoration: InputDecoration(
                         hintText: context.l10n.oldPassword,
                         // fillColor: context.colors.onPrimary,
                       ),
-                      style: TextStyle(color: context.colors.onSurface),
+                      style: TextStyle(color: Colors.black),
                       textInputAction: TextInputAction.next,
                       validator: (value) => Validators.password(context, value),
                     ),
@@ -149,7 +150,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         hintText: context.l10n.newPassword,
                         // fillColor: context.colors.onPrimary,
                       ),
-                      style: TextStyle(color: context.colors.onSurface),
+                      style: TextStyle(color: Colors.black),
                       textInputAction: TextInputAction.next,
                       validator: (value) => Validators.password(context, value),
                     ),
@@ -167,7 +168,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         hintText: context.l10n.confirmPassword,
                         // fillColor: context.colors.onPrimary,
                       ),
-                      style: TextStyle(color: context.colors.onSurface),
+                      style: TextStyle(color: Colors.black),
                       textInputAction: TextInputAction.done,
                       validator: (value) => Validators.confirmPassword(
                         context,

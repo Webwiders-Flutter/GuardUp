@@ -34,9 +34,7 @@ class UploadDocumentsScreen extends StatefulWidget {
 
 class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
   final ValueNotifier<List<DocumentTypeModel>> _docTypesNotifier =
-      ValueNotifier<List<DocumentTypeModel>>(
-        DocumentTypeModel.defaultCompanyDocs,
-      );
+      ValueNotifier<List<DocumentTypeModel>>([]);
   final ValueNotifier<Map<String, XFile>> _documentsNotifier =
       ValueNotifier<Map<String, XFile>>({});
   final ValueNotifier<Map<String, String>> _remoteDocsNotifier =
@@ -61,7 +59,7 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
           .eq('is_active', true)
           .order('display_order', ascending: true);
 
-      if (typeRows.isNotEmpty && mounted) {
+      if (mounted) {
         _docTypesNotifier.value = typeRows
             .map((r) => DocumentTypeModel.fromJson(r))
             .toList();
