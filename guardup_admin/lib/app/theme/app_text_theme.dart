@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:guardup_admin/gen/fonts.gen.dart';
 
 import 'colors/app_colors.dart';
 
@@ -6,21 +7,21 @@ final class AppTextTheme {
   const AppTextTheme._();
 
   /// Primary body & heading font family (Inter)
-  static const String primaryFontFamily = 'Inter';
+  static const String primaryFontFamily = FontFamily.inter;
 
-  static final TextTheme lightTextTheme = _baseLightTextTheme.apply(
+  static final TextTheme lightTextTheme = _baseTextTheme.apply(
     fontFamily: primaryFontFamily,
     bodyColor: AppColors.textPrimaryLight,
     displayColor: AppColors.textPrimaryLight,
   );
 
-  static final TextTheme darkTextTheme = _baseLightTextTheme.apply(
+  static final TextTheme darkTextTheme = _baseTextTheme.apply(
     fontFamily: primaryFontFamily,
     bodyColor: AppColors.textPrimaryDark,
     displayColor: AppColors.textPrimaryDark,
   );
 
-  static const TextTheme _baseLightTextTheme = TextTheme(
+  static const TextTheme _baseTextTheme = TextTheme(
     // ================= DISPLAY (Hero, Big Statements) =================
     displayLarge: TextStyle(
       fontSize: 56,

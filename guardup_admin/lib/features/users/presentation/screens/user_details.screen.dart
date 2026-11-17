@@ -115,9 +115,11 @@ class _UserDetailsBody extends StatelessWidget {
           AppSpacing.md.h,
         ],
 
-        // 4. Verification Documents
-        _UserDocumentsSection(user: user),
-        AppSpacing.xxxl.h,
+        // 4. Verification Documents (not applicable for customers)
+        if (!user.isCustomer) ...[
+          _UserDocumentsSection(user: user),
+          AppSpacing.xxxl.h,
+        ],
       ],
     );
   }
@@ -403,15 +405,17 @@ class _UserQuickStats extends StatelessWidget {
             accentColor: user.status.color(context),
           ),
         ),
-        AppSpacing.sm.w,
-        Expanded(
-          child: _StatCard(
-            label: 'Documents',
-            value: '$docsCount Submitted',
-            icon: Icons.description_outlined,
-            accentColor: colors.primary,
+        if (!user.isCustomer) ...[
+          AppSpacing.sm.w,
+          Expanded(
+            child: _StatCard(
+              label: 'Documents',
+              value: '$docsCount Submitted',
+              icon: Icons.description_outlined,
+              accentColor: colors.primary,
+            ),
           ),
-        ),
+        ],
         AppSpacing.sm.w,
         Expanded(
           child: _StatCard(
@@ -503,7 +507,7 @@ class _UserActionsBar extends ConsumerStatefulWidget {
 }
 
 class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
-  bool _isLoading = false;
+  final ValueNotifier<bool> _isLoadingNotifier = ValueNotifier<bool>(false);
 
   ({UserRoleType role, UserStatus status}) get _params =>
       (role: widget.user.role, status: widget.user.status);
@@ -511,69 +515,162 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
   UsersController get _controller =>
       ref.read(usersControllerProvider(_params).notifier);
 
+  @override
+  void dispose() {
+    _isLoadingNotifier.dispose();
+    super.dispose();
+  }
+
   Future<void> _onApprove() async {
-    AppSnackbar.info('Comming soon');
-    // setState(() => _isLoading = true);
-    // await _controller.markVerified(widget.user.id);
-    // if (mounted) {
-    //   ref.invalidate(userDetailsProvider(widget.user.id));
-    //   AppSnackbar.show(
-    //     message: '${widget.user.fullName} has been approved successfully',
-    //     type: SnackbarType.success,
-    //   );
-    //   setState(() => _isLoading = false);
-    // }
+    // [COMING SOON GUARD] - Remove this block when ready to enable operation
+    AppSnackbar.show(
+      message: 'Approve user is coming soon',
+      type: SnackbarType.info,
+    );
+    return;
+
+    _isLoadingNotifier.value = true;
+    try {
+      await _controller.markVerified(widget.user.id);
+      if (mounted) {
+        ref.invalidate(userDetailsProvider(widget.user.id));
+        AppSnackbar.show(
+          message: '${widget.user.fullName} has been approved successfully',
+          type: SnackbarType.success,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        AppSnackbar.show(
+          message: 'Failed to approve user: $e',
+          type: SnackbarType.error,
+        );
+      }
+    } finally {
+      _isLoadingNotifier.value = false;
+    }
+  }
+
+  Future<void> _onReject() async {
+    // [COMING SOON GUARD] - Remove this block when ready to enable operation
+    AppSnackbar.show(
+      message: 'Reject user is coming soon',
+      type: SnackbarType.info,
+    );
+    return;
+
+    final result = await AppPopup.showRejectConfirmation(
+      context,
+      itemName: widget.user.fullName,
+    );
+
+    if (result?.action == PopupAction.confirm && mounted) {
+      _isLoadingNotifier.value = true;
+      try {
+        await _controller.rejectUser(widget.user.id);
+        if (mounted) {
+          ref.invalidate(userDetailsProvider(widget.user.id));
+          AppSnackbar.show(
+            message: '${widget.user.fullName} has been rejected',
+            type: SnackbarType.warning,
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          AppSnackbar.show(
+            message: 'Failed to reject user: $e',
+            type: SnackbarType.error,
+          );
+        }
+      } finally {
+        _isLoadingNotifier.value = false;
+      }
+    }
   }
 
   Future<void> _onToggleBlock(bool block) async {
-    AppSnackbar.info('Comming soon');
-    // final result = block
-    //     ? await AppPopup.showBlockConfirmation(
-    //         context,
-    //         itemName: widget.user.fullName,
-    //       )
-    //     : await AppPopup.showUnblockConfirmation(
-    //         context,
-    //         itemName: widget.user.fullName,
-    //       );
-    //
-    // if (result?.action == PopupAction.confirm && mounted) {
-    //   setState(() => _isLoading = true);
-    //   await _controller.toggleBlock(widget.user.id, block);
-    //
-    //   if (mounted) {
-    //     ref.invalidate(userDetailsProvider(widget.user.id));
-    //     AppSnackbar.show(
-    //       message: block
-    //           ? '${widget.user.fullName} has been blocked'
-    //           : '${widget.user.fullName} has been unblocked',
-    //       type: block ? SnackbarType.error : SnackbarType.success,
-    //     );
-    //     setState(() => _isLoading = false);
-    //   }
-    // }
+    // [COMING SOON GUARD] - Remove this block when ready to enable operation
+    AppSnackbar.show(
+      message: '${block ? 'Block' : 'Unblock'} user is coming soon',
+      type: SnackbarType.info,
+    );
+    return;
+
+    final result = block
+        ? await AppPopup.showBlockConfirmation(
+            context,
+            itemName: widget.user.fullName,
+          )
+        : await AppPopup.showUnblockConfirmation(
+            context,
+            itemName: widget.user.fullName,
+          );
+
+    if (result?.action == PopupAction.confirm && mounted) {
+      _isLoadingNotifier.value = true;
+      try {
+        await _controller.toggleBlock(widget.user.id, block);
+
+        if (mounted) {
+          ref.invalidate(userDetailsProvider(widget.user.id));
+          AppSnackbar.show(
+            message: block
+                ? '${widget.user.fullName} has been blocked'
+                : '${widget.user.fullName} has been unblocked',
+            type: block ? SnackbarType.error : SnackbarType.success,
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          AppSnackbar.show(
+            message: 'Failed to update user status: $e',
+            type: SnackbarType.error,
+          );
+        }
+      } finally {
+        _isLoadingNotifier.value = false;
+      }
+    }
   }
 
   Future<void> _onDelete() async {
+    // [COMING SOON GUARD] - Remove this block when ready to enable operation
+    AppSnackbar.show(
+      message: 'Delete user is coming soon',
+      type: SnackbarType.info,
+    );
+    return;
+
     final result = await AppPopup.showDeleteConfirmation(
       context,
       deleteItemName: widget.user.fullName,
     );
 
     if (result?.action == PopupAction.confirm && mounted) {
-      setState(() => _isLoading = true);
-      await _controller.deleteRecord(widget.user.id);
+      _isLoadingNotifier.value = true;
+      try {
+        await _controller.deleteRecord(widget.user.id);
 
-      if (mounted) {
-        AppSnackbar.show(
-          message: '${widget.user.fullName} deleted successfully',
-          type: SnackbarType.success,
-        );
-        if (Navigator.of(context).canPop()) {
-          Navigator.of(context).pop();
-        } else {
-          context.go(AppRoutes.home);
+        if (mounted) {
+          AppSnackbar.show(
+            message: '${widget.user.fullName} deleted successfully',
+            type: SnackbarType.success,
+          );
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          } else {
+            context.go(AppRoutes.home);
+          }
         }
+      } catch (e) {
+        if (mounted) {
+          AppSnackbar.show(
+            message: 'Failed to delete user: $e',
+            type: SnackbarType.error,
+          );
+        }
+      } finally {
+        _isLoadingNotifier.value = false;
       }
     }
   }
@@ -581,80 +678,111 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final isApproved = widget.user.isApproved;
     final isBlocked = widget.user.isBlocked;
-    final isPending =
-        widget.user.isPendingApproval ||
-        widget.user.status == UserStatus.incomplete;
 
-    return Wrap(
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.sm,
-      alignment: WrapAlignment.end,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        // 1. Approve User Button (if Pending)
-        if (isPending)
-          AppButton(
-            text: 'Approve User',
-            leading: const Icon(
-              Icons.check_circle_outline_rounded,
-              size: 16,
-            ),
-            isLoading: _isLoading,
-            onPressed: _onApprove,
-          ),
+    return ValueListenableBuilder<bool>(
+      valueListenable: _isLoadingNotifier,
+      builder: (context, isLoading, _) {
+        return Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          alignment: WrapAlignment.end,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            if (isApproved || isBlocked) ...[
+              // 1. Block / Unblock Button
+              OutlinedButton.icon(
+                onPressed: isLoading ? null : () => _onToggleBlock(!isBlocked),
+                icon: Icon(
+                  isBlocked ? Icons.lock_open_rounded : Icons.block_outlined,
+                  size: 16,
+                  color: isBlocked ? colors.success : colors.warning,
+                ),
+                label: Text(
+                  isBlocked ? 'Unblock User' : 'Block User',
+                  style: context.textTheme.bodySmall?.semiBold().colour(
+                    isBlocked ? colors.success : colors.warning,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(
+                    color: isBlocked ? colors.success : colors.warning,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  shape: RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+                ),
+              ),
 
-        // 2. Block / Unblock Button
-        OutlinedButton.icon(
-          onPressed: _isLoading ? null : () => _onToggleBlock(!isBlocked),
-          icon: Icon(
-            isBlocked ? Icons.lock_open_rounded : Icons.block_outlined,
-            size: 16,
-            color: isBlocked ? colors.success : colors.warning,
-          ),
-          label: Text(
-            isBlocked ? 'Unblock User' : 'Block User',
-            style: context.textTheme.bodySmall?.semiBold().colour(
-              isBlocked ? colors.success : colors.warning,
-            ),
-          ),
-          style: OutlinedButton.styleFrom(
-            side: BorderSide(
-              color: isBlocked ? colors.success : colors.warning,
-            ),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm,
-            ),
-            shape: RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
-          ),
-        ),
+              // 2. Delete Button
+              OutlinedButton.icon(
+                onPressed: isLoading ? null : _onDelete,
+                icon: Icon(
+                  Icons.delete_outline_rounded,
+                  size: 16,
+                  color: colors.error,
+                ),
+                label: Text(
+                  'Delete User',
+                  style: context.textTheme.bodySmall?.semiBold().colour(
+                    colors.error,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: colors.error),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  shape: RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+                ),
+              ),
+            ] else ...[
+              // 1. Approve User Button
+              AppButton(
+                text: 'Approve User',
+                leading: const Icon(
+                  Icons.check_circle_outline_rounded,
+                  size: 16,
+                ),
+                isLoading: isLoading,
+                onPressed: _onApprove,
+              ),
 
-        // 3. Delete Button
-        OutlinedButton.icon(
-          onPressed: _isLoading ? null : _onDelete,
-          icon: Icon(
-            Icons.delete_outline_rounded,
-            size: 16,
-            color: colors.error,
-          ),
-          label: Text(
-            'Delete User',
-            style: context.textTheme.bodySmall?.semiBold().colour(colors.error),
-          ),
-          style: OutlinedButton.styleFrom(
-            side: BorderSide(color: colors.error),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm,
-            ),
-            shape: RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
-          ),
-        ),
-      ],
+              // 2. Reject User Button
+              OutlinedButton.icon(
+                onPressed: isLoading ? null : _onReject,
+                icon: Icon(
+                  Icons.cancel_outlined,
+                  size: 16,
+                  color: colors.error,
+                ),
+                label: Text(
+                  'Reject User',
+                  style: context.textTheme.bodySmall?.semiBold().colour(
+                    colors.error,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: colors.error),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  shape: RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+                ),
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
-}
+  }
+
 
 class _GuardDetailsSection extends StatelessWidget {
   const _GuardDetailsSection({required this.user});

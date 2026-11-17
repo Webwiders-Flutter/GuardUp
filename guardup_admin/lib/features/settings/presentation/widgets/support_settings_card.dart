@@ -123,7 +123,7 @@ class SupportSettingsCard extends StatelessWidget {
             type: AppTextFieldType.email,
             validator: (value) => Validators.email(context, value),
             decoration: const InputDecoration(
-              hintText: 'support@supplr.in',
+              hintText: 'support@guardup.com',
               prefixIcon: Icon(Icons.mail_outline_rounded),
             ),
             onChanged: (_) => onChanged(),
@@ -142,7 +142,7 @@ class SupportSettingsCard extends StatelessWidget {
                 if (email.isNotEmpty) {
                   AppLauncher.sendEmail(
                     email: email,
-                    subject: 'Supplr Admin Test Inquiry',
+                    subject: 'GuardUp Admin Test Inquiry',
                     body: 'Hello Support Team,\nThis is a test notification from the admin console.',
                   );
                 }

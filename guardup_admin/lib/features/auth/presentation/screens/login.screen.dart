@@ -301,7 +301,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: TextButton.icon(
                   onPressed: () {
                     _emailController.text = 'admin@gmail.com';
-                    _passwordController.text = 'Admin@12345';
+                    _passwordController.text = '123456';
 
                     AppSnackbar.show(
                       message: 'Demo credentials prefilled (admin@gmail.com)',

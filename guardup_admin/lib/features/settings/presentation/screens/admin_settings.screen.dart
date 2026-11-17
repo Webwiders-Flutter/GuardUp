@@ -19,6 +19,7 @@ import '../../di/admin_settings.providers.dart';
 import '../controllers/admin_settings.controller.dart';
 import '../models/settings_section.enum.dart';
 import '../widgets/core_settings_card.dart';
+import '../widgets/fees_settings_card.dart';
 import '../widgets/mobile_apps_settings_card.dart';
 import '../widgets/overview_section_card.dart';
 import '../widgets/settings_header.dart';
@@ -53,6 +54,7 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
 
   // ── Form Keys for Validation ────────────────────────────────────────────────
   final GlobalKey<FormState> _coreFormKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _feesFormKey = GlobalKey<FormState>();
   final GlobalKey<FormState> _mobileAppsFormKey = GlobalKey<FormState>();
   final GlobalKey<FormState> _supportFormKey = GlobalKey<FormState>();
 
@@ -61,6 +63,8 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
       TextEditingController();
   final TextEditingController _maintenanceMessageController =
       TextEditingController();
+  final TextEditingController _bodyguardFeeController = TextEditingController();
+  final TextEditingController _companyFeeController = TextEditingController();
   final ValueNotifier<bool> _isUnderMaintenanceNotifier = ValueNotifier(false);
 
   // ── Mobile Apps Controllers ─────────────────────────────────────────────────
@@ -105,6 +109,8 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
     _isUnderMaintenanceNotifier.dispose();
     _maintenanceTitleController.dispose();
     _maintenanceMessageController.dispose();
+    _bodyguardFeeController.dispose();
+    _companyFeeController.dispose();
 
     _latestIosVersionController.dispose();
     _minimumIosVersionController.dispose();
@@ -131,6 +137,8 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
   void _syncControllersWithModel(AdminSettingsModel model) {
     _maintenanceTitleController.text = model.maintenanceTitle ?? '';
     _maintenanceMessageController.text = model.maintenanceMessage ?? '';
+    _bodyguardFeeController.text = model.bodyguardFee.toStringAsFixed(2);
+    _companyFeeController.text = model.companyFee.toStringAsFixed(2);
     _isUnderMaintenanceNotifier.value = model.isUnderMaintenance;
 
     _latestIosVersionController.text = model.latestIosVersion;
@@ -268,10 +276,11 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
   Future<bool> _handleSave() async {
     // ── Form & Field Validations ──
     final isCoreValid = _coreFormKey.currentState?.validate() ?? true;
+    final isFeesValid = _feesFormKey.currentState?.validate() ?? true;
     final isMobileValid = _mobileAppsFormKey.currentState?.validate() ?? true;
     final isSupportValid = _supportFormKey.currentState?.validate() ?? true;
 
-    if (!isCoreValid || !isMobileValid || !isSupportValid) {
+    if (!isCoreValid || !isFeesValid || !isMobileValid || !isSupportValid) {
       AppSnackbar.show(
         message: 'Please correct the validation errors before saving.',
         type: SnackbarType.error,
@@ -286,6 +295,10 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
         'is_under_maintenance': _isUnderMaintenanceNotifier.value,
         'maintenance_title': _maintenanceTitleController.text.trim(),
         'maintenance_message': _maintenanceMessageController.text.trim(),
+        'bodyguard_fee':
+            double.tryParse(_bodyguardFeeController.text.trim()) ?? 0.0,
+        'company_fee':
+            double.tryParse(_companyFeeController.text.trim()) ?? 0.0,
         'latest_ios_version': _latestIosVersionController.text.trim(),
         'minimum_ios_version': _minimumIosVersionController.text.trim(),
         'update_message_ios': _iosUpdateMessageController.text.trim(),
@@ -433,6 +446,15 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
                                 return OverviewSectionCard(
                                   settings: settings,
                                   onNavigateToSection: _handleSectionSwitch,
+                                );
+
+                              case SettingsSection.fees:
+                                return FeesSettingsCard(
+                                  formKey: _feesFormKey,
+                                  bodyguardFeeController:
+                                      _bodyguardFeeController,
+                                  companyFeeController: _companyFeeController,
+                                  onChanged: _markDirty,
                                 );
 
                               case SettingsSection.core:

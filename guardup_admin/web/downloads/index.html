@@ -109,7 +109,7 @@
     const PACKAGE_NAME = "com.guardup.app";
     const APP_SCHEME = "guardup://open";
     const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=" + PACKAGE_NAME;
-    const INTENT_URL = "intent://open#Intent;scheme=transporthub;package=" + PACKAGE_NAME + ";S.browser_fallback_url=" + encodeURIComponent(PLAY_STORE_URL) + ";end;";
+    const INTENT_URL = "intent://open#Intent;scheme=guardup;package=" + PACKAGE_NAME + ";S.browser_fallback_url=" + encodeURIComponent(PLAY_STORE_URL) + ";end;";
 
     const isAndroid = /Android/i.test(navigator.userAgent);
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);

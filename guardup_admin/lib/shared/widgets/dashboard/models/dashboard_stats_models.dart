@@ -261,8 +261,6 @@ class DashboardChartData {
       colors.success,
       colors.warning,
       colors.info,
-      colors.purpleLight,
-      colors.secondaryLight,
       colors.error,
     ];
 

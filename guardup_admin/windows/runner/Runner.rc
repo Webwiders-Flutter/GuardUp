@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.supplrtransporthub.admin" "\0"
-            VALUE "FileDescription", "admin_supplr_transport_hub" "\0"
+            VALUE "CompanyName", "com.guardup.admin" "\0"
+            VALUE "FileDescription", "guardup_admin" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "admin_supplr_transport_hub" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.supplrtransporthub.admin. All rights reserved." "\0"
-            VALUE "OriginalFilename", "admin_supplr_transport_hub.exe" "\0"
-            VALUE "ProductName", "admin_supplr_transport_hub" "\0"
+            VALUE "InternalName", "guardup_admin" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.guardup.admin. All rights reserved." "\0"
+            VALUE "OriginalFilename", "guardup_admin.exe" "\0"
+            VALUE "ProductName", "guardup_admin" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

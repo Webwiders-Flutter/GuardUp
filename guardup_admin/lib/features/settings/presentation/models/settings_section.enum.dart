@@ -8,6 +8,12 @@ enum SettingsSection {
     icon: Icons.dashboard_outlined,
     selectedIcon: Icons.dashboard_rounded,
   ),
+  fees(
+    label: 'Platform Fees',
+    description: 'Bodyguard rates, company commission & service fee schedule',
+    icon: Icons.payments_outlined,
+    selectedIcon: Icons.payments_rounded,
+  ),
   core(
     label: 'Core & Maintenance',
     description: 'Platform availability, maintenance mode & downtime alerts',

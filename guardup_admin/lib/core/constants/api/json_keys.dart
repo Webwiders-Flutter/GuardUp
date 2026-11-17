@@ -8,6 +8,7 @@ final class JsonKeys {
   static const String description = 'description';
   static const String descriptionHi = 'description_hi';
   static const String sortOrder = 'sort_order';
+  static const String displayOrder = 'display_order';
   static const String isActive = 'is_active';
   static const String status = 'status';
   static const String isRequired = 'is_required';
@@ -18,6 +19,7 @@ final class JsonKeys {
 
   // Media & Assets
   static const String imageUrl = 'image_url';
+  static const String iconName = 'icon_name';
   static const String profileImageUrl = 'profile_image_url';
 
   // Legal & Help Support Keys

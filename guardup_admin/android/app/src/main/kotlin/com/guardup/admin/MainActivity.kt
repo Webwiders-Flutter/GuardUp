@@ -1,4 +1,4 @@
-package com.supplrtransporthub.admin.admin_supplr_transport_hub
+package com.guardup.admin
 
 import io.flutter.embedding.android.FlutterActivity
 

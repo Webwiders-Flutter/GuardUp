@@ -60,7 +60,7 @@ messaging.onBackgroundMessage((payload) => {
     body: payload.notification?.body || payload.data?.body || '',
     icon: payload.notification?.icon || payload.data?.icon || '/icons/icon-192.png',
     badge: '/favicon.png',
-    tag: payload.data?.tag || payload.data?.id || 'supplr-alert',
+    tag: payload.data?.tag || payload.data?.id || 'guardup-alert',
     data: payload.data || {},
     requireInteraction: false,
     vibrate: [200, 100, 200]

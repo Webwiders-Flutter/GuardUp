@@ -555,10 +555,10 @@ class AppTextField extends StatefulWidget {
 }
 
 class _AppTextFieldState extends State<AppTextField> {
-  late bool _obscureText;
+  late final ValueNotifier<bool> _obscureTextNotifier;
+  late final ValueNotifier<bool> _hasTextNotifier;
   late final ValueNotifier<CountryWithPhoneCode> _selectedCountryNotifier;
   TextEditingController? _internalController;
-  bool _hasText = false;
 
   TextEditingController get _effectiveController =>
       widget.controller ??
@@ -584,8 +584,10 @@ class _AppTextFieldState extends State<AppTextField> {
   @override
   void initState() {
     super.initState();
-    _obscureText = _isPassword || _isCard;
-    _hasText = _effectiveController.text.isNotEmpty;
+    _obscureTextNotifier = ValueNotifier<bool>(_isPassword || _isCard);
+    _hasTextNotifier = ValueNotifier<bool>(
+      _effectiveController.text.isNotEmpty,
+    );
     _effectiveController.addListener(_onTextChanged);
 
     final initialCountry = _findInitialCountry();
@@ -613,7 +615,7 @@ class _AppTextFieldState extends State<AppTextField> {
     if (widget.controller != oldWidget.controller) {
       oldWidget.controller?.removeListener(_onTextChanged);
       widget.controller?.addListener(_onTextChanged);
-      _hasText = _effectiveController.text.isNotEmpty;
+      _hasTextNotifier.value = _effectiveController.text.isNotEmpty;
     }
 
     if (_isPhone &&
@@ -633,6 +635,8 @@ class _AppTextFieldState extends State<AppTextField> {
     _internalController?.dispose();
     widget.focusNode?.removeListener(_onFocusChanged);
     _selectedCountryNotifier.dispose();
+    _obscureTextNotifier.dispose();
+    _hasTextNotifier.dispose();
     super.dispose();
   }
 
@@ -711,14 +715,14 @@ class _AppTextFieldState extends State<AppTextField> {
 
   void _onTextChanged() {
     final nowHasText = _effectiveController.text.isNotEmpty;
-    if (_hasText != nowHasText) {
-      setState(() => _hasText = nowHasText);
+    if (_hasTextNotifier.value != nowHasText) {
+      _hasTextNotifier.value = nowHasText;
     }
   }
 
   void _togglePasswordVisibility() {
     if (!_isPassword) return;
-    setState(() => _obscureText = !_obscureText);
+    _obscureTextNotifier.value = !_obscureTextNotifier.value;
   }
 
   Widget? _buildPrefixIcon({CountryWithPhoneCode? country}) {
@@ -813,49 +817,62 @@ class _AppTextFieldState extends State<AppTextField> {
     final userSuffix = widget.customSuffixIcon ?? widget.decoration?.suffixIcon;
 
     if (_isPassword) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ?userSuffix,
-          IconButton(
-            onPressed: _togglePasswordVisibility,
-            splashRadius: AppRadius.lg,
-            hoverColor: context.colors.onSurface.withValues(alpha: 0.06),
-            icon: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 180),
-              child: Icon(
-                _obscureText ? CupertinoIcons.eye_slash : CupertinoIcons.eye,
-                key: ValueKey<bool>(_obscureText),
-                size: 20,
-                color: context.colors.onSurfaceSecondary,
+      return ValueListenableBuilder<bool>(
+        valueListenable: _obscureTextNotifier,
+        builder: (context, obscureText, _) {
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ?userSuffix,
+              IconButton(
+                onPressed: _togglePasswordVisibility,
+                splashRadius: AppRadius.lg,
+                hoverColor: context.colors.onSurface.withValues(alpha: 0.06),
+                icon: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 180),
+                  child: Icon(
+                    obscureText ? CupertinoIcons.eye_slash : CupertinoIcons.eye,
+                    key: ValueKey<bool>(obscureText),
+                    size: 20,
+                    color: context.colors.onSurfaceSecondary,
+                  ),
+                ),
+                tooltip: obscureText ? 'Show password' : 'Hide password',
               ),
-            ),
-            tooltip: _obscureText ? 'Show password' : 'Hide password',
-          ),
-        ],
+            ],
+          );
+        },
       );
     }
 
-    if ((widget.clearable || _isSearch) && _hasText) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ?userSuffix,
-          IconButton(
-            onPressed: () {
-              _effectiveController.clear();
-              widget.onChanged?.call('');
-            },
-            splashRadius: AppRadius.lg,
-            hoverColor: context.colors.onSurface.withValues(alpha: 0.06),
-            icon: Icon(
-              Icons.cancel_rounded,
-              size: _sizeSpec.iconSize,
-              color: context.colors.onSurfaceSecondary.withValues(alpha: 0.7),
-            ),
-            tooltip: 'Clear',
-          ),
-        ],
+    if (widget.clearable || _isSearch) {
+      return ValueListenableBuilder<bool>(
+        valueListenable: _hasTextNotifier,
+        builder: (context, hasText, _) {
+          if (!hasText) {
+            return userSuffix ?? const SizedBox.shrink();
+          }
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ?userSuffix,
+              IconButton(
+                onPressed: () {
+                  _effectiveController.clear();
+                  widget.onChanged?.call('');
+                },
+                splashRadius: AppRadius.lg,
+                hoverColor: context.colors.onSurface.withValues(alpha: 0.06),
+                icon: Icon(
+                  Icons.cancel_rounded,
+                  size: _sizeSpec.iconSize,
+                  color: context.colors.onSurfaceSecondary.withValues(alpha: 0.7),
+                ),
+                tooltip: 'Clear',
+              ),
+            ],
+          );
+        },
       );
     }
 
@@ -1024,42 +1041,47 @@ class _AppTextFieldState extends State<AppTextField> {
     //           }
     //         : null);
 
-    return TextFormField(
-      controller: _effectiveController,
-      focusNode: widget.focusNode,
-      keyboardType: _resolveKeyboardType(),
-      textInputAction: _resolveTextInputAction(),
-      textCapitalization: widget.textCapitalization,
-      textAlign: widget.textAlign,
-      textAlignVertical: widget.maxLines != 1
-          ? TextAlignVertical.top
-          : TextAlignVertical.center,
-      style: effectiveStyle,
-      strutStyle: widget.strutStyle,
-      obscureText: _obscureText,
-      readOnly: _effectiveReadOnly,
-      enabled: widget.enabled,
-      autofocus: widget.autofocus,
-      expands: widget.expands,
-      autocorrect: _isPassword ? false : widget.autocorrect,
-      enableSuggestions: _isPassword ? false : widget.enableSuggestions,
-      enableInteractiveSelection: widget.enableInteractiveSelection,
-      showCursor: widget.showCursor,
-      maxLines: _effectiveMaxLines,
-      minLines: widget.expands ? null : widget.minLines,
-      maxLength: widget.maxLength,
-      inputFormatters: _resolveInputFormatters(country: country),
-      autofillHints: _resolveAutofillHints(),
-      onChanged: widget.onChanged,
-      onTap: widget.onTap,
-      validator: effectiveValidator,
-      onSaved: widget.onSaved,
-      onFieldSubmitted: widget.onFieldSubmitted,
-      onEditingComplete: widget.onEditingComplete,
-      decoration: _buildDecoration(context, country: country),
-      onTapOutside: (_) => widget.onOutsideTap != null
-          ? widget.onOutsideTap!()
-          : FocusManager.instance.primaryFocus?.unfocus(),
+    return ValueListenableBuilder<bool>(
+      valueListenable: _obscureTextNotifier,
+      builder: (context, obscureText, _) {
+        return TextFormField(
+          controller: _effectiveController,
+          focusNode: widget.focusNode,
+          keyboardType: _resolveKeyboardType(),
+          textInputAction: _resolveTextInputAction(),
+          textCapitalization: widget.textCapitalization,
+          textAlign: widget.textAlign,
+          textAlignVertical: widget.maxLines != 1
+              ? TextAlignVertical.top
+              : TextAlignVertical.center,
+          style: effectiveStyle,
+          strutStyle: widget.strutStyle,
+          obscureText: obscureText,
+          readOnly: _effectiveReadOnly,
+          enabled: widget.enabled,
+          autofocus: widget.autofocus,
+          expands: widget.expands,
+          autocorrect: _isPassword ? false : widget.autocorrect,
+          enableSuggestions: _isPassword ? false : widget.enableSuggestions,
+          enableInteractiveSelection: widget.enableInteractiveSelection,
+          showCursor: widget.showCursor,
+          maxLines: _effectiveMaxLines,
+          minLines: widget.expands ? null : widget.minLines,
+          maxLength: widget.maxLength,
+          inputFormatters: _resolveInputFormatters(country: country),
+          autofillHints: _resolveAutofillHints(),
+          onChanged: widget.onChanged,
+          onTap: widget.onTap,
+          validator: effectiveValidator,
+          onSaved: widget.onSaved,
+          onFieldSubmitted: widget.onFieldSubmitted,
+          onEditingComplete: widget.onEditingComplete,
+          decoration: _buildDecoration(context, country: country),
+          onTapOutside: (_) => widget.onOutsideTap != null
+              ? widget.onOutsideTap!()
+              : FocusManager.instance.primaryFocus?.unfocus(),
+        );
+      },
     );
   }
 }
