@@ -1,0 +1,16 @@
+targets:
+  $default:
+    builders:
+      json_serializable:
+        options:
+          field_rename: snake
+
+      flutter_gen_runner:
+        options:
+          output: lib/gen/
+          line_length: 120 
+          integrations:
+            image: true
+            flutter_svg: true
+            rive: true
+            lottie: true

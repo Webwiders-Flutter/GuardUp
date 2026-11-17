@@ -1,0 +1,114 @@
+import 'package:flutter/material.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+import '/core/extensions/context.extension.dart';
+import '/gen/app_localizations.dart';
+
+enum UserStatus {
+  @JsonValue("INCOMPLETE")
+  incomplete("INCOMPLETE"),
+
+  @JsonValue('ACTIVE')
+  active('ACTIVE'),
+
+  @JsonValue("PENDING_APPROVAL")
+  approvalPending("PENDING_APPROVAL"),
+
+  @JsonValue('BLOCKED')
+  blocked('BLOCKED'),
+
+  @JsonValue('REJECTED')
+  rejected('REJECTED'),
+
+  @JsonValue('DELETED')
+  deleted('DELETED');
+
+  final String apiValue;
+
+  const UserStatus(this.apiValue);
+
+  String label([AppLocalizations? l10n]) {
+    switch (this) {
+      case UserStatus.incomplete:
+        return 'Incomplete';
+      case UserStatus.active:
+        return 'Approved';
+      case UserStatus.approvalPending:
+        return 'Pending Approval';
+      case UserStatus.blocked:
+        return 'Blocked';
+      case UserStatus.rejected:
+        return 'Rejected';
+      case UserStatus.deleted:
+        return 'Deleted';
+    }
+  }
+
+  Color color(BuildContext context) {
+    final colors = context.colors;
+    switch (this) {
+      case UserStatus.incomplete:
+        return colors.warning;
+      case UserStatus.active:
+        return colors.success;
+      case UserStatus.approvalPending:
+        return colors.warning;
+      case UserStatus.blocked:
+        return colors.error;
+      case UserStatus.rejected:
+        return colors.error;
+      case UserStatus.deleted:
+        return colors.error;
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case UserStatus.incomplete:
+        return Icons.pending_actions_outlined;
+      case UserStatus.active:
+        return Icons.verified_user_outlined;
+      case UserStatus.approvalPending:
+        return Icons.hourglass_top_outlined;
+      case UserStatus.blocked:
+        return Icons.block_outlined;
+      case UserStatus.rejected:
+        return Icons.cancel_outlined;
+      case UserStatus.deleted:
+        return Icons.delete_outlined;
+    }
+  }
+
+  String get subtitle {
+    switch (this) {
+      case UserStatus.active:
+        return 'Fully approved and active GuardUp accounts';
+      case UserStatus.approvalPending:
+        return 'Documents submitted, pending compliance review';
+      case UserStatus.incomplete:
+        return 'Profile onboarding in progress';
+      case UserStatus.blocked:
+        return 'Suspended or restricted accounts';
+      case UserStatus.rejected:
+        return 'Applications rejected by compliance';
+      case UserStatus.deleted:
+        return 'Deactivated or deleted user accounts';
+    }
+  }
+
+  static UserStatus? fromApi(String? value) {
+    if (value == null) return null;
+    final normalized = value.trim().toUpperCase();
+    if (normalized == 'APPROVED' || normalized == 'ACTIVE') {
+      return UserStatus.active;
+    }
+    if (normalized == 'PENDING_APPROVAL' ||
+        normalized == 'APPROVAL_PENDING' ||
+        normalized == 'PENDING') {
+      return UserStatus.approvalPending;
+    }
+    return UserStatus.values
+        .where((e) => e.apiValue.toUpperCase() == normalized)
+        .firstOrNull;
+  }
+}

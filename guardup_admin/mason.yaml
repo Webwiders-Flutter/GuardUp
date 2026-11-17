@@ -1,0 +1,4 @@
+# Register mason bricks for local scaffolding
+bricks:
+  feature:
+    path: bricks/feature

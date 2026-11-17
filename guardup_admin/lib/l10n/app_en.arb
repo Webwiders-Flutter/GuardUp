@@ -1,0 +1,343 @@
+{
+  "@@locale": "en",
+  "appNameSplash": "Starter",
+  "tagline": "Your journey starts here",
+  "loginTitle": "Login",
+  "signUpTitle": "Sign Up",
+  "dontHaveAccountText": "If you don't have any account",
+  "haveAccountText": "If you have any account",
+  "signup": "Signup",
+  "login": "Login",
+  "emailLabel": "Email",
+  "emailHint": "Email",
+  "passwordLabel": "Password",
+  "passwordHint": "Password",
+  "completeProfileTitle": "Complete Profile",
+  "fullNameLabel": "Full Name",
+  "fullNameHint": "Enter your full name",
+  "fullNameRequired": "Name is required",
+  "bioLabel": "Bio",
+  "bioHint": "Tell us about yourself",
+  "dobLabel": "Date of Birth",
+  "dobHint": "Select your date of birth",
+  "dobRequired": "Date of birth is required",
+  "genderLabel": "Gender",
+  "genderMale": "Male",
+  "genderFemale": "Female",
+  "genderOther": "Other",
+  "genderUnknown": "Unknown",
+  "emailAddressHint": "Your email address",
+  "fillRequiredFieldsError": "Please fill all required fields",
+  "selectGenderError": "Please select a gender",
+  "selectProfileImageError": "Please select a profile image",
+  "checkYourEmail": "Check Your Email",
+  "sentVerificationLink": "We've sent a verification link to",
+  "checkInboxInstructions": "Please check your inbox and tap the verification link to continue.",
+  "resendEmail": "Resend Email",
+  "resendEmailWithSeconds": "Resend Email ({seconds}s)",
+
+  "@resendEmailWithSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "continueBtn": "Continue",
+  "wrongEmailText": "Wrong email? ",
+  "goBack": "Go Back",
+  "failedToLoadMore": "Failed to load more",
+  "somethingWentWrong": "Something went wrong",
+  "noDataFound": "No data found",
+  "fieldRequired": "{fieldName} is required",
+  "@fieldRequired": {
+    "placeholders": {
+      "fieldName": {
+        "type": "String"
+      }
+    }
+  },
+  "thisField": "This field",
+  "emailRequired": "Email is required",
+  "enterValidEmail": "Enter a valid email",
+  "passwordRequired": "Password is required",
+  "passwordMinLengthError": "Password must be at least {minLength} characters",
+  "@passwordMinLengthError": {
+    "placeholders": {
+      "minLength": {
+        "type": "int"
+      }
+    }
+  },
+  "strongPasswordError": "Password must include upper, lower, number & special char",
+  "phoneRequired": "Phone number is required",
+  "enterValidPhone": "Enter valid 10-digit phone number",
+  "minLengthError": "Minimum {length} characters required",
+  "@minLengthError": {
+    "placeholders": {
+      "length": {
+        "type": "int"
+      }
+    }
+  },
+  "maxLengthError": "Maximum {length} characters allowed",
+  "@maxLengthError": {
+    "placeholders": {
+      "length": {
+        "type": "int"
+      }
+    }
+  },
+  "thisFieldRequired": "This field is required",
+  "enterValidNumber": "Enter a valid number",
+  "pleaseConfirmPassword": "Please confirm password",
+  "passwordsDoNotMatch": "Passwords do not match",
+  "cancel": "Cancel",
+  "confirm": "Confirm",
+  "exitApp": "Exit App",
+  "areYouSureYouWantToLeaveAnyUnsavedChangesWillBeLost": "Are you sure you want to leave? Any unsaved changes will be lost.",
+  "exit": "Exit",
+  "thisItem": "this item",
+  "thisActionCannotBeUndoneAreYouAbsolutelySure": "This action cannot be undone. Are you absolutely sure?",
+  "keep": "Keep",
+  "delete": "Delete",
+  "deleteItem": "Delete {itemName}",
+  "@deleteItem": {
+    "placeholders": {
+      "itemName": {
+        "type": "String"
+      }
+    }
+  },
+  "great": "Great!",
+  "proceed": "Proceed",
+  "gotIt": "Got it",
+  "logOut": "Log Out",
+  "youWillBeSignedOutOfYourAccount": "You will be signed out of your account.",
+  "selectAVideo": "Select a video",
+  "selectAnImage": "Select an image",
+  "chooseFromYourVideoLibraryOrTakeAVideo": "Choose from your video library or take a video",
+  "chooseFromYourGalleryOrTakeAPhoto": "Choose from your gallery or take a photo",
+  "searchItem": "Search item",
+  "chooseFromGallery": "Choose from Gallery",
+  "selectFromYourVideoLibrary": "Select from your video library",
+  "selectFromYourPhotoLibrary": "Select from your photo library",
+  "takeAPhoto": "Take a Photo",
+  "useCameraToCaptureNewImage": "Use camera to capture new image",
+  "invalidImageSourceConfiguration": "Invalid image source configuration",
+
+
+
+  "withoutContextMessages": "withoutContextMessages",
+  "connectionTimeout": "Connection timeout",
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "tomorrow": "Tomorrow",
+  "requestCancelled": "Request cancelled",
+  "noInternetConnection": "No internet connection",
+  "serverError": "Server error",
+  "failedToParseResponse": "Failed to parse response",
+  "noFilesProvided": "No files provided",
+  "requestFailed": "Request failed",
+  "unexpectedError": "Unexpected error",
+  "invalidEmailOrPassword": "Invalid email or password",
+  "userNotFound": "User not found",
+  "emailAlreadyInUse": "Email already in use",
+  "weakPassword": "Weak password",
+  "tooManyRequestsTryAgainLater": "Too many requests. Try again later.",
+  "userAccountDisabled": "User account disabled",
+  "documentNotFound": "Document not found",
+  "authenticationFailed": "Authentication failed",
+  "serviceUnavailable": "Service unavailable",
+  "databaseError": "Database error",
+  "requestTimeout": "Request timeout",
+  "invalidDataFormat": "Invalid data format",
+  "permissionDenied": "Permission denied",
+  "userIsNotLoggedIn": "User is not logged in",
+  "failedToUpdateProfilePleaseTryAgainLater": "Failed to update profile. Please try again later.",
+  "failedToDeleteProfilePleaseTryAgainLater": "Failed to delete profile. Please try again later.",
+  "emailIsRequired": "Email is required",
+  "failedToResetPasswordPleaseTryAgainLater": "Failed to reset password. Please try again later.",
+  "passwordIsRequired": "Password is required",
+  "failedToLoginPleaseTryAgainLater": "Failed to login. Please try again later.",
+  "failedToLogoutPleaseTryAgainLater": "Failed to logout. Please try again later.",
+  "failedToGetUserProfilePleaseTryAgainLater": "Failed to get user profile. Please try again later.",
+  "failedToSendVerificationEmailPleaseTryAgainLater": "Failed to send verification email. Please try again later.",
+  "failedToSignupPleaseTryAgainLater": "Failed to signup. Please try again later.",
+  "failedToListenAuthStateChanges": "Failed to listen auth state changes",
+  "signupFailed": "Signup failed",
+  "loginFailed": "Login failed",
+  "verificationEmailSent": "Verification email sent",
+  "failedToSendVerificationEmail": "Failed to send verification email",
+  "failedToRefreshCurrentUser": "Failed to refresh current user",
+  "failedToLogout": "Failed to logout",
+  "pleaseVerifyYourEmailFirst": "Please verify your email first",
+  "profileCompletedSuccessfully": "Profile completed successfully",
+  "failedToCompleteProfile": "Failed to complete profile",
+  "imagePickerFailed": "Image picker failed",
+  "videoPickerFailed": "Video picker failed",
+  "cropImage": "Crop Image",
+  "done": "Done",
+  "pleaseTryAgain": "Please try again",
+  "provideEitherIconOrLottieAssetNotBoth": "Provide either icon or lottieAsset, not both.",
+  "tryRefreshingOrCheckBackLater": "Try refreshing or check back later",
+  "retry": "Retry",
+  "refresh": "Refresh",
+
+  "permissionLocationName": "Location",
+  "permissionCameraName": "Camera",
+  "permissionPhotosName": "Photos",
+  "permissionMicrophoneName": "Microphone",
+  "permissionNotificationName": "Notifications",
+  "permissionBluetoothName": "Bluetooth",
+  "permissionContactsName": "Contacts",
+  "permissionCalendarName": "Calendar",
+  "permissionRemindersName": "Reminders",
+  "permissionStorageName": "Storage",
+
+  "enablePermissionAccess": "Enable {permission} Access",
+  "@enablePermissionAccess": {
+    "placeholders": {
+      "permission": {
+        "type": "String"
+      }
+    }
+  },
+  "defaultPermissionExplanation": "We need access to your {permission} to provide full functionality. Rest assured, your data is kept secure.",
+  "@defaultPermissionExplanation": {
+    "placeholders": {
+      "permission": {
+        "type": "String"
+      }
+    }
+  },
+  "grantPermission": "Grant Permission",
+  "notNow": "Not Now",
+  
+  "serviceIsOff": "{service} is Off",
+  "@serviceIsOff": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "serviceOffExplanation": "Your system {service} seems to be disabled. To proceed, please toggle it on in settings.",
+  "@serviceOffExplanation": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "bluetoothService": "Bluetooth",
+  "locationServices": "Location Services",
+  
+  "serviceDisabledBullet1": "Required to scan and connect devices",
+  "serviceDisabledBullet2": "Enables native discovery features",
+  "serviceDisabledBullet3": "Turn on directly in your phone settings panel",
+  "openSystemSettings": "Open System Settings",
+  "goBackBtn": "Go Back",
+  
+  "permissionAccessDisabled": "{permission} Access Disabled",
+  "@permissionAccessDisabled": {
+    "placeholders": {
+      "permission": {
+        "type": "String"
+      }
+    }
+  },
+  "permissionDisabledExplanation": "You have permanently disabled {permission} access. Please follow these quick steps to re-enable:",
+  "@permissionDisabledExplanation": {
+    "placeholders": {
+      "permission": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "permanentlyDeniedBullet1": "1. Tap \"Open Settings\" below.",
+  "permanentlyDeniedBullet2": "2. Select \"Permissions\" (or \"{permission}\").",
+  "@permanentlyDeniedBullet2": {
+    "placeholders": {
+      "permission": {
+        "type": "String"
+      }
+    }
+  },
+  "permanentlyDeniedBullet3": "3. Toggle the permission to \"Allowed\" or \"Always\".",
+  "openAppSettings": "Open App Settings",
+  
+  "bulletLocation1": "Find nearby locations and destinations",
+  "bulletLocation2": "Get highly accurate mapping features",
+  "bulletLocation3": "Optimize routes and navigation guidelines",
+  
+  "bulletCamera1": "Take beautiful photos and video directly in-app",
+  "bulletCamera2": "Scan QR codes instantly",
+  "bulletCamera3": "Personalize your avatar dynamically",
+  
+  "bulletPhotos1": "Select and upload existing photos from your library",
+  "bulletPhotos2": "Save downloaded media safely to your device",
+  "bulletPhotos3": "Manage album-specific selections",
+  
+  "bulletMicrophone1": "Record high-quality voice audio notes",
+  "bulletMicrophone2": "Enable hands-free speech interactions",
+  "bulletMicrophone3": "Capture sound during video recordings",
+  
+  "bulletNotification1": "Receive instant real-time alerts and updates",
+  "bulletNotification2": "Get notification of critical security events",
+  "bulletNotification3": "Never miss a message or app reminder",
+  
+  "bulletBluetooth1": "Scan and sync with external hardware accessories",
+  "bulletBluetooth2": "Enable local peer-to-peer data transfers",
+  "bulletBluetooth3": "Provide premium local connectivity modes",
+  
+  "bulletContacts1": "Find and connect with friends instantly",
+  "bulletContacts2": "Auto-complete recipient contact details",
+  "bulletContacts3": "Share referral codes with direct contacts",
+  
+  "bulletCalendar1": "Sync events and deadlines directly",
+  "bulletCalendar2": "Avoid schedule overlaps and conflicts",
+  "bulletCalendar3": "Never miss your plan dates",
+  
+  "bulletReminders1": "Schedule task-specific push alerts",
+  "bulletReminders2": "Manage critical step checklists",
+  "bulletReminders3": "Receive alarm calls for quick actions",
+  
+  "bulletStorage1": "Store and access documents offline",
+  "bulletStorage2": "Save application cache to run faster",
+  "bulletStorage3": "Import system files and download logs",
+
+  "home": "Home",
+  "search": "Search",
+  "permissions": "Permissions",
+  "profile": "Profile",
+
+  "roleBuyerSeller": "Buyer / Seller",
+  "roleBuyerSellerDesc": "I buy or sell material and need trucks for transportation.",
+  "roleTransporterTruckOwner": "Transporter / Truck Owner",
+  "roleTransporterTruckOwnerDesc": "I own trucks or provide transport services for material movement.",
+  "roleTransporter": "Transporter",
+  "roleTransporterDesc": "I arrange trucks or provide transport services.",
+  "roleTruckOwner": "Truck Owner",
+  "roleTruckOwnerDesc": "I own trucks and want to list them for transport work movements.",
+  "roleDriver": "Driver",
+  "roleDriverDesc": "I drive trucks and want to manage my trips.",
+  "roleAdmin": "Admin",
+  "roleAdminDesc": "I manage the platform and its users.",
+  "languageEnglish": "English",
+  "languageHindi": "हिंदी",
+  "chooseFile": "Choose File",
+  "selectFromYourFiles": "Select from your files",
+  "selectDocument": "Select a document",
+  "chooseSource": "Choose source",
+  "dealTypeBoth": "Both",
+  "dealTypeBuyer": "Buyer",
+  "dealTypeSeller": "Seller",
+  "dealTypeBothForm": "Both (Buyers & Sellers)",
+  "dealTypeBuyerForm": "Buyer Only",
+  "dealTypeSellerForm": "Seller Only",
+  "dealTypeBothDesc": "Material is available for both cargo procurement demands and seller supplies",
+  "dealTypeBuyerDesc": "Material is tailored for buyer cargo requirements & RFQs",
+  "dealTypeSellerDesc": "Material is offered by suppliers and vendors"
+}

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="GuardUp — Executive Protection & Security Administration Console.">
+  <meta name="theme-color" content="#12141C">
+  <meta name="color-scheme" content="dark">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="GuardUp Admin Console">
+  <meta property="og:description" content="Executive Protection & Security Administration Console">
+  <meta property="og:type" content="website">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GuardUp Admin">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+
+  <title>GuardUp Admin Console</title>
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* =========================================================
+       GUARDUP ADMIN - EXECUTIVE DARK LUXURY PRELOADER
+       Harmonized with GuardUp Gold & Obsidian Slate Design System
+       ========================================================= */
+    :root {
+      --bg-page: #12141C;
+      --surface-card: #191B23;
+      --surface-elevated: #262D3D;
+      --brand-primary: #EDCC73;
+      --brand-container: #AC7F42;
+      --text-primary: #FFFFFF;
+      --text-secondary: #CCCCCC;
+      --text-muted: #D3C4B0;
+      --border-subtle: #262D3D;
+      --border-card: #32353D;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Screen Container */
+    #splash-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at 50% 30%, #191B23 0%, #12141C 65%, #000B14 100%);
+      z-index: 999999;
+      transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
+    }
+
+    #splash-screen.fade-out {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    /* Wrapper */
+    .splash-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 90%;
+      max-width: 420px;
+      animation: enterFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Brand Header Box */
+    .brand-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .brand-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #262D3D 0%, #1C252D 100%);
+      border: 1px solid var(--border-card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.4), 0 0 16px -2px rgba(237, 204, 115, 0.15);
+      margin-bottom: 16px;
+      transition: transform 0.3s ease;
+    }
+
+    .brand-icon svg {
+      width: 28px;
+      height: 28px;
+      color: var(--brand-primary);
+    }
+
+    .brand-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+
+    .brand-subtitle {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    /* Elegant Dark Surface Card */
+    .splash-card {
+      width: 100%;
+      background: var(--surface-card);
+      border-radius: 16px;
+      border: 1px solid var(--border-card);
+      box-shadow: 
+        0 18px 36px -12px rgba(0, 0, 0, 0.5),
+        0 2px 6px -1px rgba(0, 0, 0, 0.3);
+      padding: 32px 28px 24px 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Card Header */
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+      letter-spacing: -0.01em;
+    }
+
+    .card-desc {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .progress-bar-track {
+      width: 100%;
+      height: 4px;
+      background-color: var(--border-subtle);
+      border-radius: 99px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 35%;
+      background: linear-gradient(90deg, var(--brand-primary) 0%, var(--brand-container) 100%);
+      border-radius: 99px;
+      box-shadow: 0 0 8px rgba(237, 204, 115, 0.4);
+      animation: fluidProgress 1.7s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--brand-primary);
+      box-shadow: 0 0 6px rgba(237, 204, 115, 0.8);
+      animation: pulseDot 1.8s ease-in-out infinite;
+    }
+
+    /* Bottom Trust Line */
+    .splash-footer {
+      margin-top: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      text-align: center;
+    }
+
+    .trust-meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .trust-meta svg {
+      width: 13px;
+      height: 13px;
+      color: var(--brand-primary);
+    }
+
+    .copyright {
+      font-size: 11px;
+      color: #64748B;
+    }
+
+    @keyframes enterFade {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fluidProgress {
+      0% {
+        left: -35%;
+        width: 35%;
+      }
+      50% {
+        width: 45%;
+      }
+      100% {
+        left: 100%;
+        width: 35%;
+      }
+    }
+
+    @keyframes pulseDot {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.4;
+        transform: scale(0.85);
+      }
+    }
+
+    noscript {
+      position: fixed;
+      bottom: 24px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      background: #DC2626;
+      color: #FFFFFF;
+      font-size: 12px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- GuardUp Executive Preloader -->
+  <div id="splash-screen">
+    <div class="splash-content">
+
+      <!-- Brand Header -->
+      <div class="brand-header">
+        <div class="brand-icon">
+          <!-- Security Shield Icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <h1 class="brand-title">GuardUp</h1>
+        <p class="brand-subtitle">Executive Protection Administration Console</p>
+      </div>
+
+      <!-- Surface Card -->
+      <div class="splash-card">
+        <span class="card-title">Connecting to Console</span>
+        <span class="card-desc">Establishing authenticated administrative session</span>
+
+        <div class="progress-container">
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill"></div>
+          </div>
+          <div class="status-badge">
+            <span class="status-dot"></span>
+            <span id="loader-status">Initializing workspace...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trust Footer -->
+      <div class="splash-footer">
+        <div class="trust-meta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <span>Secure 256-bit SSL encrypted connection</span>
+        </div>
+        <span class="copyright">© GuardUp • Administrative Console</span>
+      </div>
+
+    </div>
+
+    <noscript>
+      JavaScript is required to access GuardUp Admin Console. Please enable JavaScript in your browser settings.
+    </noscript>
+  </div>
+
+  <!-- Splash Lifecycle Controller -->
+  <script>
+    (function() {
+      const statusList = [
+        "Initializing workspace...",
+        "Verifying security credentials...",
+        "Loading modules...",
+        "Readying console..."
+      ];
+      let idx = 0;
+      const el = document.getElementById("loader-status");
+      const interval = setInterval(function() {
+        idx = (idx + 1) % statusList.length;
+        if (el) {
+          el.style.opacity = "0.5";
+          setTimeout(function() {
+            el.textContent = statusList[idx];
+            el.style.opacity = "1";
+          }, 120);
+        }
+      }, 1500);
+
+      let dismissed = false;
+      function dismissSplash() {
+        if (dismissed) return;
+        dismissed = true;
+        clearInterval(interval);
+
+        const splash = document.getElementById("splash-screen");
+        if (splash) {
+          splash.classList.add("fade-out");
+          setTimeout(function() {
+            if (splash.parentNode) splash.parentNode.removeChild(splash);
+          }, 450);
+        }
+      }
+
+      // Handoff on Flutter first frame
+      window.addEventListener("flutter-first-frame", dismissSplash);
+
+      // DOM MutationObserver to detect Flutter view mount
+      const observer = new MutationObserver(function(mutations, obs) {
+        for (let i = 0; i < mutations.length; i++) {
+          const added = mutations[i].addedNodes;
+          for (let j = 0; j < added.length; j++) {
+            const node = added[j];
+            if (node.nodeType === 1) {
+              const tag = node.tagName.toLowerCase();
+              if (tag === "flutter-view" || tag === "flt-glass-pane" || node.classList.contains("flutter-view")) {
+                dismissSplash();
+                obs.disconnect();
+                return;
+              }
+            }
+          }
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+
+      // Fallback check
+      const poll = setInterval(function() {
+        if (document.querySelector("flutter-view, flt-glass-pane")) {
+          dismissSplash();
+          clearInterval(poll);
+          observer.disconnect();
+        }
+      }, 200);
+
+      // Timeout safety
+      setTimeout(function() {
+        dismissSplash();
+        clearInterval(poll);
+        observer.disconnect();
+      }, 8000);
+    })();
+  </script>
+
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
