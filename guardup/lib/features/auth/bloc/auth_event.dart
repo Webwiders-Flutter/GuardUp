@@ -149,6 +149,26 @@ class AuthSetSessionRoleRequested extends AuthEvent {
   List<Object?> get props => [role];
 }
 
+/// Dispatched when a user requests a password reset code to their email.
+class AuthSendPasswordResetRequested extends AuthEvent {
+  final String email;
+
+  const AuthSendPasswordResetRequested({required this.email});
+
+  @override
+  List<Object?> get props => [email];
+}
+
+/// Dispatched when user sets a new password during the recovery flow.
+class AuthResetPasswordRequested extends AuthEvent {
+  final String newPassword;
+
+  const AuthResetPasswordRequested({required this.newPassword});
+
+  @override
+  List<Object?> get props => [newPassword];
+}
+
 /// Dispatched when the user logs out.
 class AuthSignOutRequested extends AuthEvent {
   const AuthSignOutRequested();

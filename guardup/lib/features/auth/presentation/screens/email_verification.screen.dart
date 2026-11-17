@@ -24,6 +24,7 @@ import '/features/payments/presentation/screens/membership_plans_screen.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
+import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/app_image.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
@@ -31,8 +32,14 @@ class EmailVerificationScreen extends StatefulWidget {
 
   final String? email;
   final UserRole? role;
+  final OtpType otpType;
 
-  const EmailVerificationScreen({super.key, this.email, this.role});
+  const EmailVerificationScreen({
+    super.key,
+    this.email,
+    this.role,
+    this.otpType = OtpType.email,
+  });
 
   @override
   State<EmailVerificationScreen> createState() =>
@@ -121,7 +128,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       AuthVerifyOtpRequested(
         email: _targetEmail,
         token: pin,
-        type: OtpType.email,
+        type: widget.otpType,
       ),
     );
   }
@@ -153,7 +160,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     }
     _startCountdown();
     sl<AuthBloc>().add(
-      AuthResendOtpRequested(target: _targetEmail, type: OtpType.email),
+      AuthResendOtpRequested(target: _targetEmail, type: widget.otpType),
     );
     AppSnackbar.info('A new verification code has been sent to $_targetEmail');
   }
@@ -176,6 +183,14 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
     if (state.isAuthenticated) {
       _isVerifying = false;
+      if (widget.otpType == OtpType.recovery) {
+        AppSnackbar.success('Verification code verified successfully');
+        context.go(
+          '${AppRoutes.resetPassword}?email=${Uri.encodeComponent(_targetEmail)}',
+          extra: _targetEmail,
+        );
+        return;
+      }
       AppSnackbar.success('Email verified successfully');
       _navigateByRole();
     } else if (state.hasError) {
@@ -233,6 +248,16 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       bloc: sl<AuthBloc>(),
       listener: _onAuthStateChanged,
       child: Scaffold(
+        appBar: AppAppBar.transparent(
+          showBackIcon: true,
+          onBackTap: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              _handleLogout();
+            }
+          },
+        ),
         body: SafeArea(
           child: CustomScrollView(
             slivers: [
@@ -242,7 +267,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   padding: context.horizontalEdgeInsets,
                   child: Column(
                     children: [
-                      AppSpacing.huge.h,
+                      AppSpacing.lg.h,
 
                       // Logo
                       Center(
@@ -256,7 +281,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
                       // Heading
                       Text(
-                        context.l10n.emailVerificationTitle,
+                        widget.otpType == OtpType.recovery
+                            ? context.l10n.forgotPasswordTitle
+                            : context.l10n.emailVerificationTitle,
                         textAlign: TextAlign.center,
                         style: context.textTheme.headlineLarge?.bold(),
                       ),
@@ -333,12 +360,14 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
                       const Spacer(),
 
-                      // Logout
+                      // Logout / Back to Login
                       Center(
                         child: AppButton(
                           type: ButtonType.text,
                           size: ButtonSize.normal,
-                          text: context.l10n.logOut,
+                          text: widget.otpType == OtpType.recovery
+                              ? context.l10n.login
+                              : context.l10n.logOut,
                           onPressed: _handleLogout,
                         ),
                       ),

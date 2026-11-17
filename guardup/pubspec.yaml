@@ -25,8 +25,9 @@ dependencies:
   lottie: ^3.8.0
   dartz: ^0.10.1
   wakelock_plus: ^1.8.2
-  sim_reader: ^1.0.4
+  # sim_reader: ^1.0.4
   flutter_libphonenumber: ^2.8.4
+  flutter_libphonenumber_android: ^2.1.1
   readmore: ^3.0.0
   pinput: ^7.0.0
   flutter_secure_storage: ^11.2.0

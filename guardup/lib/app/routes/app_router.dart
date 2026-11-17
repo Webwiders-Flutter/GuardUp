@@ -79,6 +79,7 @@ final class AppRouter {
             location == SelectRoleScreen.route ||
             location == ForgotPasswordScreen.route ||
             location == EmailVerificationScreen.route ||
+            location == ResetPasswordScreen.route ||
             location == ContactUsScreen.route ||
             location == LegalContentScreen.privacyPolicyRoute ||
             location == LegalContentScreen.termsRoute;
@@ -90,6 +91,12 @@ final class AppRouter {
       // 4. User is Authenticated: enforce onboarding step clearance & realtime admin status
       // ------------------------------------------------------------
       if (authState.isAuthenticated) {
+        // Allow user to stay on Reset Password or Email Verification screen while completing recovery
+        if (location == ResetPasswordScreen.route ||
+            location == EmailVerificationScreen.route) {
+          return null;
+        }
+
         final isAuthFlow =
             location == LoginScreen.route ||
             location == SignUpScreen.route ||
@@ -198,16 +205,48 @@ final class AppRouter {
         path: EmailVerificationScreen.route,
         builder: (context, state) {
           final extra = state.extra;
-          if (extra is Map<String, dynamic>) {
-            return EmailVerificationScreen(
-              email: extra['email'] as String?,
-              role: extra['role'] as UserRole?,
-            );
+          String? email;
+          UserRole? role;
+          OtpType otpType = OtpType.email;
+
+          if (extra is Map) {
+            email = extra['email'] as String?;
+            role = extra['role'] as UserRole?;
+            final rawOtpType = extra['otpType'];
+            if (rawOtpType is OtpType) {
+              otpType = rawOtpType;
+            } else if (rawOtpType is String) {
+              otpType = OtpType.tryFromApiValue(rawOtpType) ?? otpType;
+            }
+          } else if (extra is String) {
+            email = extra;
           }
+
+          email ??= state.uri.queryParameters['email'];
+          final queryType = state.uri.queryParameters['type'];
+          if (queryType != null) {
+            otpType = OtpType.tryFromApiValue(queryType) ?? otpType;
+          }
+
+          return EmailVerificationScreen(
+            email: email,
+            role: role,
+            otpType: otpType,
+          );
+        },
+      ),
+      GoRoute(
+        path: ResetPasswordScreen.route,
+        builder: (context, state) {
+          final extra = state.extra;
+          String? email;
           if (extra is String) {
-            return EmailVerificationScreen(email: extra);
+            email = extra;
+          } else if (extra is Map) {
+            email = extra['email'] as String?;
           }
-          return const EmailVerificationScreen();
+          email ??= state.uri.queryParameters['email'];
+          return ResetPasswordScreen(email: email);
         },
       ),
       GoRoute(

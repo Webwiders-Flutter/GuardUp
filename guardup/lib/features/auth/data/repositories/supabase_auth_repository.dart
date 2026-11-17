@@ -215,6 +215,17 @@ class SupabaseAuthRepository implements AuthRepository {
     final normalizedTarget = isEmail ? target.trim().toLowerCase() : target.trim();
     SupabaseLogger.request('resendOtp', details: 'target=$normalizedTarget, type=${type.apiValue}');
 
+    if (type == OtpType.recovery && isEmail) {
+      try {
+        await _supabase.auth.resetPasswordForEmail(normalizedTarget);
+        SupabaseLogger.success('resendOtp', message: 'Resent recovery code to $normalizedTarget');
+        return;
+      } catch (e, st) {
+        SupabaseLogger.error('resendOtp', e, st);
+        rethrow;
+      }
+    }
+
     supa.OtpType supaOtpType;
     switch (type) {
       case OtpType.email:

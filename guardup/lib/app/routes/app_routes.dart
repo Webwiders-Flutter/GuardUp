@@ -21,6 +21,7 @@ final class AppRoutes {
   static const register = signup;
   static const forgotPassword = ForgotPasswordScreen.route;
   static const emailVerification = EmailVerificationScreen.route;
+  static const resetPassword = ResetPasswordScreen.route;
   static const adminApproval = AdminApprovalScreen.route;
   static const accountBlocked = AccountStatusScreen.blockedRoute;
   static const accountDeleted = AccountStatusScreen.deletedRoute;

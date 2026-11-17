@@ -52,6 +52,10 @@ abstract class UserRepository {
     String? phoneCode,
   });
 
+  /// Checks whether an account with the given [email] exists in the database.
+  /// Returns whether it exists and an optional user-facing error message if it does not.
+  Future<({bool exists, String? errorMessage})> checkEmailExists(String email);
+
   // ---------------------------------------------------------------------------
   // PROFILE IMAGE STORAGE
   // ---------------------------------------------------------------------------

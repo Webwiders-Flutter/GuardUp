@@ -76,6 +76,26 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } else if (state.hasError) {
       _isLoadingNotifier.value = false;
+      final errorMsg = state.errorMessage?.toLowerCase() ?? '';
+      final isUnconfirmed = state.errorMessage == 'EMAIL_NOT_CONFIRMED' ||
+          errorMsg.contains('confirm') ||
+          errorMsg.contains('verif') ||
+          errorMsg.contains('unconfirmed');
+
+      if (isUnconfirmed) {
+        final email = _emailController.text.trim().toLowerCase();
+        AppSnackbar.info(
+          'Please verify your email address. A 6-digit verification code has been sent.',
+        );
+        context.push(
+          '${AppRoutes.emailVerification}?email=${Uri.encodeComponent(email)}&type=EMAIL',
+          extra: <String, dynamic>{
+            'email': email,
+            'otpType': OtpType.email,
+          },
+        );
+        return;
+      }
       AppSnackbar.error(
         state.errorMessage ?? 'Invalid email or password. Please try again.',
       );

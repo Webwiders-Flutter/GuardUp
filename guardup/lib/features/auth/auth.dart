@@ -19,6 +19,7 @@ export 'presentation/screens/email_verification.screen.dart';
 export 'presentation/screens/forgot_password.screen.dart';
 export 'presentation/screens/login.screen.dart';
 export 'presentation/screens/profile_screen.dart';
+export 'presentation/screens/reset_password.screen.dart';
 export 'presentation/screens/select_role.screen.dart';
 export 'presentation/screens/signup.screen.dart';
 export 'presentation/screens/splash_screen.dart';

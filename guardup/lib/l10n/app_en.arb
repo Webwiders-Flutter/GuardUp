@@ -274,6 +274,30 @@
   "@submit": {
     "description": "Submit button label"
   },
+  "resetPasswordTitle": "Reset Password",
+  "@resetPasswordTitle": {
+    "description": "Reset password screen title"
+  },
+  "resetPasswordSubtitle": "Set a new password for your account to regain access",
+  "@resetPasswordSubtitle": {
+    "description": "Reset password screen subtitle"
+  },
+  "resetPassword": "Reset Password",
+  "@resetPassword": {
+    "description": "Reset password button label"
+  },
+  "passwordResetSuccessfully": "Password reset successfully. Please log in with your new password.",
+  "@passwordResetSuccessfully": {
+    "description": "Success message when password is reset"
+  },
+  "codeSentSuccess": "A verification code has been sent to your email",
+  "@codeSentSuccess": {
+    "description": "Verification code sent message"
+  },
+  "emailNotFound": "No account found with this email. Please check your email or sign up.",
+  "@emailNotFound": {
+    "description": "Error message when email does not exist during password reset"
+  },
   "fieldRequired": "{fieldName} is required",
   "@fieldRequired": {
     "description": "Generic required field error",

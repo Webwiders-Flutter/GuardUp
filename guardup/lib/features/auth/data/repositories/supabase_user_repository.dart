@@ -231,4 +231,39 @@ class SupabaseUserRepository extends UserRepository {
       return null;
     }
   }
+
+  @override
+  Future<({bool exists, String? errorMessage})> checkEmailExists(String email) async {
+    final cleanEmail = email.trim().toLowerCase();
+    SupabaseLogger.request('checkEmailExists', payload: {'email': cleanEmail});
+
+    try {
+      // Reuses the existing security definer check_registration_conflict RPC
+      final conflictRes = await _supabase.rpc(
+        'check_registration_conflict',
+        params: {
+          'p_email': cleanEmail,
+          'p_phone_number': null,
+          'p_phone_code': null,
+        },
+      );
+
+      if (conflictRes is Map) {
+        final hasConflict = conflictRes['has_conflict'] == true;
+        if (!hasConflict) {
+          return (
+            exists: false,
+            errorMessage:
+                'No account found with this email. Please check your email or sign up.',
+          );
+        }
+        return (exists: true, errorMessage: null);
+      }
+
+      return (exists: true, errorMessage: null);
+    } catch (e) {
+      SupabaseLogger.warning('checkEmailExists error: $e');
+      return (exists: true, errorMessage: null);
+    }
+  }
 }

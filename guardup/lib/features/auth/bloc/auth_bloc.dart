@@ -31,6 +31,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthSignUpRequested>(_onSignUpRequested);
     on<AuthVerifyOtpRequested>(_onVerifyOtpRequested);
     on<AuthResendOtpRequested>(_onResendOtpRequested);
+    on<AuthSendPasswordResetRequested>(_onSendPasswordResetRequested);
+    on<AuthResetPasswordRequested>(_onResetPasswordRequested);
     on<AuthUpdateUserStatusRequested>(_onUpdateUserStatusRequested);
     on<AuthUpdateProfileRequested>(_onUpdateProfileRequested);
     on<AuthSetSessionRoleRequested>(_onSetSessionRoleRequested);
@@ -315,11 +317,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       SupabaseLogger.error('AuthBloc._onLoginRequested', e, st);
       String cleanMessage = 'Login failed. Please check your credentials.';
       final errStr = e.toString().toLowerCase();
+
+      final isEmailUnconfirmed = errStr.contains('confirm') ||
+          errStr.contains('verif') ||
+          errStr.contains('unconfirmed');
+
       if (errStr.contains('invalid login credentials') ||
           errStr.contains('invalid_credentials')) {
         cleanMessage = 'Invalid email or password. Please try again.';
-      } else if (errStr.contains('email not confirmed')) {
-        cleanMessage = 'Please verify your email address before logging in.';
+      } else if (isEmailUnconfirmed) {
+        try {
+          await authRepo.resendOtp(target: event.email, type: OtpType.email);
+        } catch (_) {}
+        emit(
+          state.copyWith(
+            email: event.email,
+            operationState: const ApiState.failure('EMAIL_NOT_CONFIRMED'),
+          ),
+        );
+        return;
       } else if (errStr.contains('network') || errStr.contains('socket')) {
         cleanMessage = 'Network error. Please check your internet connection.';
       }
@@ -415,9 +431,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
         // Fetch user profile from DB to get real role and server-assigned data
         UserModel? profile;
+        UserStatus? dbStatus;
         if (_userRepo != null) {
           try {
-            profile = await _userRepo.getUserProfile(uid);
+            final raw = await _userRepo.getUserData(uid);
+            if (raw != null) {
+              profile = UserModel.fromJson(raw);
+              dbStatus = UserStatus.tryFromApiValue(raw['status'] as String?);
+            }
           } catch (_) {}
         }
 
@@ -428,10 +449,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             state.user ??
             UserModel(id: uid, name: 'User', role: role);
 
+        final finalStatus = event.type == OtpType.recovery
+            ? (dbStatus ?? state.status)
+            : (dbStatus ?? targetStatus);
+
         emit(
           state.copyWith(
             sessionStatus: AuthSessionStatus.authenticated,
-            status: targetStatus,
+            status: finalStatus,
             email: event.email,
             operationState: ApiState.success(currentUser),
           ),
@@ -491,6 +516,97 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       } catch (e) {
         emit(state.copyWith(operationState: ApiState.failure(e.toString())));
       }
+    }
+  }
+
+  Future<void> _onSendPasswordResetRequested(
+    AuthSendPasswordResetRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        operationState: ApiState.loading(previousData: state.user),
+      ),
+    );
+
+    final authRepo = _authRepo;
+    if (authRepo != null) {
+      try {
+        await authRepo.sendPasswordResetEmail(email: event.email);
+        emit(
+          state.copyWith(
+            email: event.email,
+            operationState: const ApiState.success(UserModel(id: '', name: '')),
+          ),
+        );
+      } catch (e, st) {
+        SupabaseLogger.error('AuthBloc._onSendPasswordResetRequested', e, st);
+        String cleanMessage =
+            'Failed to send password reset code. Please check your email and try again.';
+        final errStr = e.toString().toLowerCase();
+        if (errStr.contains('rate') || errStr.contains('too many requests')) {
+          cleanMessage =
+              'Too many requests. Please wait a few moments before trying again.';
+        } else if (errStr.contains('network') || errStr.contains('socket')) {
+          cleanMessage =
+              'Network error. Please check your internet connection.';
+        }
+        emit(state.copyWith(operationState: ApiState.failure(cleanMessage)));
+      }
+    } else {
+      emit(
+        state.copyWith(
+          email: event.email,
+          operationState:
+              const ApiState.success(UserModel(id: 'mock', name: 'Mock')),
+        ),
+      );
+    }
+  }
+
+  Future<void> _onResetPasswordRequested(
+    AuthResetPasswordRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        operationState: ApiState.loading(previousData: state.user),
+      ),
+    );
+
+    final authRepo = _authRepo;
+    if (authRepo != null) {
+      try {
+        await authRepo.changePassword(newPassword: event.newPassword);
+        try {
+          await authRepo.signOut();
+        } catch (_) {}
+
+        emit(
+          const AuthState.unauthenticated(
+            operationState: ApiState.success(UserModel(id: '', name: '')),
+          ),
+        );
+      } catch (e, st) {
+        SupabaseLogger.error('AuthBloc._onResetPasswordRequested', e, st);
+        String cleanMessage = 'Failed to reset password. Please try again.';
+        final errStr = e.toString().toLowerCase();
+        if (errStr.contains('same_password')) {
+          cleanMessage =
+              'New password should be different from your previous password.';
+        } else if (errStr.contains('network') || errStr.contains('socket')) {
+          cleanMessage =
+              'Network error. Please check your internet connection.';
+        }
+        emit(state.copyWith(operationState: ApiState.failure(cleanMessage)));
+      }
+    } else {
+      emit(
+        const AuthState.unauthenticated(
+          operationState:
+              ApiState.success(UserModel(id: 'mock', name: 'Mock')),
+        ),
+      );
     }
   }
 

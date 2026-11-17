@@ -493,10 +493,10 @@ packages:
     dependency: "direct main"
     description:
       name: firebase_core
-      sha256: "21551c1205441d9d155660ea0a409530b65a8d66ce88002bab3f38d94a8638fc"
+      sha256: "1a3a65a71c5a21311a37f3e94fd4aef4c77801a66008a1859b30eb1a8fc1744b"
       url: "https://pub.dev"
     source: hosted
-    version: "5.1.0"
+    version: "5.2.0"
   firebase_core_platform_interface:
     dependency: transitive
     description:
@@ -663,7 +663,7 @@ packages:
     source: hosted
     version: "2.8.4"
   flutter_libphonenumber_android:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: flutter_libphonenumber_android
       sha256: bc58bf37a0a47e7abb51a42d0183f08e52266429ba8b9fa72fae684503be26bd
@@ -1565,14 +1565,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.0"
-  sim_reader:
-    dependency: "direct main"
-    description:
-      name: sim_reader
-      sha256: dd55844d6e8b15a1d433af3a190816883844c936af96baf3ae1dec5bf0396bf5
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.4"
   skeletonizer:
     dependency: "direct main"
     description:
