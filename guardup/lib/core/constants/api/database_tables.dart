@@ -9,4 +9,5 @@ final class DatabaseTables {
   static const String faqs = "faqs";
   static const String legalContent = "legal_content";
   static const String contactUs = "contact_us";
+  static const String adminSettings = "admin_settings";
 }

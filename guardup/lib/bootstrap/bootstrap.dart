@@ -9,6 +9,7 @@ import '/app/theme/colors/app_colors.dart';
 import '/bootstrap/flavor.dart';
 import '/core/config/config.dart';
 import '/core/di/injection_container.dart';
+import '/core/services/admin_settings/admin_settings.service.dart';
 import '/shared/functionalities/location-and-phone-code/services/phone_code_picker.services.dart';
 
 Future<void> bootstrap({
@@ -37,7 +38,10 @@ Future<void> bootstrap({
       supabaseAnonKey != null &&
       supabaseAnonKey.isNotEmpty) {
     try {
-      await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+      await Supabase.initialize(
+        url: supabaseUrl,
+        publishableKey: supabaseAnonKey,
+      );
       SupabaseLogger.success(
         'init',
         message: 'Supabase client initialized with url=$supabaseUrl',
@@ -65,6 +69,9 @@ Future<void> bootstrap({
 
   // Initialize dependencies / service locator (sl)
   await initDependencies();
+
+  // Load platform admin settings once on app startup
+  await AdminSettingsService.instance.init();
 
   LocationPhoneCodeServices.init();
 

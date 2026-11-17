@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 
+import '/core/services/admin_settings/admin_settings.service.dart';
 import '/core/services/file_storage/file_storage.service.dart';
 import '/core/services/file_storage/supabase_file_storage.service.dart';
 import '/core/services/local_storage/local_storage.service.dart';
@@ -17,6 +18,9 @@ Future<void> initDependencies() async {
   // Storage & Core Services
   // ------------------------------------------------------------
   sl.registerLazySingleton<LocalStorage>(() => PrefsStorageService.instance);
+  sl.registerLazySingleton<AdminSettingsService>(
+    () => AdminSettingsService.instance,
+  );
   sl.registerLazySingleton<FileStorageService>(
     () => SupabaseFileStorageService(),
   );

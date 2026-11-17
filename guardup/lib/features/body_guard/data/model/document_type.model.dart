@@ -55,30 +55,46 @@ class DocumentTypeModel {
   GuardDocType? get guardDocType => GuardDocType.tryFromApiValue(code);
   CompanyDocType? get companyDocType => CompanyDocType.tryFromApiValue(code);
 
+  /// Unique key for state mappings and foreign keys (prefers unique UUID id, fallbacks to code).
+  String get docKey => id.isNotEmpty ? id : code;
+
   IconData get icon {
-    switch (code.toUpperCase()) {
-      case 'BUSINESS_REGISTRATION':
-        return Icons.description_outlined;
-      case 'GOVERNMENT_ID':
-        return Icons.badge_outlined;
-      case 'COMPANY_LOGO':
-        return Icons.image_outlined;
-      case 'ADDITIONAL_DOCUMENTS':
-        return Icons.folder_open_outlined;
-      case 'ID_PROOF':
-        return Icons.badge_outlined;
-      case 'POLICE_VERIFICATION':
-        return Icons.verified_user_outlined;
-      case 'SECURITY_LICENSE':
-        return Icons.lock_outline_rounded;
-      case 'CERTIFICATIONS':
-        return Icons.military_tech_outlined;
-      default:
-        return Icons.description_outlined;
+    final key = (code.isNotEmpty ? code : name)
+        .toUpperCase()
+        .replaceAll(' ', '_');
+    if (key.contains('ID_PROOF') ||
+        key.contains('GOVERNMENT_ID') ||
+        key.contains('ID')) {
+      return Icons.badge_outlined;
     }
+    if (key.contains('POLICE')) {
+      return Icons.verified_user_outlined;
+    }
+    if (key.contains('LICENSE') || key.contains('SECURITY')) {
+      return Icons.lock_outline_rounded;
+    }
+    if (key.contains('CERTIFICATION')) {
+      return Icons.military_tech_outlined;
+    }
+    if (key.contains('BUSINESS') || key.contains('REGISTRATION')) {
+      return Icons.description_outlined;
+    }
+    if (key.contains('LOGO')) {
+      return Icons.image_outlined;
+    }
+    if (key.contains('ADDITIONAL')) {
+      return Icons.folder_open_outlined;
+    }
+    return Icons.description_outlined;
   }
 
-  bool get allowCrop => code.toUpperCase() == 'COMPANY_LOGO';
-  bool get allowFile => code.toUpperCase() != 'COMPANY_LOGO';
+  bool get allowCrop {
+    final key = (code.isNotEmpty ? code : name)
+        .toUpperCase()
+        .replaceAll(' ', '_');
+    return key.contains('LOGO');
+  }
+
+  bool get allowFile => !allowCrop;
 }
 
