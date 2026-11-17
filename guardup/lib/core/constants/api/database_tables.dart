@@ -2,6 +2,7 @@ final class DatabaseTables {
   const DatabaseTables._();
   static const String users = "users";
   static const String services = "services";
+  static const String userServices = "user_services";
   static const String documentTypes = "document_types";
   static const String userDocuments = "user_documents";
   static const String documents = "documents";

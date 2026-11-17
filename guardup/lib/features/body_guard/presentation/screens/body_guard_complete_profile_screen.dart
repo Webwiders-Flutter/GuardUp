@@ -32,7 +32,6 @@ import '/shared/widgets/misc/app_input_label.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/selection/selection.dart';
-import '../../data/enum/guard_service.enum.dart';
 import '../../data/model/service_item.model.dart';
 
 /// Screen for bodyguard profile setup / entering professional details.
@@ -157,16 +156,19 @@ class _BodyGuardCompleteProfileScreenState
           _bioController.text = dbBio;
         }
 
-        final dbServices = data['services'] as List<dynamic>?;
-        if (dbServices != null && dbServices.isNotEmpty) {
-          final activeCodes =
-              _availableServicesNotifier.value.map((s) => s.code).toSet();
-          final validServices = dbServices
-              .map((s) => s.toString())
-              .where((s) => activeCodes.contains(s))
+        try {
+          final userServicesRows = await Supabase.instance.client
+              .from(DatabaseTables.userServices)
+              .select('service_id')
+              .eq('user_id', currentUserId);
+          final activeIds =
+              _availableServicesNotifier.value.map((s) => s.id).toSet();
+          final validServices = (userServicesRows as List<dynamic>)
+              .map((r) => r['service_id']?.toString() ?? '')
+              .where((id) => id.isNotEmpty && activeIds.contains(id))
               .toList();
           _selectedServicesNotifier.value = validServices;
-        }
+        } catch (_) {}
 
         final dbAvatar = data['profile_image_url'] as String?;
         if (dbAvatar != null &&
@@ -260,7 +262,6 @@ class _BodyGuardCompleteProfileScreenState
           'name': _fullNameController.text.trim(),
           'hourly_rate':
               double.tryParse(_hourlyRateController.text.trim()) ?? 0.0,
-          'services': _selectedServicesNotifier.value,
           'bio': _bioController.text.trim(),
         };
         if (avatarUrl != null) {
@@ -271,6 +272,25 @@ class _BodyGuardCompleteProfileScreenState
           userId: currentUserId,
           data: updatePayload,
         );
+
+        // Sync services in user_services junction table by service_id (UUID)
+        await Supabase.instance.client
+            .from(DatabaseTables.userServices)
+            .delete()
+            .eq('user_id', currentUserId);
+
+        if (_selectedServicesNotifier.value.isNotEmpty) {
+          final insertPayload = _selectedServicesNotifier.value
+              .map((serviceId) => {
+                    'user_id': currentUserId,
+                    'service_id': serviceId,
+                  })
+              .toList();
+
+          await Supabase.instance.client
+              .from(DatabaseTables.userServices)
+              .insert(insertPayload);
+        }
       }
 
       if (mounted) {
@@ -567,7 +587,7 @@ class _BodyGuardCompleteProfileScreenState
                               builder: (context, selectedServices, _) {
                                 final remainingServices = activeServices
                                     .where(
-                                      (s) => !selectedServices.contains(s.code),
+                                      (s) => !selectedServices.contains(s.id),
                                     )
                                     .toList();
 
@@ -598,29 +618,29 @@ class _BodyGuardCompleteProfileScreenState
                                       Wrap(
                                         spacing: AppSpacing.sm,
                                         runSpacing: AppSpacing.sm,
-                                        children: selectedServices.map((code) {
+                                        children: selectedServices.map((serviceId) {
                                           final serviceModel =
                                               activeServices.firstWhere(
-                                            (s) => s.code == code,
+                                            (s) => s.id == serviceId,
                                             orElse: () => ServiceItemModel(
-                                              id: code,
-                                              code: code,
-                                              name: GuardService.tryFromApiValue(
-                                                        code,
-                                                      )?.label ??
-                                                  code,
+                                              id: serviceId,
+                                              code: '',
+                                              name: 'Service',
                                             ),
                                           );
                                           return AppRemovableChip(
                                             text: serviceModel.name,
                                             onRemove: () =>
-                                                _handleRemoveService(code),
+                                                _handleRemoveService(serviceId),
                                           );
                                         }).toList(),
                                       ),
                                     ],
                                     AppSpacing.lg.h,
                                     AppDropdown<String>(
+                                      key: ValueKey(
+                                        'services_dropdown_${selectedServices.join('_')}',
+                                      ),
                                       controller: _serviceDropdownController,
                                       hintText: context.l10n.selectService,
                                       closeOnSelect: true,
@@ -653,17 +673,17 @@ class _BodyGuardCompleteProfileScreenState
                                       items: remainingServices
                                           .map(
                                             (e) => DropdownItem<String>(
-                                              id: e.code,
+                                              id: e.id,
                                               data: e.name,
                                             ),
                                           )
                                           .toList(),
-                                      onSelected: (code) {
+                                      onSelected: (serviceId) {
                                         if (!_selectedServicesNotifier.value
-                                            .contains(code)) {
+                                            .contains(serviceId)) {
                                           _selectedServicesNotifier.value = [
                                             ..._selectedServicesNotifier.value,
-                                            code,
+                                            serviceId,
                                           ];
                                         }
                                         _serviceDropdownController.clear();
