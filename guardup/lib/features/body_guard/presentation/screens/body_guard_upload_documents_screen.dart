@@ -142,7 +142,7 @@ class _BodyGuardUploadDocumentsScreenState
     if (picked != null && mounted) {
       _documentsNotifier.value = {
         ..._documentsNotifier.value,
-        doc.code: picked,
+        doc.id: picked,
       };
     }
   }
@@ -156,8 +156,8 @@ class _BodyGuardUploadDocumentsScreenState
 
     // Validate required documents from dynamic docTypes:
     for (final doc in docTypes.where((d) => d.isRequired)) {
-      final hasLocal = localDocs.containsKey(doc.code);
-      final hasRemote = remoteDocs.containsKey(doc.code);
+      final hasLocal = localDocs.containsKey(doc.id);
+      final hasRemote = remoteDocs.containsKey(doc.id);
       if (!hasLocal && !hasRemote) {
         AppSnackbar.error('Please upload your ${doc.name}');
         return;
@@ -339,11 +339,11 @@ class _BodyGuardUploadDocumentsScreenState
                                                   isOptional: !doc.isRequired,
                                                   isLoading: isLoading,
                                                   initialUrl:
-                                                      remoteDocs[doc.code],
+                                                      remoteDocs[doc.id],
                                                   fileName:
-                                                      remoteNames[doc.code],
+                                                      remoteNames[doc.id],
                                                   selectedFilePath:
-                                                      docs[doc.code]?.path,
+                                                      docs[doc.id]?.path,
                                                   onPick: () =>
                                                       _pickDocument(doc),
                                                 ),

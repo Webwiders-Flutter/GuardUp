@@ -118,7 +118,7 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
     if (picked != null && mounted) {
       _documentsNotifier.value = {
         ..._documentsNotifier.value,
-        doc.code: picked,
+        doc.id: picked,
       };
     }
   }
@@ -132,8 +132,8 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
 
     // Validate required documents dynamically from database definitions
     for (final doc in docTypes.where((d) => d.isRequired)) {
-      final hasLocal = localDocs.containsKey(doc.code);
-      final hasRemote = remoteDocs.containsKey(doc.code);
+      final hasLocal = localDocs.containsKey(doc.id);
+      final hasRemote = remoteDocs.containsKey(doc.id);
       if (!hasLocal && !hasRemote) {
         AppSnackbar.error('Please upload your ${doc.name}');
         return;
@@ -167,7 +167,7 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
                 ),
               );
 
-              if (docCode == 'COMPANY_LOGO') {
+              if (docTypes.any((d) => d.id == docCode && d.isLogo)) {
                 uploadedLogoUrl = fileUrl;
               }
 
@@ -288,11 +288,11 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
                                                   isOptional: !doc.isRequired,
                                                   isLoading: isLoading,
                                                   initialUrl:
-                                                      remoteDocs[doc.code],
+                                                      remoteDocs[doc.id],
                                                   fileName:
-                                                      remoteNames[doc.code],
+                                                      remoteNames[doc.id],
                                                   selectedFilePath:
-                                                      docs[doc.code]?.path,
+                                                      docs[doc.id]?.path,
                                                   onPick: () =>
                                                       _pickDocument(doc),
                                                 ),

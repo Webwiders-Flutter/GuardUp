@@ -107,32 +107,20 @@ class ServicesController extends AsyncNotifier<PaginationState<ServiceModel>> {
   }
 
   Future<void> createRecord(ServiceRequest data) async {
+    final Map<String, dynamic> payload = data.toJson();
     final current = state.value;
     state = const AsyncLoading();
 
+    final sortOrder =
+        (current?.items.firstOrNull?.displayOrder ?? 0) -
+        AppConstants.sortOrderGap;
+    payload[JsonKeys.displayOrder] = sortOrder;
+
     final result = await AsyncValue.guard(
       () => asyncHandler(() async {
-        final payload = data.toJson();
-
-        // Calculate next displayOrder in steps of 1000s if not set
-        if (!payload.containsKey(JsonKeys.displayOrder) ||
-            payload[JsonKeys.displayOrder] == null ||
-            (payload[JsonKeys.displayOrder] as int) <= 0) {
-          final maxOrder =
-              current?.items.fold<int>(
-                0,
-                (max, item) =>
-                    item.displayOrder > max ? item.displayOrder : max,
-              ) ??
-              0;
-          payload[JsonKeys.displayOrder] =
-              (maxOrder ~/ 1000 + 1) * AppConstants.sortOrderGap;
-        }
-
         final newService = await _repository.addOrUpdate(payload);
         final currentItems = current?.items ?? [];
-        final updatedItems = [...currentItems, newService]
-          ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+        final updatedItems = [newService, ...currentItems];
 
         return (current ?? const PaginationState<ServiceModel>()).copyWith(
           items: updatedItems,

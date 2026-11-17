@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '/shared/widgets/misc/app_logo.dart';
+
 import 'package:quick_container/quick_container.dart';
 
 import '/app/routes/app_routes.dart';
@@ -75,10 +78,7 @@ class CustomDashboardSidebar extends StatelessWidget {
       decoration: BoxDecoration(
         color: effectiveSideBarColor,
         border: Border(
-          right: BorderSide(
-            color: context.colors.borderDark,
-            width: 1.0,
-          ),
+          right: BorderSide(color: context.colors.borderDark, width: 1.0),
         ),
         boxShadow: [
           BoxShadow(
@@ -283,10 +283,7 @@ class _SidebarBrand extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           border: Border(
-            bottom: BorderSide(
-              color: context.colors.borderDark,
-              width: 1.0,
-            ),
+            bottom: BorderSide(color: context.colors.borderDark, width: 1.0),
           ),
         ),
         child: Tooltip(
@@ -323,22 +320,7 @@ class _SidebarBrand extends StatelessWidget {
                       ],
                     ),
                   )
-                : QuickContainer(
-                    h: (AppSpacing.md * 3) + 4,
-                    w: (AppSpacing.md * 3) + 4,
-                    radius: AppRadius.md,
-                    color: context.colors.primary,
-                    border: Border.all(
-                      color: context.colors.white.withValues(alpha: 0.12),
-                      width: 1.0,
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      Icons.security_rounded,
-                      color: context.colors.onPrimary,
-                      size: AppSpacing.xl,
-                    ),
-                  ),
+                : const AppLogo(size: (AppSpacing.md * 3) + 4),
           ),
         ),
       );
@@ -349,10 +331,7 @@ class _SidebarBrand extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(
-            color: context.colors.borderDark,
-            width: 1.0,
-          ),
+          bottom: BorderSide(color: context.colors.borderDark, width: 1.0),
         ),
       ),
       child: Row(
@@ -361,22 +340,7 @@ class _SidebarBrand extends StatelessWidget {
           if (logo != null)
             logo!
           else
-            QuickContainer(
-              h: (AppSpacing.md * 3) + 4,
-              w: (AppSpacing.md * 3) + 4,
-              radius: AppRadius.md,
-              color: context.colors.primary,
-              border: Border.all(
-                color: context.colors.white.withValues(alpha: 0.12),
-                width: 1.0,
-              ),
-              alignment: Alignment.center,
-              child: Icon(
-                Icons.security_rounded,
-                color: context.colors.onPrimary,
-                size: AppSpacing.xl,
-              ),
-            ),
+            const AppLogo(size: (AppSpacing.md * 3) + 4),
 
           // App Name + Version Tag
           Expanded(

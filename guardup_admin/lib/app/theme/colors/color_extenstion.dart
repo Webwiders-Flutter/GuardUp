@@ -88,10 +88,18 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
       infoLight: Color.lerp(infoLight, other.infoLight, t)!,
       error: Color.lerp(error, other.error, t)!,
       errorLight: Color.lerp(errorLight, other.errorLight, t)!,
-      onSurfaceSecondary: Color.lerp(onSurfaceSecondary, other.onSurfaceSecondary, t)!,
+      onSurfaceSecondary: Color.lerp(
+        onSurfaceSecondary,
+        other.onSurfaceSecondary,
+        t,
+      )!,
       borderLight: Color.lerp(borderLight, other.borderLight, t)!,
       borderDark: Color.lerp(borderDark, other.borderDark, t)!,
-      borderExtraLight: Color.lerp(borderExtraLight, other.borderExtraLight, t)!,
+      borderExtraLight: Color.lerp(
+        borderExtraLight,
+        other.borderExtraLight,
+        t,
+      )!,
       backgroundLight: Color.lerp(backgroundLight, other.backgroundLight, t)!,
       backgroundDark: Color.lerp(backgroundDark, other.backgroundDark, t)!,
     );

@@ -11,6 +11,7 @@ import '/features/auth/di/auth.providers.dart';
 import '/features/auth/presentation/screens/login.screen.dart';
 import '/features/auth/presentation/screens/profile.screen.dart';
 import '/features/dashboard/presentation/screens/dashboard.screen.dart';
+import '/features/document-type/presentation/screens/document_type_management.screen.dart';
 import '/features/help-support/presentation/screens/help_support_management.screen.dart';
 import '/features/legal/data/enums/content_type.enum.dart';
 import '/features/legal/data/models/faq.model.dart';
@@ -257,6 +258,17 @@ final class AppRouter {
                   path: AppRoutes.services,
                   builder: (context, state) =>
                       const ServicesManagementScreen(),
+                ),
+              ],
+            ),
+
+            // 3a. Document Types Management
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: AppRoutes.documentTypes,
+                  builder: (context, state) =>
+                      const DocumentTypeManagementScreen(),
                 ),
               ],
             ),

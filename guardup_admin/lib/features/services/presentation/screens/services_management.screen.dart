@@ -53,10 +53,7 @@ class _ServicesManagementScreenState
   }
 
   Future<void> _openServiceForm({ServiceModel? item}) async {
-    await ServiceFormScreen.showAsSidebar(
-      context: context,
-      service: item,
-    );
+    await ServiceFormScreen.showAsSidebar(context: context, service: item);
   }
 
   Future<void> _onDeleteServices() async {
@@ -65,8 +62,7 @@ class _ServicesManagementScreenState
 
     final result = await AppPopup.showDeleteConfirmation(
       context,
-      deleteItemName:
-          '${items.length} Service${items.length > 1 ? 's' : ''}',
+      deleteItemName: '${items.length} Service${items.length > 1 ? 's' : ''}',
     );
 
     if (result?.action == PopupAction.confirm && mounted) {
@@ -112,9 +108,7 @@ class _ServicesManagementScreenState
         asyncState.value ?? const PaginationState<ServiceModel>();
 
     ref.listen(provider, (previous, next) {
-      next.showErrorSnackbar(
-        fallbackErrorMessage: 'Failed to load services',
-      );
+      next.showErrorSnackbar(fallbackErrorMessage: 'Failed to load services');
     });
 
     final columns = <TableColumn<ServiceModel>>[
@@ -248,8 +242,7 @@ class _ServicesManagementScreenState
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: AdminTableBuilder<ServiceModel>(
             title: 'Protection Services',
-            subtitle:
-                'Manage executive security service offerings and catalog status',
+            subtitle: 'Manage executive security service offerings and catalog status',
             columns: columns,
             tableData: paginationState.items,
             searchController: _searchController,
@@ -320,7 +313,7 @@ class _ServicesManagementScreenState
             },
             actions: [
               AppButton(
-                text: 'Add Service',
+                text: 'Add',
                 leading: Icon(
                   Icons.add_rounded,
                   size: AppSpacing.lg,

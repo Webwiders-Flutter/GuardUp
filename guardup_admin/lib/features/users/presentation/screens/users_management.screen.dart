@@ -1,7 +1,9 @@
 import 'package:guardup_admin/features/users/presentation/controllers/users.controller.dart';
 import 'package:guardup_admin/shared/widgets/table/table_models.dart';
 import 'package:flutter_riverpod/misc.dart';
+
 import '/features/users/presentation/screens/user_details.screen.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:quick_container/quick_container.dart';
@@ -63,7 +65,7 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
   }
 
   Future<void> _onVerifyUser(UserModel item) async {
-    // [COMING SOON GUARD] - Remove this block when ready to enable operation
+    // [COMING SOON GUARD]
     AppSnackbar.show(
       message: 'Approve user is coming soon',
       type: SnackbarType.info,
@@ -86,7 +88,7 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
   }
 
   Future<void> _onRejectUser(UserModel item) async {
-    // [COMING SOON GUARD] - Remove this block when ready to enable operation
+    // [COMING SOON GUARD]
     AppSnackbar.show(
       message: 'Reject user is coming soon',
       type: SnackbarType.info,
@@ -113,7 +115,7 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
   }
 
   Future<void> _onToggleBlock(UserModel item, bool block) async {
-    // [COMING SOON GUARD] - Remove this block when ready to enable operation
+    // [COMING SOON GUARD]
     AppSnackbar.show(
       message: '${block ? 'Block' : 'Unblock'} user is coming soon',
       type: SnackbarType.info,
@@ -144,7 +146,7 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
   }
 
   Future<void> _onDeleteUser(UserModel item) async {
-    // [COMING SOON GUARD] - Remove this block when ready to enable operation
+    // [COMING SOON GUARD]
     AppSnackbar.show(
       message: 'Delete user is coming soon',
       type: SnackbarType.info,
@@ -277,19 +279,6 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
             phone.trim().isNotEmpty ? phone : '—',
             style: context.textTheme.bodyMedium?.decreaseSize(1).semiBold(),
             maxLines: 1,
-          );
-        },
-      ),
-      TableColumn<UserModel>(
-        title: 'Role',
-        width: AppSpacing.xxxl * 4 + AppSpacing.lg,
-        alignment: Alignment.center,
-        cellBuilder: (item, index) {
-          return AppChip(
-            color: item.role.color(context),
-            title: item.role.label(context.l10n),
-            icon: item.role.icon,
-            size: AppChipSize.small,
           );
         },
       ),

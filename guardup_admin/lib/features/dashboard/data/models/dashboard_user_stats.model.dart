@@ -106,7 +106,6 @@ class DashboardUserStats {
     final items = [
       UserStatus.active,
       UserStatus.approvalPending,
-      UserStatus.incomplete,
       UserStatus.blocked,
     ].map((status) {
       return StatMetricItem(

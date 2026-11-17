@@ -8,8 +8,8 @@ enum VerificationStatus {
   @JsonValue('PENDING')
   pending('PENDING'),
 
-  @JsonValue('VERIFIED')
-  verified('VERIFIED'),
+  @JsonValue('APPROVED')
+  verified('APPROVED'),
 
   @JsonValue('REJECTED')
   rejected('REJECTED');

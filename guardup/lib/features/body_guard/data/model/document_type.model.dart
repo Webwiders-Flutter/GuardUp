@@ -29,7 +29,8 @@ class DocumentTypeModel {
   factory DocumentTypeModel.fromJson(Map<String, dynamic> json) {
     return DocumentTypeModel(
       id: (json['id'] ?? '') as String,
-      code: (json['code'] ?? '') as String,
+      code: (json['code'] as String?) ??
+          _legacyCodeFromName(json['name'] as String?),
       name: (json['name'] ?? '') as String,
       description: json['description'] as String?,
       targetRole: UserRole.fromApiValue(json['target_role'] as String?),
@@ -78,7 +79,21 @@ class DocumentTypeModel {
     }
   }
 
-  bool get allowCrop => code.toUpperCase() == 'COMPANY_LOGO';
-  bool get allowFile => code.toUpperCase() != 'COMPANY_LOGO';
+  bool get isLogo => code.toUpperCase() == 'COMPANY_LOGO';
+  bool get allowCrop => isLogo;
+  bool get allowFile => !isLogo;
+}
+
+/// The `code` column was removed from `document_types`; derive the legacy code
+/// from the seeded name so icons / logo handling keep working.
+String _legacyCodeFromName(String? name) {
+  final n = (name ?? '').trim().toLowerCase();
+  if (n.isEmpty) return '';
+  if (n.contains('logo')) return 'COMPANY_LOGO';
+  if (n.startsWith('government id')) return 'GOVERNMENT_ID';
+  return n
+      .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
+      .replaceAll(RegExp(r'^_+|_+$'), '')
+      .toUpperCase();
 }
 

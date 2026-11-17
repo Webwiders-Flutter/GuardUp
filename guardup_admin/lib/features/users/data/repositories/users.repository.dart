@@ -7,7 +7,6 @@ import '/core/repositories/base.repository.dart';
 import '/features/users/data/enums/user_role.enum.dart';
 import '/features/users/data/enums/user_status.enum.dart';
 import '/features/users/data/enums/verification_status.enum.dart';
-import '/features/users/data/models/user_document.model.dart';
 import '/features/users/data/models/user_model.dart';
 
 final class UsersRepository extends BaseSupabaseRepository<UserModel> {
@@ -47,10 +46,9 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
         if (status != null) {
           query = query.eq(JsonKeys.registrationStatus, status.apiValue);
         } else {
-            query = query
+          query = query
               .neq(JsonKeys.registrationStatus, UserStatus.incomplete.apiValue)
               .neq(JsonKeys.registrationStatus, UserStatus.deleted.apiValue);
-        
         }
         if (role != null) {
           query = query.eq(JsonKeys.role, role.apiValue);
@@ -63,11 +61,36 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
     );
   }
 
+  static const String _detailsSelect = '''
+    *,
+    user_services(
+      id,
+      service:services(id, name, description, icon_name, is_active, display_order)
+    ),
+    documents:user_documents(
+      id,
+      user_id,
+      document_type_id,
+      file_url,
+      file_name,
+      status,
+      rejection_reason,
+      valid_till,
+      uploaded_at,
+      updated_at,
+      document_type:document_types(
+        id, name, description, target_role, is_required, is_active, display_order
+      )
+    )
+  ''';
+
+  /// Embedded relations resolve to `[]` when the user has no services or
+  /// documents, so those users load fine.
   @override
   Future<UserModel> getDetails(String id) async {
     final response = await client
         .from(tableName)
-        .select('*')
+        .select(_detailsSelect)
         .eq(JsonKeys.id, id)
         .maybeSingle();
 
@@ -77,46 +100,7 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
       );
     }
 
-    // Load related user documents from documents table
-    List<UserDocumentModel> userDocs = [];
-    try {
-      final docsRes = await client
-          .from(DatabaseTables.userDocuments)
-          .select()
-          .eq('user_id', id);
-
-      for (final d in docsRes) {
-        final map = d;
-        final docStatusStr = (map['status'] as String? ?? '').toUpperCase();
-        final vStatus = docStatusStr == 'APPROVED' || docStatusStr == 'VERIFIED'
-            ? VerificationStatus.verified
-            : (docStatusStr == 'REJECTED'
-                ? VerificationStatus.rejected
-                : VerificationStatus.pending);
-
-        userDocs.add(
-          UserDocumentModel(
-            id: (map['id'] ?? '') as String,
-            userId: (map['user_id'] ?? id) as String,
-            documentTypeId: map['document_type_id'] as String?,
-            documentTypeName: map['document_type_name'] as String?,
-            fileUrl: (map['file_url'] ?? '') as String,
-            fileName: map['file_name'] as String?,
-            verificationStatus: vStatus,
-            rejectionReason: map['rejection_reason'] as String?,
-            createdAt: map['created_at'] != null
-                ? DateTime.tryParse(map['created_at'].toString())
-                : null,
-            updatedAt: map['updated_at'] != null
-                ? DateTime.tryParse(map['updated_at'].toString())
-                : null,
-          ),
-        );
-      }
-    } catch (_) {}
-
-    final user = UserModel.fromJson(response);
-    return user.copyWith(documents: userDocs);
+    return UserModel.fromJson(Map<String, dynamic>.from(response));
   }
 
   /// Approves user application and marks pending documents as verified.
@@ -131,8 +115,8 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
     try {
       await client
           .from(DatabaseTables.userDocuments)
-          .update({'status': 'APPROVED'})
-          .eq('user_id', id);
+          .update({JsonKeys.status: VerificationStatus.verified.apiValue})
+          .eq(JsonKeys.userId, id);
     } catch (_) {}
 
     return getDetails(id);
@@ -148,8 +132,8 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
     try {
       await client
           .from(DatabaseTables.userDocuments)
-          .update({'status': 'REJECTED'})
-          .eq('user_id', id);
+          .update({JsonKeys.status: VerificationStatus.rejected.apiValue})
+          .eq(JsonKeys.userId, id);
     } catch (_) {}
 
     return getDetails(id);

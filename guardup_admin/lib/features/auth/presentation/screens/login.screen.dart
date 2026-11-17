@@ -5,6 +5,9 @@ import '/core/extensions/riverpod.extension.dart';
 import '/features/auth/di/auth.providers.dart';
 
 import 'package:flutter/material.dart';
+
+import '/shared/widgets/misc/app_logo.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
@@ -126,21 +129,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget _buildBrandHeader() {
     return Column(
       children: [
-        QuickContainer(
-          w: (AppSpacing.xxl * 2) + AppSpacing.xs,
-          h: (AppSpacing.xxl * 2) + AppSpacing.xs,
-          radius: AppRadius.md + 2,
-          color: context.colors.primary,
-          border: Border.all(
-            color: context.colors.borderDark.withValues(alpha: 0.3),
-          ),
-          alignment: Alignment.center,
-          child: Icon(
-            Icons.security_rounded,
-            color: context.colors.onPrimary,
-            size: AppSpacing.xxl + 2,
-          ),
-        ),
+        const AppLogo(size: AppSpacing.xxxl * 2.5),
         AppSpacing.md.h,
         Text(
           'GuardUp Admin',
@@ -201,12 +190,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             // Email
             const AppFieldLabel(text: 'Email Address', isRequired: true),
             AppSpacing.xs.h,
-            AppTextField.email(
+            AppTextField(
               controller: _emailController,
               size: AppInputSize.medium,
               textInputAction: TextInputAction.next,
               decoration: InputDecoration(
-                hintText: 'admin@gmail.com',
+                hintText: 'Enter email',
                 prefixIcon: Icon(
                   Icons.mail_outline_rounded,
                   size: AppSpacing.lg + 2,

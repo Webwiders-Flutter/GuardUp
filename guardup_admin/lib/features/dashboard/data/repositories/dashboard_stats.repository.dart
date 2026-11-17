@@ -41,11 +41,10 @@ final class DashboardStatsRepository implements IDashboardStatsRepository {
       // Negate admin role from platform user stats
       query = query.neq(JsonKeys.role, UserRoleType.admin.apiValue);
 
-      // Negate deleted users
-      query = query.neq(
-        JsonKeys.registrationStatus,
-        UserStatus.deleted.apiValue,
-      );
+      // Negate deleted users and incomplete profiles
+      query = query
+          .neq(JsonKeys.registrationStatus, UserStatus.deleted.apiValue)
+          .neq(JsonKeys.registrationStatus, UserStatus.incomplete.apiValue);
 
       if (role != null && role != UserRoleType.admin) {
         query = query.eq(JsonKeys.role, role.apiValue);

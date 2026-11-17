@@ -12,18 +12,12 @@ class ThemeController extends AsyncNotifier<ThemeMode> {
   @override
   Future<ThemeMode> build() async {
     final theme = await _storage.read(AppLocalStorageKeys.themePreference);
-    if (theme != null) {
-      switch (theme) {
-        case 'dark':
-          return ThemeMode.dark;
-        case 'light':
-          return ThemeMode.light;
-        case 'system':
-        default:
-          return ThemeMode.dark;
-      }
-    }
-    return ThemeMode.dark;
+    return switch (theme) {
+      'dark' => ThemeMode.dark,
+      'light' => ThemeMode.light,
+      // Follow the OS setting when the user hasn't chosen a theme yet.
+      _ => ThemeMode.system,
+    };
   }
 
   Future<void> changeTheme(ThemeMode theme) async {
