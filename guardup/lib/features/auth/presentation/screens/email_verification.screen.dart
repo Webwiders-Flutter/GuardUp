@@ -1,12 +1,16 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:guardup/features/payments/payments.dart';
+import 'package:material_ui/material_ui.dart' as mui;
+import 'package:pinput/pinput.dart';
 
+import '../../data/enum/otp_type.enum.dart';
 import '../../data/enum/user_role.enum.dart';
 import '/app/routes/app_routes.dart';
 import '/core/constants/app_constants.dart';
+import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
@@ -15,14 +19,20 @@ import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/features/auth/bloc/auth_bloc.dart';
 import '/features/auth/bloc/auth_event.dart';
+import '/features/auth/bloc/auth_state.dart';
+import '/features/payments/presentation/screens/membership_plans_screen.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/buttons/app_button.dart';
+import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/sections/app_image.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
   static const route = '/emailVerification';
 
-  const EmailVerificationScreen({super.key});
+  final String? email;
+  final UserRole? role;
+
+  const EmailVerificationScreen({super.key, this.email, this.role});
 
   @override
   State<EmailVerificationScreen> createState() =>
@@ -30,10 +40,16 @@ class EmailVerificationScreen extends StatefulWidget {
 }
 
 class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
+  static const int _otpLength = 6;
+
+  final _pinController = TextEditingController();
+  final _focusNode = FocusNode();
   Timer? _countdownTimer;
   final _secondsRemainingNotifier = ValueNotifier<int>(
     AppConstants.resendSeconds,
   );
+  final _isLoadingNotifier = ValueNotifier<bool>(false);
+  bool _isVerifying = false;
 
   @override
   void initState() {
@@ -63,17 +79,60 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   void dispose() {
     _countdownTimer?.cancel();
     _secondsRemainingNotifier.dispose();
+    _pinController.dispose();
+    _focusNode.dispose();
+    _isLoadingNotifier.dispose();
     super.dispose();
   }
 
-  void _handleContinue() {
-    final role = sl<AuthBloc>().state.sessionRole;
-    switch (role) {
+  String get _targetEmail {
+    if (widget.email != null && widget.email!.isNotEmpty) {
+      return widget.email!;
+    }
+    final blocEmail = sl<AuthBloc>().state.email;
+    if (blocEmail != null && blocEmail.isNotEmpty) {
+      return blocEmail;
+    }
+    return '';
+  }
+
+  UserRole get _effectiveRole {
+    return widget.role ?? sl<AuthBloc>().state.sessionRole;
+  }
+
+  void _handleVerifyOtp(String pin) {
+    // Ignore duplicate submits (onCompleted + Continue button)
+    if (_isLoadingNotifier.value) return;
+
+    if (_targetEmail.isEmpty) {
+      AppSnackbar.error('Missing target email. Please try signing in again.');
+      return;
+    }
+
+    if (pin.length < _otpLength) {
+      AppSnackbar.error('Please enter the full verification code');
+      return;
+    }
+
+    _isVerifying = true;
+    _isLoadingNotifier.value = true;
+
+    sl<AuthBloc>().add(
+      AuthVerifyOtpRequested(
+        email: _targetEmail,
+        token: pin,
+        type: OtpType.email,
+      ),
+    );
+  }
+
+  void _navigateByRole() {
+    switch (_effectiveRole) {
       case UserRole.customer:
         context.go(
           AppRoutes.membershipPlans,
           extra: (
-            mode: MembershipPlanMode.booking,
+            mode: MembershipPlanMode.onboarding,
             bookingAmount: null,
             operativeName: null,
             activePlanId: null,
@@ -88,7 +147,15 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
   void _handleResendEmail() {
     if (_secondsRemainingNotifier.value > 0) return;
+    if (_targetEmail.isEmpty) {
+      AppSnackbar.error('No email address provided to resend code');
+      return;
+    }
     _startCountdown();
+    sl<AuthBloc>().add(
+      AuthResendOtpRequested(target: _targetEmail, type: OtpType.email),
+    );
+    AppSnackbar.info('A new verification code has been sent to $_targetEmail');
   }
 
   void _handleLogout() {
@@ -96,22 +163,88 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     context.go(AppRoutes.login);
   }
 
+  void _onAuthStateChanged(BuildContext context, AuthState state) {
+    if (state.isLoading) {
+      _isLoadingNotifier.value = true;
+      return;
+    }
+
+    _isLoadingNotifier.value = false;
+
+    // Only process feedback when an active verification attempt was made
+    if (!_isVerifying) return;
+
+    if (state.isAuthenticated) {
+      _isVerifying = false;
+      AppSnackbar.success('Email verified successfully');
+      _navigateByRole();
+    } else if (state.hasError) {
+      _isVerifying = false;
+      _pinController.clear();
+      _focusNode.requestFocus();
+      AppSnackbar.error(
+        state.errorMessage ??
+            'Invalid verification code. Please check and try again.',
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              padding: context.horizontalEdgeInsets,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
+    final defaultPinTheme = PinTheme(
+      width: 48,
+      height: 52,
+      textStyle: context.textTheme.headlineSmall?.bold().colour(
+        context.colors.onSurface,
+      ),
+      decoration: BoxDecoration(
+        color: context.colors.onPrimary,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(
+          color: context.colors.outlineVariant.withValues(alpha: 0.5),
+          width: 1,
+        ),
+      ),
+    );
+
+    final focusedPinTheme = defaultPinTheme.copyWith(
+      decoration: defaultPinTheme.decoration?.copyWith(
+        border: Border.all(color: context.colors.primary, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: context.colors.primary.withValues(alpha: 0.2),
+            blurRadius: 8,
+          ),
+        ],
+      ),
+    );
+
+    final submittedPinTheme = defaultPinTheme.copyWith(
+      decoration: defaultPinTheme.decoration?.copyWith(
+        color: context.colors.surfaceDim,
+        border: Border.all(
+          color: context.colors.primary.withValues(alpha: 0.8),
+          width: 1.2,
+        ),
+      ),
+    );
+
+    return BlocListener<AuthBloc, AuthState>(
+      bloc: sl<AuthBloc>(),
+      listener: _onAuthStateChanged,
+      child: Scaffold(
+        body: SafeArea(
+          child: CustomScrollView(
+            slivers: [
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Padding(
+                  padding: context.horizontalEdgeInsets,
                   child: Column(
                     children: [
                       AppSpacing.huge.h,
 
-                      // GuardUp Logo (Centered)
+                      // Logo
                       Center(
                         child: AppImage.asset(
                           assetPath: Assets.images.appLogo.path,
@@ -121,7 +254,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                       ),
                       AppSpacing.colossal.h,
 
-                      // 1. Heading
+                      // Heading
                       Text(
                         context.l10n.emailVerificationTitle,
                         textAlign: TextAlign.center,
@@ -129,25 +262,58 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                       ),
                       AppSpacing.sm.h,
 
-                      // 2. Subtitle
+                      // Subtitle
                       Text(
-                        context.l10n.emailVerificationSubtitle,
+                        'Please enter the $_otpLength-digit verification code sent to\n$_targetEmail',
                         textAlign: TextAlign.center,
-                        style: context.textTheme.bodyMedium?.colour(
-                          context.colors.onSurfaceVariant,
+                        style: context.textTheme.bodyMedium
+                            ?.copyWith(height: 1.4)
+                            .colour(context.colors.onSurfaceVariant),
+                      ),
+                      AppSpacing.xxl.h,
+
+                      // OTP input
+                      mui.Material(
+                        color: Colors.transparent,
+                        child: Pinput(
+                          length: _otpLength,
+                          controller: _pinController,
+                          focusNode: _focusNode,
+                          defaultPinTheme: defaultPinTheme,
+                          focusedPinTheme: focusedPinTheme,
+                          submittedPinTheme: submittedPinTheme,
+                          showCursor: true,
+                          pinputAutovalidateMode:
+                              PinputAutovalidateMode.onSubmit,
+                          onCompleted: _handleVerifyOtp,
                         ),
                       ),
                       AppSpacing.xxl.h,
 
-                      // 3. Continue Primary Button
-                      AppButton(
-                        text: context.l10n.continueButton,
-
-                        onPressed: _handleContinue,
+                      // Continue button
+                      ValueListenableBuilder<TextEditingValue>(
+                        valueListenable: _pinController,
+                        builder: (context, pinValue, _) {
+                          final isPinComplete =
+                              pinValue.text.trim().length == _otpLength;
+                          return ValueListenableBuilder<bool>(
+                            valueListenable: _isLoadingNotifier,
+                            builder: (context, isLoading, _) {
+                              return AppButton(
+                                text: context.l10n.continueButton,
+                                isLoading: isLoading,
+                                enabled: isPinComplete && !isLoading,
+                                onPressed: isPinComplete
+                                    ? () => _handleVerifyOtp(pinValue.text)
+                                    : null,
+                              );
+                            },
+                          );
+                        },
                       ),
                       AppSpacing.md.h,
 
-                      // 4. Resend Email (Text Button with Countdown Timer via ValueListenableBuilder)
+                      // Resend countdown
                       ValueListenableBuilder<int>(
                         valueListenable: _secondsRemainingNotifier,
                         builder: (context, secondsRemaining, _) {
@@ -167,7 +333,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
                       const Spacer(),
 
-                      // 5. Bottom Logout Button
+                      // Logout
                       Center(
                         child: AppButton(
                           type: ButtonType.text,
@@ -181,8 +347,8 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   ),
                 ),
               ),
-            );
-          },
+            ],
+          ),
         ),
       ),
     );

@@ -1,14 +1,22 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '/app/routes/app_routes.dart';
 import '/core/constants/app_spacing.dart';
+import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/core/utils/validators.dart';
+import '/features/auth/bloc/auth_bloc.dart';
+import '/features/auth/bloc/auth_event.dart';
+import '/features/auth/bloc/auth_state.dart';
+import '/features/auth/domain/repositories/user_repository.dart';
 import '/shared/widgets/buttons/app_button.dart';
+import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/misc/app_rich_text.dart';
 
@@ -23,11 +31,23 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+  final _nameController = TextEditingController(
+    text: kDebugMode ? 'Mizan' : '',
+  );
+  final _phoneController = TextEditingController(
+    text: kDebugMode ? '6352416149' : '',
+  );
+  String _phoneCountryCode = '+91';
+  final _emailController = TextEditingController(
+    text: kDebugMode ? 'mizan.webwiders@gmail.com' : '',
+  );
+  final _passwordController = TextEditingController(
+    text: kDebugMode ? 'mizan@123' : '',
+  );
+  final _confirmPasswordController = TextEditingController(
+    text: kDebugMode ? 'mizan@123' : '',
+  );
+  final _isLoadingNotifier = ValueNotifier<bool>(false);
 
   @override
   void dispose() {
@@ -36,20 +56,79 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _isLoadingNotifier.dispose();
     super.dispose();
   }
 
-  void _handleSignUp() {
-    // if (!(_formKey.currentState?.validate() ?? false)) return;
-    context.push(AppRoutes.emailVerification);
+  Future<void> _handleSignUp() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (_isLoadingNotifier.value) return;
+
+    _isLoadingNotifier.value = true;
+    final email = _emailController.text.trim().toLowerCase();
+    final name = _nameController.text.trim();
+    final phone = _phoneController.text.trim();
+    final password = _passwordController.text;
+    final role = sl<AuthBloc>().state.sessionRole;
+
+    // Single repository check for active account conflicts (email & phone together in one API call)
+    // If account with this email/phone was DELETED, it is freed to use!
+    if (sl.isRegistered<UserRepository>()) {
+      final conflictError =
+          await sl<UserRepository>().checkRegistrationConflict(
+        email: email,
+        phone: phone,
+        phoneCode: _phoneCountryCode,
+      );
+
+      if (conflictError != null) {
+        _isLoadingNotifier.value = false;
+        if (mounted) {
+          AppSnackbar.error(conflictError);
+        }
+        return;
+      }
+    }
+
+    sl<AuthBloc>().add(
+      AuthSignUpRequested(
+        name: name,
+        email: email,
+        phone: phone,
+        phoneCode: _phoneCountryCode,
+        password: password,
+        role: role,
+      ),
+    );
+  }
+
+  void _onAuthStateChanged(BuildContext context, AuthState state) {
+    if (!_isLoadingNotifier.value) return;
+
+    if (state.hasError) {
+      _isLoadingNotifier.value = false;
+      AppSnackbar.error(
+        state.errorMessage ?? 'Registration failed. Please try again.',
+      );
+    } else if (state.operationState.isSuccess) {
+      _isLoadingNotifier.value = false;
+      final email = _emailController.text.trim().toLowerCase();
+      final role = sl<AuthBloc>().state.sessionRole;
+      context.push(
+        AppRoutes.emailVerification,
+        extra: {'email': email, 'role': role},
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
+    return BlocListener<AuthBloc, AuthState>(
+      listener: _onAuthStateChanged,
+      child: Scaffold(
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
             return SingleChildScrollView(
               padding: context.horizontalEdgeInsets,
               child: ConstrainedBox(
@@ -94,6 +173,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         // 4. Phone Number Field
                         AppTextField.phone(
                           controller: _phoneController,
+                          phoneCountryCode: _phoneCountryCode,
+                          onCountryCodeChanged: (code) {
+                            setState(() {
+                              _phoneCountryCode = code;
+                            });
+                          },
                           decoration: InputDecoration(
                             hintText: context.l10n.phoneNumber,
                           ),
@@ -143,11 +228,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ),
                         AppSpacing.xl.h,
 
-                        // 8. Sign Up Primary Button (Has gradient by default)
-                        AppButton(
-                          text: context.l10n.signUp,
-
-                          onPressed: _handleSignUp,
+                        // 8. Sign Up Primary Button (with loading indicator)
+                        ValueListenableBuilder<bool>(
+                          valueListenable: _isLoadingNotifier,
+                          builder: (context, isLoading, _) {
+                            return AppButton(
+                              text: context.l10n.signUp,
+                              isLoading: isLoading,
+                              onPressed: isLoading ? null : _handleSignUp,
+                            );
+                          },
                         ),
 
                         const Spacer(),
@@ -180,6 +270,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           },
         ),
       ),
-    );
+    ),
+  );
   }
 }

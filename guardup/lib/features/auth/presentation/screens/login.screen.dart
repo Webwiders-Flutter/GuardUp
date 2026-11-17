@@ -31,60 +31,63 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _isLoadingNotifier = ValueNotifier<bool>(false);
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _isLoadingNotifier.dispose();
     super.dispose();
   }
 
   void _handleLogin() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (_isLoadingNotifier.value) return;
 
     final email = _emailController.text.trim().toLowerCase();
-    final UserRole role;
+    final password = _passwordController.text;
 
-    if (email == 'company@gmail.com') {
-      role = UserRole.company;
-    } else if (email == 'guard@gmail.com') {
-      role = UserRole.guard;
-    } else if (email == 'customer@gmail.com') {
-      role = UserRole.customer;
-    } else {
-      AppSnackbar.error('Invalid Email');
-      return;
-    }
-
-    final authBloc = sl.isRegistered<AuthBloc>()
-        ? sl<AuthBloc>()
-        : context.read<AuthBloc>();
-
-    // Update role in session
-    authBloc.add(AuthSetSessionRoleRequested(role));
-
-    // Authenticate session with user profile
-    authBloc.add(
-      AuthProfileChanged(
-        UserModel(
-          id: 'mock_${role.name}_user',
-          name: switch (role) {
-            UserRole.company => 'Apex Security Ltd.',
-            UserRole.guard => 'Vikram Singh',
-            UserRole.customer => 'Alex Morgan',
-          },
-          // email: email,
-          role: role,
-        ),
-      ),
+    _isLoadingNotifier.value = true;
+    sl<AuthBloc>().add(
+      AuthLoginRequested(email: email, password: password),
     );
+  }
 
-    context.go(AppRoutes.home);
+  void _onAuthStateChanged(BuildContext context, AuthState state) {
+    if (!_isLoadingNotifier.value) return;
+
+    if (state.isAuthenticated) {
+      _isLoadingNotifier.value = false;
+      if (state.isBlocked) {
+        AppSnackbar.error('Your account is blocked. Please contact support.');
+        context.go(AppRoutes.accountBlocked);
+        return;
+      }
+      AppSnackbar.success('Logged in successfully');
+      if (state.requiresOnboarding) {
+        if (state.isGuard) {
+          context.go(AppRoutes.bodyguardProfile);
+        } else if (state.isCompany) {
+          context.go(AppRoutes.companyProfile);
+        }
+      } else {
+        context.go(AppRoutes.home);
+      }
+    } else if (state.hasError) {
+      _isLoadingNotifier.value = false;
+      AppSnackbar.error(
+        state.errorMessage ?? 'Invalid email or password. Please try again.',
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BlocListener<AuthBloc, AuthState>(
+      bloc: sl<AuthBloc>(),
+      listener: _onAuthStateChanged,
+      child: Scaffold(
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -167,10 +170,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         AppSpacing.xl.h,
 
                         // 6. Login Primary Button
-                        AppButton(
-                          text: context.l10n.login,
-
-                          onPressed: _handleLogin,
+                        ValueListenableBuilder<bool>(
+                          valueListenable: _isLoadingNotifier,
+                          builder: (context, isLoading, _) {
+                            return AppButton(
+                              text: context.l10n.login,
+                              isLoading: isLoading,
+                              onPressed: _handleLogin,
+                            );
+                          },
                         ),
 
                         const Spacer(),
@@ -201,6 +209,7 @@ class _LoginScreenState extends State<LoginScreen> {
           },
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

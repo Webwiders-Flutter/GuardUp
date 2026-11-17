@@ -13,11 +13,11 @@ import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/number.extension.dart';
 import '/core/extensions/spacing.extension.dart';
+import '/core/extensions/string.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/features/auth/bloc/auth_bloc.dart';
 import '/features/auth/bloc/auth_event.dart';
 import '/features/auth/bloc/auth_state.dart';
-import '/features/payments/payments.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/feedbacks/widgets/app_popup.dart';
 import '/shared/widgets/sections/app_appbar.dart';
@@ -48,35 +48,17 @@ class ProfileScreen extends StatelessWidget {
             padding: context.horizontalEdgeInsets,
             child: Column(
               children: [
-                // 1. Profile Header Card
-                if (sl<AuthBloc>().state.sessionRole == .company)
-                  CompanyCard(
-                    company: CompanyModel.fakeData.first,
-                    onTap: () => context.push(AppRoutes.companyInformation),
-                  )
+                // 1. Dynamic Profile Header Card
+                if (role == UserRole.company)
+                  _buildCompanyCard(context, state)
+                else if (role == UserRole.guard)
+                  _buildGuardCard(context, state)
                 else
-                  _ProfileCard(
-                    name: 'Michael Carter',
-                    specialization: 'Licensed armed, Corporate visits',
-                    rating: 4.8,
-                    location: 'Toronto, ON',
-                    hourlyRate: 60,
-                    avatarAssetPath: Assets.images.profilePicture.path,
-                    isVerified: true,
-                    onTap: () {
-                      switch (role) {
-                        case .company:
-                          context.push(AppRoutes.companyInformation);
-                        case .guard:
-                          context.push(AppRoutes.bodyguardInformation);
-                        default:
-                      }
-                    },
-                  ),
+                  _buildCustomerCard(context, state),
                 AppSpacing.xl.h,
 
                 // 2. Edit Profile Menu Card
-                if (role != .guard)
+                if (role != UserRole.guard)
                   _ProfileMenuCard(
                     title: context.l10n.editProfile,
                     icon: Icons.person_outline_rounded,
@@ -154,7 +136,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ],
 
-                // 4. Common Action Cards
+                // 4. Common Settings Menu Cards
                 _ProfileMenuCard(
                   title: context.l10n.changePassword,
                   icon: Icons.lock_outline_rounded,
@@ -162,22 +144,13 @@ class ProfileScreen extends StatelessWidget {
                     context.push(AppRoutes.changePassword);
                   },
                 ),
-                if (role == .customer)
-                  _ProfileMenuCard(
-                    title: context.l10n.membershipPlan,
-                    icon: Icons.workspace_premium_outlined,
-                    onTap: () {
-                      context.push(
-                        AppRoutes.membershipPlans,
-                        extra: (
-                          mode: MembershipPlanMode.profile,
-                          bookingAmount: 240.0,
-                          operativeName: 'Operative Vikram Singh',
-                          activePlanId: 'gold_sentinel',
-                        ),
-                      );
-                    },
-                  ),
+                _ProfileMenuCard(
+                  title: context.l10n.notifications,
+                  icon: Icons.notifications_none_rounded,
+                  onTap: () {
+                    context.push(AppRoutes.notifications);
+                  },
+                ),
                 _ProfileMenuCard(
                   title: context.l10n.privacyPolicy,
                   icon: Icons.privacy_tip_outlined,
@@ -187,14 +160,14 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 _ProfileMenuCard(
                   title: context.l10n.termsAndConditions,
-                  icon: Icons.article_outlined,
+                  icon: Icons.gavel_outlined,
                   onTap: () {
                     context.push(AppRoutes.termsAndConditions);
                   },
                 ),
                 _ProfileMenuCard(
-                  title: context.l10n.support,
-                  icon: Icons.headset_mic_outlined,
+                  title: context.l10n.contactUs,
+                  icon: Icons.support_agent_outlined,
                   onTap: () {
                     context.push(AppRoutes.contactUs);
                   },
@@ -237,6 +210,74 @@ class ProfileScreen extends StatelessWidget {
       },
     );
   }
+
+  Widget _buildCompanyCard(BuildContext context, AuthState state) {
+    final companyName = state.companyName;
+    final logoUrl = state.avatarUrl.isNotEmpty ? state.avatarUrl : null;
+    final rating = state.rating;
+    final companyType = state.companyType.isNotEmpty
+        ? state.companyType
+        : 'Licensed Agency';
+
+    final dynamicCompany = CompanyModel(
+      id: state.user?.id ?? 'comp_current',
+      name: companyName,
+      initials: companyName.isNotEmpty ? companyName.getInitials() : 'SP',
+      logoUrl: logoUrl,
+      rating: rating,
+      bio: companyType,
+      isVerified: true,
+      isOnline: true,
+    );
+
+    return CompanyCard(
+      company: dynamicCompany,
+      onTap: () => context.push(AppRoutes.companyInformation),
+    );
+  }
+
+  Widget _buildGuardCard(BuildContext context, AuthState state) {
+    final guardName = state.user?.name ?? state.displayName;
+    final hourlyRate = state.hourlyRate > 0 ? state.hourlyRate : 45;
+    final rating = state.rating;
+    final avatar = state.avatarUrl.isNotEmpty
+        ? state.avatarUrl
+        : Assets.images.profilePicture.path;
+
+    final specialization = state.services.isNotEmpty
+        ? state.services.map((s) => s.replaceAll('_', ' ')).join(', ')
+        : 'Executive & VIP Protection';
+
+    return _ProfileCard(
+      name: guardName.isNotEmpty ? guardName : 'Operative Guard',
+      specialization: specialization,
+      rating: rating,
+      location: 'Available',
+      hourlyRate: hourlyRate,
+      avatarAssetPath: avatar,
+      isVerified: true,
+      onTap: () => context.push(AppRoutes.bodyguardInformation),
+    );
+  }
+
+  Widget _buildCustomerCard(BuildContext context, AuthState state) {
+    final customerName = state.user?.name ?? state.displayName;
+    final email = state.businessEmail;
+    final avatar = state.avatarUrl.isNotEmpty
+        ? state.avatarUrl
+        : Assets.images.profilePicture.path;
+
+    return _ProfileCard(
+      name: customerName.isNotEmpty ? customerName : 'Client Member',
+      specialization: email.isNotEmpty ? email : 'Elite Member',
+      rating: 5.0,
+      location: 'Member',
+      hourlyRate: 0,
+      avatarAssetPath: avatar,
+      isVerified: true,
+      onTap: () => context.push(AppRoutes.editProfile),
+    );
+  }
 }
 
 /// Private stateless widget for the primary profile information card.
@@ -273,8 +314,10 @@ class _ProfileCard extends StatelessWidget {
           Stack(
             clipBehavior: Clip.none,
             children: [
-              AppImage.asset(
-                assetPath: avatarAssetPath,
+              AppImage.auto(
+                source: avatarAssetPath.isNotEmpty
+                    ? avatarAssetPath
+                    : Assets.images.profilePicture.path,
                 width: 22.wPercent(context),
                 height: 22.wPercent(context),
                 borderRadius: AppRadius.md.toBorderRadius,
@@ -340,12 +383,9 @@ class _ProfileCard extends StatelessWidget {
                         context.colors.primary,
                       ),
                     ),
-                    Text(
-                      ' • ',
-                      style: context.textTheme.labelSmall?.colour(
-                        context.colors.onSurfaceVariant,
-                      ),
-                    ),
+                    AppSpacing.sm.w,
+                    Text('•', style: context.textTheme.labelSmall),
+                    AppSpacing.sm.w,
                     Expanded(
                       child: Text(
                         location,
@@ -361,24 +401,32 @@ class _ProfileCard extends StatelessWidget {
               ],
             ),
           ),
-          AppSpacing.xs.w,
+          AppSpacing.sm.w,
 
-          // Pricing block with USD numeric extension
+          // Right Price & Arrow
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                hourlyRate.toUsd,
-                style: context.textTheme.titleLarge?.bold().colour(
-                  context.colors.primary,
+              if (hourlyRate > 0) ...[
+                Text(
+                  hourlyRate.toUsd,
+                  style: context.textTheme.titleMedium?.bold().colour(
+                    context.colors.primary,
+                  ),
                 ),
-              ),
-              Text(
-                '/ hour',
-                style: context.textTheme.labelSmall?.colour(
-                  context.colors.onSurfaceVariant,
+                Text(
+                  '/hr',
+                  style: context.textTheme.labelSmall?.colour(
+                    context.colors.onSurfaceVariant,
+                  ),
                 ),
+                AppSpacing.xs.h,
+              ],
+              Icon(
+                Icons.chevron_right_rounded,
+                size: AppSizes.iconMd,
+                color: context.colors.onSurfaceVariant,
               ),
             ],
           ),
@@ -388,54 +436,53 @@ class _ProfileCard extends StatelessWidget {
   }
 }
 
-/// Private stateless widget for menu options below the profile card.
+/// Private stateless widget for menu options under the profile card.
 class _ProfileMenuCard extends StatelessWidget {
   final String title;
-  final VoidCallback? onTap;
+  final IconData icon;
+  final VoidCallback onTap;
   final Color? textColor;
-  final IconData? icon;
 
   const _ProfileMenuCard({
     required this.title,
-    this.onTap,
+    required this.icon,
+    required this.onTap,
     this.textColor,
-    this.icon,
   });
 
   @override
   Widget build(BuildContext context) {
-    return WrapperCard(
-      margin: const EdgeInsets.only(bottom: AppSpacing.lg),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.xl,
-      ),
-      onTap: onTap,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          if (icon != null) ...[
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: WrapperCard(
+        onTap: onTap,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.lg,
+        ),
+        child: Row(
+          children: [
             Icon(
               icon,
-              color: textColor ?? context.colors.onSurfaceVariant,
               size: AppSizes.iconMd,
+              color: textColor ?? context.colors.primary,
             ),
             AppSpacing.md.w,
-          ],
-          Expanded(
-            child: Text(
-              title.toUpperCase(),
-              style: context.textTheme.labelLarge
-                  ?.colour(textColor ?? context.colors.onSurface)
-                  .textSpacing(0.6),
+            Expanded(
+              child: Text(
+                title,
+                style: context.textTheme.bodyMedium?.semiBold().colour(
+                  textColor ?? context.colors.onSurface,
+                ),
+              ),
             ),
-          ),
-          Icon(
-            Icons.chevron_right_rounded,
-            color: textColor ?? context.colors.onSurfaceVariant,
-            size: AppSizes.iconLg,
-          ),
-        ],
+            Icon(
+              Icons.chevron_right_rounded,
+              size: AppSizes.iconMd,
+              color: context.colors.onSurfaceVariant,
+            ),
+          ],
+        ),
       ),
     );
   }

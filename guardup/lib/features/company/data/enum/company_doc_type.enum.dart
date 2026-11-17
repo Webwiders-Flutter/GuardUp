@@ -53,6 +53,32 @@ enum CompanyDocType {
     }
   }
 
+  String description(AppLocalizations l10n) {
+    switch (this) {
+      case CompanyDocType.businessRegistration:
+        return 'Certificate of Incorporation / Trade License';
+      case CompanyDocType.governmentId:
+        return 'Director / Authorized Signatory Govt ID';
+      case CompanyDocType.companyLogo:
+        return 'Official Company Logo (Square/PNG)';
+      case CompanyDocType.additionalDocuments:
+        return 'PSARA License / Security Certifications';
+    }
+  }
+
+  bool get isRequired {
+    switch (this) {
+      case CompanyDocType.businessRegistration:
+      case CompanyDocType.governmentId:
+        return true;
+      case CompanyDocType.companyLogo:
+      case CompanyDocType.additionalDocuments:
+        return false;
+    }
+  }
+
+  bool get isOptional => !isRequired;
+
   IconData get icon {
     switch (this) {
       case CompanyDocType.businessRegistration:

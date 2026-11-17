@@ -12,13 +12,15 @@ import '/shared/widgets/sections/app_image.dart';
 /// Top header widget displaying customer greeting, avatar, verified badge, and notification bell.
 class CustomerHeaderWidget extends StatelessWidget {
   final String userName;
+  final String? avatarUrl;
   final String subtitle;
   final VoidCallback? onNotificationTap;
   final VoidCallback? onProfileTap;
 
   const CustomerHeaderWidget({
     super.key,
-    this.userName = 'Rahul',
+    this.userName = 'Member',
+    this.avatarUrl,
     this.subtitle = 'Stay Safe, Always',
     this.onNotificationTap,
     this.onProfileTap,
@@ -50,8 +52,10 @@ class CustomerHeaderWidget extends StatelessWidget {
               ],
             ),
             child: ClipOval(
-              child: AppImage.asset(
-                assetPath: Assets.images.profilePicture.path,
+              child: AppImage.auto(
+                source: avatarUrl?.isNotEmpty == true
+                    ? avatarUrl!
+                    : Assets.images.profilePicture.path,
                 fit: BoxFit.cover,
                 width: 48,
                 height: 48,

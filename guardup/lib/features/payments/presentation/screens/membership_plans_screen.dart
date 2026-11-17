@@ -30,7 +30,11 @@ enum MembershipPlanMode {
 
   /// Invoked from Profile -> Membership Plan to view or upgrade membership.
   @JsonValue('PROFILE')
-  profile('PROFILE');
+  profile('PROFILE'),
+
+  /// Invoked right after customer signup & OTP verification to select membership plan.
+  @JsonValue('ONBOARDING')
+  onboarding('ONBOARDING');
 
   final String apiValue;
 
@@ -108,12 +112,16 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
   }
 
   void _handleAction() {
-    widget.mode == MembershipPlanMode.booking
-        ? context.go(AppRoutes.home)
-        : context.pop();
+    if (widget.mode == MembershipPlanMode.booking ||
+        widget.mode == MembershipPlanMode.onboarding) {
+      context.go(AppRoutes.home);
+    } else {
+      context.pop();
+    }
   }
 
   Widget _buildHeader(BuildContext context, bool isBooking) {
+    final bool isOnboarding = widget.mode == MembershipPlanMode.onboarding;
     return Padding(
       padding: AppSpacing.sm.bPadding,
       child: Column(
@@ -152,14 +160,22 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
 
           // 2. Headline
           Text(
-            'Unlock Instant Savings',
+            isOnboarding ? 'Select Membership Plan' : 'Unlock Instant Savings',
             textAlign: TextAlign.center,
             style: context.textTheme.headlineMedium?.bold(),
           ),
           AppSpacing.xs.h,
 
           // 3. Subtitle Description
-          if (isBooking)
+          if (isOnboarding)
+            Text(
+              'Select an elite membership tier to unlock priority dispatch, verified operative pools, and exclusive member discounts.',
+              textAlign: TextAlign.center,
+              style: context.textTheme.bodyMedium
+                  ?.colour(context.colors.onSurfaceVariant)
+                  .lineHeight(1.35),
+            )
+          else if (isBooking)
             AppRichText(
               textAlign: TextAlign.center,
               spans: [
@@ -208,9 +224,13 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
   @override
   Widget build(BuildContext context) {
     final bool isBooking = widget.mode == MembershipPlanMode.booking;
+    final bool isOnboarding = widget.mode == MembershipPlanMode.onboarding;
 
     return Scaffold(
-      appBar: const AppAppBar.transparent(showBackIcon: true, actions: []),
+      appBar: AppAppBar.transparent(
+        showBackIcon: !isOnboarding,
+        actions: const [],
+      ),
       body: SafeArea(
         child: ValueListenableBuilder<PlanModel>(
           valueListenable: _selectedPlanNotifier,
@@ -224,7 +244,10 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
                 return PlanSelectionCard(
                   plan: plan,
                   isSelected: selectedPlan.id == plan.id,
-                  isCurrentPlan: !isBooking && plan.id == widget.activePlanId,
+                  isCurrentPlan:
+                      !isBooking &&
+                      !isOnboarding &&
+                      plan.id == widget.activePlanId,
                   bookingAmount: isBooking
                       ? (widget.bookingAmount ?? 240.0)
                       : null,
@@ -241,13 +264,15 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
           child: ValueListenableBuilder<PlanModel>(
             valueListenable: _selectedPlanNotifier,
             builder: (context, selectedPlan, _) {
-              if (isBooking) {
+              if (isBooking || isOnboarding) {
                 return Row(
                   children: [
                     Expanded(
                       flex: 6,
                       child: AppButton(
-                        text: 'Apply ${selectedPlan.title}',
+                        text: isOnboarding
+                            ? 'Select Plan'
+                            : 'Apply ${selectedPlan.title}',
                         trailing: const Icon(
                           Icons.arrow_forward_rounded,
                           size: AppSizes.iconSmd,
@@ -270,7 +295,6 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
 
               return AppButton(
                 text: 'Upgrade your plan',
-
                 trailing: const Icon(
                   Icons.arrow_forward_rounded,
                   size: AppSizes.iconSmd,

@@ -2,7 +2,10 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '/core/logger/supabase_logger.dart';
 import '/core/state/api_state.dart';
+import '../data/enum/user_role.enum.dart';
+import '../data/enum/user_status.enum.dart';
 import '../data/model/user.model.dart';
 import '../domain/repositories/auth_repository.dart';
 import '../domain/repositories/user_repository.dart';
@@ -14,7 +17,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final UserRepository? _userRepo;
 
   StreamSubscription<String?>? _authSubscription;
-  StreamSubscription<UserModel?>? _profileSubscription;
+  StreamSubscription<dynamic>? _profileSubscription;
 
   AuthBloc({AuthRepository? authRepository, UserRepository? userRepository})
     : _authRepo = authRepository,
@@ -26,6 +29,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthErrorOccurred>(_onErrorOccurred);
     on<AuthLoginRequested>(_onLoginRequested);
     on<AuthSignUpRequested>(_onSignUpRequested);
+    on<AuthVerifyOtpRequested>(_onVerifyOtpRequested);
+    on<AuthResendOtpRequested>(_onResendOtpRequested);
+    on<AuthUpdateUserStatusRequested>(_onUpdateUserStatusRequested);
     on<AuthUpdateProfileRequested>(_onUpdateProfileRequested);
     on<AuthSetSessionRoleRequested>(_onSetSessionRoleRequested);
     on<AuthSignOutRequested>(_onSignOutRequested);
@@ -50,7 +56,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         add(AuthUserChanged(userId));
       },
       onError: (Object error) {
-        add(AuthErrorOccurred(error.toString()));
+        SupabaseLogger.warning(
+          'Auth state changes stream error: $error',
+          operation: 'authStateChanges',
+        );
       },
     );
   }
@@ -59,13 +68,28 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     if (_userRepo == null) return;
     _profileSubscription?.cancel();
     _profileSubscription = _userRepo
-        .watchUserProfile(userId)
+        .watchUserData(userId)
         .listen(
-          (profile) {
-            add(AuthProfileChanged(profile));
+          (data) {
+            if (data == null) {
+              add(const AuthProfileChanged(null));
+              return;
+            }
+            final profile = UserModel.fromJson(data);
+            final status =
+                UserStatus.tryFromApiValue(data['status'] as String?);
+            add(AuthProfileChanged(
+              profile,
+              status: status,
+              email: data['email'] as String?,
+              userData: data,
+            ));
           },
           onError: (Object error) {
-            add(AuthErrorOccurred(error.toString()));
+            SupabaseLogger.warning(
+              'Realtime profile subscription error for userId=$userId: $error',
+              operation: 'watchUserData',
+            );
           },
         );
   }
@@ -95,8 +119,36 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     if (currentUid != null) {
       try {
         _listenToProfile(currentUid);
-        emit(AuthState.authenticated(UserModel(id: currentUid, name: 'User')));
-      } catch (e) {
+
+        Map<String, dynamic>? userData;
+        if (_userRepo != null) {
+          userData = await _userRepo.getUserData(currentUid);
+        }
+
+        if (userData != null) {
+          final profile = UserModel.fromJson(userData);
+          final status =
+              UserStatus.tryFromApiValue(userData['status'] as String?);
+          final email = userData['email'] as String?;
+          final phoneCode = userData['phone_code'] as String?;
+          final phone = userData['phone_number'] as String?;
+
+          emit(
+            AuthState.authenticated(
+              profile,
+              status: status,
+              email: email,
+              phoneCode: phoneCode,
+              phoneNumber: phone,
+              userData: userData,
+            ),
+          );
+        } else {
+          // Profile record not found or still being created
+          emit(const AuthState.unauthenticated());
+        }
+      } catch (e, st) {
+        SupabaseLogger.error('AuthBloc._onCheckStatusRequested', e, st);
         emit(
           AuthState.unauthenticated(
             operationState: ApiState.failure(e.toString()),
@@ -128,6 +180,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(const AuthState.unauthenticated());
     } else {
       _listenToProfile(event.userId!);
+      Map<String, dynamic>? userData;
+      if (_userRepo != null) {
+        userData = await _userRepo.getUserData(event.userId!);
+      }
+      if (userData != null) {
+        final profile = UserModel.fromJson(userData);
+        final status =
+            UserStatus.tryFromApiValue(userData['status'] as String?);
+        emit(
+          AuthState.authenticated(
+            profile,
+            status: status,
+            email: userData['email'] as String?,
+            phoneCode: userData['phone_code'] as String?,
+            phoneNumber: userData['phone_number'] as String?,
+            userData: userData,
+          ),
+        );
+      }
     }
   }
 
@@ -136,7 +207,38 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     if (event.profile != null) {
-      emit(AuthState.authenticated(event.profile!));
+      final user = event.profile!;
+      final newStatus = event.status ?? state.status;
+
+      // Realtime Admin Action: If admin blocked the user
+      if (newStatus == UserStatus.blocked) {
+        emit(
+          state.copyWith(
+            sessionStatus: AuthSessionStatus.authenticated,
+            status: UserStatus.blocked,
+            operationState: ApiState.success(user),
+            userData: event.userData ?? state.userData,
+          ),
+        );
+        return;
+      }
+
+      // Realtime Admin Action: If admin deleted the user
+      if (newStatus == UserStatus.deleted) {
+        add(const AuthSignOutRequested());
+        return;
+      }
+
+      // Realtime Admin Action: Approved / Active / Pending Approval
+      emit(
+        state.copyWith(
+          sessionStatus: AuthSessionStatus.authenticated,
+          status: newStatus,
+          email: event.email ?? state.email,
+          operationState: ApiState.success(user),
+          userData: event.userData ?? state.userData,
+        ),
+      );
     } else {
       emit(const AuthState.unauthenticated());
     }
@@ -169,17 +271,59 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         password: event.password,
       );
       if (_userRepo != null) {
-        final profile = await _userRepo.getUserProfile(userId);
-        if (profile != null) {
-          emit(AuthState.authenticated(profile));
+        final userData = await _userRepo.getUserData(userId);
+        if (userData != null) {
+          final status =
+              UserStatus.tryFromApiValue(userData['status'] as String?);
+
+          // If account is deleted: sign out immediately and show error (do not show deleted screen)
+          if (status == UserStatus.deleted) {
+            await authRepo.signOut();
+            emit(
+              state.copyWith(
+                sessionStatus: AuthSessionStatus.unauthenticated,
+                status: UserStatus.deleted,
+                operationState: const ApiState.failure(
+                  'This account has been deleted. Please register or contact support.',
+                ),
+              ),
+            );
+            return;
+          }
+
+          final profile = UserModel.fromJson(userData);
+          final email = userData['email'] as String?;
+          final phoneCode = userData['phone_code'] as String?;
+          final phone = userData['phone_number'] as String?;
+
+          emit(
+            AuthState.authenticated(
+              profile,
+              status: status,
+              email: email,
+              phoneCode: phoneCode,
+              phoneNumber: phone,
+            ),
+          );
           _listenToProfile(userId);
           return;
         }
       }
       emit(AuthState.authenticated(UserModel(id: userId, name: 'User')));
       _listenToProfile(userId);
-    } catch (e) {
-      emit(state.copyWith(operationState: ApiState.failure(e.toString())));
+    } catch (e, st) {
+      SupabaseLogger.error('AuthBloc._onLoginRequested', e, st);
+      String cleanMessage = 'Login failed. Please check your credentials.';
+      final errStr = e.toString().toLowerCase();
+      if (errStr.contains('invalid login credentials') ||
+          errStr.contains('invalid_credentials')) {
+        cleanMessage = 'Invalid email or password. Please try again.';
+      } else if (errStr.contains('email not confirmed')) {
+        cleanMessage = 'Please verify your email address before logging in.';
+      } else if (errStr.contains('network') || errStr.contains('socket')) {
+        cleanMessage = 'Network error. Please check your internet connection.';
+      }
+      emit(state.copyWith(operationState: ApiState.failure(cleanMessage)));
     }
   }
 
@@ -187,41 +331,174 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthSignUpRequested event,
     Emitter<AuthState> emit,
   ) async {
-    final authRepo = _authRepo;
-    if (authRepo == null) {
-      emit(
-        state.copyWith(
-          operationState: const ApiState.failure(
-            'AuthRepository not configured.',
-          ),
-        ),
-      );
-      return;
-    }
-
     emit(
       state.copyWith(
         operationState: ApiState.loading(previousData: state.user),
       ),
     );
-    try {
-      final userId = await authRepo.signUpWithEmail(
-        email: event.email,
-        password: event.password,
-      );
-      final newUser = UserModel(
-        id: userId,
-        name: event.name ?? 'New User',
-        role: state.sessionRole,
-      );
-      if (_userRepo != null) {
-        await _userRepo.createUserProfile(user: newUser);
+
+    final authRepo = _authRepo;
+    if (authRepo != null) {
+      try {
+        final userId = await authRepo.signUpWithEmail(
+          email: event.email,
+          password: event.password,
+          metadata: {
+            'role': event.role.apiValue,
+            'name': event.name,
+            'phone': event.phone,
+            'phone_code': event.phoneCode ?? '+91',
+          },
+        );
+        final newUser = UserModel(
+          id: userId,
+          name: event.name ?? 'New User',
+          role: event.role,
+        );
+        // Note: public.users is automatically populated by PostgreSQL trigger handle_new_user()
+        emit(
+          state.copyWith(
+            sessionStatus: AuthSessionStatus.unauthenticated,
+            status: UserStatus.incomplete,
+            email: event.email,
+            phoneCode: event.phoneCode,
+            phoneNumber: event.phone,
+            operationState: ApiState.success(newUser),
+          ),
+        );
+      } catch (e) {
+        emit(state.copyWith(operationState: ApiState.failure(e.toString())));
       }
-      emit(AuthState.authenticated(newUser));
-      _listenToProfile(userId);
-    } catch (e) {
-      emit(state.copyWith(operationState: ApiState.failure(e.toString())));
+    } else {
+      // Development mock fallback
+      final mockUser = UserModel(
+        id: 'usr_${DateTime.now().millisecondsSinceEpoch}',
+        name: event.name ?? 'New User',
+        role: event.role,
+      );
+      emit(
+        state.copyWith(
+          sessionStatus: AuthSessionStatus.unauthenticated,
+          status: UserStatus.incomplete,
+          email: event.email,
+          phoneCode: event.phoneCode,
+          phoneNumber: event.phone,
+          operationState: ApiState.success(mockUser),
+        ),
+      );
     }
+  }
+
+  Future<void> _onVerifyOtpRequested(
+    AuthVerifyOtpRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        operationState: ApiState.loading(previousData: state.user),
+      ),
+    );
+
+    final authRepo = _authRepo;
+    final role = state.sessionRole;
+    final UserStatus targetStatus = role == UserRole.customer
+        ? UserStatus.active
+        : UserStatus.incomplete;
+
+    if (authRepo != null) {
+      try {
+        final uid = await authRepo.verifyOtp(
+          target: event.email,
+          token: event.token,
+          type: event.type,
+        );
+
+        // Fetch user profile from DB to get real role and server-assigned data
+        UserModel? profile;
+        if (_userRepo != null) {
+          try {
+            profile = await _userRepo.getUserProfile(uid);
+          } catch (_) {}
+        }
+
+        // Realtime: Listen immediately to changes in public.users (admin approve/block/delete)
+        _listenToProfile(uid);
+
+        final currentUser = profile ??
+            state.user ??
+            UserModel(id: uid, name: 'User', role: role);
+
+        emit(
+          state.copyWith(
+            sessionStatus: AuthSessionStatus.authenticated,
+            status: targetStatus,
+            email: event.email,
+            operationState: ApiState.success(currentUser),
+          ),
+        );
+      } catch (e) {
+        SupabaseLogger.warning('OTP verification failed: $e', operation: 'verifyOtp');
+
+        String cleanMessage = 'Verification failed. Please try again.';
+        final errStr = e.toString().toLowerCase();
+
+        if (errStr.contains('expired')) {
+          cleanMessage = 'The verification code has expired. Please request a new code.';
+        } else if (errStr.contains('invalid') ||
+            errStr.contains('403') ||
+            errStr.contains('400') ||
+            errStr.contains('otp_expired')) {
+          cleanMessage = 'Invalid verification code. Please check your 6-digit code and try again.';
+        } else if (errStr.contains('network') ||
+            errStr.contains('socket') ||
+            errStr.contains('timeout')) {
+          cleanMessage = 'Network connection issue. Please check your internet and try again.';
+        }
+
+        emit(state.copyWith(operationState: ApiState.failure(cleanMessage)));
+      }
+    } else {
+      // Development mock fallback: verification succeeds
+      final currentUser =
+          state.user ??
+          UserModel(
+            id: 'mock_${role.name}_user',
+            name: role == UserRole.company
+                ? 'Apex Security'
+                : role == UserRole.guard
+                    ? 'Vikram Singh'
+                    : 'Alex Morgan',
+            role: role,
+          );
+      emit(
+        state.copyWith(
+          sessionStatus: AuthSessionStatus.authenticated,
+          status: targetStatus,
+          operationState: ApiState.success(currentUser),
+        ),
+      );
+    }
+  }
+
+  Future<void> _onResendOtpRequested(
+    AuthResendOtpRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final authRepo = _authRepo;
+    if (authRepo != null) {
+      try {
+        await authRepo.resendOtp(target: event.target, type: event.type);
+      } catch (e) {
+        emit(state.copyWith(operationState: ApiState.failure(e.toString())));
+      }
+    }
+  }
+
+  void _onUpdateUserStatusRequested(
+    AuthUpdateUserStatusRequested event,
+    Emitter<AuthState> emit,
+  ) {
+    emit(state.copyWith(status: event.status));
   }
 
   Future<void> _onUpdateProfileRequested(

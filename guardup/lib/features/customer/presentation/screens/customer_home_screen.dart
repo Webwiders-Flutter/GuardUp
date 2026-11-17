@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 
@@ -6,6 +7,7 @@ import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
+import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/number.extension.dart';
 import '/core/extensions/spacing.extension.dart';
@@ -73,7 +75,16 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
     return Scaffold(
       backgroundColor: context.colors.transparent,
       appBar: AppAppBar(
-        titleWidget: CustomerHeaderWidget(),
+        titleWidget: BlocBuilder<AuthBloc, AuthState>(
+          bloc: sl<AuthBloc>(),
+          builder: (context, state) {
+            final name = state.user?.name ?? state.displayName;
+            return CustomerHeaderWidget(
+              userName: name.isNotEmpty ? name : 'Member',
+              avatarUrl: state.avatarUrl,
+            );
+          },
+        ),
         alignTitle: .left,
         showBackIcon: false,
         showNotificationIcon: true,

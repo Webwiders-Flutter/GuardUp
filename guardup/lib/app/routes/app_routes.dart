@@ -22,6 +22,8 @@ final class AppRoutes {
   static const forgotPassword = ForgotPasswordScreen.route;
   static const emailVerification = EmailVerificationScreen.route;
   static const adminApproval = AdminApprovalScreen.route;
+  static const accountBlocked = AccountStatusScreen.blockedRoute;
+  static const accountDeleted = AccountStatusScreen.deletedRoute;
 
   // Onboarding / Profile setup
   static const companyProfile = CompanyCompleteProfileScreen.route;

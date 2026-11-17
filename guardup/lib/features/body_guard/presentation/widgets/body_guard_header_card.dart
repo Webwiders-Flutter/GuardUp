@@ -51,8 +51,8 @@ class BodyGuardHeaderCard extends StatelessWidget {
           Stack(
             clipBehavior: Clip.none,
             children: [
-              AppImage.asset(
-                assetPath: effectiveAvatar,
+              AppImage.auto(
+                source: effectiveAvatar,
                 width: 22.wPercent(context),
                 height: 22.wPercent(context),
                 borderRadius: AppRadius.md.toBorderRadius,

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/core/constants/app_sizes.dart';
@@ -6,24 +8,177 @@ import 'package:quick_container/quick_container.dart';
 import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
+import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/number.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
-import '/gen/assets.gen.dart';
 import '/features/auth/auth.dart';
+import '/gen/assets.gen.dart';
 import '/shared/widgets/buttons/app_button.dart';
+import '/shared/widgets/feedbacks/widgets/app_popup.dart';
+import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 import '../../data/enum/transaction_type.enum.dart';
 import '../../data/model/transaction.model.dart';
 
 /// Screen presenting the one-time registration fee for verification and priority onboarding.
-class RegistrationFeeScreen extends StatelessWidget {
+class RegistrationFeeScreen extends StatefulWidget {
   static const route = '/registration-fee';
 
   const RegistrationFeeScreen({super.key});
+
+  @override
+  State<RegistrationFeeScreen> createState() => _RegistrationFeeScreenState();
+}
+
+class _RegistrationFeeScreenState extends State<RegistrationFeeScreen> {
+  final ValueNotifier<bool> _isLoadingNotifier = ValueNotifier<bool>(false);
+  UserModel? _loadedUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCurrentUser();
+  }
+
+  Future<void> _fetchCurrentUser() async {
+    final authUser = sl.isRegistered<AuthBloc>()
+        ? sl<AuthBloc>().state.user
+        : null;
+    final currentUserId = sl.isRegistered<AuthRepository>()
+        ? sl<AuthRepository>().currentUserId
+        : null;
+
+    if (currentUserId != null && sl.isRegistered<UserRepository>()) {
+      try {
+        final data = await sl<UserRepository>().getUserData(currentUserId);
+        if (data != null && mounted) {
+          final role = UserRole.fromApiValue(data['role'] as String?);
+          final name =
+              (role == UserRole.company
+                  ? (data['company_name'] as String?)
+                  : (data['name'] as String?)) ??
+              (data['name'] as String?) ??
+              authUser?.name ??
+              'User';
+
+          setState(() {
+            _loadedUser = UserModel(
+              id: currentUserId,
+              name: name,
+              role: role,
+              profileImageUrl: data['profile_image_url'] as String?,
+            );
+          });
+          return;
+        }
+      } catch (_) {}
+    }
+
+    if (authUser != null && mounted) {
+      setState(() {
+        _loadedUser = authUser;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _isLoadingNotifier.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handlePayment() async {
+    if (_isLoadingNotifier.value) return;
+    _isLoadingNotifier.value = true;
+
+    try {
+      final currentUserId = sl.isRegistered<AuthRepository>()
+          ? sl<AuthRepository>().currentUserId
+          : null;
+
+      // 1. Generate unique dummy payment reference ID and transaction ID
+      final randomNum = math.Random().nextInt(900000) + 100000;
+      final dummyReferenceId = '#GD-$randomNum';
+      final dummyPaymentId =
+          'pay_stripe_${DateTime.now().millisecondsSinceEpoch}';
+
+      // 2. Persist dummy payment details in database (public.users)
+      if (currentUserId != null && sl.isRegistered<UserRepository>()) {
+        try {
+          await sl<UserRepository>().updateProfileFields(
+            userId: currentUserId,
+            data: {
+              'status': 'PENDING_APPROVAL',
+              'metadata': {
+                'payment_status': 'PAID',
+                'payment_id': dummyPaymentId,
+                'payment_reference': dummyReferenceId,
+                'payment_amount': 49.00,
+                'payment_currency': 'USD',
+                'payment_date': DateTime.now().toIso8601String(),
+              },
+            },
+          );
+        } catch (_) {}
+      }
+
+      // 3. Update AuthBloc user status to pendingApproval
+      sl<AuthBloc>().add(
+        const AuthUpdateUserStatusRequested(UserStatus.pendingApproval),
+      );
+
+      final effectiveRole =
+          _loadedUser?.role ?? sl<AuthBloc>().state.sessionRole;
+      final effectiveName =
+          _loadedUser?.name ??
+          (effectiveRole == UserRole.company
+              ? 'SecurePro Security Ltd.'
+              : 'Michael Carter');
+
+      final effectiveUser = UserModel(
+        id: currentUserId ?? 'usr_${DateTime.now().millisecondsSinceEpoch}',
+        name: effectiveName,
+        role: effectiveRole,
+        profileImageUrl: _loadedUser?.profileImageUrl,
+      );
+
+      if (mounted) {
+        _isLoadingNotifier.value = false;
+
+        // 4. Navigate to luxury PaymentSuccessScreen
+        context.go(
+          AppRoutes.paymentSuccess,
+          extra: (
+            transaction: TransactionModel(
+              id: dummyPaymentId,
+              referenceId: dummyReferenceId,
+              bookingId: dummyReferenceId,
+              amount: 49.0,
+              currency: 'USD',
+              type: TransactionType.debit,
+              title: 'Registration Fee',
+              gateway: 'Stripe Verified',
+              scheduleText: 'Today, 2:00 PM – 4:00 PM',
+              dateTime: DateTime.now(),
+              discountNote: context.l10n.incMembershipDiscount,
+            ),
+            user: effectiveUser,
+            buttonText: context.l10n.next,
+            onTap: () => context.go(AppRoutes.adminApproval),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        _isLoadingNotifier.value = false;
+        AppSnackbar.error('Payment processing failed. Please try again.');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +186,24 @@ class RegistrationFeeScreen extends StatelessWidget {
       appBar: AppAppBar.transparent(
         alignTitle: .center,
         titleWidget: Assets.svg.appBanner.svg(height: AppSizes.iconLg),
+        actions: [
+          IconButton(
+            tooltip: context.l10n.logOut,
+            icon: Icon(
+              Icons.logout_rounded,
+              color: context.colors.error,
+              size: AppSizes.iconSmd,
+            ),
+            onPressed: () async {
+              final result = await AppPopup.showLogoutConfirmation(context);
+              if (result?.action == PopupAction.confirm && context.mounted) {
+                sl<AuthBloc>().add(const AuthSignOutRequested());
+                context.go(AppRoutes.login);
+              }
+            },
+          ),
+          AppSpacing.xs.w,
+        ],
       ),
       body: SafeArea(
         child: LayoutBuilder(
@@ -51,7 +224,6 @@ class RegistrationFeeScreen extends StatelessWidget {
                           vertical: AppSpacing.xxl,
                         ),
                         borderColor: context.colors.primaryContainer,
-
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -148,39 +320,17 @@ class RegistrationFeeScreen extends StatelessWidget {
                             ),
                             AppSpacing.xl.h,
 
-                            // 6. Pay Now Button (with primary glow)
-                            AppButton(
-                              text: context.l10n.payNow,
-
-                              makeItGlow: true,
-                              onPressed: () => context.push(
-                                AppRoutes.paymentSuccess,
-                                extra: (
-                                  transaction: TransactionModel(
-                                    id: '884920',
-                                    referenceId: '#GD - 884920',
-                                    bookingId: '#GD - 884920',
-                                    amount: 49.0,
-                                    currency: 'USD',
-                                    type: TransactionType.debit,
-                                    title: 'Registration Fee',
-                                    gateway: 'Stripe Verified',
-                                    scheduleText: 'Today, 2:00 PM – 4:00 PM',
-                                    dateTime: DateTime.now(),
-                                    discountNote:
-                                        context.l10n.incMembershipDiscount,
-                                  ),
-                                  user: const UserModel(
-                                    id: 'usr_securepro',
-                                    name: 'SecurePro Security Ltd.',
-                                    profileImageUrl: null,
-                                    role: UserRole.company,
-                                  ),
-                                  buttonText: context.l10n.next,
-                                  onTap: () =>
-                                      context.go(AppRoutes.adminApproval),
-                                ),
-                              ),
+                            // 6. Pay Now Button (with primary glow and loading)
+                            ValueListenableBuilder<bool>(
+                              valueListenable: _isLoadingNotifier,
+                              builder: (context, isLoading, _) {
+                                return AppButton(
+                                  text: context.l10n.payNow,
+                                  isLoading: isLoading,
+                                  makeItGlow: true,
+                                  onPressed: _handlePayment,
+                                );
+                              },
                             ),
                             AppSpacing.lg.h,
 

@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 
+import '../data/enum/otp_type.enum.dart';
 import '../data/enum/user_role.enum.dart';
+import '../data/enum/user_status.enum.dart';
 import '../data/model/user.model.dart';
 
 abstract class AuthEvent extends Equatable {
@@ -28,11 +30,19 @@ class AuthUserChanged extends AuthEvent {
 /// Internal event dispatched when the user profile stream emits an update.
 class AuthProfileChanged extends AuthEvent {
   final UserModel? profile;
+  final UserStatus? status;
+  final String? email;
+  final Map<String, dynamic>? userData;
 
-  const AuthProfileChanged(this.profile);
+  const AuthProfileChanged(
+    this.profile, {
+    this.status,
+    this.email,
+    this.userData,
+  });
 
   @override
-  List<Object?> get props => [profile];
+  List<Object?> get props => [profile, status, email, userData];
 }
 
 /// Internal event dispatched when an error occurs on a background stream.
@@ -56,20 +66,66 @@ class AuthLoginRequested extends AuthEvent {
   List<Object?> get props => [email, password];
 }
 
-/// Dispatched when a new user registers with email, password, and optional name.
+/// Dispatched when a new user registers with email, password, optional name, phone, and role.
 class AuthSignUpRequested extends AuthEvent {
   final String email;
   final String password;
   final String? name;
+  final String? phone;
+  final String? phoneCode;
+  final UserRole role;
 
   const AuthSignUpRequested({
     required this.email,
     required this.password,
     this.name,
+    this.phone,
+    this.phoneCode,
+    this.role = UserRole.customer,
   });
 
   @override
-  List<Object?> get props => [email, password, name];
+  List<Object?> get props => [email, password, name, phone, phoneCode, role];
+}
+
+/// Dispatched when user submits an OTP code received via email or SMS.
+class AuthVerifyOtpRequested extends AuthEvent {
+  final String email;
+  final String token;
+  final OtpType type;
+
+  const AuthVerifyOtpRequested({
+    required this.email,
+    required this.token,
+    this.type = OtpType.email,
+  });
+
+  @override
+  List<Object?> get props => [email, token, type];
+}
+
+/// Dispatched when requesting a fresh OTP code.
+class AuthResendOtpRequested extends AuthEvent {
+  final String target;
+  final OtpType type;
+
+  const AuthResendOtpRequested({
+    required this.target,
+    this.type = OtpType.email,
+  });
+
+  @override
+  List<Object?> get props => [target, type];
+}
+
+/// Dispatched when the user transitions status (e.g., incomplete -> pendingApproval -> approved).
+class AuthUpdateUserStatusRequested extends AuthEvent {
+  final UserStatus status;
+
+  const AuthUpdateUserStatusRequested(this.status);
+
+  @override
+  List<Object?> get props => [status];
 }
 
 /// Dispatched when the user updates profile details.

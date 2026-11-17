@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/core/constants/app_sizes.dart';
 
+import '../../../../core/di/injection_container.dart';
+import '../../../auth/auth.dart';
 import '/app/routes/app_routes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
@@ -11,8 +13,11 @@ import '/core/extensions/textstyle_extension.dart';
 import '/core/utils/validators.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/buttons/app_button.dart';
+import '/shared/widgets/feedbacks/widgets/app_popup.dart';
+import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_dropdown.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
+import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/selection/selection.controller.dart';
 import '../../data/enum/business_type.enum.dart';
@@ -35,9 +40,58 @@ class _CompanyCompleteProfileScreenState
   final _companyNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
+  String _companyPhoneCode = '+91';
   final _businessTypeController = SelectionController<BusinessType>.single(
     allowDeselect: false,
   );
+  final ValueNotifier<bool> _isLoadingNotifier = ValueNotifier<bool>(false);
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExistingProfile();
+  }
+
+  Future<void> _loadExistingProfile() async {
+    final currentUserId = sl.isRegistered<AuthRepository>()
+        ? sl<AuthRepository>().currentUserId
+        : null;
+    if (currentUserId == null || !sl.isRegistered<UserRepository>()) return;
+
+    try {
+      final data = await sl<UserRepository>().getUserData(currentUserId);
+      if (data != null && mounted) {
+        // 1. Company Name
+        final dbCompanyName = data['company_name'] as String?;
+        if (dbCompanyName != null && dbCompanyName.isNotEmpty) {
+          _companyNameController.text = dbCompanyName;
+        }
+
+        // 2. Business Email (Never prefill personal email here)
+        final dbBusinessEmail = data['business_email'] as String?;
+        if (dbBusinessEmail != null && dbBusinessEmail.isNotEmpty) {
+          _emailController.text = dbBusinessEmail;
+        }
+
+        // 3. Company Phone Number & Code (Dedicated business phone, not personal auth phone)
+        final dbCompanyPhone = data['company_phone_number'] as String?;
+        final dbCompanyPhoneCode = data['company_phone_code'] as String?;
+        if (dbCompanyPhone != null && dbCompanyPhone.isNotEmpty) {
+          _phoneController.text = dbCompanyPhone;
+        }
+        if (dbCompanyPhoneCode != null && dbCompanyPhoneCode.isNotEmpty) {
+          _companyPhoneCode = dbCompanyPhoneCode;
+        }
+
+        // 4. Company Type
+        final dbCompanyType = data['company_type'] as String?;
+        if (dbCompanyType != null && dbCompanyType.isNotEmpty) {
+          final type = BusinessType.fromApiValue(dbCompanyType);
+          _businessTypeController.select(type);
+        }
+      }
+    } catch (_) {}
+  }
 
   @override
   void dispose() {
@@ -45,17 +99,71 @@ class _CompanyCompleteProfileScreenState
     _emailController.dispose();
     _phoneController.dispose();
     _businessTypeController.dispose();
+    _isLoadingNotifier.dispose();
     super.dispose();
   }
 
-  void _handleNext() {
-    // Navigate directly to document upload stage
-    context.push(AppRoutes.uploadDocuments);
+  Future<void> _handleNext() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (_businessTypeController.selectedItem == null) {
+      AppSnackbar.error(context.l10n.selectCompanyType);
+      return;
+    }
+    if (_isLoadingNotifier.value) return;
+
+    _isLoadingNotifier.value = true;
+
+    final currentUserId = sl.isRegistered<AuthRepository>()
+        ? sl<AuthRepository>().currentUserId
+        : null;
+
+    if (currentUserId != null && sl.isRegistered<UserRepository>()) {
+      try {
+        final compName = _companyNameController.text.trim();
+        await sl<UserRepository>().updateProfileFields(
+          userId: currentUserId,
+          data: {
+            'company_name': compName,
+            'name': compName,
+            'business_email': _emailController.text.trim(),
+            'company_phone_number': _phoneController.text.trim(),
+            'company_phone_code': _companyPhoneCode,
+            'company_type': _businessTypeController.selectedItem?.apiValue,
+          },
+        );
+      } catch (_) {}
+    }
+
+    if (mounted) {
+      _isLoadingNotifier.value = false;
+      context.go(AppRoutes.uploadDocuments);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppAppBar.transparent(
+        showBackIcon: false,
+        actions: [
+          IconButton(
+            tooltip: context.l10n.logOut,
+            icon: Icon(
+              Icons.logout_rounded,
+              color: context.colors.error,
+              size: AppSizes.iconSmd,
+            ),
+            onPressed: () async {
+              final result = await AppPopup.showLogoutConfirmation(context);
+              if (result?.action == PopupAction.confirm && context.mounted) {
+                sl<AuthBloc>().add(const AuthSignOutRequested());
+                context.go(AppRoutes.login);
+              }
+            },
+          ),
+          AppSpacing.xs.w,
+        ],
+      ),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -121,9 +229,13 @@ class _CompanyCompleteProfileScreenState
                         ),
                         AppSpacing.lg.h,
 
-                        // 5. Phone Number Field
+                        // 5. Company Phone Number Field
                         AppTextField.phone(
                           controller: _phoneController,
+                          phoneCountryCode: _companyPhoneCode,
+                          onCountryCodeChanged: (code) {
+                            _companyPhoneCode = code;
+                          },
                           decoration: InputDecoration(
                             hintText: context.l10n.phoneNumber,
                           ),
@@ -159,10 +271,15 @@ class _CompanyCompleteProfileScreenState
                         AppSpacing.huge.h,
 
                         // 7. Next Button pinned to bottom
-                        AppButton(
-                          text: context.l10n.next,
-
-                          onPressed: _handleNext,
+                        ValueListenableBuilder<bool>(
+                          valueListenable: _isLoadingNotifier,
+                          builder: (context, isLoading, _) {
+                            return AppButton(
+                              text: context.l10n.next,
+                              isLoading: isLoading,
+                              onPressed: _handleNext,
+                            );
+                          },
                         ),
                         const Spacer(),
                         AppSpacing.xl.h,

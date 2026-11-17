@@ -4,16 +4,24 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:quick_container/quick_container.dart';
 
+import '/core/constants/api/storage_buckets.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
+import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
+import '/core/services/file_storage/file_storage.service.dart';
+import '/core/services/file_storage/models/file_upload_request.model.dart';
 import '/core/utils/validators.dart';
+import '/features/auth/bloc/auth_bloc.dart';
+import '/features/auth/domain/repositories/auth_repository.dart';
+import '/features/auth/domain/repositories/user_repository.dart';
 import '/gen/assets.gen.dart';
 import '../../data/enum/gender_type.enum.dart';
 import '/shared/widgets/buttons/app_button.dart';
+import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_media_picker_sheet.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/sections/app_appbar.dart';
@@ -34,17 +42,30 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final _nameController = TextEditingController(text: 'Michael Carter');
-  final _emailController = TextEditingController(
-    text: 'michael.carter@example.com',
-  );
-  final _phoneController = TextEditingController(text: '1234567890');
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _genderController = SelectionController<GenderType>.single(
     initial: GenderType.male,
   );
   final ValueNotifier<XFile?> _profileImageNotifier = ValueNotifier<XFile?>(
     null,
   );
+
+  String? _existingAvatarUrl;
+  String _phoneCode = '+91';
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final state = sl<AuthBloc>().state;
+    _nameController.text = state.user?.name ?? state.displayName;
+    _emailController.text = state.businessEmail;
+    _phoneController.text = state.userPhoneNumber;
+    _phoneCode = state.userPhoneCode;
+    _existingAvatarUrl = state.avatarUrl;
+  }
 
   @override
   void dispose() {
@@ -72,8 +93,60 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  void _handleSave() {
-    context.pop();
+  Future<void> _handleSave() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    final currentUserId = sl.isRegistered<AuthRepository>()
+        ? sl<AuthRepository>().currentUserId
+        : null;
+    if (currentUserId == null || !sl.isRegistered<UserRepository>()) {
+      context.pop();
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      String? avatarUrl = _existingAvatarUrl;
+      if (_profileImageNotifier.value != null &&
+          sl.isRegistered<FileStorageService>()) {
+        final xFile = _profileImageNotifier.value!;
+        final ext = xFile.name.split('.').last;
+        final storagePath =
+            '$currentUserId/avatar_${DateTime.now().millisecondsSinceEpoch}.$ext';
+        avatarUrl = await sl<FileStorageService>().uploadSingleFile(
+          FileUploadRequest.fromXFile(
+            bucket: StorageBuckets.avatars,
+            path: storagePath,
+            xFile: xFile,
+            upsert: true,
+          ),
+        );
+      }
+
+      final updatedName = _nameController.text.trim();
+      final updatedPhone = _phoneController.text.trim();
+
+      await sl<UserRepository>().updateProfileFields(
+        userId: currentUserId,
+        data: {
+          'name': updatedName,
+          'phone_number': updatedPhone,
+          'phone_code': _phoneCode,
+          'profile_image_url': ?avatarUrl,
+        },
+      );
+
+      if (mounted) {
+        AppSnackbar.success('Profile updated successfully.');
+        context.pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        AppSnackbar.error('Failed to update profile: $e');
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -122,9 +195,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                         fit: BoxFit.cover,
                                         onTap: _handleChangePhoto,
                                       )
-                                    : AppImage.asset(
-                                        assetPath:
-                                            Assets.images.profilePicture.path,
+                                    : AppImage.auto(
+                                        source:
+                                            _existingAvatarUrl?.isNotEmpty ==
+                                                    true
+                                                ? _existingAvatarUrl!
+                                                : Assets
+                                                    .images
+                                                    .profilePicture
+                                                    .path,
                                         width: AppSizes.avatarColossal - 4,
                                         height: AppSizes.avatarColossal - 4,
                                         fit: BoxFit.cover,
@@ -161,9 +240,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          'Michael Carter',
-                          style: context.textTheme.titleMedium?.bold(),
+                        ValueListenableBuilder<TextEditingValue>(
+                          valueListenable: _nameController,
+                          builder: (context, textVal, _) {
+                            final name = textVal.text.trim();
+                            return Text(
+                              name.isEmpty ? 'Client Member' : name,
+                              style: context.textTheme.titleMedium?.bold(),
+                            );
+                          },
                         ),
                         AppSpacing.xs.w,
                         AppImage.svgAsset(
@@ -213,9 +298,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ),
                     AppSpacing.md.h,
 
-                    // Email Address Field
+                    // Email Address Field (Read-only)
                     AppTextField.email(
                       controller: _emailController,
+                      readOnly: true,
                       decoration: InputDecoration(
                         hintText: context.l10n.emailAddress,
                       ),
@@ -227,6 +313,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     // Phone Number Field
                     AppTextField.phone(
                       controller: _phoneController,
+                      phoneCountryCode: _phoneCode,
+                      onCountryCodeChanged: (code) {
+                        setState(() {
+                          _phoneCode = code;
+                        });
+                      },
                       decoration: InputDecoration(
                         hintText: context.l10n.phoneNumber,
                       ),
@@ -272,7 +364,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               70.h,
 
               // 4. Save Changes Primary Button
-              AppButton(text: context.l10n.saveChanges, onPressed: _handleSave),
+              AppButton(
+                text: context.l10n.saveChanges,
+                isLoading: _isLoading,
+                onPressed: _handleSave,
+              ),
               AppSpacing.lg.h,
 
               // 5. Cancel Secondary Button

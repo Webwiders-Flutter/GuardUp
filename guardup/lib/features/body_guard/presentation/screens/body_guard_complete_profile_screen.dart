@@ -2,13 +2,17 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:guardup/core/constants/api/storage_buckets.dart';
 import 'package:guardup/core/constants/app_radius.dart';
 import 'package:guardup/core/extensions/number.extension.dart';
+import 'package:guardup/core/services/file_storage/file_storage.service.dart';
+import 'package:guardup/core/services/file_storage/models/file_upload_request.model.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/di/injection_container.dart';
-import '../../../auth/bloc/auth_bloc.dart';
+import '../../../auth/auth.dart';
 import '/app/routes/app_routes.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
@@ -18,6 +22,8 @@ import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/core/utils/validators.dart';
 import '/shared/widgets/buttons/app_button.dart';
+import '/shared/widgets/feedbacks/widgets/app_popup.dart';
+import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_dropdown.dart';
 import '/shared/widgets/inputs/app_media_picker_sheet.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
@@ -48,22 +54,97 @@ class _BodyGuardCompleteProfileScreenState
     extends State<BodyGuardCompleteProfileScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final _fullNameController = TextEditingController(text: 'Vikram Singh');
-  final _hourlyRateController = TextEditingController(text: '60');
+  late final TextEditingController _fullNameController;
+  final _hourlyRateController = TextEditingController();
   final _bioController = TextEditingController();
 
   final _serviceDropdownController = SelectionController<GuardService>.multi(
-    initial: const [
-      GuardService.vipCloseProtection,
-      GuardService.armedEscort,
-      GuardService.tacticalDriver,
-    ],
+    initial: const [],
   );
 
   /// Isolated avatar profile picture notifier matching edit profile UI.
   final ValueNotifier<XFile?> _profileImageNotifier = ValueNotifier<XFile?>(
     null,
   );
+  final ValueNotifier<String?> _networkImageUrlNotifier = ValueNotifier<String?>(
+    null,
+  );
+  final ValueNotifier<bool> _isLoadingNotifier = ValueNotifier<bool>(false);
+
+  @override
+  void initState() {
+    super.initState();
+    final authUser =
+        sl.isRegistered<AuthBloc>() ? sl<AuthBloc>().state.user : null;
+    final metaName =
+        Supabase.instance.client.auth.currentUser?.userMetadata?['name']
+            as String?;
+
+    final initialName =
+        (authUser?.name != null &&
+                authUser!.name.isNotEmpty &&
+                authUser.name != 'User' &&
+                authUser.name != 'New User' &&
+                authUser.name != 'Vikram Singh')
+            ? authUser.name
+            : (metaName ?? '');
+
+    _fullNameController = TextEditingController(text: initialName);
+    _loadExistingProfile();
+  }
+
+  Future<void> _loadExistingProfile() async {
+    final currentUserId = sl.isRegistered<AuthRepository>()
+        ? sl<AuthRepository>().currentUserId
+        : null;
+    if (currentUserId == null || !sl.isRegistered<UserRepository>()) return;
+
+    try {
+      final data = await sl<UserRepository>().getUserData(currentUserId);
+      if (data != null && mounted) {
+        final dbName = data['name'] as String?;
+        if (dbName != null &&
+            dbName.isNotEmpty &&
+            dbName != 'User' &&
+            dbName != 'New User' &&
+            _fullNameController.text.isEmpty) {
+          _fullNameController.text = dbName;
+        }
+
+        final dbRate = data['hourly_rate'];
+        if (dbRate != null && _hourlyRateController.text.isEmpty) {
+          final rateNum = double.tryParse(dbRate.toString()) ?? 0.0;
+          if (rateNum > 0) {
+            _hourlyRateController.text = rateNum.toInt().toString();
+          }
+        }
+
+        final dbBio = data['bio'] as String?;
+        if (dbBio != null && dbBio.isNotEmpty && _bioController.text.isEmpty) {
+          _bioController.text = dbBio;
+        }
+
+        final dbServices = data['services'] as List<dynamic>?;
+        if (dbServices != null && dbServices.isNotEmpty) {
+          final servicesList = dbServices
+              .map((s) => GuardService.fromApiValue(s.toString()))
+              .toList();
+          for (final s in servicesList) {
+            if (!_serviceDropdownController.value.contains(s)) {
+              _serviceDropdownController.toggle(s);
+            }
+          }
+        }
+
+        final dbAvatar = data['profile_image_url'] as String?;
+        if (dbAvatar != null &&
+            dbAvatar.isNotEmpty &&
+            _profileImageNotifier.value == null) {
+          _networkImageUrlNotifier.value = dbAvatar;
+        }
+      }
+    } catch (_) {}
+  }
 
   @override
   void dispose() {
@@ -72,6 +153,8 @@ class _BodyGuardCompleteProfileScreenState
     _bioController.dispose();
     _serviceDropdownController.dispose();
     _profileImageNotifier.dispose();
+    _networkImageUrlNotifier.dispose();
+    _isLoadingNotifier.dispose();
     super.dispose();
   }
 
@@ -96,23 +179,105 @@ class _BodyGuardCompleteProfileScreenState
     _serviceDropdownController.toggle(service);
   }
 
-  void _handleNext() {
-    // if (!(_formKey.currentState?.validate() ?? false)) return;
+  Future<void> _handleNext() async {
+    if (_isLoadingNotifier.value) return;
 
-    // Navigate to next onboarding step (documents upload)
-    context.push(AppRoutes.bodyguardUploadDocuments);
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    if (_profileImageNotifier.value == null &&
+        (_networkImageUrlNotifier.value == null ||
+            _networkImageUrlNotifier.value!.isEmpty)) {
+      AppSnackbar.error('Please upload a profile photo');
+      return;
+    }
+
+    if (_serviceDropdownController.value.isEmpty) {
+      AppSnackbar.error('Please select at least one service offered');
+      return;
+    }
+
+    _isLoadingNotifier.value = true;
+
+    try {
+      final currentUserId = sl.isRegistered<AuthRepository>()
+          ? sl<AuthRepository>().currentUserId
+          : null;
+
+      if (currentUserId != null && sl.isRegistered<UserRepository>()) {
+        String? avatarUrl = _networkImageUrlNotifier.value;
+        final pickedAvatar = _profileImageNotifier.value;
+        if (pickedAvatar != null && sl.isRegistered<FileStorageService>()) {
+          try {
+            avatarUrl = await sl<FileStorageService>().uploadSingleFile(
+              FileUploadRequest.fromXFile(
+                bucket: StorageBuckets.avatars,
+                path:
+                    '$currentUserId/avatar_${DateTime.now().millisecondsSinceEpoch}.jpg',
+                xFile: pickedAvatar,
+                upsert: true,
+              ),
+            );
+          } catch (_) {}
+        }
+
+        final updatePayload = <String, dynamic>{
+          'name': _fullNameController.text.trim(),
+          'hourly_rate':
+              double.tryParse(_hourlyRateController.text.trim()) ?? 0.0,
+          'services': _serviceDropdownController.value
+              .map((s) => s.apiValue)
+              .toList(),
+          'bio': _bioController.text.trim(),
+        };
+        if (avatarUrl != null) {
+          updatePayload['profile_image_url'] = avatarUrl;
+        }
+
+        await sl<UserRepository>().updateProfileFields(
+          userId: currentUserId,
+          data: updatePayload,
+        );
+      }
+
+      if (mounted) {
+        context.go(AppRoutes.bodyguardUploadDocuments);
+      }
+    } catch (e) {
+      if (mounted) {
+        AppSnackbar.error('Failed to save profile details: $e');
+      }
+    } finally {
+      if (mounted) {
+        _isLoadingNotifier.value = false;
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppAppBar.transparent(
-        title: sl<AuthBloc>().state.isAuthenticated
-            ? context.l10n.addBodyguard
-            : context.l10n.profileSetupTitle,
+        title: context.l10n.profileSetupTitle,
         fontSize: 14,
-        
         alignTitle: sl<AuthBloc>().state.isAuthenticated ? .right : .center,
+        actions: [
+          IconButton(
+            tooltip: context.l10n.logOut,
+            icon: Icon(
+              Icons.logout_rounded,
+              color: context.colors.error,
+              size: AppSizes.iconSmd,
+            ),
+            onPressed: () async {
+              final result = await AppPopup.showLogoutConfirmation(context);
+              if (result?.action == PopupAction.confirm && context.mounted) {
+                sl<AuthBloc>().add(const AuthSignOutRequested());
+                context.go(AppRoutes.login);
+              }
+            },
+          ),
+          AppSpacing.xs.w,
+        ],
       ),
       body: SafeArea(
         child: LayoutBuilder(
@@ -174,35 +339,53 @@ class _BodyGuardCompleteProfileScreenState
                                                 );
                                               }
 
-                                              return Column(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  Icon(
-                                                    Icons
-                                                        .person_outline_rounded,
-                                                    size: 38,
-                                                    color:
-                                                        context.colors.outline,
-                                                  ),
-                                                  6.h,
-                                                  Text(
-                                                    'Add Photo',
-                                                    style: context
-                                                        .textTheme
-                                                        .labelSmall
-                                                        ?.regular()
-                                                        .copyWith(
-                                                          fontSize: 10.0,
-                                                          letterSpacing: 0.2,
-                                                        )
-                                                        .colour(
-                                                          context
-                                                              .colors
-                                                              .primary,
-                                                        ),
-                                                  ),
-                                                ],
+                                              return ValueListenableBuilder<String?>(
+                                                valueListenable:
+                                                    _networkImageUrlNotifier,
+                                                builder: (context, networkUrl, _) {
+                                                  if (networkUrl != null &&
+                                                      networkUrl.isNotEmpty) {
+                                                    return ClipOval(
+                                                      child: AppImage.network(
+                                                        imageUrl: networkUrl,
+                                                        width: 108,
+                                                        height: 108,
+                                                        fit: BoxFit.cover,
+                                                      ),
+                                                    );
+                                                  }
+
+                                                  return Column(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.center,
+                                                    children: [
+                                                      Icon(
+                                                        Icons
+                                                            .person_outline_rounded,
+                                                        size: 38,
+                                                        color: context
+                                                            .colors.outline,
+                                                      ),
+                                                      6.h,
+                                                      Text(
+                                                        'Add Photo',
+                                                        style: context
+                                                            .textTheme
+                                                            .labelSmall
+                                                            ?.regular()
+                                                            .copyWith(
+                                                              fontSize: 10.0,
+                                                              letterSpacing: 0.2,
+                                                            )
+                                                            .colour(
+                                                              context
+                                                                  .colors
+                                                                  .primary,
+                                                            ),
+                                                      ),
+                                                    ],
+                                                  );
+                                                },
                                               );
                                             },
                                           ),
@@ -279,6 +462,8 @@ class _BodyGuardCompleteProfileScreenState
                           ),
                           style: TextStyle(color: context.colors.onSurface),
                           textInputAction: TextInputAction.next,
+                          validator: (value) =>
+                              Validators.required(context, value),
                         ),
                         AppSpacing.xxl.h,
 
@@ -287,7 +472,6 @@ class _BodyGuardCompleteProfileScreenState
                         AppSpacing.sm.h,
                         AppTextField(
                           controller: _hourlyRateController,
-
                           decoration: InputDecoration(
                             hintText: "Enter Hourly Rate",
                             prefix: Padding(
@@ -319,8 +503,20 @@ class _BodyGuardCompleteProfileScreenState
                           style: TextStyle(color: context.colors.onSurface),
                           keyboardType: TextInputType.number,
                           textInputAction: TextInputAction.next,
-                          validator: (value) =>
-                              Validators.required(context, value),
+                          validator: (value) {
+                            final requiredError = Validators.required(
+                              context,
+                              value,
+                              fieldName: context.l10n.hourlyRateLabel,
+                            );
+                            if (requiredError != null) return requiredError;
+
+                            final rate = double.tryParse(value!.trim());
+                            if (rate == null || rate <= 0) {
+                              return 'Please enter an hourly rate greater than 0';
+                            }
+                            return null;
+                          },
                         ),
                         AppSpacing.xxl.h,
 
@@ -422,7 +618,6 @@ class _BodyGuardCompleteProfileScreenState
                         AppSpacing.sm.h,
                         AppTextField(
                           controller: _bioController,
-
                           decoration: InputDecoration(
                             hintText: context.l10n.bioBackgroundHint,
                             fillColor: context.colors.onPrimary,
@@ -431,21 +626,39 @@ class _BodyGuardCompleteProfileScreenState
                           maxLines: 4,
                           minLines: 4,
                           textInputAction: TextInputAction.done,
+                          validator: (value) {
+                            final requiredError = Validators.required(
+                              context,
+                              value,
+                              fieldName: context.l10n.bioBackgroundLabel,
+                            );
+                            if (requiredError != null) return requiredError;
+
+                            if (value!.trim().length < 15) {
+                              return 'Please enter at least 15 characters describing your background';
+                            }
+                            return null;
+                          },
                         ),
 
                         const Spacer(),
                         AppSpacing.xxl.h,
 
                         // 6. Next Action Button
-                        AppButton(
-                          text: context.l10n.next,
-                          trailing: Icon(
-                            Icons.arrow_forward_rounded,
-                            size: AppSizes.iconMd,
-                            color: context.colors.onPrimary,
-                          ),
-
-                          onPressed: _handleNext,
+                        ValueListenableBuilder<bool>(
+                          valueListenable: _isLoadingNotifier,
+                          builder: (context, isLoading, _) {
+                            return AppButton(
+                              text: context.l10n.next,
+                              isLoading: isLoading,
+                              trailing: Icon(
+                                Icons.arrow_forward_rounded,
+                                size: AppSizes.iconMd,
+                                color: context.colors.onPrimary,
+                              ),
+                              onPressed: _handleNext,
+                            );
+                          },
                         ),
                         AppSpacing.xxl.h,
                       ],

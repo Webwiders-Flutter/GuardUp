@@ -29,7 +29,7 @@ class SelectRoleScreen extends StatefulWidget {
 
 class _SelectRoleScreenState extends State<SelectRoleScreen> {
   final SelectionController<UserRole> _roleController =
-      SelectionController<UserRole>.single(initial: .guard);
+      SelectionController<UserRole>.single(initial: .customer);
 
   @override
   void dispose() {

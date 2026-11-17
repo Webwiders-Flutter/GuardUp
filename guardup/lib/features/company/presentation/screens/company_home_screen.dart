@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 
@@ -9,6 +10,8 @@ import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/number.extension.dart';
 import '/core/extensions/spacing.extension.dart';
+import '/core/di/injection_container.dart';
+import '/core/extensions/string.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/core/state/api_state.dart';
 import '/features/auth/auth.dart';
@@ -20,6 +23,7 @@ import '/shared/widgets/pagination/app_pagination.dart';
 import '/shared/widgets/pagination/pagination.controller.dart';
 import '/shared/widgets/pagination/pagination.state.dart';
 import '/shared/widgets/sections/app_appbar.dart';
+import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 
 /// Company operational dashboard / home screen presenting:
@@ -42,6 +46,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
   late final PaginationController<BookingModel> _bookingsPaginationController;
   late final PaginationController<BodyGuardModel>
   _bodyguardsPaginationController;
+
   @override
   void initState() {
     super.initState();
@@ -70,6 +75,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
     _bodyguardsPaginationController.dispose();
     super.dispose();
   }
+
   // ── Clickflow Handlers ─────────────────────────────────────────────────────
 
   void _handleAcceptBooking(BookingModel booking) {}
@@ -272,98 +278,130 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
   // ===========================================================================
 
   Widget _buildAppBarTitle(BuildContext context) {
-    return Row(
-      children: [
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            QuickContainer(
-              shape: QuickContainerShape.circle,
-              w: 48,
-              h: 48,
-              color: context.colors.surfaceContainerHigh,
-              border: Border.all(color: context.colors.primary, width: 1.5),
-              alignment: Alignment.center,
-              child: Text(
-                'SP',
-                style: context.textTheme.titleSmall?.bold().colour(
-                  context.colors.primary,
-                ),
-              ),
-            ),
-            Positioned(
-              right: 0,
-              bottom: 0,
-              child: QuickContainer(
-                shape: QuickContainerShape.circle,
-                color: context.colors.surface,
-                p: 1.5,
-                child: QuickContainer(
-                  shape: QuickContainerShape.circle,
-                  color: context.colors.success,
-                  w: 8,
-                  h: 8,
-                ),
-              ),
-            ),
-          ],
-        ),
-        AppSpacing.md.w,
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
+    return BlocBuilder<AuthBloc, AuthState>(
+      bloc: sl<AuthBloc>(),
+      builder: (context, state) {
+        final companyName = state.companyName;
+        final logoUrl = state.avatarUrl;
+        final initials =
+            companyName.isNotEmpty ? companyName.getInitials() : 'CO';
+        final rating = state.rating.toString();
+        final companyType = state.companyType.isNotEmpty
+            ? state.companyType
+            : 'Agency';
+
+        return GestureDetector(
+          onTap: () => context.push(AppRoutes.companyInformation),
+          behavior: HitTestBehavior.opaque,
+          child: Row(
             children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
+              Stack(
+                clipBehavior: Clip.none,
                 children: [
-                  Flexible(
-                    child: Text(
-                      'SecurePro Security Ltd.',
-                      style: context.textTheme.titleMedium
-                          ?.medium()
-                          .increaseLetterSpacing(1),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                  QuickContainer(
+                    shape: QuickContainerShape.circle,
+                    w: 48,
+                    h: 48,
+                    color: context.colors.surfaceContainerHigh,
+                    border: Border.all(color: context.colors.primary, width: 1.5),
+                    alignment: Alignment.center,
+                    clipBehavior: Clip.antiAlias,
+                    child: logoUrl.isNotEmpty
+                        ? AppImage.auto(
+                            source: logoUrl,
+                            width: 48,
+                            height: 48,
+                            fit: BoxFit.cover,
+                          )
+                        : Text(
+                            initials,
+                            style: context.textTheme.titleSmall?.bold().colour(
+                              context.colors.primary,
+                            ),
+                          ),
                   ),
-                  AppSpacing.xxs.w,
-                  Icon(
-                    Icons.shield_rounded,
-                    size: AppSizes.iconXs,
-                    color: context.colors.primary,
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: QuickContainer(
+                      shape: QuickContainerShape.circle,
+                      color: context.colors.surface,
+                      p: 1.5,
+                      child: QuickContainer(
+                        shape: QuickContainerShape.circle,
+                        color: context.colors.success,
+                        w: 8,
+                        h: 8,
+                      ),
+                    ),
                   ),
                 ],
               ),
-              AppSpacing.xxs.h,
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.star_rounded,
-                    size: AppSizes.iconXs,
-                    color: context.colors.primary,
-                  ),
-                  AppSpacing.xs.w,
-                  Text('4.93', style: context.textTheme.labelSmall),
-                  Text(
-                    '  •  ',
-                    style: context.textTheme.labelLarge?.colour(
-                      context.colors.onSurfaceVariant,
+              AppSpacing.md.w,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            companyName,
+                            style: context.textTheme.titleMedium
+                                ?.medium()
+                                .increaseLetterSpacing(1),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        AppSpacing.xxs.w,
+                        Icon(
+                          Icons.shield_rounded,
+                          size: AppSizes.iconXs,
+                          color: context.colors.primary,
+                        ),
+                      ],
                     ),
-                  ),
-                  Text(
-                    '214 reviews',
-                    style: context.textTheme.labelSmall?.regular().colour(
-                      context.colors.onSurfaceVariant,
+                    AppSpacing.xxs.h,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.star_rounded,
+                          size: AppSizes.iconXs,
+                          color: context.colors.primary,
+                        ),
+                        AppSpacing.xs.w,
+                        Text(rating, style: context.textTheme.labelSmall),
+                        Text(
+                          '  •  ',
+                          style: context.textTheme.labelLarge?.colour(
+                            context.colors.onSurfaceVariant,
+                          ),
+                        ),
+                        Flexible(
+                          child: Text(
+                            companyType,
+                            style: context.textTheme.labelSmall
+                                ?.regular()
+                                .colour(
+                                  context.colors.onSurfaceVariant,
+                                ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 

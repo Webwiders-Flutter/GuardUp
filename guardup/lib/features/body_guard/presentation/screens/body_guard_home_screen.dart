@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 
@@ -6,6 +7,7 @@ import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
+import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/number.extension.dart';
 import '/core/extensions/spacing.extension.dart';
@@ -233,29 +235,46 @@ class _BodyGuardHomeScreenState extends State<BodyGuardHomeScreen> {
   // ===========================================================================
 
   Widget _buildAppBarTitle(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        GestureDetector(
-          onTap: () => context.push(AppRoutes.bodyguardProfile),
-          child: Container(
-            padding: const EdgeInsets.all(2),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: context.colors.primary, width: 1.5),
+    return BlocBuilder<AuthBloc, AuthState>(
+      bloc: sl<AuthBloc>(),
+      builder: (context, state) {
+        final guardName = state.user?.name ?? state.displayName;
+        final avatar = state.avatarUrl;
+
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            GestureDetector(
+              onTap: () => context.push(AppRoutes.bodyguardProfile),
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: context.colors.primary, width: 1.5),
+                ),
+                child: AppImage.auto(
+                  source: avatar.isNotEmpty
+                      ? avatar
+                      : Assets.images.profilePicture2.path,
+                  width: 36,
+                  height: 36,
+                  shape: BoxShape.circle,
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
-            child: AppImage.asset(
-              assetPath: Assets.images.profilePicture2.path,
-              width: 36,
-              height: 36,
-              shape: BoxShape.circle,
-              fit: BoxFit.cover,
+            AppSpacing.sm.w,
+            Flexible(
+              child: Text(
+                guardName.isNotEmpty ? 'Hello, $guardName' : 'Dashboard',
+                style: context.textTheme.titleLarge?.bold(),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-          ),
-        ),
-        AppSpacing.sm.w,
-        Text('Dashboard', style: context.textTheme.titleLarge?.bold()),
-      ],
+          ],
+        );
+      },
     );
   }
 

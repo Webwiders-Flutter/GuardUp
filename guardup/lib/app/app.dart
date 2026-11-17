@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:material_ui/material_ui.dart' as mui;
 
 import '/app/routes/app_router.dart';
 import '/app/theme/app_theme.dart';
@@ -35,8 +36,16 @@ class App extends StatelessWidget {
             locale: languageState.locale,
             themeMode: ThemeMode.system,
             scaffoldMessengerKey: FeedbackService.messengerKey,
+            // localizationsDelegates: const [
+            //   AppLocalizations.delegate,
+            //   GlobalMaterialLocalizations.delegate,
+            //   GlobalWidgetsLocalizations.delegate,
+            //   GlobalCupertinoLocalizations.delegate,
+            // ],
+            // inside MaterialApp.router
             localizationsDelegates: const [
               AppLocalizations.delegate,
+              mui.DefaultMaterialLocalizations.delegate, // add this
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,

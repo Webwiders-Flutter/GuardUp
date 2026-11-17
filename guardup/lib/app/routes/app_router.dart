@@ -52,9 +52,109 @@ final class AppRouter {
       // 2. Once bootstrap is complete, route away from splash
       // ------------------------------------------------------------
       if (isSplash) {
-        return authState.isAuthenticated
-            ? CustomerHomeScreen.route
-            : LoginScreen.route;
+        if (!authState.isAuthenticated) {
+          return LoginScreen.route;
+        }
+        if (authState.isBlocked) {
+          return AccountStatusScreen.blockedRoute;
+        }
+        if (authState.isPendingApproval) {
+          return AdminApprovalScreen.route;
+        }
+        if (authState.requiresOnboarding) {
+          if (authState.isGuard) return BodyGuardCompleteProfileScreen.route;
+          if (authState.isCompany) return CompanyCompleteProfileScreen.route;
+        }
+        return AppRoutes.home;
+      }
+
+      // ------------------------------------------------------------
+      // 3. User is Unauthenticated: block access to protected routes
+      // ------------------------------------------------------------
+      if (!authState.isAuthenticated) {
+        final isPublicRoute =
+            isSplash ||
+            location == LoginScreen.route ||
+            location == SignUpScreen.route ||
+            location == SelectRoleScreen.route ||
+            location == ForgotPasswordScreen.route ||
+            location == EmailVerificationScreen.route ||
+            location == ContactUsScreen.route ||
+            location == LegalContentScreen.privacyPolicyRoute ||
+            location == LegalContentScreen.termsRoute;
+
+        return isPublicRoute ? null : LoginScreen.route;
+      }
+
+      // ------------------------------------------------------------
+      // 4. User is Authenticated: enforce onboarding step clearance & realtime admin status
+      // ------------------------------------------------------------
+      if (authState.isAuthenticated) {
+        final isAuthFlow =
+            location == LoginScreen.route ||
+            location == SignUpScreen.route ||
+            location == SelectRoleScreen.route;
+
+        // A. Account is blocked by Admin
+        if (authState.isBlocked) {
+          return location == AccountStatusScreen.blockedRoute
+              ? null
+              : AccountStatusScreen.blockedRoute;
+        }
+
+        // B. Account is deleted by Admin
+        if (authState.isDeleted) {
+          return LoginScreen.route;
+        }
+
+        // B. Application submitted, waiting for Admin review
+        if (authState.isPendingApproval) {
+          final isAllowedPending =
+              location == AdminApprovalScreen.route ||
+              location == PaymentSuccessScreen.route;
+
+          if (!isAllowedPending) {
+            return AdminApprovalScreen.route;
+          }
+          return null;
+        }
+
+        // C. Onboarding step is incomplete: redirect directly to left step
+        if (authState.requiresOnboarding) {
+          final isOnboardingPayment =
+              location == RegistrationFeeScreen.route ||
+              location == PaymentSuccessScreen.route;
+
+          if (isOnboardingPayment) {
+            return null;
+          }
+
+          if (authState.isGuard) {
+            final isGuardOnboarding =
+                location == BodyGuardCompleteProfileScreen.route ||
+                location == BodyGuardUploadDocumentsScreen.route;
+            return isGuardOnboarding
+                ? null
+                : BodyGuardCompleteProfileScreen.route;
+          }
+          if (authState.isCompany) {
+            final isCompanyOnboarding =
+                location == CompanyCompleteProfileScreen.route ||
+                location == UploadDocumentsScreen.route;
+            return isCompanyOnboarding
+                ? null
+                : CompanyCompleteProfileScreen.route;
+          }
+        }
+
+        // D. Fully approved user trying to access login/signup/approval or other role onboarding screens
+        if (authState.isApproved &&
+            (isAuthFlow ||
+                location == AdminApprovalScreen.route ||
+                location == CompanyCompleteProfileScreen.route ||
+                location == BodyGuardCompleteProfileScreen.route)) {
+          return AppRoutes.home;
+        }
       }
 
       // Current route is valid.
@@ -96,7 +196,19 @@ final class AppRouter {
       ),
       GoRoute(
         path: EmailVerificationScreen.route,
-        builder: (context, state) => const EmailVerificationScreen(),
+        builder: (context, state) {
+          final extra = state.extra;
+          if (extra is Map<String, dynamic>) {
+            return EmailVerificationScreen(
+              email: extra['email'] as String?,
+              role: extra['role'] as UserRole?,
+            );
+          }
+          if (extra is String) {
+            return EmailVerificationScreen(email: extra);
+          }
+          return const EmailVerificationScreen();
+        },
       ),
       GoRoute(
         path: UploadDocumentsScreen.route,
@@ -141,6 +253,15 @@ final class AppRouter {
       GoRoute(
         path: AdminApprovalScreen.route,
         builder: (context, state) => const AdminApprovalScreen(),
+      ),
+      GoRoute(
+        path: AccountStatusScreen.blockedRoute,
+        builder: (context, state) =>
+            const AccountStatusScreen(isDeleted: false),
+      ),
+      GoRoute(
+        path: AccountStatusScreen.deletedRoute,
+        builder: (context, state) => const AccountStatusScreen(isDeleted: true),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

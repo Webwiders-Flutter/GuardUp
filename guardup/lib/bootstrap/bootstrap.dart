@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:guardup/core/logger/app_logger.dart';
+import 'package:guardup/core/logger/supabase_logger.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '/app/theme/colors/app_colors.dart';
 import '/bootstrap/flavor.dart';
@@ -24,6 +26,29 @@ Future<void> bootstrap({
     } catch (e) {
       AppLogger.d('Could not load .env file: $e');
     }
+  }
+
+  // Initialize Supabase if credentials are provided in .env
+  final supabaseUrl = dotenv.env['SUPABASE_URL'];
+  final supabaseAnonKey =
+      dotenv.env['SUPABASE_PUBLISH_KEY'] ?? dotenv.env['SUPABASE_ANON_KEY'];
+  if (supabaseUrl != null &&
+      supabaseUrl.isNotEmpty &&
+      supabaseAnonKey != null &&
+      supabaseAnonKey.isNotEmpty) {
+    try {
+      await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+      SupabaseLogger.success(
+        'init',
+        message: 'Supabase client initialized with url=$supabaseUrl',
+      );
+    } catch (e, st) {
+      SupabaseLogger.error('init', e, st);
+    }
+  } else {
+    SupabaseLogger.warning(
+      'SUPABASE_URL or key missing in .env. Supabase client not initialized.',
+    );
   }
 
   SystemChrome.setSystemUIOverlayStyle(

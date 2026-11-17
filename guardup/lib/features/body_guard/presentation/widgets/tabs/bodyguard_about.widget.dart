@@ -22,12 +22,18 @@ import '/shared/widgets/selection/selection.controller.dart';
 /// and manageable security services.
 class BodyguardAboutWidget extends StatefulWidget {
   final BodyGuardModel? bodyguard;
+  final String? bio;
+  final num? hourlyRate;
+  final List<GuardService>? services;
   final VoidCallback? onEditBio;
   final VoidCallback? onEditKeyDetails;
 
   const BodyguardAboutWidget({
     super.key,
     this.bodyguard,
+    this.bio,
+    this.hourlyRate,
+    this.services,
     this.onEditBio,
     this.onEditKeyDetails,
   });
@@ -39,24 +45,36 @@ class BodyguardAboutWidget extends StatefulWidget {
 class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
   final _isBioExpandedNotifier = ValueNotifier<bool>(false);
   final _dropdownController = SelectionController<GuardService>.single();
-
-  late final _selectedServicesNotifier = ValueNotifier<List<GuardService>>(
-    List.from(
-      widget.bodyguard?.serviceTypes.isNotEmpty == true
-          ? widget.bodyguard!.serviceTypes
-          : const [
-              GuardService.vipCloseProtection,
-              GuardService.armedEscort,
-              GuardService.tacticalDriver,
-            ],
-    ),
-  );
+  late final ValueNotifier<List<GuardService>> _selectedServicesNotifier;
 
   static const String _defaultBio =
       'I am a professional and certified bodyguard with over 8 years of '
       'experience in personal protection, executive security and close protection. '
       'I am trained in situational awareness, conflict management and first aid.';
 
+  @override
+  void initState() {
+    super.initState();
+    final initialServices = widget.services != null && widget.services!.isNotEmpty
+        ? widget.services!
+        : (widget.bodyguard?.serviceTypes.isNotEmpty == true
+            ? widget.bodyguard!.serviceTypes
+            : const [
+                GuardService.vipCloseProtection,
+                GuardService.armedEscort,
+                GuardService.tacticalDriver,
+              ]);
+    _selectedServicesNotifier =
+        ValueNotifier<List<GuardService>>(List.from(initialServices));
+  }
+
+  @override
+  void didUpdateWidget(covariant BodyguardAboutWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.services != null && widget.services != oldWidget.services) {
+      _selectedServicesNotifier.value = List.from(widget.services!);
+    }
+  }
   @override
   void dispose() {
     _isBioExpandedNotifier.dispose();
@@ -142,9 +160,11 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final bioText = widget.bodyguard?.bio.isNotEmpty == true
-        ? widget.bodyguard!.bio
-        : _defaultBio;
+    final bioText = widget.bio?.isNotEmpty == true
+        ? widget.bio!
+        : (widget.bodyguard?.bio.isNotEmpty == true
+            ? widget.bodyguard!.bio
+            : _defaultBio);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -244,9 +264,11 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
                 context: context,
                 icon: Assets.svg.dollar,
                 label: 'Hourly Rate',
-                value: widget.bodyguard != null
-                    ? '${widget.bodyguard!.hourlyRate.toUsd} / hour'
-                    : '${60.toUsd} / hour',
+                value: widget.hourlyRate != null
+                    ? '${widget.hourlyRate!.toUsd} / hour'
+                    : (widget.bodyguard != null
+                        ? '${widget.bodyguard!.hourlyRate.toUsd} / hour'
+                        : '${60.toUsd} / hour'),
               ),
               AppSpacing.md.h,
               _buildDetailRow(

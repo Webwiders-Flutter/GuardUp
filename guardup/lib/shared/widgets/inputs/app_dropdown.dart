@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:guardup/core/extensions/number.extension.dart';
 import 'package:quick_container/quick_container.dart';
@@ -26,6 +27,18 @@ class SelectableItem<T, D> {
     this.icon,
     this.subtitle,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SelectableItem &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          data == other.data &&
+          subtitle == other.subtitle;
+
+  @override
+  int get hashCode => Object.hash(id, data, subtitle);
 }
 
 /// Convenience alias for string-labeled dropdown items.
@@ -75,6 +88,7 @@ class AppDropdown<V> extends StatefulWidget {
 class _AppDropdownState<V> extends State<AppDropdown<V>> {
   final searchController = TextEditingController();
   final searchFocusNode = FocusNode();
+  final _displayTextController = TextEditingController();
   final layerLink = LayerLink();
   OverlayEntry? entry;
   final GlobalKey fieldKey = GlobalKey();
@@ -84,6 +98,8 @@ class _AppDropdownState<V> extends State<AppDropdown<V>> {
   @override
   void initState() {
     super.initState();
+    _updateDisplayText();
+    widget.controller.addListener(_onSelectionChanged);
 
     paginationController = PaginationController<SelectableItem<V, String>>(
       initialState: PaginationState<SelectableItem<V, String>>(
@@ -109,26 +125,51 @@ class _AppDropdownState<V> extends State<AppDropdown<V>> {
     );
   }
 
+  void _updateDisplayText() {
+    final selected = widget.items.where((i) => widget.controller.value.contains(i.id));
+    final displayText = selected.map((e) => e.data).join(', ');
+    if (_displayTextController.text != displayText) {
+      _displayTextController.text = displayText;
+    }
+  }
+
+  void _onSelectionChanged() {
+    _updateDisplayText();
+  }
+
   @override
   void didUpdateWidget(covariant AppDropdown<V> oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (oldWidget.items != widget.items) {
-      paginationController.updateState(
-        paginationController.value.copyWith(
-          items: widget.items,
-          total: widget.items.length,
-        ),
-      );
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_onSelectionChanged);
+      widget.controller.addListener(_onSelectionChanged);
+      _updateDisplayText();
+    } else if (!listEquals(oldWidget.items, widget.items)) {
+      _updateDisplayText();
+    }
+
+    if (!listEquals(oldWidget.items, widget.items)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        paginationController.updateState(
+          paginationController.value.copyWith(
+            items: widget.items,
+            total: widget.items.length,
+          ),
+        );
+      });
     }
   }
 
   @override
   void dispose() {
+    widget.controller.removeListener(_onSelectionChanged);
     _removeDropdown();
     paginationController.dispose();
     searchController.dispose();
     searchFocusNode.dispose();
+    _displayTextController.dispose();
     super.dispose();
   }
 
@@ -137,27 +178,19 @@ class _AppDropdownState<V> extends State<AppDropdown<V>> {
       return widget.target!(fieldKey);
     }
 
-    return ValueListenableBuilder<List<V>>(
-      valueListenable: widget.controller,
-      builder: (context, selection, _) {
-        final selected = widget.items.where((i) => selection.contains(i.id));
-        final displayText = selected.map((e) => e.data).join(', ');
-
-        return AppTextField(
-          key: fieldKey,
-          controller: TextEditingController(text: displayText),
-          readOnly: true,
-          decoration: InputDecoration(
-            hintText: widget.hintText ?? context.l10n.companyType,
-            suffixIcon: Icon(
-              Icons.keyboard_arrow_down_rounded,
-              color: context.colors.onSurfaceVariant,
-              size: 22,
-            ),
-          ),
-          validator: widget.validator,
-        );
-      },
+    return AppTextField(
+      key: fieldKey,
+      controller: _displayTextController,
+      readOnly: true,
+      decoration: InputDecoration(
+        hintText: widget.hintText ?? context.l10n.companyType,
+        suffixIcon: Icon(
+          Icons.keyboard_arrow_down_rounded,
+          color: context.colors.onSurfaceVariant,
+          size: 22,
+        ),
+      ),
+      validator: widget.validator,
     );
   }
 

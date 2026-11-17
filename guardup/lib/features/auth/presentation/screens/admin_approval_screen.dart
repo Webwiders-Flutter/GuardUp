@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/core/di/injection_container.dart';
+import 'package:guardup/features/auth/domain/repositories/auth_repository.dart';
+import 'package:guardup/features/auth/domain/repositories/user_repository.dart';
+import 'package:guardup/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import 'package:guardup/shared/widgets/sections/wrapper_card.dart';
 import 'package:quick_container/quick_container.dart';
 
@@ -20,13 +23,77 @@ import '../../bloc/auth_bloc.dart';
 import '../../bloc/auth_event.dart';
 
 /// Screen displaying the application status / review stage for onboarding operatives & companies.
-class AdminApprovalScreen extends StatelessWidget {
+class AdminApprovalScreen extends StatefulWidget {
   static const route = '/admin-approval';
 
   const AdminApprovalScreen({super.key});
 
   @override
+  State<AdminApprovalScreen> createState() => _AdminApprovalScreenState();
+}
+
+class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
+  bool _isChecking = false;
+
+  Future<void> _checkStatus() async {
+    final authBloc = sl.isRegistered<AuthBloc>() ? sl<AuthBloc>() : null;
+    final currentUserId =
+        authBloc?.state.user?.id ??
+        (sl.isRegistered<AuthRepository>()
+            ? sl<AuthRepository>().currentUserId
+            : null);
+
+    if (currentUserId == null || !sl.isRegistered<UserRepository>()) return;
+
+    setState(() => _isChecking = true);
+
+    try {
+      final data = await sl<UserRepository>().getUserData(currentUserId);
+      if (!mounted) return;
+
+      if (data != null) {
+        final rawStatus = (data['status'] as String? ?? '').toUpperCase();
+
+        if (rawStatus == 'APPROVED' || rawStatus == 'ACTIVE') {
+          authBloc?.add(const AuthCheckStatusRequested());
+          AppSnackbar.success(
+            'Your profile has been approved! Welcome to GuardUp.',
+          );
+          if (mounted) {
+            context.go(AppRoutes.home);
+          }
+          return;
+        } else if (rawStatus == 'REJECTED') {
+          AppSnackbar.error(
+            'Your application was not approved. Please contact support.',
+          );
+        } else if (rawStatus == 'BLOCKED') {
+          AppSnackbar.error('Your account has been suspended.');
+        } else {
+          AppSnackbar.info(
+            'Your application is still under review by our compliance team.',
+          );
+        }
+      } else {
+        AppSnackbar.info('Your application is still under review.');
+      }
+    } catch (e) {
+      if (mounted) {
+        AppSnackbar.error(
+          'Failed to check status. Please check your connection.',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isChecking = false);
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final authState = context.watch<AuthBloc>().state;
+
     return Scaffold(
       appBar: AppAppBar.transparent(
         titleWidget: Assets.svg.appBanner.svg(height: AppSizes.iconLg),
@@ -142,35 +209,53 @@ class AdminApprovalScreen extends StatelessWidget {
 
                       AppSpacing.colossal.h,
 
-                      // 5. Logout Button
-                      if (!sl<AuthBloc>().state.isAuthenticated) ...[
+                      // 5. Actions (Check Status, Back to Home, & Logout)
+                      if (authState.isApproved) ...[
                         AppButton(
-                          text: context.l10n.checkStatus,
-
+                          text: 'Go to Home',
+                          trailing: const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: AppSizes.iconSmd,
+                          ),
                           onPressed: () {
-                            context.read<AuthBloc>().add(
-                              AuthProfileChanged(sl<AuthBloc>().state.user),
-                            );
                             context.go(AppRoutes.home);
-                          },
-                        ),
-                        AppSpacing.lg.h,
-                        AppButton(
-                          type: .secondaryOff,
-                          text: context.l10n.logoutButton,
-
-                          onPressed: () {
-                            context.read<AuthBloc>().add(
-                              const AuthSignOutRequested(),
-                            );
-                            context.go(AppRoutes.login);
                           },
                         ),
                       ] else ...[
                         AppButton(
-                          text: 'Back to home',
+                          text: 'Check Status',
+                          leading: _isChecking
+                              ? const SizedBox(
+                                  width: AppSizes.iconSmd,
+                                  height: AppSizes.iconSmd,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.black,
+                                    ),
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.refresh_rounded,
+                                  size: AppSizes.iconSmd,
+                                ),
+                          onPressed: _isChecking
+                              ? null
+                              : _checkStatus,
+                        ),
+                        AppSpacing.md.h,
+
+                        AppButton(
+                          type: ButtonType.text,
+                          text: context.l10n.logoutButton,
+                          leading: Icon(
+                            Icons.logout_rounded,
+                            size: AppSizes.iconSmd,
+                            color: context.colors.error,
+                          ),
                           onPressed: () {
-                            context.go(AppRoutes.home);
+                            sl<AuthBloc>().add(const AuthSignOutRequested());
+                            context.go(AppRoutes.login);
                           },
                         ),
                       ],

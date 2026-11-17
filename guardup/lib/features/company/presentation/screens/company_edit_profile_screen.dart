@@ -4,15 +4,23 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:quick_container/quick_container.dart';
 
+import '/core/constants/api/storage_buckets.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
+import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/string.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
+import '/core/services/file_storage/file_storage.service.dart';
+import '/core/services/file_storage/models/file_upload_request.model.dart';
 import '/core/utils/validators.dart';
+import '/features/auth/bloc/auth_bloc.dart';
+import '/features/auth/domain/repositories/auth_repository.dart';
+import '/features/auth/domain/repositories/user_repository.dart';
 import '/shared/widgets/buttons/app_button.dart';
+import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_dropdown.dart';
 import '/shared/widgets/inputs/app_media_picker_sheet.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
@@ -36,16 +44,33 @@ class CompanyEditProfileScreen extends StatefulWidget {
 class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final _companyNameController = TextEditingController(
-    text: 'SecurePro Security Ltd.',
-  );
-  final _emailController = TextEditingController(text: 'contact@securepro.com');
-  final _phoneController = TextEditingController(text: '9876543210');
+  final _companyNameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _businessTypeController = SelectionController<BusinessType>.single(
     initial: BusinessType.pvtLtd,
     allowDeselect: false,
   );
   final ValueNotifier<XFile?> _logoImageNotifier = ValueNotifier<XFile?>(null);
+
+  String? _existingLogoUrl;
+  String _phoneCode = '+91';
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final state = sl<AuthBloc>().state;
+    _companyNameController.text = state.companyName;
+    _emailController.text = state.businessEmail;
+    _phoneController.text = state.companyPhoneNumber;
+    _phoneCode = state.companyPhoneCode;
+    _existingLogoUrl = state.avatarUrl;
+
+    if (state.companyType.isNotEmpty) {
+      _businessTypeController.select(BusinessType.fromApiValue(state.companyType));
+    }
+  }
 
   @override
   void dispose() {
@@ -73,8 +98,66 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
     }
   }
 
-  void _handleSave() {
-    context.pop();
+  Future<void> _handleSave() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    final l10n = context.l10n;
+    final currentUserId = sl.isRegistered<AuthRepository>()
+        ? sl<AuthRepository>().currentUserId
+        : null;
+    if (currentUserId == null || !sl.isRegistered<UserRepository>()) {
+      context.pop();
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      String? logoUrl = _existingLogoUrl;
+      if (_logoImageNotifier.value != null &&
+          sl.isRegistered<FileStorageService>()) {
+        final xFile = _logoImageNotifier.value!;
+        final ext = xFile.name.split('.').last;
+        final storagePath =
+            '$currentUserId/logo_${DateTime.now().millisecondsSinceEpoch}.$ext';
+        logoUrl = await sl<FileStorageService>().uploadSingleFile(
+          FileUploadRequest.fromXFile(
+            bucket: StorageBuckets.documents,
+            path: storagePath,
+            xFile: xFile,
+            upsert: true,
+          ),
+        );
+      }
+
+      final companyName = _companyNameController.text.trim();
+      final typeLabel = _businessTypeController.selectedItem != null
+          ? _businessTypeController.selectedItem!.label(l10n)
+          : 'Private Limited (Pvt Ltd)';
+
+      await sl<UserRepository>().updateProfileFields(
+        userId: currentUserId,
+        data: {
+          'company_name': companyName,
+          'name': companyName,
+          'business_email': _emailController.text.trim(),
+          'company_phone_number': _phoneController.text.trim(),
+          'company_phone_code': _phoneCode,
+          'company_type': typeLabel,
+          'profile_image_url': ?logoUrl,
+        },
+      );
+
+      if (mounted) {
+        AppSnackbar.success('Company profile updated successfully.');
+        context.pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        AppSnackbar.error('Failed to update profile: $e');
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -136,33 +219,54 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
                                               fit: BoxFit.cover,
                                               onTap: _handleChangePhoto,
                                             )
-                                          : ValueListenableBuilder<
-                                              TextEditingValue
-                                            >(
-                                              valueListenable:
-                                                  _companyNameController,
-                                              builder: (context, textVal, _) {
-                                                return QuickContainer(
-                                                  color: context
-                                                      .colors
-                                                      .surfaceContainer,
-                                                  alignment: Alignment.center,
+                                          : (_existingLogoUrl != null &&
+                                                  _existingLogoUrl!.isNotEmpty
+                                              ? AppImage.auto(
+                                                  source: _existingLogoUrl!,
+                                                  width:
+                                                      AppSizes.avatarColossal -
+                                                      4,
+                                                  height:
+                                                      AppSizes.avatarColossal -
+                                                      4,
+                                                  fit: BoxFit.cover,
                                                   onTap: _handleChangePhoto,
-                                                  child: Text(
-                                                    textVal.text.getInitials(),
-                                                    style: context
-                                                        .textTheme
-                                                        .headlineMedium
-                                                        ?.bold()
-                                                        .colour(
-                                                          context
-                                                              .colors
-                                                              .primary,
-                                                        ),
-                                                  ),
-                                                );
-                                              },
-                                            ),
+                                                )
+                                              : ValueListenableBuilder<
+                                                  TextEditingValue
+                                                >(
+                                                  valueListenable:
+                                                      _companyNameController,
+                                                  builder: (context, textVal, _) {
+                                                    final initials = textVal
+                                                            .text
+                                                            .isNotEmpty
+                                                        ? textVal.text
+                                                            .getInitials()
+                                                        : 'CO';
+                                                    return QuickContainer(
+                                                      color: context
+                                                          .colors
+                                                          .surfaceContainer,
+                                                      alignment:
+                                                          Alignment.center,
+                                                      onTap:
+                                                          _handleChangePhoto,
+                                                      child: Text(
+                                                        initials,
+                                                        style: context
+                                                            .textTheme
+                                                            .headlineMedium
+                                                            ?.bold()
+                                                            .colour(
+                                                              context
+                                                                  .colors
+                                                                  .primary,
+                                                            ),
+                                                      ),
+                                                    );
+                                                  },
+                                                )),
                                     );
                                   },
                                 ),
@@ -275,6 +379,12 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
                           // Phone Number Field
                           AppTextField.phone(
                             controller: _phoneController,
+                            phoneCountryCode: _phoneCode,
+                            onCountryCodeChanged: (code) {
+                              setState(() {
+                                _phoneCode = code;
+                              });
+                            },
                             decoration: InputDecoration(
                               hintText: context.l10n.phoneNumber,
                             ),
@@ -315,7 +425,7 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
                     // 4. Save Changes Primary Button
                     AppButton(
                       text: context.l10n.saveChanges,
-
+                      isLoading: _isLoading,
                       onPressed: _handleSave,
                     ),
                     AppSpacing.md.h,

@@ -16,8 +16,14 @@ abstract class UserRepository {
   /// Streams real-time updates for a specific user profile by [userId].
   Stream<UserModel?> watchUserProfile(String userId);
 
+  /// Streams raw realtime data map for a user profile by [userId].
+  Stream<Map<String, dynamic>?> watchUserData(String userId);
+
   /// Retrieves a user profile by [userId]. Returns `null` if not found.
   Future<UserModel?> getUserProfile(String userId);
+
+  /// Retrieves raw data map for a user profile by [userId]. Returns `null` if not found.
+  Future<Map<String, dynamic>?> getUserData(String userId);
 
   /// Creates a new user profile record.
   Future<void> createUserProfile({required UserModel user});
@@ -36,6 +42,15 @@ abstract class UserRepository {
 
   /// Checks whether a profile exists for the given [userId].
   Future<bool> userProfileExists(String userId);
+
+  /// Checks whether an email or phone number is already registered by an active (non-deleted) user.
+  /// Executes as a single query.
+  /// Returns a human-readable conflict error message if taken, or `null` if both are free to use.
+  Future<String?> checkRegistrationConflict({
+    required String email,
+    String? phone,
+    String? phoneCode,
+  });
 
   // ---------------------------------------------------------------------------
   // PROFILE IMAGE STORAGE

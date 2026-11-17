@@ -7,11 +7,14 @@ import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
+import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/string.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
+import '/features/auth/bloc/auth_bloc.dart';
+import '/features/auth/data/enum/user_role.enum.dart';
 import '/features/auth/data/model/user.model.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/buttons/app_button.dart';
@@ -37,12 +40,20 @@ class PaymentSuccessScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authState = sl.isRegistered<AuthBloc>() ? sl<AuthBloc>().state : null;
+    final effectiveUser = user ?? authState?.user;
+    final isGuard =
+        (effectiveUser?.role == UserRole.guard) ||
+        (authState?.isGuard ?? false);
+    final companyName = (effectiveUser?.name.isNotEmpty == true
+        ? effectiveUser!.name
+        : (authState?.companyName ?? 'SecurePro Security Ltd.'));
+    final officerName = (effectiveUser?.name.isNotEmpty == true
+        ? effectiveUser!.name
+        : (authState?.displayName ?? 'Michael Carter'));
+    final initials = companyName.isNotEmpty ? companyName.getInitials() : 'SP';
     final referenceId =
-        transaction?.referenceId ?? transaction?.bookingId ?? '#GD - 884920';
-    final companyName = user?.name ?? 'SecurePro Security Ltd.';
-    final initials = user?.name.isNotEmpty == true
-        ? user!.name.getInitials()
-        : 'SP';
+        transaction?.referenceId ?? transaction?.bookingId ?? '#GD-884920';
     final scheduleText =
         transaction?.scheduleText ??
         transaction?.formattedDate ??
@@ -167,36 +178,107 @@ class PaymentSuccessScreen extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            // 4a. Company Header Row
-                            Row(
-                              children: [
-                                QuickContainer(
-                                  w: 18.wPercent(context),
-                                  h: 18.wPercent(context),
-                                  radius: AppRadius.full,
-                                  color: context.colors.surfaceDim,
-                                  border: Border.all(
-                                    color: context.colors.primary,
-                                    width: 1.5,
+                            // 4a. Header Row (Guard vs Company)
+                            if (isGuard)
+                              Row(
+                                children: [
+                                  QuickContainer(
+                                    w: 14.wPercent(context),
+                                    h: 14.wPercent(context),
+                                    radius: AppRadius.full,
+                                    color: context.colors.surfaceDim,
+                                    border: Border.all(
+                                      color: context.colors.primary,
+                                      width: 1.5,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Icon(
+                                      Icons.person_rounded,
+                                      color: context.colors.primary,
+                                      size: AppSizes.iconMd,
+                                    ),
                                   ),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    initials,
-                                    style: context.textTheme.titleMedium
-                                        ?.bold()
-                                        .colour(context.colors.primary),
+                                  AppSpacing.md.w,
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          'ASSIGNED OFFICER',
+                                          style: context.textTheme.labelSmall
+                                              ?.semiBold()
+                                              .copyWith(
+                                                color: context
+                                                    .colors
+                                                    .onSurfaceVariant,
+                                                letterSpacing: 0.8,
+                                              ),
+                                        ),
+                                        AppSpacing.xxs.h,
+                                        Text(
+                                          officerName,
+                                          style: context.textTheme.titleSmall
+                                              ?.bold(),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                AppSpacing.lg.w,
-                                Expanded(
-                                  child: Text(
-                                    companyName,
-                                    style: context.textTheme.titleMedium
-                                        ?.bold(),
+                                  QuickContainer(
+                                    px: AppSpacing.sm,
+                                    py: AppSpacing.xxs,
+                                    radius: AppRadius.round,
+                                    color: context.colors.success.withValues(
+                                      alpha: 0.15,
+                                    ),
+                                    border: Border.all(
+                                      color: context.colors.success.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                      width: 1,
+                                    ),
+                                    child: Text(
+                                      'Armed Escort',
+                                      style: context.textTheme.labelSmall
+                                          ?.semiBold()
+                                          .copyWith(
+                                            color: context.colors.success,
+                                          ),
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              )
+                            else
+                              Row(
+                                children: [
+                                  QuickContainer(
+                                    w: 16.wPercent(context),
+                                    h: 16.wPercent(context),
+                                    radius: AppRadius.full,
+                                    color: context.colors.surfaceDim,
+                                    border: Border.all(
+                                      color: context.colors.primary,
+                                      width: 1.5,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      initials,
+                                      style: context.textTheme.titleMedium
+                                          ?.bold()
+                                          .colour(context.colors.primary),
+                                    ),
+                                  ),
+                                  AppSpacing.lg.w,
+                                  Expanded(
+                                    child: Text(
+                                      companyName,
+                                      style: context.textTheme.titleMedium
+                                          ?.bold(),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             AppSpacing.lg.h,
 
                             // 4b. Divider below company header (visible hairline)
