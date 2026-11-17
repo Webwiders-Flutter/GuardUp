@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/core/constants/api/database_functions.dart';
 import '/core/constants/api/database_tables.dart';
 import '/core/constants/api/json_keys.dart';
 import '/core/error/api_exception.dart';
@@ -10,9 +11,7 @@ import '/features/users/data/enums/verification_status.enum.dart';
 import '/features/users/data/models/user_model.dart';
 
 final class UsersRepository extends BaseSupabaseRepository<UserModel> {
-  final FunctionsClient _function;
-
-  UsersRepository(SupabaseClient client, this._function)
+  UsersRepository(SupabaseClient client)
     : super(
         client: client,
         tableName: DatabaseTables.users,
@@ -122,22 +121,12 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
     return getDetails(id);
   }
 
-  /// Rejects user registration.
-  Future<UserModel> rejectUser(String id) async {
-    await client
-        .from(tableName)
-        .update({JsonKeys.registrationStatus: UserStatus.rejected.apiValue})
-        .eq(JsonKeys.id, id);
-
-    try {
-      await client
-          .from(DatabaseTables.userDocuments)
-          .update({JsonKeys.status: VerificationStatus.rejected.apiValue})
-          .eq(JsonKeys.userId, id);
-    } catch (_) {}
-
-    return getDetails(id);
-  }
+  /// Rejects a pending application.
+  ///
+  /// There is no REJECTED status: rejecting deletes the applicant while they
+  /// are PENDING_APPROVAL, which removes their profile, documents and login.
+  /// See documentation/user_deletion.md.
+  Future<void> rejectUser(String id) => delete(id);
 
   /// Blocks user account.
   Future<UserModel> blockUser(String id) async {
@@ -159,15 +148,14 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
     return getDetails(id);
   }
 
+  /// Deletes a user through the delete_user RPC. The database decides how:
+  /// never approved -> removed completely; otherwise login removed and the
+  /// profile kept with status DELETED. See documentation/user_deletion.md.
   @override
   Future<void> delete(String id) async {
-    try {
-      await _function.invoke('delete-user', body: {JsonKeys.userIdParam: id});
-    } catch (_) {}
-    // Update user status to DELETED (triggers on_user_status_deleted in DB)
-    await client
-        .from(tableName)
-        .update({JsonKeys.registrationStatus: UserStatus.deleted.apiValue})
-        .eq(JsonKeys.id, id);
+    await client.rpc(
+      DatabaseFunctions.deleteUser,
+      params: {JsonKeys.pUserId: id},
+    );
   }
 }

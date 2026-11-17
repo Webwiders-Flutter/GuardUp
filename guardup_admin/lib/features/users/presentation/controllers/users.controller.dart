@@ -160,28 +160,18 @@ class UsersController extends AsyncNotifier<PaginationState<UserModel>> {
     }
   }
 
+  /// Rejecting removes the applicant completely, so the row leaves the list.
   Future<void> rejectUser(String id) async {
     final current = state.value;
 
     final result = await AsyncValue.guard(
       () => asyncHandler(() async {
-        final updated = await _repository.rejectUser(id);
-        final currentItems = current?.items ?? [];
-        final updatedItems = currentItems.map((item) {
-          return item.id == id ? updated : item;
-        }).toList();
-
-        return (current ?? const PaginationState<UserModel>()).copyWith(
-          items: updatedItems,
-        );
+        await _repository.rejectUser(id);
+        return _withoutRecord(current, id);
       }),
     );
 
-    if (result.hasError) {
-      state = result;
-    } else if (result.hasValue) {
-      state = result;
-    }
+    state = result;
   }
 
   Future<void> toggleBlock(String id, bool block) async {
@@ -203,19 +193,22 @@ class UsersController extends AsyncNotifier<PaginationState<UserModel>> {
     final result = await AsyncValue.guard(
       () => asyncHandler(() async {
         await _repository.delete(id);
-
-        final currentItems = current?.items ?? [];
-        final updatedItems = currentItems
-            .where((item) => item.id != id)
-            .toList();
-        return (current ?? const PaginationState<UserModel>()).copyWith(
-          items: updatedItems,
-          total: current != null && current.total > 0 ? current.total - 1 : 0,
-        );
+        return _withoutRecord(current, id);
       }),
     );
 
     state = result;
+  }
+
+  PaginationState<UserModel> _withoutRecord(
+    PaginationState<UserModel>? current,
+    String id,
+  ) {
+    final currentItems = current?.items ?? [];
+    return (current ?? const PaginationState<UserModel>()).copyWith(
+      items: currentItems.where((item) => item.id != id).toList(),
+      total: current != null && current.total > 0 ? current.total - 1 : 0,
+    );
   }
 
   /// Returns loaded records matching the provided [ids] and optional [condition].

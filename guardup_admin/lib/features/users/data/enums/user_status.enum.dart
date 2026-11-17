@@ -17,9 +17,6 @@ enum UserStatus {
   @JsonValue('BLOCKED')
   blocked('BLOCKED'),
 
-  @JsonValue('REJECTED')
-  rejected('REJECTED'),
-
   @JsonValue('DELETED')
   deleted('DELETED');
 
@@ -37,8 +34,6 @@ enum UserStatus {
         return 'Pending Approval';
       case UserStatus.blocked:
         return 'Blocked';
-      case UserStatus.rejected:
-        return 'Rejected';
       case UserStatus.deleted:
         return 'Deleted';
     }
@@ -55,8 +50,6 @@ enum UserStatus {
         return colors.warning;
       case UserStatus.blocked:
         return colors.error;
-      case UserStatus.rejected:
-        return colors.error;
       case UserStatus.deleted:
         return colors.error;
     }
@@ -72,8 +65,6 @@ enum UserStatus {
         return Icons.hourglass_top_outlined;
       case UserStatus.blocked:
         return Icons.block_outlined;
-      case UserStatus.rejected:
-        return Icons.cancel_outlined;
       case UserStatus.deleted:
         return Icons.delete_outlined;
     }
@@ -89,8 +80,6 @@ enum UserStatus {
         return 'Profile onboarding in progress';
       case UserStatus.blocked:
         return 'Suspended or restricted accounts';
-      case UserStatus.rejected:
-        return 'Applications rejected by compliance';
       case UserStatus.deleted:
         return 'Deactivated or deleted user accounts';
     }

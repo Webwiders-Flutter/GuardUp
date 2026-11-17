@@ -118,7 +118,7 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
     if (picked != null && mounted) {
       _documentsNotifier.value = {
         ..._documentsNotifier.value,
-        doc.id: picked,
+        doc.docKey: picked,
       };
     }
   }
@@ -132,8 +132,10 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
 
     // Validate required documents dynamically from database definitions
     for (final doc in docTypes.where((d) => d.isRequired)) {
-      final hasLocal = localDocs.containsKey(doc.id);
-      final hasRemote = remoteDocs.containsKey(doc.id);
+      final key = doc.docKey;
+      final hasLocal = localDocs.containsKey(key);
+      final hasRemote = remoteDocs.containsKey(key) ||
+          (doc.code.isNotEmpty && remoteDocs.containsKey(doc.code));
       if (!hasLocal && !hasRemote) {
         AppSnackbar.error('Please upload your ${doc.name}');
         return;
@@ -152,12 +154,12 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
 
         if (sl.isRegistered<FileStorageService>()) {
           for (final entry in localDocs.entries) {
-            final docCode = entry.key;
+            final docKey = entry.key;
             final xFile = entry.value;
             try {
               final ext = xFile.name.split('.').last;
               final storagePath =
-                  '$currentUserId/${docCode.toLowerCase()}_${DateTime.now().millisecondsSinceEpoch}.$ext';
+                  '$currentUserId/${docKey.toLowerCase()}_${DateTime.now().millisecondsSinceEpoch}.$ext';
               final fileUrl = await sl<FileStorageService>().uploadSingleFile(
                 FileUploadRequest.fromXFile(
                   bucket: StorageBuckets.documents,
@@ -167,7 +169,16 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
                 ),
               );
 
-              if (docTypes.any((d) => d.id == docCode && d.isLogo)) {
+              final isLogo = docKey == 'COMPANY_LOGO' ||
+                  docTypes
+                      .firstWhere(
+                        (d) => d.docKey == docKey,
+                        orElse: () => docTypes.first,
+                      )
+                      .name
+                      .toUpperCase()
+                      .contains('LOGO');
+              if (isLogo) {
                 uploadedLogoUrl = fileUrl;
               }
 
@@ -176,7 +187,7 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
                   .from(DatabaseTables.userDocuments)
                   .upsert({
                     'user_id': currentUserId,
-                    'document_type_id': docCode,
+                    'document_type_id': docKey,
                     'file_url': fileUrl,
                     'file_name': xFile.name,
                     'status': 'PENDING',
@@ -272,33 +283,47 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
                                           AppSpacing.lg.h,
 
                                           ...docTypes.map(
-                                            (doc) => Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                DocumentUploadCard(
-                                                  title: doc.name,
-                                                  description: doc.description,
-                                                  icon: Icon(
-                                                    doc.icon,
-                                                    color:
-                                                        context.colors.primary,
-                                                    size: AppSizes.iconLg,
+                                            (doc) {
+                                              final key = doc.docKey;
+                                              final localFile = docs[key];
+                                              final remoteUrl =
+                                                  remoteDocs[key] ??
+                                                  (doc.code.isNotEmpty
+                                                      ? remoteDocs[doc.code]
+                                                      : null);
+                                              final remoteName =
+                                                  remoteNames[key] ??
+                                                  (doc.code.isNotEmpty
+                                                      ? remoteNames[doc.code]
+                                                      : null);
+
+                                              return Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  DocumentUploadCard(
+                                                    key: ValueKey('doc_$key'),
+                                                    title: doc.name,
+                                                    description: doc.description,
+                                                    icon: Icon(
+                                                      doc.icon,
+                                                      color: context
+                                                          .colors.primary,
+                                                      size: AppSizes.iconLg,
+                                                    ),
+                                                    isRequired: doc.isRequired,
+                                                    isOptional: !doc.isRequired,
+                                                    isLoading: isLoading,
+                                                    initialUrl: remoteUrl,
+                                                    fileName: remoteName,
+                                                    selectedFilePath:
+                                                        localFile?.path,
+                                                    onPick: () =>
+                                                        _pickDocument(doc),
                                                   ),
-                                                  isRequired: doc.isRequired,
-                                                  isOptional: !doc.isRequired,
-                                                  isLoading: isLoading,
-                                                  initialUrl:
-                                                      remoteDocs[doc.id],
-                                                  fileName:
-                                                      remoteNames[doc.id],
-                                                  selectedFilePath:
-                                                      docs[doc.id]?.path,
-                                                  onPick: () =>
-                                                      _pickDocument(doc),
-                                                ),
-                                                AppSpacing.md.h,
-                                              ],
-                                            ),
+                                                  AppSpacing.md.h,
+                                                ],
+                                              );
+                                            },
                                           ),
 
                                           const Spacer(),

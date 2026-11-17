@@ -9,10 +9,7 @@ import '/shared/states/pagination.state.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final usersRepositoryProvider = Provider<UsersRepository>((ref) {
-  return UsersRepository(
-    ref.watch(supabaseClientProvider),
-    ref.watch(supabaseFunctionProvider),
-  );
+  return UsersRepository(ref.watch(supabaseClientProvider));
 });
 final usersControllerProvider =
     AsyncNotifierProvider.family<

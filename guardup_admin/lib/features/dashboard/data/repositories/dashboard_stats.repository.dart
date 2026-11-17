@@ -115,8 +115,6 @@ final class DashboardStatsRepository implements IDashboardStatsRepository {
           case UserStatus.blocked:
             blocked++;
             break;
-          case UserStatus.rejected:
-            break;
           case UserStatus.deleted:
             deleted++;
             break;

@@ -14,6 +14,7 @@ import '/core/extensions/localization.extension.dart';
 import '/core/extensions/number.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
+import '/core/services/admin_settings/admin_settings.service.dart';
 import '/features/auth/auth.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/buttons/app_button.dart';
@@ -36,53 +37,37 @@ class RegistrationFeeScreen extends StatefulWidget {
 
 class _RegistrationFeeScreenState extends State<RegistrationFeeScreen> {
   final ValueNotifier<bool> _isLoadingNotifier = ValueNotifier<bool>(false);
-  UserModel? _loadedUser;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchCurrentUser();
-  }
-
-  Future<void> _fetchCurrentUser() async {
-    final authUser = sl.isRegistered<AuthBloc>()
-        ? sl<AuthBloc>().state.user
-        : null;
+  UserModel get _currentUser {
+    final authState = sl<AuthBloc>().state;
     final currentUserId = sl.isRegistered<AuthRepository>()
         ? sl<AuthRepository>().currentUserId
         : null;
 
-    if (currentUserId != null && sl.isRegistered<UserRepository>()) {
-      try {
-        final data = await sl<UserRepository>().getUserData(currentUserId);
-        if (data != null && mounted) {
-          final role = UserRole.fromApiValue(data['role'] as String?);
-          final name =
-              (role == UserRole.company
-                  ? (data['company_name'] as String?)
-                  : (data['name'] as String?)) ??
-              (data['name'] as String?) ??
-              authUser?.name ??
-              'User';
+    return UserModel(
+      id: currentUserId ??
+          authState.user?.id ??
+          'usr_${DateTime.now().millisecondsSinceEpoch}',
+      name: authState.displayName.isNotEmpty
+          ? authState.displayName
+          : (authState.user?.name ?? 'User'),
+      role: authState.user?.role ?? authState.sessionRole,
+      profileImageUrl:
+          (authState.userData?['profile_image_url'] as String?) ??
+          authState.user?.profileImageUrl,
+    );
+  }
 
-          setState(() {
-            _loadedUser = UserModel(
-              id: currentUserId,
-              name: name,
-              role: role,
-              profileImageUrl: data['profile_image_url'] as String?,
-            );
-          });
-          return;
-        }
-      } catch (_) {}
-    }
+  double get _registrationFee {
+    return AdminSettingsService.instance.getRegistrationFee(_currentUser.role);
+  }
 
-    if (authUser != null && mounted) {
-      setState(() {
-        _loadedUser = authUser;
-      });
-    }
+  @override
+  void initState() {
+    super.initState();
+    // Ensures settings are loaded if opened before bootstrap finished
+    AdminSettingsService.instance.init().then((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -101,6 +86,7 @@ class _RegistrationFeeScreenState extends State<RegistrationFeeScreen> {
           : null;
 
       // 1. Generate unique dummy payment reference ID and transaction ID
+      final feeAmount = _registrationFee;
       final randomNum = math.Random().nextInt(900000) + 100000;
       final dummyReferenceId = '#GD-$randomNum';
       final dummyPaymentId =
@@ -117,7 +103,7 @@ class _RegistrationFeeScreenState extends State<RegistrationFeeScreen> {
                 'payment_status': 'PAID',
                 'payment_id': dummyPaymentId,
                 'payment_reference': dummyReferenceId,
-                'payment_amount': 49.00,
+                'payment_amount': feeAmount,
                 'payment_currency': 'USD',
                 'payment_date': DateTime.now().toIso8601String(),
               },
@@ -131,20 +117,7 @@ class _RegistrationFeeScreenState extends State<RegistrationFeeScreen> {
         const AuthUpdateUserStatusRequested(UserStatus.pendingApproval),
       );
 
-      final effectiveRole =
-          _loadedUser?.role ?? sl<AuthBloc>().state.sessionRole;
-      final effectiveName =
-          _loadedUser?.name ??
-          (effectiveRole == UserRole.company
-              ? 'SecurePro Security Ltd.'
-              : 'Michael Carter');
-
-      final effectiveUser = UserModel(
-        id: currentUserId ?? 'usr_${DateTime.now().millisecondsSinceEpoch}',
-        name: effectiveName,
-        role: effectiveRole,
-        profileImageUrl: _loadedUser?.profileImageUrl,
-      );
+      final effectiveUser = _currentUser;
 
       if (mounted) {
         _isLoadingNotifier.value = false;
@@ -157,7 +130,7 @@ class _RegistrationFeeScreenState extends State<RegistrationFeeScreen> {
               id: dummyPaymentId,
               referenceId: dummyReferenceId,
               bookingId: dummyReferenceId,
-              amount: 49.0,
+              amount: feeAmount,
               currency: 'USD',
               type: TransactionType.debit,
               title: 'Registration Fee',
@@ -276,7 +249,7 @@ class _RegistrationFeeScreenState extends State<RegistrationFeeScreen> {
                               textBaseline: TextBaseline.alphabetic,
                               children: [
                                 Text(
-                                  49.toUsd,
+                                  _registrationFee.toUsd,
                                   style: context.textTheme.headlineLarge
                                       ?.bold()
                                       .colour(context.colors.primary)

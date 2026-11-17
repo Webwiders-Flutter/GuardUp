@@ -566,13 +566,19 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
     if (result?.action == PopupAction.confirm && mounted) {
       _isLoadingNotifier.value = true;
       try {
+        // Rejecting removes the applicant completely
+        // (documentation/user_deletion.md), so leave the details screen.
         await _controller.rejectUser(widget.user.id);
         if (mounted) {
-          ref.invalidate(userDetailsProvider(widget.user.id));
           AppSnackbar.show(
             message: '${widget.user.fullName} has been rejected',
             type: SnackbarType.warning,
           );
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          } else {
+            context.go(AppRoutes.home);
+          }
         }
       } catch (e) {
         if (mounted) {

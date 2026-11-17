@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import '/core/providers/theme/theme.provider.dart';
 import '/features/auth/di/auth.providers.dart';
 import '../../shared/widgets/feedbacks/widgets/app_snackbar.dart';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,6 +13,7 @@ import 'package:quick_container/quick_container.dart';
 import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
+import '/features/legal/data/enums/content_type.enum.dart';
 import '../../core/extensions/context.extension.dart';
 import '../../core/extensions/spacing.extension.dart';
 import '../../core/extensions/textstyle_extension.dart';
@@ -182,20 +185,23 @@ class _AdminShellState extends ConsumerState<AdminShell> {
     //   description:
     //       'Frequently asked questions, localized answers and role guides',
     // ),
-    // CustomDashboardMenuItem(
-    //   icon: Icons.article_outlined,
-    //   label: 'Policies & Content',
-    //   route: AppRoutes.content,
-    //   description: 'Manage Terms & Conditions, Privacy Policy, About Us, Delete Account, and Support',
-    //   children: ContentType.values.map((e) {
-    //     return CustomDashboardMenuItem(
-    //       icon: e.icon,
-    //       label: e.label,
-    //       route: AppRoutes.contentUrl(e),
-    //       description: e.description,
-    //     );
-    //   }).toList(),
-    // ),
+    // Legal is not production-ready yet: visible in debug builds only.
+    if (kDebugMode)
+      CustomDashboardMenuItem(
+        sectionTitle: 'Legal',
+        icon: Icons.article_outlined,
+        label: 'Policies & Content',
+        route: AppRoutes.content,
+        description: 'Manage Terms & Conditions, Privacy Policy, About Us, Delete Account, and Support',
+        children: ContentType.values.map((e) {
+          return CustomDashboardMenuItem(
+            icon: e.icon,
+            label: e.label,
+            route: AppRoutes.contentUrl(e),
+            description: e.description,
+          );
+        }).toList(),
+      ),
 
     // ── PLATFORM & MASTER DATA ───────────────────────────
     const CustomDashboardMenuItem(
@@ -213,19 +219,20 @@ class _AdminShellState extends ConsumerState<AdminShell> {
     ),
 
     // ── SYSTEM ───────────────────────────────────────────
-    // const CustomDashboardMenuItem(
-    //   sectionTitle: 'System',
-    //   icon: Icons.notifications_outlined,
-    //   label: 'Notifications',
-    //   route: AppRoutes.notifications,
-    //   description: 'System broadcasts, push notifications and delivery logs',
-    // ),
+   
     const CustomDashboardMenuItem(
       sectionTitle: 'System',
       icon: Icons.tune_rounded,
       label: 'Settings',
       route: AppRoutes.settings,
       description: 'Platform preferences, role permissions & configuration',
+    ),
+    if(kDebugMode)
+     const CustomDashboardMenuItem(
+      icon: Icons.notifications_outlined,
+      label: 'Notifications',
+      route: AppRoutes.notifications,
+      description: 'System broadcasts, push notifications and delivery logs',
     ),
   ];
 

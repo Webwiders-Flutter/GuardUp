@@ -4,9 +4,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 enum LanguageType {
   @JsonValue('en')
-  english('en', code: 'en', nativeName: 'English'),
-  @JsonValue('hi')
-  hindi('hi', code: 'hi', nativeName: 'हिंदी');
+  english('en', code: 'en', nativeName: 'English');
 
   final String apiValue;
   final String code;

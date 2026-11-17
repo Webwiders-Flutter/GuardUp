@@ -29,8 +29,7 @@ class DocumentTypeModel {
   factory DocumentTypeModel.fromJson(Map<String, dynamic> json) {
     return DocumentTypeModel(
       id: (json['id'] ?? '') as String,
-      code: (json['code'] as String?) ??
-          _legacyCodeFromName(json['name'] as String?),
+      code: (json['code'] ?? '') as String,
       name: (json['name'] ?? '') as String,
       description: json['description'] as String?,
       targetRole: UserRole.fromApiValue(json['target_role'] as String?),
@@ -56,44 +55,46 @@ class DocumentTypeModel {
   GuardDocType? get guardDocType => GuardDocType.tryFromApiValue(code);
   CompanyDocType? get companyDocType => CompanyDocType.tryFromApiValue(code);
 
+  /// Unique key for state mappings and foreign keys (prefers unique UUID id, fallbacks to code).
+  String get docKey => id.isNotEmpty ? id : code;
+
   IconData get icon {
-    switch (code.toUpperCase()) {
-      case 'BUSINESS_REGISTRATION':
-        return Icons.description_outlined;
-      case 'GOVERNMENT_ID':
-        return Icons.badge_outlined;
-      case 'COMPANY_LOGO':
-        return Icons.image_outlined;
-      case 'ADDITIONAL_DOCUMENTS':
-        return Icons.folder_open_outlined;
-      case 'ID_PROOF':
-        return Icons.badge_outlined;
-      case 'POLICE_VERIFICATION':
-        return Icons.verified_user_outlined;
-      case 'SECURITY_LICENSE':
-        return Icons.lock_outline_rounded;
-      case 'CERTIFICATIONS':
-        return Icons.military_tech_outlined;
-      default:
-        return Icons.description_outlined;
+    final key = (code.isNotEmpty ? code : name)
+        .toUpperCase()
+        .replaceAll(' ', '_');
+    if (key.contains('ID_PROOF') ||
+        key.contains('GOVERNMENT_ID') ||
+        key.contains('ID')) {
+      return Icons.badge_outlined;
     }
+    if (key.contains('POLICE')) {
+      return Icons.verified_user_outlined;
+    }
+    if (key.contains('LICENSE') || key.contains('SECURITY')) {
+      return Icons.lock_outline_rounded;
+    }
+    if (key.contains('CERTIFICATION')) {
+      return Icons.military_tech_outlined;
+    }
+    if (key.contains('BUSINESS') || key.contains('REGISTRATION')) {
+      return Icons.description_outlined;
+    }
+    if (key.contains('LOGO')) {
+      return Icons.image_outlined;
+    }
+    if (key.contains('ADDITIONAL')) {
+      return Icons.folder_open_outlined;
+    }
+    return Icons.description_outlined;
   }
 
-  bool get isLogo => code.toUpperCase() == 'COMPANY_LOGO';
-  bool get allowCrop => isLogo;
-  bool get allowFile => !isLogo;
-}
+  bool get allowCrop {
+    final key = (code.isNotEmpty ? code : name)
+        .toUpperCase()
+        .replaceAll(' ', '_');
+    return key.contains('LOGO');
+  }
 
-/// The `code` column was removed from `document_types`; derive the legacy code
-/// from the seeded name so icons / logo handling keep working.
-String _legacyCodeFromName(String? name) {
-  final n = (name ?? '').trim().toLowerCase();
-  if (n.isEmpty) return '';
-  if (n.contains('logo')) return 'COMPANY_LOGO';
-  if (n.startsWith('government id')) return 'GOVERNMENT_ID';
-  return n
-      .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
-      .replaceAll(RegExp(r'^_+|_+$'), '')
-      .toUpperCase();
+  bool get allowFile => !allowCrop;
 }
 
