@@ -19,7 +19,6 @@ import '/features/users/data/models/user_model.dart';
 import '/features/users/di/users.providers.dart';
 import '/features/users/presentation/controllers/users.controller.dart';
 import '/shared/widgets/admin_layout/app_side_panel.dart';
-import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/feedbacks/widgets/app_file_preview.dart';
 import '/shared/widgets/feedbacks/widgets/app_popup.dart';
 import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
@@ -522,7 +521,7 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
   }
 
   Future<void> _onApprove() async {
-    // [COMING SOON GUARD] - Remove this block when ready to enable operation
+    // [COMING SOON GUARD]
     AppSnackbar.show(
       message: 'Approve user is coming soon',
       type: SnackbarType.info,
@@ -552,7 +551,7 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
   }
 
   Future<void> _onReject() async {
-    // [COMING SOON GUARD] - Remove this block when ready to enable operation
+    // [COMING SOON GUARD]
     AppSnackbar.show(
       message: 'Reject user is coming soon',
       type: SnackbarType.info,
@@ -589,7 +588,7 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
   }
 
   Future<void> _onToggleBlock(bool block) async {
-    // [COMING SOON GUARD] - Remove this block when ready to enable operation
+    // [COMING SOON GUARD]
     AppSnackbar.show(
       message: '${block ? 'Block' : 'Unblock'} user is coming soon',
       type: SnackbarType.info,
@@ -634,7 +633,7 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
   }
 
   Future<void> _onDelete() async {
-    // [COMING SOON GUARD] - Remove this block when ready to enable operation
+    // [COMING SOON GUARD]
     AppSnackbar.show(
       message: 'Delete user is coming soon',
       type: SnackbarType.info,
@@ -713,7 +712,9 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
                     horizontal: AppSpacing.md,
                     vertical: AppSpacing.sm,
                   ),
-                  shape: RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AppRadius.smRadius,
+                  ),
                 ),
               ),
 
@@ -737,19 +738,36 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
                     horizontal: AppSpacing.md,
                     vertical: AppSpacing.sm,
                   ),
-                  shape: RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AppRadius.smRadius,
+                  ),
                 ),
               ),
             ] else ...[
               // 1. Approve User Button
-              AppButton(
-                text: 'Approve User',
-                leading: const Icon(
+              OutlinedButton.icon(
+                onPressed: isLoading ? null : _onApprove,
+                icon: Icon(
                   Icons.check_circle_outline_rounded,
                   size: 16,
+                  color: colors.success,
                 ),
-                isLoading: isLoading,
-                onPressed: _onApprove,
+                label: Text(
+                  'Approve User',
+                  style: context.textTheme.bodySmall?.semiBold().colour(
+                    colors.success,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: colors.success),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AppRadius.smRadius,
+                  ),
+                ),
               ),
 
               // 2. Reject User Button
@@ -772,7 +790,9 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
                     horizontal: AppSpacing.md,
                     vertical: AppSpacing.sm,
                   ),
-                  shape: RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AppRadius.smRadius,
+                  ),
                 ),
               ),
             ],
@@ -781,8 +801,7 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
       },
     );
   }
-  }
-
+}
 
 class _GuardDetailsSection extends StatelessWidget {
   const _GuardDetailsSection({required this.user});
@@ -813,7 +832,7 @@ class _GuardDetailsSection extends StatelessWidget {
         if (user.bio != null && user.bio!.trim().isNotEmpty)
           (label: 'Bio', value: user.bio!, icon: Icons.description_outlined),
       ],
-      child: user.services != null && user.services!.isNotEmpty
+      child: user.services.isNotEmpty
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -828,7 +847,7 @@ class _GuardDetailsSection extends StatelessWidget {
                 Wrap(
                   spacing: AppSpacing.xs,
                   runSpacing: AppSpacing.xs,
-                  children: user.services!
+                  children: user.services
                       .map(
                         (s) => AppChip(
                           title: s,
@@ -878,6 +897,34 @@ class _CompanyDetailsSection extends StatelessWidget {
           icon: Icons.phone_outlined,
         ),
       ],
+      child: user.services.isNotEmpty
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppSpacing.sm.h,
+                Text(
+                  'Offered Services & Capabilities',
+                  style: context.textTheme.bodySmall?.semiBold().colour(
+                    context.colors.onSurfaceSecondary,
+                  ),
+                ),
+                AppSpacing.xs.h,
+                Wrap(
+                  spacing: AppSpacing.xs,
+                  runSpacing: AppSpacing.xs,
+                  children: user.services
+                      .map(
+                        (s) => AppChip(
+                          title: s,
+                          size: AppChipSize.small,
+                          color: context.colors.primary,
+                        ),
+                      )
+                      .toList(),
+                ),
+              ],
+            )
+          : null,
     );
   }
 }
@@ -920,8 +967,15 @@ class _UserDocumentsSection extends StatelessWidget {
         separatorBuilder: (_, _) => AppSpacing.sm.h,
         itemBuilder: (context, index) {
           final doc = docs[index];
-          final title =
-              doc.fileName ?? doc.documentTypeId ?? 'Document #${index + 1}';
+          final docName = doc.resolvedDocumentName;
+          final title = docName?.isNotEmpty == true
+              ? docName!
+              : (doc.fileName?.isNotEmpty == true
+                    ? doc.fileName!
+                    : (doc.documentTypeId ?? 'Document #${index + 1}'));
+          final subtitle = docName?.isNotEmpty == true
+              ? (doc.fileName ?? doc.documentTypeId)
+              : doc.documentTypeId;
 
           return Container(
             padding: const EdgeInsets.all(AppSpacing.md),
@@ -955,13 +1009,15 @@ class _UserDocumentsSection extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      if (doc.documentTypeId != null) ...[
+                      if (subtitle != null) ...[
                         (AppSpacing.xs / 2).h,
                         Text(
-                          doc.documentTypeId!,
+                          subtitle,
                           style: context.textTheme.bodySmall?.colour(
                             colors.onSurfaceSecondary,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ],
@@ -970,11 +1026,11 @@ class _UserDocumentsSection extends StatelessWidget {
                 AppSpacing.md.w,
 
                 // Status Badge
-                // AppChip(
-                //   title: doc.verificationStatus.label(),
-                //   color: doc.verificationStatus.color(context),
-                //   size: AppChipSize.small,
-                // ),
+                AppChip(
+                  title: doc.verificationStatus.label(),
+                  color: doc.verificationStatus.color(context),
+                  size: AppChipSize.small,
+                ),
                 AppSpacing.sm.w,
 
                 // Preview File Action

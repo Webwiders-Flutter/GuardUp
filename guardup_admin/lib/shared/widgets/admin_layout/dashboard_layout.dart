@@ -6,6 +6,7 @@ import 'package:quick_container/quick_container.dart';
 
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
+import '/app/theme/app_theme.dart';
 import '/app/theme/colors/app_colors.dart';
 import '../../../core/extensions/context.extension.dart';
 import '../../../core/extensions/spacing.extension.dart';
@@ -124,40 +125,34 @@ class _CustomDashboardLayoutState extends State<CustomDashboardLayout> {
     _manualCollapseOverrideNotifier.value = !current;
   }
 
-  void _handleSidebarDragUpdate(DragUpdateDetails details, double screenWidth) {
-    final isCurrentlyCollapsed = _resolveIsCollapsed(screenWidth);
-    final effectiveMaxWidth = math.min(
-      widget.maxSidebarWidth,
-      screenWidth * 0.5,
-    );
-    final currentWidth = isCurrentlyCollapsed
+  /// Unclamped width following the pointer since the drag started. Deltas are
+  /// accumulated here so slow drags still cross the collapse/expand threshold.
+  double _dragWidth = 0;
+
+  void _handleSidebarDragStart(double screenWidth) {
+    _dragWidth = _resolveIsCollapsed(screenWidth)
         ? widget.collapsedSidebarWidth
         : _expandedWidthNotifier.value;
-    final tentativeWidth = currentWidth + details.delta.dx;
+    _isDraggingSidebarNotifier.value = true;
+  }
 
-    if (isCurrentlyCollapsed) {
-      // Dragging rightwards from collapsed state to expand
-      if (details.delta.dx > 0 &&
-          tentativeWidth > widget.collapsedSidebarWidth + 24) {
-        _manualCollapseOverrideNotifier.value = false;
-        _expandedWidthNotifier.value = tentativeWidth.clamp(
-          widget.minSidebarWidth,
-          effectiveMaxWidth,
-        );
-      }
-    } else {
-      // Dragging while expanded
-      if (tentativeWidth < widget.minSidebarWidth - 40) {
-        // Snap to collapse
-        _manualCollapseOverrideNotifier.value = true;
-      } else {
-        _manualCollapseOverrideNotifier.value = false;
-        _expandedWidthNotifier.value = tentativeWidth.clamp(
-          widget.minSidebarWidth,
-          effectiveMaxWidth,
-        );
-      }
+  void _handleSidebarDragUpdate(DragUpdateDetails details, double screenWidth) {
+    _dragWidth += details.delta.dx;
+
+    // Snap point halfway between the collapsed rail and the minimum width.
+    final snapThreshold =
+        (widget.collapsedSidebarWidth + widget.minSidebarWidth) / 2;
+
+    if (_dragWidth < snapThreshold) {
+      _manualCollapseOverrideNotifier.value = true;
+      return;
     }
+
+    _manualCollapseOverrideNotifier.value = false;
+    _expandedWidthNotifier.value = _dragWidth.clamp(
+      widget.minSidebarWidth,
+      math.min(widget.maxSidebarWidth, screenWidth * 0.5),
+    );
   }
 
   @override
@@ -187,36 +182,42 @@ class _CustomDashboardLayoutState extends State<CustomDashboardLayout> {
             ? false
             : _resolveIsCollapsed(screenWidth);
 
-        final sidebar = CustomDashboardSidebar(
-          topItems: widget.topItems,
-          bottomItems: widget.bottomItems,
-          currentRoute: widget.currentRoute,
-          sideBarColor: sideBarColor,
-          brandTitle: widget.brandTitle,
-          brandLogo: widget.brandLogo,
-          versionTag: widget.versionTag,
-          isCollapsed: isCollapsed,
-          width: _expandedWidthNotifier.value,
-          minWidth: widget.minSidebarWidth,
-          maxWidth: math.min(widget.maxSidebarWidth, screenWidth * 0.5),
-          collapsedWidth: widget.collapsedSidebarWidth,
-          isResizable: !isMobile && widget.isSidebarResizable,
-          isDragging: _isDraggingSidebarNotifier.value,
-          onDragUpdate: (details) =>
-              _handleSidebarDragUpdate(details, screenWidth),
-          onDraggingChanged: (dragging) =>
-              _isDraggingSidebarNotifier.value = dragging,
-          onSelect: (item) {
-            widget.onSelect(item);
-            if (isMobile) _scaffoldKey.currentState?.closeDrawer();
-          },
-          onToggle: () {
-            if (isMobile) {
-              _scaffoldKey.currentState?.closeDrawer();
-            } else {
-              _toggleSidebar(screenWidth);
-            }
-          },
+        // The sidebar is always drawn on a dark surface, so it always uses
+        // dark-theme tokens (bright gold, light text) regardless of app mode.
+        final sidebar = Theme(
+          data: AppTheme.darkTheme,
+          child: CustomDashboardSidebar(
+            topItems: widget.topItems,
+            bottomItems: widget.bottomItems,
+            currentRoute: widget.currentRoute,
+            sideBarColor: sideBarColor,
+            brandTitle: widget.brandTitle,
+            brandLogo: widget.brandLogo,
+            versionTag: widget.versionTag,
+            isCollapsed: isCollapsed,
+            width: _expandedWidthNotifier.value,
+            minWidth: widget.minSidebarWidth,
+            maxWidth: math.min(widget.maxSidebarWidth, screenWidth * 0.5),
+            collapsedWidth: widget.collapsedSidebarWidth,
+            isResizable: !isMobile && widget.isSidebarResizable,
+            isDragging: _isDraggingSidebarNotifier.value,
+            onDragUpdate: (details) =>
+                _handleSidebarDragUpdate(details, screenWidth),
+            onDraggingChanged: (dragging) => dragging
+                ? _handleSidebarDragStart(screenWidth)
+                : _isDraggingSidebarNotifier.value = false,
+            onSelect: (item) {
+              widget.onSelect(item);
+              if (isMobile) _scaffoldKey.currentState?.closeDrawer();
+            },
+            onToggle: () {
+              if (isMobile) {
+                _scaffoldKey.currentState?.closeDrawer();
+              } else {
+                _toggleSidebar(screenWidth);
+              }
+            },
+          ),
         );
 
         return Scaffold(

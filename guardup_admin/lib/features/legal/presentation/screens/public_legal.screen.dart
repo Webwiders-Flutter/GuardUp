@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '/shared/widgets/misc/app_logo.dart';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -206,20 +209,7 @@ class _PublicLegalScreenState extends ConsumerState<PublicLegalScreen> {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    height: (AppSpacing.md * 3) + 4,
-                    width: (AppSpacing.md * 3) + 4,
-                    decoration: BoxDecoration(
-                      color: colors.primary,
-                      borderRadius: AppRadius.mdRadius,
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      Icons.local_shipping_rounded,
-                      color: colors.secondary,
-                      size: AppSpacing.xl,
-                    ),
-                  ),
+                  const AppLogo(size: (AppSpacing.md * 3) + 4),
                   AppSpacing.md.w,
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

@@ -49,8 +49,9 @@ class _BodyGuardUploadDocumentsScreenState
   /// Available active document types dynamically fetched from DatabaseTables.documentTypes.
   final ValueNotifier<List<DocumentTypeModel>> _docTypesNotifier =
       ValueNotifier<List<DocumentTypeModel>>([]);
-  final ValueNotifier<bool> _isDocTypesLoadingNotifier =
-      ValueNotifier<bool>(true);
+  final ValueNotifier<bool> _isDocTypesLoadingNotifier = ValueNotifier<bool>(
+    true,
+  );
 
   /// Reactive state holding selected documents per document code.
   final ValueNotifier<Map<String, XFile>> _documentsNotifier =
@@ -140,10 +141,7 @@ class _BodyGuardUploadDocumentsScreenState
     );
 
     if (picked != null && mounted) {
-      _documentsNotifier.value = {
-        ..._documentsNotifier.value,
-        doc.docKey: picked,
-      };
+      _documentsNotifier.value = {..._documentsNotifier.value, doc.id: picked};
     }
   }
 
@@ -156,10 +154,8 @@ class _BodyGuardUploadDocumentsScreenState
 
     // Validate required documents from dynamic docTypes:
     for (final doc in docTypes.where((d) => d.isRequired)) {
-      final key = doc.docKey;
-      final hasLocal = localDocs.containsKey(key);
-      final hasRemote = remoteDocs.containsKey(key) ||
-          (doc.code.isNotEmpty && remoteDocs.containsKey(doc.code));
+      final hasLocal = localDocs.containsKey(doc.id);
+      final hasRemote = remoteDocs.containsKey(doc.id);
       if (!hasLocal && !hasRemote) {
         AppSnackbar.error('Please upload your ${doc.name}');
         return;
@@ -284,18 +280,21 @@ class _BodyGuardUploadDocumentsScreenState
                                               QuickContainer(
                                                 w: 8,
                                                 h: 8,
-                                                shape: QuickContainerShape.circle,
+                                                shape:
+                                                    QuickContainerShape.circle,
                                                 color: context.colors.primary,
                                               ),
                                               AppSpacing.xs.w,
                                               Text(
                                                 'ELITE PROTECTION PARTNER',
                                                 style: context
-                                                    .textTheme.labelSmall
+                                                    .textTheme
+                                                    .labelSmall
                                                     ?.bold()
                                                     .copyWith(
                                                       color: context
-                                                          .colors.primary,
+                                                          .colors
+                                                          .primary,
                                                       letterSpacing: 0.8,
                                                     ),
                                               ),
@@ -307,7 +306,8 @@ class _BodyGuardUploadDocumentsScreenState
                                           Text(
                                             'Verification Credentials',
                                             style: context
-                                                .textTheme.headlineMedium
+                                                .textTheme
+                                                .headlineMedium
                                                 ?.bold(),
                                           ),
                                           AppSpacing.sm.h,
@@ -318,56 +318,40 @@ class _BodyGuardUploadDocumentsScreenState
                                             style: context.textTheme.bodyMedium
                                                 ?.colour(
                                                   context
-                                                      .colors.onSurfaceVariant,
+                                                      .colors
+                                                      .onSurfaceVariant,
                                                 ),
                                           ),
                                           AppSpacing.lg.h,
 
                                           // Dynamic Document Types from Supabase
                                           ...docTypes.map(
-                                            (doc) {
-                                              final key = doc.docKey;
-                                              final localFile = docs[key];
-                                              final remoteUrl =
-                                                  remoteDocs[key] ??
-                                                  (doc.code.isNotEmpty
-                                                      ? remoteDocs[doc.code]
-                                                      : null);
-                                              final remoteName =
-                                                  remoteNames[key] ??
-                                                  (doc.code.isNotEmpty
-                                                      ? remoteNames[doc.code]
-                                                      : null);
-
-                                              return Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  DocumentUploadCard(
-                                                    key: ValueKey('doc_$key'),
-                                                    title: doc.name,
-                                                    description: doc.description,
-                                                    icon: Icon(
-                                                      doc.icon,
-                                                      color: context
-                                                          .colors.primary,
-                                                      size: AppSizes.iconLg,
-                                                    ),
-                                                    isRequired: doc.isRequired,
-                                                    isOptional: !doc.isRequired,
-                                                    isLoading: false,
-                                                    initialUrl: remoteUrl,
-                                                    fileName: remoteName,
-                                                    selectedFilePath:
-                                                        localFile?.path,
-                                                    onPick: isLoading
-                                                        ? null
-                                                        : () =>
-                                                            _pickDocument(doc),
+                                            (doc) => Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                DocumentUploadCard(
+                                                  title: doc.name,
+                                                  description: doc.description,
+                                                  icon: Icon(
+                                                    doc.icon,
+                                                    color:
+                                                        context.colors.primary,
+                                                    size: AppSizes.iconLg,
                                                   ),
-                                                  AppSpacing.lg.h,
-                                                ],
-                                              );
-                                            },
+                                                  isRequired: doc.isRequired,
+                                                  isOptional: !doc.isRequired,
+                                                  isLoading: isLoading,
+                                                  initialUrl:
+                                                      remoteDocs[doc.id],
+                                                  fileName: remoteNames[doc.id],
+                                                  selectedFilePath:
+                                                      docs[doc.id]?.path,
+                                                  onPick: () =>
+                                                      _pickDocument(doc),
+                                                ),
+                                                AppSpacing.lg.h,
+                                              ],
+                                            ),
                                           ),
 
                                           // 4. 256-Bit Encrypted & Compliant Security Notice
@@ -388,7 +372,8 @@ class _BodyGuardUploadDocumentsScreenState
                                                       .withValues(alpha: 0.5),
                                                   border: Border.all(
                                                     color: context
-                                                        .colors.outlineVariant
+                                                        .colors
+                                                        .outlineVariant
                                                         .withValues(alpha: 0.5),
                                                     width: 1,
                                                   ),
@@ -405,17 +390,16 @@ class _BodyGuardUploadDocumentsScreenState
                                                   child: AppRichText(
                                                     spans: [
                                                       AppTextSpan(
-                                                        text:
-                                                            '256-Bit Encrypted & Compliant: ',
+                                                        text: '256-Bit Encrypted & Compliant: ',
                                                         fontWeight:
                                                             FontWeight.bold,
                                                         color: context
-                                                            .colors.onSurface,
+                                                            .colors
+                                                            .onSurface,
                                                         fontSize: 12,
                                                       ),
                                                       AppTextSpan(
-                                                        text:
-                                                            'Documents are stored in an encrypted vault and reviewed only by authorized government compliance officers.',
+                                                        text: 'Documents are stored in an encrypted vault and reviewed only by authorized government compliance officers.',
                                                         color: context
                                                             .colors
                                                             .onSurfaceVariant,

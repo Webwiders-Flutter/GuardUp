@@ -122,16 +122,16 @@ class _AdminShellState extends ConsumerState<AdminShell> {
       description: 'Manage bodyguard personnel & credentials',
       children: [
         CustomDashboardMenuItem(
-          icon: Icons.verified_user_outlined,
-          label: 'Approved',
-          route: AppRoutes.userGuardVerified,
-          description: 'Manage approved bodyguard operatives',
-        ),
-        CustomDashboardMenuItem(
           icon: Icons.pending_actions_outlined,
           label: 'Pending',
           route: AppRoutes.userGuardPending,
           description: 'Review pending bodyguard verifications',
+        ),
+        CustomDashboardMenuItem(
+          icon: Icons.verified_user_outlined,
+          label: 'Approved',
+          route: AppRoutes.userGuardVerified,
+          description: 'Manage approved bodyguard operatives',
         ),
         CustomDashboardMenuItem(
           icon: Icons.block_outlined,
@@ -148,16 +148,16 @@ class _AdminShellState extends ConsumerState<AdminShell> {
       description: 'Manage security firm & partner accounts',
       children: [
         CustomDashboardMenuItem(
-          icon: Icons.verified_user_outlined,
-          label: 'Approved',
-          route: AppRoutes.userCompanyVerified,
-          description: 'Manage approved security companies',
-        ),
-        CustomDashboardMenuItem(
           icon: Icons.pending_actions_outlined,
           label: 'Pending',
           route: AppRoutes.userCompanyPending,
           description: 'Review pending company applications',
+        ),
+        CustomDashboardMenuItem(
+          icon: Icons.verified_user_outlined,
+          label: 'Approved',
+          route: AppRoutes.userCompanyVerified,
+          description: 'Manage approved security companies',
         ),
         CustomDashboardMenuItem(
           icon: Icons.block_outlined,
@@ -204,6 +204,12 @@ class _AdminShellState extends ConsumerState<AdminShell> {
       label: 'Services',
       route: AppRoutes.services,
       description: 'Protection services catalog, ordering & active status',
+    ),
+    const CustomDashboardMenuItem(
+      icon: Icons.description_outlined,
+      label: 'Document Types',
+      route: AppRoutes.documentTypes,
+      description: 'Verification documents required per user role',
     ),
 
     // ── SYSTEM ───────────────────────────────────────────

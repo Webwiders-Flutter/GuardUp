@@ -14,6 +14,19 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/flutter_svg.dart' as _svg;
 import 'package:vector_graphics/vector_graphics.dart' as _vg;
 
+class $AssetsImagesGen {
+  const $AssetsImagesGen();
+
+  /// File path: assets/images/app_logo.png
+  AssetGenImage get appLogo => const AssetGenImage('assets/images/app_logo.png');
+
+  /// File path: assets/images/app_logo_mark.png
+  AssetGenImage get appLogoMark => const AssetGenImage('assets/images/app_logo_mark.png');
+
+  /// List of all assets
+  List<AssetGenImage> get values => [appLogo, appLogoMark];
+}
+
 class $AssetsPngGen {
   const $AssetsPngGen();
 
@@ -35,8 +48,13 @@ class $AssetsSvgGen {
 }
 
 abstract final class Assets {
+  static const String aEnv = '.env';
+  static const $AssetsImagesGen images = $AssetsImagesGen();
   static const $AssetsPngGen png = $AssetsPngGen();
   static const $AssetsSvgGen svg = $AssetsSvgGen();
+
+  /// List of all assets
+  static List<String> get values => [aEnv];
 }
 
 class AssetGenImage {

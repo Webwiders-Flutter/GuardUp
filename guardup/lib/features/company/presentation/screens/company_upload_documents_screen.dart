@@ -116,10 +116,7 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
     );
 
     if (picked != null && mounted) {
-      _documentsNotifier.value = {
-        ..._documentsNotifier.value,
-        doc.docKey: picked,
-      };
+      _documentsNotifier.value = {..._documentsNotifier.value, doc.id: picked};
     }
   }
 
@@ -132,11 +129,8 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
 
     // Validate required documents dynamically from database definitions
     for (final doc in docTypes.where((d) => d.isRequired)) {
-      final key = doc.docKey;
-      final hasLocal = localDocs.containsKey(key);
-      final hasRemote =
-          remoteDocs.containsKey(key) ||
-          (doc.code.isNotEmpty && remoteDocs.containsKey(doc.code));
+      final hasLocal = localDocs.containsKey(doc.id);
+      final hasRemote = remoteDocs.containsKey(doc.id);
       if (!hasLocal && !hasRemote) {
         AppSnackbar.error('Please upload your ${doc.name}');
         return;
@@ -170,17 +164,7 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
                 ),
               );
 
-              final isLogo =
-                  docKey == 'COMPANY_LOGO' ||
-                  docTypes
-                      .firstWhere(
-                        (d) => d.docKey == docKey,
-                        orElse: () => docTypes.first,
-                      )
-                      .name
-                      .toUpperCase()
-                      .contains('LOGO');
-              if (isLogo) {
+              if (docTypes.any((d) => d.id == docCode && d.isLogo)) {
                 uploadedLogoUrl = fileUrl;
               }
 
@@ -313,15 +297,14 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
                                                   ),
                                                   isRequired: doc.isRequired,
                                                   isOptional: !doc.isRequired,
-                                                  isLoading: false,
-                                                  initialUrl: remoteUrl,
-                                                  fileName: remoteName,
+                                                  isLoading: isLoading,
+                                                  initialUrl:
+                                                      remoteDocs[doc.id],
+                                                  fileName: remoteNames[doc.id],
                                                   selectedFilePath:
-                                                      localFile?.path,
-                                                  onPick: isLoading
-                                                      ? null
-                                                      : () =>
-                                                            _pickDocument(doc),
+                                                      docs[doc.id]?.path,
+                                                  onPick: () =>
+                                                      _pickDocument(doc),
                                                 ),
                                                 AppSpacing.md.h,
                                               ],

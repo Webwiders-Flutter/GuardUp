@@ -1,10 +1,12 @@
 import '../enum/document_status.enum.dart';
+import 'document_type.model.dart';
 
 /// Represents a document submitted by a Guard or Company user.
 class UserDocumentModel {
   final String id;
   final String userId;
   final String documentTypeId;
+  final DocumentTypeModel? documentType;
   final String fileUrl;
   final String? fileName;
   final DocumentStatus status;
@@ -16,6 +18,7 @@ class UserDocumentModel {
     required this.id,
     required this.userId,
     required this.documentTypeId,
+    this.documentType,
     required this.fileUrl,
     this.fileName,
     this.status = DocumentStatus.pending,
@@ -29,6 +32,11 @@ class UserDocumentModel {
       id: (json['id'] ?? '') as String,
       userId: (json['user_id'] ?? '') as String,
       documentTypeId: (json['document_type_id'] ?? '') as String,
+      documentType: json['document_type'] != null &&
+              json['document_type'] is Map<String, dynamic>
+          ? DocumentTypeModel.fromJson(
+              json['document_type'] as Map<String, dynamic>)
+          : null,
       fileUrl: (json['file_url'] ?? '') as String,
       fileName: json['file_name'] as String?,
       status: DocumentStatus.fromApiValue(json['status'] as String?),
@@ -47,6 +55,7 @@ class UserDocumentModel {
       'id': id,
       'user_id': userId,
       'document_type_id': documentTypeId,
+      if (documentType != null) 'document_type': documentType!.toJson(),
       'file_url': fileUrl,
       'file_name': fileName,
       'status': status.apiValue,
@@ -56,4 +65,3 @@ class UserDocumentModel {
     };
   }
 }
-

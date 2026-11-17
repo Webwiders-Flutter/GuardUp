@@ -35,6 +35,7 @@ final class JsonKeys {
 
   // User & Account Keys
   static const String role = 'role';
+  static const String targetRole = 'target_role';
   static const String fullName = 'name';
   static const String email = 'email';
   static const String mobileNumber = 'phone_number';

@@ -219,6 +219,7 @@ class UsersController extends AsyncNotifier<PaginationState<UserModel>> {
   }
 
   /// Returns loaded records matching the provided [ids] and optional [condition].
+  // ignore: unused_element
   List<UserModel> _getLocalRecords(
     List<String> ids, {
     bool Function(UserModel item)? condition,
