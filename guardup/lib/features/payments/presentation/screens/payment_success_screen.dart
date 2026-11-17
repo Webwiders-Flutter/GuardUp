@@ -13,6 +13,7 @@ import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/string.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
+import '/core/services/admin_settings/admin_settings.service.dart';
 import '/features/auth/bloc/auth_bloc.dart';
 import '/features/auth/data/enum/user_role.enum.dart';
 import '/features/auth/data/model/user.model.dart';
@@ -52,15 +53,22 @@ class PaymentSuccessScreen extends StatelessWidget {
         ? effectiveUser!.name
         : (authState?.displayName ?? 'Michael Carter'));
     final initials = companyName.isNotEmpty ? companyName.getInitials() : 'SP';
-    final referenceId =
-        transaction?.referenceId ?? transaction?.bookingId ?? '#GD-884920';
+    final referenceId = transaction?.referenceId ??
+        transaction?.bookingId ??
+        (authState?.userData?['metadata']?['payment_reference'] as String?) ??
+        '#GD-884920';
     final scheduleText =
         transaction?.scheduleText ??
         transaction?.formattedDate ??
         'Today, 2:00 PM – 4:00 PM';
-    final amountText = transaction != null
-        ? transaction!.amount.toUsd
-        : 49.toUsd;
+    final dynamicFee = transaction?.amount ??
+        double.tryParse(
+          authState?.userData?['metadata']?['payment_amount']?.toString() ?? '',
+        ) ??
+        AdminSettingsService.instance.getRegistrationFee(
+          isGuard ? UserRole.guard : UserRole.company,
+        );
+    final amountText = dynamicFee.toUsd;
     final gateway = transaction?.gateway ?? context.l10n.stripeVerified;
     final discountNote =
         transaction?.discountNote ?? context.l10n.incMembershipDiscount;

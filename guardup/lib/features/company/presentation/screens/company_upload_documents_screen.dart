@@ -134,7 +134,8 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
     for (final doc in docTypes.where((d) => d.isRequired)) {
       final key = doc.docKey;
       final hasLocal = localDocs.containsKey(key);
-      final hasRemote = remoteDocs.containsKey(key) ||
+      final hasRemote =
+          remoteDocs.containsKey(key) ||
           (doc.code.isNotEmpty && remoteDocs.containsKey(doc.code));
       if (!hasLocal && !hasRemote) {
         AppSnackbar.error('Please upload your ${doc.name}');
@@ -169,7 +170,8 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
                 ),
               );
 
-              final isLogo = docKey == 'COMPANY_LOGO' ||
+              final isLogo =
+                  docKey == 'COMPANY_LOGO' ||
                   docTypes
                       .firstWhere(
                         (d) => d.docKey == docKey,
@@ -282,49 +284,49 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
                                         children: [
                                           AppSpacing.lg.h,
 
-                                          ...docTypes.map(
-                                            (doc) {
-                                              final key = doc.docKey;
-                                              final localFile = docs[key];
-                                              final remoteUrl =
-                                                  remoteDocs[key] ??
-                                                  (doc.code.isNotEmpty
-                                                      ? remoteDocs[doc.code]
-                                                      : null);
-                                              final remoteName =
-                                                  remoteNames[key] ??
-                                                  (doc.code.isNotEmpty
-                                                      ? remoteNames[doc.code]
-                                                      : null);
+                                          ...docTypes.map((doc) {
+                                            final key = doc.docKey;
+                                            final localFile = docs[key];
+                                            final remoteUrl =
+                                                remoteDocs[key] ??
+                                                (doc.code.isNotEmpty
+                                                    ? remoteDocs[doc.code]
+                                                    : null);
+                                            final remoteName =
+                                                remoteNames[key] ??
+                                                (doc.code.isNotEmpty
+                                                    ? remoteNames[doc.code]
+                                                    : null);
 
-                                              return Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  DocumentUploadCard(
-                                                    key: ValueKey('doc_$key'),
-                                                    title: doc.name,
-                                                    description: doc.description,
-                                                    icon: Icon(
-                                                      doc.icon,
-                                                      color: context
-                                                          .colors.primary,
-                                                      size: AppSizes.iconLg,
-                                                    ),
-                                                    isRequired: doc.isRequired,
-                                                    isOptional: !doc.isRequired,
-                                                    isLoading: isLoading,
-                                                    initialUrl: remoteUrl,
-                                                    fileName: remoteName,
-                                                    selectedFilePath:
-                                                        localFile?.path,
-                                                    onPick: () =>
-                                                        _pickDocument(doc),
+                                            return Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                DocumentUploadCard(
+                                                  key: ValueKey('doc_$key'),
+                                                  title: doc.name,
+                                                  description: doc.description,
+                                                  icon: Icon(
+                                                    doc.icon,
+                                                    color:
+                                                        context.colors.primary,
+                                                    size: AppSizes.iconLg,
                                                   ),
-                                                  AppSpacing.md.h,
-                                                ],
-                                              );
-                                            },
-                                          ),
+                                                  isRequired: doc.isRequired,
+                                                  isOptional: !doc.isRequired,
+                                                  isLoading: false,
+                                                  initialUrl: remoteUrl,
+                                                  fileName: remoteName,
+                                                  selectedFilePath:
+                                                      localFile?.path,
+                                                  onPick: isLoading
+                                                      ? null
+                                                      : () =>
+                                                            _pickDocument(doc),
+                                                ),
+                                                AppSpacing.md.h,
+                                              ],
+                                            );
+                                          }),
 
                                           const Spacer(),
                                           AppSpacing.lg.h,

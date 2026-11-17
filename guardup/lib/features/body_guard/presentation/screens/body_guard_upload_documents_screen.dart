@@ -354,13 +354,15 @@ class _BodyGuardUploadDocumentsScreenState
                                                     ),
                                                     isRequired: doc.isRequired,
                                                     isOptional: !doc.isRequired,
-                                                    isLoading: isLoading,
+                                                    isLoading: false,
                                                     initialUrl: remoteUrl,
                                                     fileName: remoteName,
                                                     selectedFilePath:
                                                         localFile?.path,
-                                                    onPick: () =>
-                                                        _pickDocument(doc),
+                                                    onPick: isLoading
+                                                        ? null
+                                                        : () =>
+                                                            _pickDocument(doc),
                                                   ),
                                                   AppSpacing.lg.h,
                                                 ],

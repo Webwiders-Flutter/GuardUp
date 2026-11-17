@@ -44,7 +44,8 @@ class _RegistrationFeeScreenState extends State<RegistrationFeeScreen> {
         : null;
 
     return UserModel(
-      id: currentUserId ??
+      id:
+          currentUserId ??
           authState.user?.id ??
           'usr_${DateTime.now().millisecondsSinceEpoch}',
       name: authState.displayName.isNotEmpty
@@ -125,8 +126,8 @@ class _RegistrationFeeScreenState extends State<RegistrationFeeScreen> {
         // 4. Navigate to luxury PaymentSuccessScreen
         context.go(
           AppRoutes.paymentSuccess,
-          extra: (
-            transaction: TransactionModel(
+          extra: {
+            'transaction': TransactionModel(
               id: dummyPaymentId,
               referenceId: dummyReferenceId,
               bookingId: dummyReferenceId,
@@ -139,10 +140,10 @@ class _RegistrationFeeScreenState extends State<RegistrationFeeScreen> {
               dateTime: DateTime.now(),
               discountNote: context.l10n.incMembershipDiscount,
             ),
-            user: effectiveUser,
-            buttonText: context.l10n.next,
-            onTap: () => context.go(AppRoutes.adminApproval),
-          ),
+            'user': effectiveUser,
+            'buttonText': context.l10n.next,
+            'onTap': () => context.go(AppRoutes.adminApproval),
+          },
         );
       }
     } catch (e) {

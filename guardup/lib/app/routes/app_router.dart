@@ -275,7 +275,7 @@ final class AppRouter {
               onTap: extra.onTap,
             );
           }
-          if (extra is Map<String, dynamic>) {
+          if (extra is Map) {
             return PaymentSuccessScreen(
               transaction: extra['transaction'] as TransactionModel?,
               user: extra['user'] as UserModel?,
