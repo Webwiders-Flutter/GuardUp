@@ -240,72 +240,79 @@ class AppButton extends StatelessWidget {
     final resolvedHeight = height ?? sizeSpec.height;
     final resolvedPadding = padding ?? sizeSpec.padding;
 
-    Widget button = SizedBox(
-      width: fullWidth ? double.infinity : width,
-      height: resolvedHeight,
-      child: ElevatedButton(
-        onPressed: _isEnabled ? onPressed : null,
-        style: (themeStyle ?? const ButtonStyle()).copyWith(
-          backgroundColor: WidgetStateProperty.resolveWith((states) {
-            if (!_isEnabled) return context.colors.borderLight;
-            return resolvedBackground;
-          }),
-          foregroundColor: WidgetStateProperty.resolveWith((states) {
-            if (!_isEnabled) return context.colors.onSurfaceSecondary;
-            return resolvedForeground;
-          }),
-          overlayColor: WidgetStateProperty.resolveWith((states) {
-            if (!_isEnabled) return null;
-            if (states.contains(WidgetState.pressed)) {
-              return resolvedForeground.withValues(alpha: 0.14);
-            }
-            if (states.contains(WidgetState.hovered)) {
-              return resolvedForeground.withValues(alpha: 0.08);
-            }
-            if (states.contains(WidgetState.focused)) {
-              return resolvedForeground.withValues(alpha: 0.12);
-            }
-            return null;
-          }),
-          elevation: WidgetStateProperty.resolveWith((states) {
-            final baseElevation = resolvedElevation ?? 0.0;
-            if (!_isEnabled) return 0.0;
-            if (states.contains(WidgetState.pressed)) {
-              return baseElevation > 0 ? baseElevation - 1.0 : 0.0;
-            }
-            if (states.contains(WidgetState.hovered) && baseElevation > 0) {
-              return baseElevation + 1.5;
-            }
-            return baseElevation;
-          }),
-          mouseCursor: WidgetStateProperty.resolveWith((states) {
-            return _isEnabled
-                ? SystemMouseCursors.click
-                : SystemMouseCursors.basic;
-          }),
-          padding: WidgetStatePropertyAll(resolvedPadding),
-          side: resolvedBorder != null
-              ? WidgetStatePropertyAll(resolvedBorder)
-              : null,
-          shape: WidgetStatePropertyAll(
-            RoundedRectangleBorder(
-              borderRadius:
-                  borderRadius ??
-                  (size == ButtonSize.small
-                      ? AppRadius.smRadius
-                      : AppRadius.mdRadius),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final canBeFullWidth = fullWidth && constraints.hasBoundedWidth;
+        final resolvedWidth = width ?? (canBeFullWidth ? double.infinity : null);
+
+        Widget button = SizedBox(
+          width: resolvedWidth,
+          height: resolvedHeight,
+          child: ElevatedButton(
+            onPressed: _isEnabled ? onPressed : null,
+            style: (themeStyle ?? const ButtonStyle()).copyWith(
+              backgroundColor: WidgetStateProperty.resolveWith((states) {
+                if (!_isEnabled) return context.colors.borderLight;
+                return resolvedBackground;
+              }),
+              foregroundColor: WidgetStateProperty.resolveWith((states) {
+                if (!_isEnabled) return context.colors.onSurfaceSecondary;
+                return resolvedForeground;
+              }),
+              overlayColor: WidgetStateProperty.resolveWith((states) {
+                if (!_isEnabled) return null;
+                if (states.contains(WidgetState.pressed)) {
+                  return resolvedForeground.withValues(alpha: 0.14);
+                }
+                if (states.contains(WidgetState.hovered)) {
+                  return resolvedForeground.withValues(alpha: 0.08);
+                }
+                if (states.contains(WidgetState.focused)) {
+                  return resolvedForeground.withValues(alpha: 0.12);
+                }
+                return null;
+              }),
+              elevation: WidgetStateProperty.resolveWith((states) {
+                final baseElevation = resolvedElevation ?? 0.0;
+                if (!_isEnabled) return 0.0;
+                if (states.contains(WidgetState.pressed)) {
+                  return baseElevation > 0 ? baseElevation - 1.0 : 0.0;
+                }
+                if (states.contains(WidgetState.hovered) && baseElevation > 0) {
+                  return baseElevation + 1.5;
+                }
+                return baseElevation;
+              }),
+              mouseCursor: WidgetStateProperty.resolveWith((states) {
+                return _isEnabled
+                    ? SystemMouseCursors.click
+                    : SystemMouseCursors.basic;
+              }),
+              padding: WidgetStatePropertyAll(resolvedPadding),
+              side: resolvedBorder != null
+                  ? WidgetStatePropertyAll(resolvedBorder)
+                  : null,
+              shape: WidgetStatePropertyAll(
+                RoundedRectangleBorder(
+                  borderRadius:
+                      borderRadius ??
+                      (size == ButtonSize.small
+                          ? AppRadius.smRadius
+                          : AppRadius.mdRadius),
+                ),
+              ),
             ),
+            child: _buildChild(context, resolvedForeground, sizeSpec),
           ),
-        ),
-        child: _buildChild(context, resolvedForeground, sizeSpec),
-      ),
+        );
+
+        if (margin != null) {
+          button = Padding(padding: margin!, child: button);
+        }
+
+        return button;
+      },
     );
-
-    if (margin != null) {
-      button = Padding(padding: margin!, child: button);
-    }
-
-    return button;
   }
 
   Widget _buildChild(

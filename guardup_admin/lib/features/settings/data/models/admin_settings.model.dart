@@ -37,6 +37,8 @@ sealed class AdminSettingsModel with _$AdminSettingsModel {
       'We are currently upgrading our systems. Please check back shortly.',
     )
     String? maintenanceMessage,
+    @Default(0.0) double bodyguardFee,
+    @Default(0.0) double companyFee,
     @Default(true) bool singletonGuard,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -65,6 +67,8 @@ sealed class AdminSettingsModel with _$AdminSettingsModel {
     maintenanceTitle: 'App Under Maintenance',
     maintenanceMessage:
         'We are currently upgrading our systems. Please check back shortly.',
+    bodyguardFee: 0.0,
+    companyFee: 0.0,
     singletonGuard: true,
   );
 }

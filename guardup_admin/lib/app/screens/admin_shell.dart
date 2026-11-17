@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import '/core/providers/theme/theme.provider.dart';
 import '/features/auth/di/auth.providers.dart';
 import '../../shared/widgets/feedbacks/widgets/app_snackbar.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -198,6 +197,15 @@ class _AdminShellState extends ConsumerState<AdminShell> {
     //   }).toList(),
     // ),
 
+    // ── PLATFORM & MASTER DATA ───────────────────────────
+    const CustomDashboardMenuItem(
+      sectionTitle: 'Platform',
+      icon: Icons.shield_outlined,
+      label: 'Services',
+      route: AppRoutes.services,
+      description: 'Protection services catalog, ordering & active status',
+    ),
+
     // ── SYSTEM ───────────────────────────────────────────
     // const CustomDashboardMenuItem(
     //   sectionTitle: 'System',
@@ -206,12 +214,13 @@ class _AdminShellState extends ConsumerState<AdminShell> {
     //   route: AppRoutes.notifications,
     //   description: 'System broadcasts, push notifications and delivery logs',
     // ),
-    // const CustomDashboardMenuItem(
-    //   icon: Icons.tune_rounded,
-    //   label: 'Settings',
-    //   route: AppRoutes.settings,
-    //   description: 'Platform preferences, role permissions & configuration',
-    // ),
+    const CustomDashboardMenuItem(
+      sectionTitle: 'System',
+      icon: Icons.tune_rounded,
+      label: 'Settings',
+      route: AppRoutes.settings,
+      description: 'Platform preferences, role permissions & configuration',
+    ),
   ];
 
   final List<CustomDashboardMenuItem> bottomItems = [
@@ -425,9 +434,7 @@ class _AdminShellState extends ConsumerState<AdminShell> {
               iconData,
               key: ValueKey(currentMode),
               size: AppSpacing.xl,
-              color: isDark
-                  ? context.colors.secondary
-                  : context.colors.onSurfaceSecondary,
+              color: context.colors.primary,
             ),
           ),
         ),
@@ -718,8 +725,8 @@ class _CommandPaletteDialogState extends State<_CommandPaletteDialog> {
     final allItems = _flatten(widget.menuItems);
 
     return Dialog(
-      backgroundColor: context.colors.white,
-      surfaceTintColor: context.colors.white,
+      backgroundColor: context.colors.surface,
+      surfaceTintColor: context.colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: AppRadius.xlRadius),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 560, maxHeight: 480),

@@ -53,6 +53,11 @@ class OverviewSectionCard extends StatelessWidget {
             ],
 
             AppSpacing.xl.h,
+
+            // ── Section 3: Platform Fees Snapshot ──
+            _buildPlatformFeesSnapshot(context),
+
+            AppSpacing.xl.h,
           ],
         );
       },
@@ -115,7 +120,7 @@ class OverviewSectionCard extends StatelessWidget {
                       isMaintenance
                           ? (settings.maintenanceTitle ??
                                 'App Under Maintenance')
-                          : 'Customer apps, driver portal & carrier networks are live.',
+                          : 'Customer apps, bodyguard personnel & security companies are live.',
                       style: context.textTheme.bodySmall?.colour(
                         colors.onSurface,
                       ),
@@ -420,6 +425,127 @@ class OverviewSectionCard extends StatelessWidget {
           onPressed: onTap,
         ),
       ],
+    );
+  }
+
+  Widget _buildPlatformFeesSnapshot(BuildContext context) {
+    final colors = context.colors;
+
+    return QuickContainer(
+      p: AppSpacing.xl,
+      radius: AppRadius.lg,
+      color: colors.surface,
+      border: Border.all(color: colors.borderLight.withValues(alpha: 0.8)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: colors.primary.withValues(alpha: 0.12),
+                  borderRadius: AppRadius.mdRadius,
+                ),
+                child: Icon(
+                  Icons.payments_outlined,
+                  size: AppSpacing.xl,
+                  color: colors.primary,
+                ),
+              ),
+              AppSpacing.md.w,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Platform Service Fees',
+                      style: context.textTheme.titleMedium?.semiBold(),
+                    ),
+                    AppSpacing.xs.h,
+                    Text(
+                      'Configured standard base commission and platform fee schedule.',
+                      style: context.textTheme.bodySmall?.colour(
+                        colors.onSurfaceSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              AppButton(
+                text: 'Edit Fees',
+                fullWidth: false,
+                type: ButtonType.secondaryOff,
+                size: ButtonSize.small,
+                leading: const Icon(Icons.edit_outlined, size: AppSpacing.md),
+                onPressed: () => onNavigateToSection(SettingsSection.fees),
+              ),
+            ],
+          ),
+          AppSpacing.xl.h,
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: colors.backgroundLight,
+                    borderRadius: AppRadius.mdRadius,
+                    border: Border.all(color: colors.borderLight),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Bodyguard Fee',
+                        style: context.textTheme.labelSmall?.colour(
+                          colors.onSurfaceSecondary,
+                        ),
+                      ),
+                      AppSpacing.xs.h,
+                      Text(
+                        '\$${settings.bodyguardFee.toStringAsFixed(2)}',
+                        style: context.textTheme.titleLarge?.bold().colour(
+                          colors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              AppSpacing.lg.w,
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: colors.backgroundLight,
+                    borderRadius: AppRadius.mdRadius,
+                    border: Border.all(color: colors.borderLight),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Company Fee',
+                        style: context.textTheme.labelSmall?.colour(
+                          colors.onSurfaceSecondary,
+                        ),
+                      ),
+                      AppSpacing.xs.h,
+                      Text(
+                        '\$${settings.companyFee.toStringAsFixed(2)}',
+                        style: context.textTheme.titleLarge?.bold().colour(
+                          colors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

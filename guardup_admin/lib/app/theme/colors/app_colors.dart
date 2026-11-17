@@ -3,58 +3,45 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // Primary Gold Palette (matching GuardUp mobile app #EDCC73, #AC7F42)
+  // Brand
   static const Color primary = Color(0xFFEDCC73); // Luxury Gold
-  static const Color primaryContainer = Color(0xFFAC7F42);
-  static const Color onPrimary = Color(0xFF191B23);
-  static const Color onPrimaryContainer = Color(0xFFFFFFFF);
-
-  // Secondary Slate Palette (#262D3D, #333C4F)
-  static const Color secondary = Color(0xFF262D3D);
-  static const Color secondaryLight = Color(0xFF333C4F);
-  static const Color onSecondary = Color(0xFFFFFFFF);
-  static const Color teal = Color(0xFFEDCC73);
-  static const Color lightTeal = Color(0xFFD3C4B0);
-  static const Color purpleLight = Color(0xFFAC7F42);
+  static const Color secondary = Color(0xFFAC7F42); // Deep Gold / Accent
+  static const Color onPrimary = Color(0xFF0D0F14); // Near-black text on gold
+  static const Color onSecondary = Color(0xFFFFFFFF); // High-contrast text on secondary
 
   // Status
-  static const Color success = Color(0xFF10B981);
-  static const Color darkGreen = Color(0xFF059669);
-  static const Color successLight = Color(0x2610B981);
-  static const Color warning = Color(0xFFEDCC73);
-  static const Color warningLight = Color(0x26EDCC73);
-  static const Color error = Color(0xFFDC2626);
-  static const Color errorLight = Color(0x26DC2626);
-  static const Color info = Color(0xFF7E8B9B);
-  static const Color infoLight = Color(0x267E8B9B);
+  static const Color success = Color(0xFF22C55E);
+  static const Color successLight = Color(0xFFDCFCE7);
+  static const Color warning = Color(0xFFF59E0B);
+  static const Color warningLight = Color(0xFFFEF3C7);
+  static const Color error = Color(0xFFEF4444);
+  static const Color errorLight = Color(0xFFFEE2E2);
+  static const Color info = Color(0xFF60A5FA);
+  static const Color infoLight = Color(0xFFDBEAFE);
 
   // Neutrals
   static const Color white = Colors.white;
   static const Color black = Colors.black;
 
-  // Navigation Sidebar (Executive Midnight Obsidian)
-  static const Color sidebarBackground = Color(0xFF0A0D14);
-
-  // Surfaces & Backgrounds (Dark luxury obsidian)
-  static const Color backgroundLight = Color(0xFF0E1119);
-  static const Color surfaceLight = Color(0xFF191B23);
+  // Light surfaces
+  static const Color backgroundLight = Color(0xFFF7F4EE); // Warm ivory-white
+  static const Color surfaceLight = Color(0xFFFFFFFF);
 
   // Dark surfaces
-  static const Color backgroundDark = Color(0xFF0E1119);
-  static const Color surfaceDark = Color(0xFF191B23);
+  static const Color backgroundDark = Color(0xFF0D0F14); // Deep obsidian
+  static const Color surfaceDark = Color(0xFF161920); // Raised obsidian
 
   // Text
-  static const Color textPrimaryLight = Color(0xFFFFFFFF);
-  static const Color textSecondaryLight = Color(0xFFCCCCCC);
+  static const Color textPrimaryLight = Color(0xFF1A1710); // Near-black warm
+  static const Color textSecondaryLight = Color(0xFF6B6354); // Warm muted
 
-  static const Color textPrimaryDark = Color(0xFFFFFFFF);
-  static const Color textSecondaryDark = Color(0xFFCCCCCC);
-  static const Color textMuted = Color(0xFFD3C4B0);
+  static const Color textPrimaryDark = Color(0xFFF5F0E8); // Warm off-white
+  static const Color textSecondaryDark = Color(0xFFADA595); // Muted warm gray
 
   // Border / Divider
-  static const Color borderLight = Color(0xFF32353D);
-  static const Color borderDark = Color(0xFF262D3D);
-  static const Color borderExtraLight = Color(0xFF1F2430);
+  static const Color borderLight = Color(0xFFE0D8C8); // Warm light border
+  static const Color borderDark = Color(0xFF2A2D35); // Dark obsidian border
+  static const Color borderExtraLight = Color(0xFFF0EAE0); // Subtlest border
 
   // misc.
   static const Color transparent = Colors.transparent;

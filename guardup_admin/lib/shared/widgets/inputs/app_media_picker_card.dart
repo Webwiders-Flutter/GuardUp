@@ -822,7 +822,7 @@ class _AppMediaPickerCardState extends State<AppMediaPickerCard> {
     final badgeColor = _isPdf
         ? colors.error
         : (_isVideo
-              ? colors.purpleLight
+              ? colors.info
               : (_isSvg ? colors.warning : colors.primary));
 
     return Container(

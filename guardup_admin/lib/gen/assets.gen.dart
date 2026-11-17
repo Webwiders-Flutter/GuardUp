@@ -35,12 +35,8 @@ class $AssetsSvgGen {
 }
 
 abstract final class Assets {
-  static const String aEnv = '.env';
   static const $AssetsPngGen png = $AssetsPngGen();
   static const $AssetsSvgGen svg = $AssetsSvgGen();
-
-  /// List of all assets
-  static List<String> get values => [aEnv];
 }
 
 class AssetGenImage {

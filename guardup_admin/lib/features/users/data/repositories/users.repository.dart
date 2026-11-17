@@ -47,10 +47,10 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
         if (status != null) {
           query = query.eq(JsonKeys.registrationStatus, status.apiValue);
         } else {
-          query = query.neq(
-            JsonKeys.registrationStatus,
-            UserStatus.deleted.apiValue,
-          );
+            query = query
+              .neq(JsonKeys.registrationStatus, UserStatus.incomplete.apiValue)
+              .neq(JsonKeys.registrationStatus, UserStatus.deleted.apiValue);
+        
         }
         if (role != null) {
           query = query.eq(JsonKeys.role, role.apiValue);
@@ -132,6 +132,23 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
       await client
           .from(DatabaseTables.userDocuments)
           .update({'status': 'APPROVED'})
+          .eq('user_id', id);
+    } catch (_) {}
+
+    return getDetails(id);
+  }
+
+  /// Rejects user registration.
+  Future<UserModel> rejectUser(String id) async {
+    await client
+        .from(tableName)
+        .update({JsonKeys.registrationStatus: UserStatus.rejected.apiValue})
+        .eq(JsonKeys.id, id);
+
+    try {
+      await client
+          .from(DatabaseTables.userDocuments)
+          .update({'status': 'REJECTED'})
           .eq('user_id', id);
     } catch (_) {}
 

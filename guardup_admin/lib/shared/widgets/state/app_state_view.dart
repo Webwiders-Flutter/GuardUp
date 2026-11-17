@@ -275,7 +275,7 @@ class AppStateView extends StatelessWidget {
       defaultIcon: Icons.inventory_2_outlined,
       defaultColor: (ctx) => ctx.colors.secondary,
       defaultBackgroundColor: (ctx) =>
-          ctx.colors.secondaryLight.withValues(alpha: 0.15),
+          ctx.colors.secondary.withValues(alpha: 0.15),
       defaultMessage: (ctx) => ctx.l10n.noDataFound,
       defaultSubtitle: (ctx) => ctx.l10n.tryRefreshingOrCheckBackLater,
       defaultActionText: (ctx) => ctx.l10n.refresh,
@@ -296,7 +296,7 @@ class AppStateView extends StatelessWidget {
       defaultIcon: Icons.hourglass_empty_rounded,
       defaultColor: (ctx) => ctx.colors.secondary,
       defaultBackgroundColor: (ctx) =>
-          ctx.colors.secondaryLight.withValues(alpha: 0.12),
+          ctx.colors.secondary.withValues(alpha: 0.12),
       defaultMessage: (ctx) => 'Loading...',
       defaultSubtitle: (ctx) => null,
       defaultActionText: (ctx) => null,

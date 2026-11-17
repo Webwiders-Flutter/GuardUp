@@ -8,6 +8,7 @@ final class StorageBuckets {
 final class StorageFolders {
   const StorageFolders._();
 
+  static const String services = "services";
   static const String materialType = "material-type";
   static const String vehicleType = "vehicle-type";
 }

@@ -13,11 +13,9 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
   final Color onSurfaceSecondary;
   final Color borderLight;
   final Color borderDark;
+  final Color borderExtraLight;
   final Color backgroundLight;
   final Color backgroundDark;
-  final Color secondaryLight;
-  final Color purpleLight;
-  final Color borderExtraLight;
 
   const AppThemeColors({
     required this.success,
@@ -31,14 +29,10 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     required this.onSurfaceSecondary,
     required this.borderLight,
     required this.borderDark,
+    required this.borderExtraLight,
     required this.backgroundLight,
     required this.backgroundDark,
-    required this.secondaryLight,
-    required this.purpleLight,
-    required this.borderExtraLight,
   });
-
-  Color get lightTeal => secondaryLight;
 
   // --------------------------------------------------
   // copyWith
@@ -56,11 +50,9 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     Color? onSurfaceSecondary,
     Color? borderLight,
     Color? borderDark,
+    Color? borderExtraLight,
     Color? backgroundLight,
     Color? backgroundDark,
-    Color? secondaryLight,
-    Color? purpleLight,
-    Color? borderExtraLight,
   }) {
     return AppThemeColors(
       success: success ?? this.success,
@@ -74,11 +66,9 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
       onSurfaceSecondary: onSurfaceSecondary ?? this.onSurfaceSecondary,
       borderLight: borderLight ?? this.borderLight,
       borderDark: borderDark ?? this.borderDark,
+      borderExtraLight: borderExtraLight ?? this.borderExtraLight,
       backgroundLight: backgroundLight ?? this.backgroundLight,
       backgroundDark: backgroundDark ?? this.backgroundDark,
-      secondaryLight: secondaryLight ?? this.secondaryLight,
-      purpleLight: purpleLight ?? this.purpleLight,
-      borderExtraLight: borderExtraLight ?? this.borderExtraLight,
     );
   }
 
@@ -98,22 +88,12 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
       infoLight: Color.lerp(infoLight, other.infoLight, t)!,
       error: Color.lerp(error, other.error, t)!,
       errorLight: Color.lerp(errorLight, other.errorLight, t)!,
-      onSurfaceSecondary: Color.lerp(
-        onSurfaceSecondary,
-        other.onSurfaceSecondary,
-        t,
-      )!,
+      onSurfaceSecondary: Color.lerp(onSurfaceSecondary, other.onSurfaceSecondary, t)!,
       borderLight: Color.lerp(borderLight, other.borderLight, t)!,
       borderDark: Color.lerp(borderDark, other.borderDark, t)!,
+      borderExtraLight: Color.lerp(borderExtraLight, other.borderExtraLight, t)!,
       backgroundLight: Color.lerp(backgroundLight, other.backgroundLight, t)!,
       backgroundDark: Color.lerp(backgroundDark, other.backgroundDark, t)!,
-      secondaryLight: Color.lerp(secondaryLight, other.secondaryLight, t)!,
-      purpleLight: Color.lerp(purpleLight, other.purpleLight, t)!,
-      borderExtraLight: Color.lerp(
-        borderExtraLight,
-        other.borderExtraLight,
-        t,
-      )!,
     );
   }
 }

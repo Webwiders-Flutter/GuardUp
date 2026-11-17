@@ -16,6 +16,7 @@ final class DatabaseTables {
   static const String trucks = "trucks";
   static const String truckDocuments = "truck_documents";
   static const String adminSettings = "admin_settings";
+  static const String services = "services";
   static const String orders = "orders";
   static const String orderDocuments = "order_documents";
   static const String party = "party";

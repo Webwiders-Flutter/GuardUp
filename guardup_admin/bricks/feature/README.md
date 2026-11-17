@@ -1,6 +1,6 @@
 # Feature Scaffolding Brick
 
-Enterprise feature scaffolding brick for Supplr Transport Hub Admin Flutter web application.
+Enterprise feature scaffolding brick for GuardUp Admin Flutter web application.
 
 ## Generated Artifacts
 

@@ -174,7 +174,7 @@ class _CustomDashboardLayoutState extends State<CustomDashboardLayout> {
         ? context.colors.backgroundDark
         : context.colors.backgroundLight;
     final titleColor = context.colors.onSurface;
-    final sideBarColor = widget.sideBarColor ?? AppColors.sidebarBackground;
+    final sideBarColor = widget.sideBarColor ?? AppColors.surfaceDark;
 
     return ListenableBuilder(
       listenable: Listenable.merge([
@@ -300,10 +300,7 @@ class _CustomDashboardLayoutState extends State<CustomDashboardLayout> {
       decoration: BoxDecoration(
         color: headerBgColor,
         border: Border(
-          bottom: BorderSide(
-            color: context.colors.borderDark,
-            width: 1.0,
-          ),
+          bottom: BorderSide(color: context.colors.borderLight, width: 1.0),
         ),
         boxShadow: [
           BoxShadow(

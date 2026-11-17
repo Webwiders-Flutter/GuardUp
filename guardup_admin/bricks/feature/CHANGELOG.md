@@ -10,4 +10,4 @@
 
 # 0.1.0+1
 
-- Initial release of feature brick template for Supplr Transport Hub Admin.
+- Initial release of feature brick template for GuardUp Admin.

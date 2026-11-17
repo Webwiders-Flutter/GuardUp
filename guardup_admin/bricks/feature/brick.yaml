@@ -1,5 +1,5 @@
 name: feature
-description: Enterprise Feature Scaffolding Brick for Supplr Transport Hub Admin (Model, Repository, Providers, Controller, Management Screen, Form Screen)
+description: Enterprise Feature Scaffolding Brick for GuardUp Admin (Model, Repository, Providers, Controller, Management Screen, Form Screen)
 version: 0.1.0+2
 environment:
   mason: ">=0.1.0-dev.36 <0.2.0"

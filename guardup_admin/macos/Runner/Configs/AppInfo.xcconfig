@@ -5,10 +5,10 @@
 // 'flutter create' template.
 
 // The application's name. By default this is also the title of the Flutter window.
-PRODUCT_NAME = admin_supplr_transport_hub
+PRODUCT_NAME = guardup_admin
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.supplrtransporthub.admin.adminSupplrTransportHub
+PRODUCT_BUNDLE_IDENTIFIER = com.guardup.admin
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.supplrtransporthub.admin. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 com.guardup.admin. All rights reserved.

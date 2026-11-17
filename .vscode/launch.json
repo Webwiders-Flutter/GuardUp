@@ -1,28 +1,86 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "guardup",
-            "cwd": "guardup",
-            "request": "launch",
-            "type": "dart"
-        },
-        {
-            "name": "guardup (profile mode)",
-            "cwd": "guardup",
-            "request": "launch",
-            "type": "dart",
-            "flutterMode": "profile"
-        },
-        {
-            "name": "guardup (release mode)",
-            "cwd": "guardup",
-            "request": "launch",
-            "type": "dart",
-            "flutterMode": "release"
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "App (Dev)",
+      "cwd": "guardup",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_dev.dart",
+      "args": [
+        "--flavor",
+        "dev"
+      ]
+    },
+    {
+      "name": "App (Staging)",
+      "cwd": "guardup",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_staging.dart",
+      "args": [
+        "--flavor",
+        "staging"
+      ]
+    },
+    {
+      "name": "App (Prod)",
+      "cwd": "guardup",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_prod.dart",
+      "args": [
+        "--flavor",
+        "prod"
+      ]
+    },
+    {
+      "name": "Admin (Dev - Debug)",
+      "cwd": "guardup_admin",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main_dev.dart",
+      "flutterMode": "debug",
+      "toolArgs": [
+        "--web-port=51657",
+        "--web-hostname=localhost"
+      ]
+    },
+    {
+      "name": "Admin (Staging - Debug)",
+      "cwd": "guardup_admin",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main_staging.dart",
+      "flutterMode": "debug",
+      "toolArgs": [
+        "--web-port=51657",
+        "--web-hostname=localhost"
+      ]
+    },
+    {
+      "name": "Admin (Prod - Debug)",
+      "cwd": "guardup_admin",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main_prod.dart",
+      "flutterMode": "debug",
+      "toolArgs": [
+        "--web-port=51657",
+        "--web-hostname=localhost"
+      ]
+    },
+    {
+      "name": "Admin (Prod - Release Mode)",
+      "cwd": "guardup_admin",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main_prod.dart",
+      "flutterMode": "release",
+      "toolArgs": [
+        "--web-port=51657",
+        "--web-hostname=localhost"
+      ]
+    }
+  ]
 }

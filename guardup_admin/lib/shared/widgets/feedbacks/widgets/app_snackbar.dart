@@ -73,7 +73,7 @@ class SnackbarStyles {
           iconColor: colors.white,
           iconBackgroundColor: colors.white.withValues(alpha: 0.18),
           borderColor: colors.white.withValues(alpha: 0.22),
-          actionColor: colors.secondaryLight,
+          actionColor: colors.secondary,
           icon: Icons.info_rounded,
         );
     }

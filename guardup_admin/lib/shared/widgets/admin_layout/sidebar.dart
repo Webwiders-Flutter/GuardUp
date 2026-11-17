@@ -373,7 +373,7 @@ class _SidebarBrand extends StatelessWidget {
               alignment: Alignment.center,
               child: Icon(
                 Icons.security_rounded,
-                color: context.colors.black,
+                color: context.colors.onPrimary,
                 size: AppSpacing.xl,
               ),
             ),

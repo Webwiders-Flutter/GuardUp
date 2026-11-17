@@ -1,10 +1,7 @@
 import 'package:guardup_admin/features/users/presentation/controllers/users.controller.dart';
-import 'package:guardup_admin/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import 'package:guardup_admin/shared/widgets/table/table_models.dart';
 import 'package:flutter_riverpod/misc.dart';
-
 import '/features/users/presentation/screens/user_details.screen.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:quick_container/quick_container.dart';
@@ -23,6 +20,7 @@ import '/features/users/di/users.providers.dart';
 import '/shared/states/pagination.state.dart';
 import '../../../../shared/widgets/feedbacks/widgets/app_file_preview.dart';
 import '../../../../shared/widgets/feedbacks/widgets/app_popup.dart';
+import '../../../../shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/misc/app_chip.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/table/admin_table_builder.dart';
@@ -65,71 +63,94 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
   }
 
   Future<void> _onVerifyUser(UserModel item) async {
-    AppSnackbar.info('Comming soon');
-    // await controller.markVerified(item.id);
-    // if (mounted) {
-    //   ref
-    //       .read(provider)
-    //       .handleResult(
-    //         successMessage: '${item.fullName} has been verified',
-    //         fallbackErrorMessage: 'Failed to verify user',
-    //       );
-    // }
+    // [COMING SOON GUARD] - Remove this block when ready to enable operation
+    AppSnackbar.show(
+      message: 'Approve user is coming soon',
+      type: SnackbarType.info,
+    );
+    return;
+
+    await controller.markVerified(item.id);
+    if (mounted) {
+      ref
+          .read(provider)
+          .handleResult(
+            successMessage: '${item.fullName} has been approved successfully',
+            fallbackErrorMessage: 'Failed to approve user',
+          );
+    }
   }
 
   Future<void> _onViewUser(UserModel item) async {
-    // context.push(AppRoutes.userDetail(id: item.id));
     UserDetailsScreen.showAsSidebar(context: context, userId: item.id);
   }
 
   Future<void> _onRejectUser(UserModel item) async {
-    AppSnackbar.info('Comming soon');
-    // final result = await AppPopup.showRejectConfirmation(
-    //   context,
-    //   itemName: item.fullName,
-    //   alsoDelete: true,
-    // );
-    //
-    // if (result?.action == PopupAction.confirm && mounted) {
-    //   await controller.deleteRecord(item.id);
-    //
-    //   if (mounted) {
-    //     ref
-    //         .read(provider)
-    //         .handleResult(
-    //           successMessage: 'User rejected and deleted successfully',
-    //           fallbackErrorMessage: 'Failed to reject user',
-    //         );
-    //   }
-    // }
+    // [COMING SOON GUARD] - Remove this block when ready to enable operation
+    AppSnackbar.show(
+      message: 'Reject user is coming soon',
+      type: SnackbarType.info,
+    );
+    return;
+
+    final result = await AppPopup.showRejectConfirmation(
+      context,
+      itemName: item.fullName,
+    );
+
+    if (result?.action == PopupAction.confirm && mounted) {
+      await controller.rejectUser(item.id);
+
+      if (mounted) {
+        ref
+            .read(provider)
+            .handleResult(
+              successMessage: '${item.fullName} has been rejected',
+              fallbackErrorMessage: 'Failed to reject user',
+            );
+      }
+    }
   }
 
   Future<void> _onToggleBlock(UserModel item, bool block) async {
-    AppSnackbar.info('Comming soon');
-    // final result = block
-    //     ? await AppPopup.showBlockConfirmation(context, itemName: item.fullName)
-    //     : await AppPopup.showUnblockConfirmation(
-    //         context,
-    //         itemName: item.fullName,
-    //       );
-    //
-    // if (result?.action == PopupAction.confirm && mounted) {
-    //   await controller.toggleBlock(item.id, block);
-    //
-    //   if (mounted) {
-    //     ref
-    //         .read(provider)
-    //         .handleResult(
-    //           successMessage: block
-    //               ? '${item.fullName} has been blocked'
-    //               : '${item.fullName} has been unblocked',
-    //           fallbackErrorMessage: 'Failed to update user status',
-    //         );
-    //   }
-    // }
+    // [COMING SOON GUARD] - Remove this block when ready to enable operation
+    AppSnackbar.show(
+      message: '${block ? 'Block' : 'Unblock'} user is coming soon',
+      type: SnackbarType.info,
+    );
+    return;
+
+    final result = block
+        ? await AppPopup.showBlockConfirmation(context, itemName: item.fullName)
+        : await AppPopup.showUnblockConfirmation(
+            context,
+            itemName: item.fullName,
+          );
+
+    if (result?.action == PopupAction.confirm && mounted) {
+      await controller.toggleBlock(item.id, block);
+
+      if (mounted) {
+        ref
+            .read(provider)
+            .handleResult(
+              successMessage: block
+                  ? '${item.fullName} has been blocked'
+                  : '${item.fullName} has been unblocked',
+              fallbackErrorMessage: 'Failed to update user status',
+            );
+      }
+    }
   }
 
   Future<void> _onDeleteUser(UserModel item) async {
+    // [COMING SOON GUARD] - Remove this block when ready to enable operation
+    AppSnackbar.show(
+      message: 'Delete user is coming soon',
+      type: SnackbarType.info,
+    );
+    return;
+
     final result = await AppPopup.showDeleteConfirmation(
       context,
       deleteItemName: item.fullName,

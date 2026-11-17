@@ -1,4 +1,3 @@
-import 'package:guardup_admin/core/services/notification/push_notification_service.dart';
 import 'package:guardup_admin/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -42,7 +41,7 @@ Future<void> bootstrap({
     ),
     Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform),
   ]);
-  await PushNotificationService.init();
+  // await PushNotificationService.init();
   runApp(
     ProviderScope(
       retry: (_, _) => null, //

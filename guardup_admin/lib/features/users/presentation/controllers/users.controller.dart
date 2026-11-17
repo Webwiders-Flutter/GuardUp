@@ -160,9 +160,31 @@ class UsersController extends AsyncNotifier<PaginationState<UserModel>> {
     }
   }
 
+  Future<void> rejectUser(String id) async {
+    final current = state.value;
+
+    final result = await AsyncValue.guard(
+      () => asyncHandler(() async {
+        final updated = await _repository.rejectUser(id);
+        final currentItems = current?.items ?? [];
+        final updatedItems = currentItems.map((item) {
+          return item.id == id ? updated : item;
+        }).toList();
+
+        return (current ?? const PaginationState<UserModel>()).copyWith(
+          items: updatedItems,
+        );
+      }),
+    );
+
+    if (result.hasError) {
+      state = result;
+    } else if (result.hasValue) {
+      state = result;
+    }
+  }
+
   Future<void> toggleBlock(String id, bool block) async {
-    final target = _getLocalRecords([id]).firstOrNull;
-    if (target == null) return;
     final targetStatus = block ? UserStatus.blocked : UserStatus.active;
     _updateLocalRecords([
       id,

@@ -19,6 +19,7 @@ import '/features/legal/presentation/screens/faq.form.dart';
 import '/features/legal/presentation/screens/faq_management.screen.dart';
 import '/features/legal/presentation/screens/public_legal.screen.dart';
 import '/features/notifications/presentation/screens/notification_management.screen.dart';
+import '/features/services/presentation/screens/services_management.screen.dart';
 import '/features/settings/presentation/screens/admin_settings.screen.dart';
 import '/features/users/data/enums/user_role.enum.dart';
 import '/features/users/data/enums/user_status.enum.dart';
@@ -249,7 +250,18 @@ final class AppRouter {
               ],
             ),
 
-            // 3. Settings
+            // 3. Services Management
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: AppRoutes.services,
+                  builder: (context, state) =>
+                      const ServicesManagementScreen(),
+                ),
+              ],
+            ),
+
+            // 4. Settings
             StatefulShellBranch(
               routes: [
                 GoRoute(

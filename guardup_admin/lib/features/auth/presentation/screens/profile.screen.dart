@@ -212,7 +212,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         user?.fullName ??
         (authUser?.userMetadata?['full_name'] as String?) ??
         'Super Admin';
-    final displayEmail = user?.email ?? authUser?.email ?? 'admin@supplr.in';
+    final displayEmail = user?.email ?? authUser?.email ?? 'admin@guardup.com';
     final displayPhone = user?.mobileNumber.isNotEmpty == true
         ? '+91 ${user!.mobileNumber}'
         : (authUser?.phone?.isNotEmpty == true
@@ -545,7 +545,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 size: AppSpacing.lg,
                 color: colors.onSurfaceSecondary,
               ),
-              decoration: const InputDecoration(hintText: 'admin@supplr.in'),
+              decoration: const InputDecoration(hintText: 'admin@guardup.com'),
               validator: (value) => Validators.email(context, value),
             ),
 

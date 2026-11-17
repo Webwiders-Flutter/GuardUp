@@ -1,6 +1,6 @@
 # Project Code & Design Guidelines (rules.md)
 
-This document defines the strict code consistency and design rules for the **Supplr Transport Hub** Flutter project (`supplr_transport_hub`).
+This document defines the strict code consistency and design rules for the **GuardUp Admin** Flutter project (`guardup_admin`).
 All AI agents and developers **MUST** follow these guidelines when creating or modifying code in this codebase.
 
 ---
@@ -510,7 +510,7 @@ class BadButton extends StatelessWidget {
 
 ## 16. Professional Enterprise Console Standards & Web Preloader Harmonization
 
-- **Enterprise B2B Aesthetics**: Supplr Transport Hub is a mission-critical fleet and logistics management console (comparable to Stripe, Linear, or AWS Console). It is **NOT** a gaming, crypto, or cyberpunk portal.
+- **Enterprise B2B Aesthetics**: GuardUp Admin is an executive protection and security administration console (comparable to Stripe, Linear, or AWS Console). It is **NOT** a gaming, crypto, or cyberpunk portal.
 - **Prohibited Styling Tropes**:
   - **NEVER** use rotating conic-gradient halos, glowing orbs, 90px blurs, cyberpunk tech grid overlays, or heavy multi-color shimmer sweeps.
 - **Color Discipline**:

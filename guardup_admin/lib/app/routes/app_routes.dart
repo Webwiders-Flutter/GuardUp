@@ -13,6 +13,7 @@ final class AppRoutes {
 
   // Core Management
   static const settings = '/settings';
+  static const services = '/services';
   static const notifications = '/notifications';
   static const helpSupport = '/help-support';
   static const faqs = '/faqs';

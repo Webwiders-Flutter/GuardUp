@@ -285,7 +285,7 @@ class MobileAppsSettingsCard extends StatelessWidget {
               fieldName: 'iOS Update Message',
             ),
             decoration: const InputDecoration(
-              hintText: 'e.g. A new version of the app is available. Please update to continue using Supplr.',
+              hintText: 'e.g. A new version of the app is available. Please update to continue using GuardUp.',
               prefixIcon: Icon(Icons.announcement_outlined),
             ),
             onChanged: (_) => onChanged(),
@@ -462,7 +462,7 @@ class MobileAppsSettingsCard extends StatelessWidget {
               fieldName: 'Android Update Message',
             ),
             decoration: const InputDecoration(
-              hintText: 'e.g. A new version of the app is available. Please update to continue using Supplr.',
+              hintText: 'e.g. A new version of the app is available. Please update to continue using GuardUp.',
               prefixIcon: Icon(Icons.announcement_outlined),
             ),
             onChanged: (_) => onChanged(),
