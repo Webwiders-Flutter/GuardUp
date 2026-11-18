@@ -488,13 +488,23 @@ final class AppRouter {
       ),
       GoRoute(
         path: LegalContentScreen.privacyPolicyRoute,
-        builder: (context, state) =>
-            const LegalContentScreen(type: ContentType.privacyPolicy),
+        builder: (context, state) {
+          final role = state.extra is UserRole ? state.extra as UserRole : null;
+          return LegalContentScreen(
+            type: ContentType.privacyPolicy,
+            role: role,
+          );
+        },
       ),
       GoRoute(
         path: LegalContentScreen.termsRoute,
-        builder: (context, state) =>
-            const LegalContentScreen(type: ContentType.terms),
+        builder: (context, state) {
+          final role = state.extra is UserRole ? state.extra as UserRole : null;
+          return LegalContentScreen(
+            type: ContentType.terms,
+            role: role,
+          );
+        },
       ),
       GoRoute(
         path: BookingScreen.route,

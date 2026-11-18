@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '/features/body_guard/data/model/service_item.model.dart';
+import '/features/body_guard/data/model/user_document.model.dart';
 import '../data/enum/otp_type.enum.dart';
 import '../data/enum/user_role.enum.dart';
 import '../data/enum/user_status.enum.dart';
@@ -172,4 +174,29 @@ class AuthResetPasswordRequested extends AuthEvent {
 /// Dispatched when the user logs out.
 class AuthSignOutRequested extends AuthEvent {
   const AuthSignOutRequested();
+}
+
+/// Dispatched to refresh user services and documents according to their role.
+class AuthReloadRoleDataRequested extends AuthEvent {
+  const AuthReloadRoleDataRequested();
+}
+
+/// Dispatched to update user services in the global auth state.
+class AuthUpdateUserServices extends AuthEvent {
+  final List<ServiceItemModel> services;
+
+  const AuthUpdateUserServices(this.services);
+
+  @override
+  List<Object?> get props => [services];
+}
+
+/// Dispatched to update user documents in the global auth state.
+class AuthUpdateUserDocuments extends AuthEvent {
+  final List<UserDocumentModel> documents;
+
+  const AuthUpdateUserDocuments(this.documents);
+
+  @override
+  List<Object?> get props => [documents];
 }

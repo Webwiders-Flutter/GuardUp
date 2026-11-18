@@ -1,9 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState, OtpType;
 
+import '/core/constants/api/database_tables.dart';
 import '/core/logger/supabase_logger.dart';
 import '/core/state/api_state.dart';
+import '/features/body_guard/data/model/service_item.model.dart';
+import '/features/body_guard/data/model/user_document.model.dart';
 import '../data/enum/user_role.enum.dart';
 import '../data/enum/user_status.enum.dart';
 import '../data/model/user.model.dart';
@@ -37,6 +41,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthUpdateProfileRequested>(_onUpdateProfileRequested);
     on<AuthSetSessionRoleRequested>(_onSetSessionRoleRequested);
     on<AuthSignOutRequested>(_onSignOutRequested);
+    on<AuthReloadRoleDataRequested>(_onReloadRoleDataRequested);
+    on<AuthUpdateUserServices>(_onUpdateUserServices);
+    on<AuthUpdateUserDocuments>(_onUpdateUserDocuments);
 
     _init();
   }
@@ -78,14 +85,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
               return;
             }
             final profile = UserModel.fromJson(data);
-            final status =
-                UserStatus.tryFromApiValue(data['status'] as String?);
-            add(AuthProfileChanged(
-              profile,
-              status: status,
-              email: data['email'] as String?,
-              userData: data,
-            ));
+            final status = UserStatus.tryFromApiValue(
+              data['status'] as String?,
+            );
+            add(
+              AuthProfileChanged(
+                profile,
+                status: status,
+                email: data['email'] as String?,
+                userData: data,
+              ),
+            );
           },
           onError: (Object error) {
             SupabaseLogger.warning(
@@ -129,11 +139,31 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
         if (userData != null) {
           final profile = UserModel.fromJson(userData);
-          final status =
-              UserStatus.tryFromApiValue(userData['status'] as String?);
+          final status = UserStatus.tryFromApiValue(
+            userData['status'] as String?,
+          );
           final email = userData['email'] as String?;
           final phoneCode = userData['phone_code'] as String?;
           final phone = userData['phone_number'] as String?;
+          final role =
+              profile.role ??
+              UserRole.tryFromApiValue(userData['role'] as String?);
+
+          List<ServiceItemModel> userServices = const [];
+          List<UserDocumentModel> userDocuments = const [];
+
+          if (role == UserRole.guard || role == UserRole.company) {
+            try {
+              final results = await Future.wait([
+                _fetchUserServices(currentUid),
+                _fetchUserDocuments(currentUid),
+              ]);
+              userServices = results[0] as List<ServiceItemModel>;
+              userDocuments = results[1] as List<UserDocumentModel>;
+            } catch (e) {
+              SupabaseLogger.warning('Error preloading role data: $e');
+            }
+          }
 
           emit(
             AuthState.authenticated(
@@ -143,6 +173,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
               phoneCode: phoneCode,
               phoneNumber: phone,
               userData: userData,
+              userServices: userServices,
+              userDocuments: userDocuments,
             ),
           );
         } else {
@@ -188,8 +220,31 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       }
       if (userData != null) {
         final profile = UserModel.fromJson(userData);
-        final status =
-            UserStatus.tryFromApiValue(userData['status'] as String?);
+        final status = UserStatus.tryFromApiValue(
+          userData['status'] as String?,
+        );
+        final role =
+            profile.role ??
+            UserRole.tryFromApiValue(userData['role'] as String?);
+
+        List<ServiceItemModel> userServices = const [];
+        List<UserDocumentModel> userDocuments = const [];
+
+        if (role == UserRole.guard || role == UserRole.company) {
+          try {
+            final results = await Future.wait([
+              _fetchUserServices(event.userId!),
+              _fetchUserDocuments(event.userId!),
+            ]);
+            userServices = results[0] as List<ServiceItemModel>;
+            userDocuments = results[1] as List<UserDocumentModel>;
+          } catch (e) {
+            SupabaseLogger.warning(
+              'Error preloading role data on user changed: $e',
+            );
+          }
+        }
+
         emit(
           AuthState.authenticated(
             profile,
@@ -198,6 +253,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             phoneCode: userData['phone_code'] as String?,
             phoneNumber: userData['phone_number'] as String?,
             userData: userData,
+            userServices: userServices,
+            userDocuments: userDocuments,
           ),
         );
       }
@@ -275,8 +332,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (_userRepo != null) {
         final userData = await _userRepo.getUserData(userId);
         if (userData != null) {
-          final status =
-              UserStatus.tryFromApiValue(userData['status'] as String?);
+          final status = UserStatus.tryFromApiValue(
+            userData['status'] as String?,
+          );
 
           // If account is deleted: sign out immediately and show error (do not show deleted screen)
           if (status == UserStatus.deleted) {
@@ -318,7 +376,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       String cleanMessage = 'Login failed. Please check your credentials.';
       final errStr = e.toString().toLowerCase();
 
-      final isEmailUnconfirmed = errStr.contains('confirm') ||
+      final isEmailUnconfirmed =
+          errStr.contains('confirm') ||
           errStr.contains('verif') ||
           errStr.contains('unconfirmed');
 
@@ -445,7 +504,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         // Realtime: Listen immediately to changes in public.users (admin approve/block/delete)
         _listenToProfile(uid);
 
-        final currentUser = profile ??
+        final currentUser =
+            profile ??
             state.user ??
             UserModel(id: uid, name: 'User', role: role);
 
@@ -462,13 +522,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           ),
         );
       } catch (e) {
-        SupabaseLogger.warning('OTP verification failed: $e', operation: 'verifyOtp');
+        SupabaseLogger.warning(
+          'OTP verification failed: $e',
+          operation: 'verifyOtp',
+        );
 
         String cleanMessage = 'Verification failed. Please try again.';
         final errStr = e.toString().toLowerCase();
 
         if (errStr.contains('expired')) {
-          cleanMessage = 'The verification code has expired. Please request a new code.';
+          cleanMessage =
+              'The verification code has expired. Please request a new code.';
         } else if (errStr.contains('invalid') ||
             errStr.contains('403') ||
             errStr.contains('400') ||
@@ -491,8 +555,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             name: role == UserRole.company
                 ? 'Apex Security'
                 : role == UserRole.guard
-                    ? 'Vikram Singh'
-                    : 'Alex Morgan',
+                ? 'Vikram Singh'
+                : 'Alex Morgan',
             role: role,
           );
       emit(
@@ -545,8 +609,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             'Failed to send password reset code. Please check your email and try again.';
         final errStr = e.toString().toLowerCase();
         if (errStr.contains('rate') || errStr.contains('too many requests')) {
-          cleanMessage =
-              'Too many requests. Please wait a few moments before trying again.';
+          cleanMessage = 'Too many requests. Please wait a few moments before trying again.';
         } else if (errStr.contains('network') || errStr.contains('socket')) {
           cleanMessage =
               'Network error. Please check your internet connection.';
@@ -557,8 +620,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(
         state.copyWith(
           email: event.email,
-          operationState:
-              const ApiState.success(UserModel(id: 'mock', name: 'Mock')),
+          operationState: const ApiState.success(
+            UserModel(id: 'mock', name: 'Mock'),
+          ),
         ),
       );
     }
@@ -603,8 +667,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } else {
       emit(
         const AuthState.unauthenticated(
-          operationState:
-              ApiState.success(UserModel(id: 'mock', name: 'Mock')),
+          operationState: ApiState.success(UserModel(id: 'mock', name: 'Mock')),
         ),
       );
     }
@@ -654,6 +717,88 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     _profileSubscription?.cancel();
     _profileSubscription = null;
     emit(const AuthState.unauthenticated());
+  }
+
+  Future<void> _onReloadRoleDataRequested(
+    AuthReloadRoleDataRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final uid = state.user?.id ?? _authRepo?.currentUserId;
+    if (uid == null || uid.isEmpty) return;
+
+    try {
+      final results = await Future.wait([
+        _fetchUserServices(uid),
+        _fetchUserDocuments(uid),
+      ]);
+      emit(
+        state.copyWith(
+          userServices: results[0] as List<ServiceItemModel>,
+          userDocuments: results[1] as List<UserDocumentModel>,
+        ),
+      );
+    } catch (e) {
+      SupabaseLogger.warning('Error reloading role data for $uid: $e');
+    }
+  }
+
+  void _onUpdateUserServices(
+    AuthUpdateUserServices event,
+    Emitter<AuthState> emit,
+  ) {
+    emit(state.copyWith(userServices: event.services));
+  }
+
+  void _onUpdateUserDocuments(
+    AuthUpdateUserDocuments event,
+    Emitter<AuthState> emit,
+  ) {
+    emit(state.copyWith(userDocuments: event.documents));
+  }
+
+  Future<List<ServiceItemModel>> _fetchUserServices(String userId) async {
+    try {
+      final userServicesRows = await Supabase.instance.client
+          .from(DatabaseTables.userServices)
+          .select('service_id')
+          .eq('user_id', userId);
+
+      final serviceIds = (userServicesRows as List<dynamic>)
+          .map((r) => r['service_id']?.toString() ?? '')
+          .where((id) => id.isNotEmpty)
+          .toSet();
+
+      if (serviceIds.isEmpty) return const [];
+
+      final serviceRows = await Supabase.instance.client
+          .from(DatabaseTables.services)
+          .select()
+          .order('display_order', ascending: true);
+
+      return (serviceRows as List<dynamic>)
+          .map((r) => ServiceItemModel.fromJson(r as Map<String, dynamic>))
+          .where((s) => serviceIds.contains(s.id))
+          .toList();
+    } catch (e) {
+      SupabaseLogger.warning('Error loading user services for $userId: $e');
+      return const [];
+    }
+  }
+
+  Future<List<UserDocumentModel>> _fetchUserDocuments(String userId) async {
+    try {
+      final docRows = await Supabase.instance.client
+          .from(DatabaseTables.userDocuments)
+          .select()
+          .eq('user_id', userId);
+
+      return (docRows as List<dynamic>)
+          .map((r) => UserDocumentModel.fromJson(r as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      SupabaseLogger.warning('Error loading user documents for $userId: $e');
+      return const [];
+    }
   }
 
   @override

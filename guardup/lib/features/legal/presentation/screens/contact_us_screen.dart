@@ -5,13 +5,16 @@ import 'package:quick_container/quick_container.dart';
 
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
+import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/core/utils/validators.dart';
+import '/features/auth/bloc/auth_bloc.dart';
 import '/features/legal/legal.dart';
 import '/shared/widgets/buttons/app_button.dart';
+import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/misc/app_input_label.dart';
 import '/shared/widgets/sections/app_appbar.dart';
@@ -44,20 +47,44 @@ class _ContactUsViewState extends State<_ContactUsView> {
 
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
   final _messageController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (sl.isRegistered<AuthBloc>()) {
+      final authState = sl<AuthBloc>().state;
+      final name = authState.displayName;
+      if (name.isNotEmpty && name != 'User') {
+        _nameController.text = name;
+      }
+      final email = authState.userEmail;
+      if (email.isNotEmpty) {
+        _emailController.text = email;
+      }
+    }
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
     _messageController.dispose();
     super.dispose();
   }
 
   void _handleSubmit() {
-    context.pop();
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    final submission = ContactUsSubmission(
+      fullName: _nameController.text.trim(),
+      email: _emailController.text.trim(),
+      mobileNumber: '',
+      message: _messageController.text.trim(),
+      submittedAt: DateTime.now(),
+    );
+
+    context.read<ContactUsBloc>().add(SubmitContactUsRequested(submission));
   }
 
   @override
@@ -68,7 +95,15 @@ class _ContactUsViewState extends State<_ContactUsView> {
       listener: (context, state) {
         final submissionState = state.submissionState;
         if (submissionState.isSuccess) {
+          AppSnackbar.success(
+            submissionState.dataOrNull ??
+                'Your message has been sent successfully',
+          );
           context.pop();
+        } else if (submissionState.isFailure) {
+          AppSnackbar.error(
+            submissionState.errorMessageOrNull ?? 'Failed to send message',
+          );
         }
       },
       builder: (context, state) {
@@ -91,48 +126,87 @@ class _ContactUsViewState extends State<_ContactUsView> {
                   // 1. Upper Info Card
                   WrapperCard(
                     padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        QuickContainer(
-                          w: 48,
-                          h: 48,
-                          shape: QuickContainerShape.circle,
-                          color: context.colors.primaryContainer.withValues(
-                            alpha: 0.35,
-                          ),
-                          border: Border.all(
-                            color: context.colors.primary.withValues(
-                              alpha: 0.4,
-                            ),
-                            width: 1.5,
-                          ),
-                          alignment: Alignment.center,
-                          child: Icon(
-                            Icons.support_agent_rounded,
-                            color: context.colors.primary,
-                            size: AppSizes.iconLg,
-                          ),
-                        ),
-                        AppSpacing.md.w,
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                context.l10n.contactUs,
-                                style: context.textTheme.titleMedium?.bold(),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            QuickContainer(
+                              w: 48,
+                              h: 48,
+                              shape: QuickContainerShape.circle,
+                              color: context.colors.primaryContainer.withValues(
+                                alpha: 0.35,
                               ),
-                              AppSpacing.xxs.h,
-                              Text(
-                                context.l10n.contactUsSubtitle,
-                                style: context.textTheme.bodySmall?.colour(
-                                  context.colors.onSurfaceVariant,
+                              border: Border.all(
+                                color: context.colors.primary.withValues(
+                                  alpha: 0.4,
                                 ),
+                                width: 1.5,
                               ),
-                            ],
-                          ),
+                              alignment: Alignment.center,
+                              child: Icon(
+                                Icons.support_agent_rounded,
+                                color: context.colors.primary,
+                                size: AppSizes.iconLg,
+                              ),
+                            ),
+                            AppSpacing.md.w,
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    context.l10n.contactUs,
+                                    style: context.textTheme.titleMedium
+                                        ?.bold(),
+                                  ),
+                                  AppSpacing.xxs.h,
+                                  Text(
+                                    context.l10n.contactUsSubtitle,
+                                    style: context.textTheme.bodySmall?.colour(
+                                      context.colors.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        AppSpacing.md.h,
+                        Divider(
+                          color: context.colors.outlineVariant,
+                          height: 1,
+                        ),
+                        AppSpacing.md.h,
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.email_outlined,
+                              size: AppSizes.iconSm,
+                              color: context.colors.primary,
+                            ),
+                            AppSpacing.xs.w,
+                            Text(
+                              'support@guardup.com',
+                              style: context.textTheme.bodySmall?.semiBold(),
+                            ),
+                            const Spacer(),
+                            Icon(
+                              Icons.access_time_rounded,
+                              size: AppSizes.iconSm,
+                              color: context.colors.primary,
+                            ),
+                            AppSpacing.xs.w,
+                            Text(
+                              '10:00 AM – 7:00 PM',
+                              style: context.textTheme.bodySmall?.colour(
+                                context.colors.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -202,7 +276,6 @@ class _ContactUsViewState extends State<_ContactUsView> {
                       // Submit Message Button
                       AppButton(
                         text: context.l10n.submitMessage,
-
                         isLoading: isLoading,
                         onPressed: isLoading ? null : _handleSubmit,
                       ),
