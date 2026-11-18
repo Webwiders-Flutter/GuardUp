@@ -12,6 +12,9 @@ final class AppRegex {
 
   static final numbersOnly = RegExp(r'^\d+$');
 
+  /// Input formatter pattern for amounts: digits with up to 2 decimals.
+  static final amountInput = RegExp(r'^\d*\.?\d{0,2}');
+
   static final username = RegExp(r'^[a-zA-Z0-9_]{3,20}$');
   static final fullName = RegExp(r'^[a-zA-Z ]+$');
 

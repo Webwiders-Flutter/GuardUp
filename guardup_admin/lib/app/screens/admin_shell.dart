@@ -198,7 +198,6 @@ class _AdminShellState extends ConsumerState<AdminShell> {
     //       'Frequently asked questions, localized answers and role guides',
     // ),
     // Legal is not production-ready yet: visible in debug builds only.
-    if (kDebugMode)
       CustomDashboardMenuItem(
         sectionTitle: 'Legal',
         icon: Icons.article_outlined,
@@ -228,6 +227,12 @@ class _AdminShellState extends ConsumerState<AdminShell> {
       label: 'Document Types',
       route: AppRoutes.documentTypes,
       description: 'Verification documents required per user role',
+    ),
+    const CustomDashboardMenuItem(
+      icon: Icons.workspace_premium_outlined,
+      label: 'Membership Plans',
+      route: AppRoutes.membershipPlans,
+      description: 'Customer membership tiers, pricing & booking discounts',
     ),
 
     // ── SYSTEM ───────────────────────────────────────────

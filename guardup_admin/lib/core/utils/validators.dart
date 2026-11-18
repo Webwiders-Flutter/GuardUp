@@ -139,53 +139,59 @@ final class Validators {
     return null;
   }
 
-  /// Number validation
-  static String? number(BuildContext context, String? value) {
-    if (value == null || value.isEmpty) {
-      return context.l10n.thisFieldRequired;
-    }
-
-    if (double.tryParse(value) == null) {
-      return context.l10n.enterValidNumber;
-    }
-
-    return null;
-  }
-
-  /// Integer validation with optional min and max bounds
-  static String? integer(
+  /// Number validation (integers or decimals) with optional bounds.
+  ///
+  /// - [isRequired] `false` treats an empty value as valid.
+  /// - [minExclusive] rejects values equal to [min] (e.g. "must be more than 0").
+  /// - [integerOnly] rejects decimals such as `2.5`.
+  static String? number(
     BuildContext context,
     String? value, {
-    int? min,
-    int? max,
+    num? min,
+    num? max,
+    bool minExclusive = false,
+    bool integerOnly = false,
+    bool isRequired = true,
     String? fieldName,
   }) {
-    if (value == null || value.trim().isEmpty) {
-      return context.l10n.fieldRequired(fieldName ?? context.l10n.thisField);
+    final name = fieldName ?? context.l10n.thisField;
+    final text = value?.trim() ?? '';
+
+    if (text.isEmpty) {
+      return isRequired ? context.l10n.fieldRequired(name) : null;
     }
 
-    final parsed = int.tryParse(value.trim());
+    final num? parsed = integerOnly ? int.tryParse(text) : num.tryParse(text);
     if (parsed == null) {
       return context.l10n.enterValidNumber;
     }
 
-    final name = fieldName ?? context.l10n.thisField;
-
-    if (min != null && max != null && (parsed < min || parsed > max)) {
-      if (min == max) return '$name must be $min';
-      return '$name must be between $min and $max';
+    if (min != null && max != null && !minExclusive) {
+      if (parsed < min || parsed > max) {
+        if (min == max) return '$name must be ${_formatBound(min)}';
+        return '$name must be between ${_formatBound(min)} and ${_formatBound(max)}';
+      }
+      return null;
     }
 
-    if (min != null && parsed < min) {
-      return '$name must be at least $min';
+    if (min != null) {
+      if (minExclusive && parsed <= min) {
+        return '$name must be more than ${_formatBound(min)}';
+      }
+      if (!minExclusive && parsed < min) {
+        return '$name must be at least ${_formatBound(min)}';
+      }
     }
 
     if (max != null && parsed > max) {
-      return '$name cannot be greater than $max';
+      return '$name cannot be greater than ${_formatBound(max)}';
     }
 
     return null;
   }
+
+  static String _formatBound(num value) =>
+      value % 1 == 0 ? value.toStringAsFixed(0) : value.toString();
 
   /// Confirm password
   static String? confirmPassword(

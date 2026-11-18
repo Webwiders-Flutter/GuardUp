@@ -37,3 +37,5 @@ For deleting users (what is removed, who can do it, security guards), see [user_
 
 For reviewing applications (approve / reject documents and profiles, rejection reasons), see [user_review_and_rejection.md](documentation/user_review_and_rejection.md).
 
+For customer membership plans (pricing, booking discount rules, admin management), see [membership_plans.md](documentation/membership_plans.md).
+
