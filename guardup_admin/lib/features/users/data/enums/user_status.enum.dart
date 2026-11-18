@@ -27,6 +27,17 @@ enum UserStatus {
 
   const UserStatus(this.apiValue);
 
+  bool get isIncomplete => this == UserStatus.incomplete;
+  bool get isApproved => this == UserStatus.active;
+  bool get isPendingApproval => this == UserStatus.approvalPending;
+  bool get isRejected => this == UserStatus.rejected;
+  bool get isBlocked => this == UserStatus.blocked;
+  bool get isDeleted => this == UserStatus.deleted;
+
+  /// Pending or rejected applications can be reviewed (documents approved /
+  /// rejected, profile approved / rejected).
+  bool get isUnderReview => isPendingApproval || isRejected;
+
   String label([AppLocalizations? l10n]) {
     switch (this) {
       case UserStatus.incomplete:

@@ -329,7 +329,7 @@ class _FaqManagementScreenState extends ConsumerState<FaqManagementScreen> {
             filterChips: [
               (label: 'All', value: null),
               ...UserRoleType.values
-                  .where((r) => r != UserRoleType.admin)
+                  .where((r) => !r.isAdmin)
                   .map((r) => (label: r.label(context.l10n), value: r)),
             ],
             onFilterChanged: (filter) => controller.getPaginatedRecords(

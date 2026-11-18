@@ -18,9 +18,13 @@ final class JsonKeys {
   static const String discountType = 'discount_type';
   static const String discountUpto = 'discount_upto';
   static const String isActive = 'is_active';
+  static const String isPrimary = 'is_primary';
+  static const String bankAccounts = 'bank_accounts';
   static const String status = 'status';
   static const String isRequired = 'is_required';
-  static const String isResolved = 'is_resolved';
+
+  // Contact Us (`contact_us` uses full_name, unlike users.name)
+  static const String contactFullName = 'full_name';
   static const String createdAt = 'created_at';
   static const String updatedAt = 'updated_at';
   static const String dealTypePreference = 'deal_type_preference';

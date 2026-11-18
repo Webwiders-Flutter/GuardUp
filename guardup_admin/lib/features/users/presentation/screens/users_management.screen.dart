@@ -14,6 +14,7 @@ import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/riverpod.extension.dart';
 import '/core/extensions/spacing.extension.dart';
+import '/core/extensions/string.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/features/users/data/enums/user_role.enum.dart';
 import '/features/users/data/enums/user_status.enum.dart';
@@ -250,9 +251,9 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
         title: 'Phone Number',
         alignment: Alignment.centerLeft,
         cellBuilder: (item, index) {
-          final phone = '${item.phoneCode} ${item.mobileNumber}';
+          final phone = item.mobileNumber.toE164(countryCode: item.phoneCode);
           return Text(
-            phone.trim().isNotEmpty ? phone : '—',
+            phone.isNotEmpty ? phone : '—',
             style: context.textTheme.bodyMedium?.decreaseSize(1).semiBold(),
             maxLines: 1,
           );
@@ -264,22 +265,21 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
         alignment: Alignment.center,
         cellBuilder: (item, index) {
           return AppChip(
-            color: item.registrationStatus.color(context),
-            title: item.registrationStatus.label(context.l10n),
-            icon: item.registrationStatus.icon,
+            color: item.status.color(context),
+            title: item.status.label(context.l10n),
+            icon: item.status.icon,
             size: AppChipSize.small,
           );
         },
       ),
       TableColumn<UserModel>(
         title: 'Actions',
-        width: AppSpacing.xxxl * 4 + AppSpacing.sm,
+        width: AppSpacing.xxxl * 5,
         alignment: Alignment.center,
         cellBuilder: (item, index) {
-          final isPending =
-              item.registrationStatus == UserStatus.approvalPending;
-          final isVerified = item.registrationStatus == UserStatus.active;
-          final isBlocked = item.registrationStatus == UserStatus.blocked;
+          final isPending = item.status.isPendingApproval;
+          final isVerified = item.status.isApproved;
+          final isBlocked = item.status.isBlocked;
 
           return Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -307,7 +307,7 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
                 // ),
                 // ),
                 // ),
-                // AppSpacing.xs.w,
+                // AppSpacing.sm.w,
                 // // Reject button (deletes user)
                 // Tooltip(
                 // message: 'Reject & Delete User',
@@ -351,7 +351,7 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
                     ),
                   ),
                 ),
-                AppSpacing.xs.w,
+                AppSpacing.sm.w,
                 // Delete button
                 Tooltip(
                   message: 'Delete User',
@@ -395,7 +395,7 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
                     ),
                   ),
                 ),
-                AppSpacing.xs.w,
+                AppSpacing.sm.w,
                 // Delete button
                 Tooltip(
                   message: 'Delete User',
@@ -439,7 +439,7 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
                 // ),
                 // ),
                 // ),
-                // AppSpacing.xs.w,
+                // AppSpacing.sm.w,
                 Tooltip(
                   message: 'Delete User',
                   child: InkWell(
@@ -462,7 +462,7 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
                 ),
               ],
 
-              AppSpacing.xs.w,
+              AppSpacing.sm.w,
               Tooltip(
                 message: 'Details',
                 child: InkWell(

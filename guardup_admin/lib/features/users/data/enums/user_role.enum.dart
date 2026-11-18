@@ -21,6 +21,11 @@ enum UserRoleType {
 
   const UserRoleType(this.apiValue);
 
+  bool get isAdmin => this == UserRoleType.admin;
+  bool get isCustomer => this == UserRoleType.customer;
+  bool get isGuard => this == UserRoleType.guard;
+  bool get isCompany => this == UserRoleType.company;
+
   /// URL-friendly path identifier for routing.
   String get slug {
     switch (this) {
@@ -67,11 +72,7 @@ enum UserRoleType {
   }
 
   /// Platform roles excluding admin (Customer, Bodyguard, Company).
-  static List<UserRoleType> get platformRoles => [
-    customer,
-    guard,
-    company,
-  ];
+  static List<UserRoleType> get platformRoles => [customer, guard, company];
 
   String label([AppLocalizations? l10n]) {
     switch (this) {

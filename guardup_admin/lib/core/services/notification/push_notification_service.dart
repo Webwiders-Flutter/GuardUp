@@ -339,9 +339,7 @@ final class PushNotificationService {
         }
       }
 
-      final token = await _messaging.getToken(
-        vapidKey: vapidKey,
-      );
+      final token = await _messaging.getToken(vapidKey: vapidKey);
       AppLogger.d("Token $token");
       return token;
     } catch (e, st) {

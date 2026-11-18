@@ -18,6 +18,10 @@ enum VerificationStatus {
 
   const VerificationStatus(this.apiValue);
 
+  bool get isPending => this == VerificationStatus.pending;
+  bool get isVerified => this == VerificationStatus.verified;
+  bool get isRejected => this == VerificationStatus.rejected;
+
   String label([AppLocalizations? l10n]) {
     switch (this) {
       case VerificationStatus.pending:

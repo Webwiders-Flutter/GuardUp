@@ -151,30 +151,30 @@ class _PlanHero extends ConsumerWidget {
 
   // Delete is disabled for now.
   // Future<void> _onDelete(BuildContext context, WidgetRef ref) async {
-    // final result = await AppPopup.showDeleteConfirmation(
-      // context,
-      // deleteItemName: plan.name,
-    // );
-    // if (result?.action != PopupAction.confirm || !context.mounted) return;
+  // final result = await AppPopup.showDeleteConfirmation(
+  // context,
+  // deleteItemName: plan.name,
+  // );
+  // if (result?.action != PopupAction.confirm || !context.mounted) return;
 
-    // await ref
-        // .read(membershipPlanControllerProvider.notifier)
-        // .deleteRecord(plan.id);
-    // if (!context.mounted) return;
+  // await ref
+  // .read(membershipPlanControllerProvider.notifier)
+  // .deleteRecord(plan.id);
+  // if (!context.mounted) return;
 
-    // final deleted = ref
-        // .read(membershipPlanControllerProvider)
-        // .handleResult(
-          // successMessage: '${plan.name} deleted successfully',
-          // fallbackErrorMessage: 'Failed to delete membership plan',
-        // );
-    // if (!deleted) return;
+  // final deleted = ref
+  // .read(membershipPlanControllerProvider)
+  // .handleResult(
+  // successMessage: '${plan.name} deleted successfully',
+  // fallbackErrorMessage: 'Failed to delete membership plan',
+  // );
+  // if (!deleted) return;
 
-    // if (context.canPop()) {
-      // context.pop();
-    // } else {
-      // context.go(AppRoutes.membershipPlans);
-    // }
+  // if (context.canPop()) {
+  // context.pop();
+  // } else {
+  // context.go(AppRoutes.membershipPlans);
+  // }
   // }
 
   @override
@@ -257,9 +257,9 @@ class _PlanHero extends ConsumerWidget {
                         children: [
                           TextSpan(
                             text: plan.pricePerMonth.toUsdAmount,
-                            style: context.textTheme.titleLarge
-                                ?.bold()
-                                .colour(colors.primary),
+                            style: context.textTheme.titleLarge?.bold().colour(
+                              colors.primary,
+                            ),
                           ),
                           TextSpan(
                             text: ' / month',
@@ -316,15 +316,15 @@ class _PlanHero extends ConsumerWidget {
               ),
               // Delete is disabled for now.
               // AppButton(
-                // text: 'Delete',
-                // leading: Icon(
-                  // Icons.delete_outline_rounded,
-                  // size: AppSpacing.md + 2,
-                // ),
-                // size: ButtonSize.small,
-                // type: ButtonType.danger,
-                // fullWidth: false,
-                // onPressed: () => _onDelete(context, ref),
+              // text: 'Delete',
+              // leading: Icon(
+              // Icons.delete_outline_rounded,
+              // size: AppSpacing.md + 2,
+              // ),
+              // size: ButtonSize.small,
+              // type: ButtonType.danger,
+              // fullWidth: false,
+              // onPressed: () => _onDelete(context, ref),
               // ),
             ],
           ),
@@ -367,9 +367,9 @@ class _IdChip extends StatelessWidget {
           children: [
             Text(
               'ID: #${id.length > 8 ? id.substring(0, 8) : id}',
-              style: context.textTheme.bodySmall
-                  ?.semiBold()
-                  .colour(colors.onSurfaceSecondary),
+              style: context.textTheme.bodySmall?.semiBold().colour(
+                colors.onSurfaceSecondary,
+              ),
             ),
             AppSpacing.xs.w,
             Icon(

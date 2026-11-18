@@ -11,7 +11,9 @@ import '/core/extensions/datetime.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/riverpod.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
-import '../../../users/data/enums/user_role.enum.dart';
+import '/features/help-support/data/enums/contact_us_status.enum.dart';
+import '/features/users/data/enums/user_role.enum.dart';
+import '/features/users/presentation/screens/user_details.screen.dart';
 import '/shared/states/pagination.state.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/feedbacks/widgets/app_popup.dart';
@@ -55,21 +57,34 @@ class _HelpSupportManagementScreenState
     super.dispose();
   }
 
-  Future<void> _onMarkResolved(bool resolved) async {
+  Future<void> _onUpdateSelectedStatus(ContactUsStatus status) async {
     final items = _selectedItemsNotifier.value;
     if (items.isEmpty) return;
 
     final ids = items.map((e) => e.id).toList();
-    await controller.updateResolvedStatusMany(ids, resolved);
+    await controller.updateStatusMany(ids, status);
     _selectedItemsNotifier.value = [];
 
     if (mounted) {
       ref
           .read(provider)
           .handleResult(
-            successMessage: resolved
-                ? '${items.length} request${items.length > 1 ? 's' : ''} marked as resolved'
-                : '${items.length} request${items.length > 1 ? 's' : ''} marked as pending',
+            successMessage:
+                '${items.length} request${items.length > 1 ? 's' : ''} '
+                'marked as ${status.label(context.l10n)}',
+            fallbackErrorMessage: 'Failed to update support request status',
+          );
+    }
+  }
+
+  Future<void> _onUpdateStatus(ContactUs item, ContactUsStatus status) async {
+    if (item.status == status) return;
+    await controller.updateStatus(item.id, status);
+    if (mounted) {
+      ref
+          .read(provider)
+          .handleResult(
+            successMessage: 'Request marked as ${status.label(context.l10n)}',
             fallbackErrorMessage: 'Failed to update support request status',
           );
     }
@@ -167,23 +182,13 @@ class _HelpSupportManagementScreenState
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
-                '${item.phoneCode} ${item.mobileNumber}',
+                item.email,
                 style: context.textTheme.bodyMedium
                     ?.decreaseSize(1)
                     .colour(colors.onSurfaceSecondary),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              if ((item.email ?? '').isNotEmpty) ...[
-                Text(
-                  item.email!,
-                  style: context.textTheme.bodyMedium
-                      ?.decreaseSize(1)
-                      .colour(colors.onSurfaceSecondary),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
             ],
           );
         },
@@ -216,9 +221,7 @@ class _HelpSupportManagementScreenState
             text: item.message,
             maxLines: 2,
             dialogTitle: '${item.fullName} — Inquiry Message',
-            dialogSubtitle:
-                '${item.phoneCode} ${item.mobileNumber}'
-                '${(item.email ?? '').isNotEmpty ? ' • ${item.email}' : ''}',
+            dialogSubtitle: item.email,
           );
         },
       ),
@@ -227,21 +230,32 @@ class _HelpSupportManagementScreenState
         width: AppSpacing.xxxl * 4 + AppSpacing.md,
         alignment: Alignment.center,
         cellBuilder: (item, index) {
-          final isResolved = item.isResolved;
-          return Tooltip(
-            message: isResolved
-                ? 'Click to toggle — Mark as Pending'
-                : 'Click to toggle — Mark as Resolved',
+          return PopupMenuButton<ContactUsStatus>(
+            tooltip: 'Change status',
+            initialValue: item.status,
+            onSelected: (status) => _onUpdateStatus(item, status),
+            itemBuilder: (context) => [
+              for (final status in ContactUsStatus.values)
+                PopupMenuItem(
+                  value: status,
+                  child: Row(
+                    children: [
+                      Icon(
+                        status.icon,
+                        size: AppSpacing.md + 2,
+                        color: status.color(context),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(status.label(context.l10n)),
+                    ],
+                  ),
+                ),
+            ],
             child: AppChip(
-              color: isResolved ? colors.success : colors.warning,
-              icon: isResolved
-                  ? Icons.check_circle_rounded
-                  : Icons.pending_actions_rounded,
-              title: isResolved ? 'Resolved' : 'Pending',
+              color: item.status.color(context),
+              icon: item.status.icon,
+              title: item.status.label(context.l10n),
               size: AppChipSize.normal,
-              onTap: () async {
-                await controller.toggleResolvedStatus(item.id, !isResolved);
-              },
             ),
           );
         },
@@ -251,9 +265,8 @@ class _HelpSupportManagementScreenState
         width: AppSpacing.xxxl * 5,
         alignment: Alignment.center,
         cellBuilder: (item, index) {
-          final dt = DateTime.tryParse(item.createdAt ?? '');
           return Text(
-            dt != null ? dt.fullDateTime : '—',
+            item.createdAt?.fullDateTime ?? '—',
             style: context.textTheme.bodySmall
                 ?.size(AppSpacing.md - 0.5)
                 .colour(colors.onSurfaceSecondary),
@@ -263,26 +276,61 @@ class _HelpSupportManagementScreenState
       ),
       TableColumn<ContactUs>(
         title: 'Actions',
-        width: AppSpacing.xxxl * 3,
+        width: AppSpacing.xxxl * 4,
         alignment: Alignment.center,
         cellBuilder: (item, index) {
-          return Tooltip(
-            message: 'Delete Request',
-            child: InkWell(
-              onTap: () => _onDeleteContactUs(item),
-              borderRadius: AppRadius.smRadius,
-              child: QuickContainer(
-                p: AppSpacing.xs + 2,
-                radius: AppRadius.sm,
-                color: colors.error.withValues(alpha: 0.08),
-                border: Border.all(color: colors.error.withValues(alpha: 0.25)),
-                child: Icon(
-                  Icons.delete_outline_rounded,
-                  size: AppSpacing.lg,
-                  color: colors.error,
+          final userId = item.userId;
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Registered sender: open their profile.
+              if (userId != null) ...[
+                Tooltip(
+                  message: 'View User',
+                  child: InkWell(
+                    onTap: () => UserDetailsScreen.showAsSidebar(
+                      context: context,
+                      userId: userId,
+                    ),
+                    borderRadius: AppRadius.smRadius,
+                    child: QuickContainer(
+                      p: AppSpacing.xs + 2,
+                      radius: AppRadius.sm,
+                      color: colors.primary.withValues(alpha: 0.08),
+                      border: Border.all(
+                        color: colors.primary.withValues(alpha: 0.25),
+                      ),
+                      child: Icon(
+                        Icons.person_search_outlined,
+                        size: AppSpacing.lg,
+                        color: colors.primary,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+              ],
+              Tooltip(
+                message: 'Delete Request',
+                child: InkWell(
+                  onTap: () => _onDeleteContactUs(item),
+                  borderRadius: AppRadius.smRadius,
+                  child: QuickContainer(
+                    p: AppSpacing.xs + 2,
+                    radius: AppRadius.sm,
+                    color: colors.error.withValues(alpha: 0.08),
+                    border: Border.all(
+                      color: colors.error.withValues(alpha: 0.25),
+                    ),
+                    child: Icon(
+                      Icons.delete_outline_rounded,
+                      size: AppSpacing.lg,
+                      color: colors.error,
+                    ),
+                  ),
                 ),
               ),
-            ),
+            ],
           );
         },
       ),
@@ -306,30 +354,24 @@ class _HelpSupportManagementScreenState
             showCheckbox: true,
             selectedItemsNotifier: _selectedItemsNotifier,
             selectionActions: [
-              AppButton(
-                text: 'Mark Resolved',
-                leading: Icon(
-                  Icons.check_circle_outline_rounded,
-                  size: AppSpacing.md + 2,
-                  color: colors.onSurface,
+              for (final status in ContactUsStatus.values)
+                AppButton(
+                  text: 'Mark ${status.label(context.l10n)}',
+                  leading: Icon(
+                    status.icon,
+                    size: AppSpacing.md + 2,
+                    color: colors.onSurface,
+                  ),
+                  size: ButtonSize.small,
+                  type: switch (status) {
+                    ContactUsStatus.pending => ButtonType.warning,
+                    ContactUsStatus.inProgress => ButtonType.info,
+                    ContactUsStatus.resolved => ButtonType.success,
+                    ContactUsStatus.closed => ButtonType.secondaryOff,
+                  },
+                  fullWidth: false,
+                  onPressed: () => _onUpdateSelectedStatus(status),
                 ),
-                size: ButtonSize.small,
-                type: ButtonType.success,
-                fullWidth: false,
-                onPressed: () => _onMarkResolved(true),
-              ),
-              AppButton(
-                text: 'Mark Pending',
-                leading: Icon(
-                  Icons.pending_outlined,
-                  size: AppSpacing.md + 2,
-                  color: colors.onSurface,
-                ),
-                size: ButtonSize.small,
-                type: ButtonType.warning,
-                fullWidth: false,
-                onPressed: () => _onMarkResolved(false),
-              ),
               AppButton(
                 text: 'Delete',
                 leading: Icon(
@@ -346,18 +388,19 @@ class _HelpSupportManagementScreenState
             activeFilter: controller.currentFilter,
             filterChips: [
               (label: 'All', value: null),
-              (label: 'Resolved', value: true),
-              (label: 'Unresolved', value: false),
+              ...ContactUsStatus.values.map(
+                (s) => (label: s.label(context.l10n), value: s),
+              ),
               ...UserRoleType.values
-                  .where((x) => x != UserRoleType.admin)
+                  .where((x) => !x.isAdmin)
                   .map((r) => (label: r.label(context.l10n), value: r)),
             ],
             onFilterChanged: (filter) {
               ContactUsFilters newFilters;
               if (filter == null) {
                 newFilters = const ContactUsFilters();
-              } else if (filter is bool) {
-                newFilters = ContactUsFilters(isResolved: filter);
+              } else if (filter is ContactUsStatus) {
+                newFilters = ContactUsFilters(status: filter);
               } else if (filter is UserRoleType) {
                 newFilters = ContactUsFilters(role: filter);
               } else {

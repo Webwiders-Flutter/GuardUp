@@ -46,7 +46,7 @@ final class DashboardStatsRepository implements IDashboardStatsRepository {
           .neq(JsonKeys.registrationStatus, UserStatus.deleted.apiValue)
           .neq(JsonKeys.registrationStatus, UserStatus.incomplete.apiValue);
 
-      if (role != null && role != UserRoleType.admin) {
+      if (role != null && !role.isAdmin) {
         query = query.eq(JsonKeys.role, role.apiValue);
       }
       if (status != null) {

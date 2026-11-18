@@ -10,7 +10,9 @@ import '/core/extensions/context.extension.dart';
 import '/core/extensions/datetime.extension.dart';
 import '/core/extensions/layout.extension.dart';
 import '/core/extensions/localization.extension.dart';
+import '/core/extensions/number.extension.dart';
 import '/core/extensions/spacing.extension.dart';
+import '/core/extensions/string.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/core/services/launcher/app_launcher.service.dart';
 import '/features/users/data/enums/user_role.enum.dart';
@@ -18,10 +20,11 @@ import '/features/users/data/enums/user_status.enum.dart';
 import '/features/users/data/models/user_model.dart';
 import '/features/users/di/users.providers.dart';
 import '/core/extensions/riverpod.extension.dart';
-import '/features/users/data/enums/verification_status.enum.dart';
 import '/features/users/data/models/user_document.model.dart';
 import '/features/users/presentation/controllers/user_review.controller.dart';
 import '/features/users/presentation/controllers/users.controller.dart';
+import '/features/users/presentation/widgets/user_availability.section.dart';
+import '/features/users/presentation/widgets/user_bank_accounts.section.dart';
 import '/shared/widgets/admin_layout/app_side_panel.dart';
 import '/shared/widgets/feedbacks/widgets/app_file_preview.dart';
 import '/shared/widgets/feedbacks/widgets/app_popup.dart';
@@ -29,6 +32,7 @@ import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/misc/app_chip.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/app_detail_section.dart';
+import '/shared/widgets/sections/app_detail_tile.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/state/app_state_view.dart';
 
@@ -109,20 +113,142 @@ class _UserDetailsBody extends StatelessWidget {
         _UserQuickStats(user: user),
         AppSpacing.lg.h,
 
-        // 3. Role-specific Information
-        if (user.isGuard) ...[
+        // 3. Personal information (every role)
+        _PersonalInfoSection(user: user),
+        AppSpacing.md.h,
+
+        // 4. Role-specific Information
+        if (user.role.isGuard) ...[
           _GuardDetailsSection(user: user),
           AppSpacing.md.h,
-        ] else if (user.isCompany) ...[
+        ] else if (user.role.isCompany) ...[
           _CompanyDetailsSection(user: user),
           AppSpacing.md.h,
         ],
 
-        // 4. Verification Documents (not applicable for customers)
-        if (!user.isCustomer) ...[
-          _UserDocumentsSection(user: user),
-          AppSpacing.xxxl.h,
+        // 5. Weekly availability (bodyguards, or anyone who has set one)
+        if (user.role.isGuard || user.availabilities?.isNotEmpty == true) ...[
+          UserAvailabilitySection(user: user),
+          AppSpacing.md.h,
         ],
+
+        // 6. Payout bank accounts (bodyguards & companies)
+        if (!user.role.isCustomer) ...[
+          UserBankAccountsSection(user: user),
+          AppSpacing.md.h,
+        ],
+
+        // 7. Verification Documents (not applicable for customers)
+        if (!user.role.isCustomer) _UserDocumentsSection(user: user),
+        AppSpacing.xxxl.h,
+      ],
+    );
+  }
+}
+
+class _PersonalInfoSection extends StatelessWidget {
+  const _PersonalInfoSection({required this.user});
+
+  final UserModel user;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final address = user.address ?? '';
+    final latitude = user.latitude;
+    final longitude = user.longitude;
+
+    return AppDetailSection(
+      title: 'Personal Information',
+      subtitle: 'Gender, address and app preferences',
+      icon: Icons.badge_outlined,
+      items: [
+        (label: 'Full Name', value: user.name, icon: Icons.person_outline),
+        (
+          label: 'Gender',
+          value: user.gender?.label(context.l10n) ?? 'Not specified',
+          icon: user.gender?.icon ?? Icons.wc_outlined,
+        ),
+        (
+          label: 'Push Notifications',
+          value: user.isPushNotificationEnabled ? 'Enabled' : 'Disabled',
+          icon: user.isPushNotificationEnabled
+              ? Icons.notifications_active_outlined
+              : Icons.notifications_off_outlined,
+        ),
+        (
+          label: 'Last Updated',
+          value: user.updatedAt?.readableDate,
+          icon: Icons.update_rounded,
+        ),
+      ],
+      child: AppDetailTile(
+        label: user.role.isCompany ? 'Registered Address' : 'Address',
+        value: address.isNotBlank ? address : 'Not provided',
+        icon: Icons.location_on_outlined,
+        onTap: address.isBlank
+            ? null
+            : () => latitude != null && longitude != null
+                  ? AppLauncher.openMaps(
+                      latitude: latitude,
+                      longitude: longitude,
+                    )
+                  : AppLauncher.openMapsSearch(address),
+        trailing: address.isNotBlank
+            ? Tooltip(
+                message: 'Open in Google Maps',
+                child: Icon(
+                  Icons.map_outlined,
+                  size: AppSpacing.md + 2,
+                  color: colors.primary,
+                ),
+              )
+            : null,
+      ),
+    );
+  }
+}
+
+/// Titled wrap of chips (services, languages, certifications).
+class _ChipGroup extends StatelessWidget {
+  const _ChipGroup({
+    required this.title,
+    required this.values,
+    required this.color,
+    this.icon,
+  });
+
+  final String title;
+  final List<String> values;
+  final Color color;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AppSpacing.sm.h,
+        Text(
+          title,
+          style: context.textTheme.bodySmall?.semiBold().colour(
+            context.colors.onSurfaceSecondary,
+          ),
+        ),
+        AppSpacing.xs.h,
+        Wrap(
+          spacing: AppSpacing.xs,
+          runSpacing: AppSpacing.xs,
+          children: [
+            for (final value in values)
+              AppChip(
+                title: value,
+                icon: icon,
+                size: AppChipSize.small,
+                color: color,
+              ),
+          ],
+        ),
       ],
     );
   }
@@ -136,8 +262,8 @@ class _UserProfileHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final phone = user.displayPhone;
-    final hasPhone = user.phoneNumber?.trim().isNotEmpty == true;
+    final phone = user.mobileNumber.toE164(countryCode: user.phoneCode);
+    final hasPhone = phone.isNotEmpty;
     final hasEmail = user.email.trim().isNotEmpty;
 
     return Container(
@@ -374,7 +500,7 @@ class _UserProfileHero extends StatelessWidget {
               reason: user.rejectionReason!,
             ),
           ],
-          if (!user.isRejected) ...[
+          if (!user.status.isRejected) ...[
             AppSpacing.md.h,
             Divider(
               color: colors.borderLight.withValues(alpha: 0.6),
@@ -420,7 +546,7 @@ class _UserQuickStats extends StatelessWidget {
             accentColor: user.status.color(context),
           ),
         ),
-        if (!user.isCustomer) ...[
+        if (!user.role.isCustomer) ...[
           AppSpacing.sm.w,
           Expanded(
             child: _StatCard(
@@ -655,8 +781,11 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final isApproved = widget.user.isApproved;
-    final isBlocked = widget.user.isBlocked;
+    final isApproved = widget.user.status.isApproved;
+    final isBlocked = widget.user.status.isBlocked;
+    final allDocumentsApproved = (widget.user.documents ?? const []).every(
+      (doc) => doc.verificationStatus.isVerified,
+    );
     final isReviewing = ref
         .watch(userReviewControllerProvider(widget.user.id))
         .isLoading;
@@ -725,9 +854,9 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
                   ),
                 ),
               ),
-            ] else if (widget.user.isPendingApproval) ...[
+            ] else if (widget.user.status.isPendingApproval) ...[
               // 1. Approve Profile: only once every document is approved
-              if (widget.user.allDocumentsApproved)
+              if (allDocumentsApproved)
                 OutlinedButton.icon(
                   onPressed: isBusy ? null : _onApproveProfile,
                   icon: Icon(
@@ -793,53 +922,70 @@ class _GuardDetailsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final bio = user.bio?.trim();
+    final languages = user.languages?.toCommaSeparatedList ?? const [];
+    final certifications =
+        user.certifications?.toCommaSeparatedList ?? const [];
+    final experienceYears = user.experienceYears ?? 0;
+    final hasChips =
+        user.services.isNotEmpty ||
+        languages.isNotEmpty ||
+        certifications.isNotEmpty;
+
     return AppDetailSection(
       title: 'Bodyguard Operative Details',
-      subtitle: 'Rates, ratings, professional bio and specialized skills',
+      subtitle: 'Rates, experience, skills and professional bio',
       icon: Icons.security_outlined,
       items: [
         (
           label: 'Hourly Rate',
-          value: user.hourlyRate != null
-              ? '\$${user.hourlyRate!.toStringAsFixed(2)} / hr'
+          value: (user.hourlyRate ?? 0) > 0
+              ? '${user.hourlyRate!.toUsdAmount} / hr'
               : 'Not set',
           icon: Icons.attach_money_rounded,
         ),
         (
           label: 'Rating',
-          value: user.rating != null
+          value: user.rating != null && user.rating! > 0
               ? '★ ${user.rating!.toStringAsFixed(1)}'
               : '0.0 (New)',
           icon: Icons.star_rate_rounded,
         ),
-        if (user.bio != null && user.bio!.trim().isNotEmpty)
-          (label: 'Bio', value: user.bio!, icon: Icons.description_outlined),
+        (
+          label: 'Experience',
+          value: experienceYears > 0
+              ? '$experienceYears ${experienceYears == 1 ? 'year' : 'years'}'
+              : 'Less than a year',
+          icon: Icons.workspace_premium_outlined,
+        ),
+        if (bio != null && bio.isNotEmpty)
+          (label: 'Bio', value: bio, icon: Icons.description_outlined),
       ],
-      child: user.services.isNotEmpty
+      child: hasChips
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AppSpacing.sm.h,
-                Text(
-                  'Services & Specializations',
-                  style: context.textTheme.bodySmall?.semiBold().colour(
-                    context.colors.onSurfaceSecondary,
+                if (user.services.isNotEmpty)
+                  _ChipGroup(
+                    title: 'Services & Specializations',
+                    values: user.services,
+                    color: colors.primary,
                   ),
-                ),
-                AppSpacing.xs.h,
-                Wrap(
-                  spacing: AppSpacing.xs,
-                  runSpacing: AppSpacing.xs,
-                  children: user.services
-                      .map(
-                        (s) => AppChip(
-                          title: s,
-                          size: AppChipSize.small,
-                          color: context.colors.primary,
-                        ),
-                      )
-                      .toList(),
-                ),
+                if (languages.isNotEmpty)
+                  _ChipGroup(
+                    title: 'Languages',
+                    values: languages,
+                    color: colors.info,
+                    icon: Icons.translate_rounded,
+                  ),
+                if (certifications.isNotEmpty)
+                  _ChipGroup(
+                    title: 'Certifications & Licenses',
+                    values: certifications,
+                    color: colors.success,
+                    icon: Icons.verified_outlined,
+                  ),
               ],
             )
           : null,
@@ -854,6 +1000,14 @@ class _CompanyDetailsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final businessEmail = user.businessEmail ?? '';
+    final email = businessEmail.isNotBlank ? businessEmail : user.email;
+    final contactPhone = user.mobileNumber.toE164(countryCode: user.phoneCode);
+    final companyPhone = (user.companyPhoneNumber ?? '').toE164(
+      countryCode: user.companyPhoneCode,
+    );
+
     return AppDetailSection(
       title: 'Security Company Details',
       subtitle: 'Corporate registration and business contacts',
@@ -865,49 +1019,44 @@ class _CompanyDetailsSection extends StatelessWidget {
           icon: Icons.business_outlined,
         ),
         (
-          label: 'Business Email',
-          value: user.businessEmail ?? user.email,
-          icon: Icons.email_outlined,
-        ),
-        (
           label: 'Company Type',
-          value: user.displayCompanyType,
-          icon: Icons.category_outlined,
+          value: user.companyType?.label(context.l10n) ?? '—',
+          icon: user.companyType?.icon ?? Icons.category_outlined,
         ),
+        (label: 'Contact Person', value: user.name, icon: Icons.person_outline),
         (
-          label: 'Contact Phone',
-          value: user.displayPhone,
+          label: 'Contact Person Phone',
+          value: contactPhone.isNotEmpty ? contactPhone : '—',
           icon: Icons.phone_outlined,
         ),
       ],
-      child: user.services.isNotEmpty
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AppSpacing.sm.h,
-                Text(
-                  'Offered Services & Capabilities',
-                  style: context.textTheme.bodySmall?.semiBold().colour(
-                    context.colors.onSurfaceSecondary,
-                  ),
-                ),
-                AppSpacing.xs.h,
-                Wrap(
-                  spacing: AppSpacing.xs,
-                  runSpacing: AppSpacing.xs,
-                  children: user.services
-                      .map(
-                        (s) => AppChip(
-                          title: s,
-                          size: AppChipSize.small,
-                          color: context.colors.primary,
-                        ),
-                      )
-                      .toList(),
-                ),
-              ],
-            )
-          : null,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppDetailTile(
+            label: 'Company Phone',
+            value: companyPhone.isNotEmpty ? companyPhone : '—',
+            icon: Icons.phone_in_talk_outlined,
+            onTap: companyPhone.isNotEmpty
+                ? () => AppLauncher.callPhone(companyPhone)
+                : null,
+            isCopyable: companyPhone.isNotEmpty,
+          ),
+          AppDetailTile(
+            label: 'Business Email',
+            value: email,
+            icon: Icons.email_outlined,
+            onTap: () => AppLauncher.sendEmail(email: email),
+            isCopyable: true,
+          ),
+          if (user.services.isNotEmpty)
+            _ChipGroup(
+              title: 'Offered Services & Capabilities',
+              values: user.services,
+              color: colors.primary,
+            ),
+        ],
+      ),
     );
   }
 }
@@ -975,7 +1124,7 @@ class _UserDocumentsSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final docs = user.documents ?? [];
-    final canReview = user.isUnderReview;
+    final canReview = user.status.isUnderReview;
     final isReviewing = ref
         .watch(userReviewControllerProvider(user.id))
         .isLoading;
@@ -1018,10 +1167,8 @@ class _UserDocumentsSection extends ConsumerWidget {
               ? (doc.fileName ?? doc.documentTypeId)
               : doc.documentTypeId;
 
-          final isApproved =
-              doc.verificationStatus == VerificationStatus.verified;
-          final isRejected =
-              doc.verificationStatus == VerificationStatus.rejected;
+          final isApproved = doc.verificationStatus.isVerified;
+          final isRejected = doc.verificationStatus.isRejected;
 
           return Container(
             padding: const EdgeInsets.all(AppSpacing.md),
@@ -1065,6 +1212,10 @@ class _UserDocumentsSection extends ConsumerWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
+                      ],
+                      if (doc.uploadedAt != null || doc.validTill != null) ...[
+                        AppSpacing.xs.h,
+                        _DocumentDates(doc: doc),
                       ],
                       if (doc.rejectionReason?.trim().isNotEmpty == true) ...[
                         AppSpacing.xs.h,
@@ -1135,6 +1286,75 @@ class _UserDocumentsSection extends ConsumerWidget {
           );
         },
       ),
+    );
+  }
+}
+
+/// Upload date and expiry (`valid_till`) of a document; expired ones are
+/// flagged in red.
+class _DocumentDates extends StatelessWidget {
+  const _DocumentDates({required this.doc});
+
+  final UserDocumentModel doc;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final metaStyle = context.textTheme.bodySmall?.colour(
+      colors.onSurfaceSecondary,
+    );
+    final uploadedAt = doc.uploadedAt;
+    final validTill = doc.validTill;
+    final isExpired =
+        validTill != null && validTill.isBefore(DateTime.now().startOfDay);
+
+    return Wrap(
+      spacing: AppSpacing.md,
+      runSpacing: AppSpacing.xs,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        if (uploadedAt != null)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.upload_file_outlined,
+                size: AppSpacing.md - 2,
+                color: colors.onSurfaceSecondary,
+              ),
+              (AppSpacing.xs / 2).w,
+              Text('Uploaded ${uploadedAt.readableDate}', style: metaStyle),
+            ],
+          ),
+        if (validTill != null)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.event_outlined,
+                size: AppSpacing.md - 2,
+                color: isExpired ? colors.error : colors.onSurfaceSecondary,
+              ),
+              (AppSpacing.xs / 2).w,
+              Text(
+                'Valid till ${validTill.readableDate}',
+                style: isExpired
+                    ? context.textTheme.bodySmall?.semiBold().colour(
+                        colors.error,
+                      )
+                    : metaStyle,
+              ),
+              if (isExpired) ...[
+                AppSpacing.xs.w,
+                AppChip(
+                  title: 'Expired',
+                  color: colors.error,
+                  size: AppChipSize.small,
+                ),
+              ],
+            ],
+          ),
+      ],
     );
   }
 }

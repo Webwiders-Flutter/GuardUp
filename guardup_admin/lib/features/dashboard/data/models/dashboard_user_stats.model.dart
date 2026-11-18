@@ -106,20 +106,19 @@ class DashboardUserStats {
   }) {
     final l10n = context.l10n;
 
-    final items = [
-      UserStatus.active,
-      UserStatus.approvalPending,
-      UserStatus.blocked,
-    ].map((status) {
-      return StatMetricItem(
-        id: status.apiValue,
-        title: status.label(l10n),
-        value: countForStatus(status).toDouble(),
-        color: status.color(context),
-        icon: status.icon,
-        subtitle: status.subtitle,
-      );
-    }).toList();
+    final items =
+        [UserStatus.active, UserStatus.approvalPending, UserStatus.blocked].map(
+          (status) {
+            return StatMetricItem(
+              id: status.apiValue,
+              title: status.label(l10n),
+              value: countForStatus(status).toDouble(),
+              color: status.color(context),
+              icon: status.icon,
+              subtitle: status.subtitle,
+            );
+          },
+        ).toList();
 
     final subtitle = roleFilter != null
         ? 'Status breakdown for ${roleFilter.label(l10n)} users'
@@ -141,20 +140,19 @@ class DashboardUserStats {
   }) {
     final l10n = context.l10n;
 
-    final allItems = [
-      UserRoleType.customer,
-      UserRoleType.guard,
-      UserRoleType.company,
-    ].map((role) {
-      return StatMetricItem(
-        id: role.apiValue,
-        title: role.label(l10n),
-        value: countForRole(role).toDouble(),
-        color: role.color(context),
-        icon: role.icon,
-        subtitle: role.description(l10n),
-      );
-    }).toList();
+    final allItems =
+        [UserRoleType.customer, UserRoleType.guard, UserRoleType.company].map((
+          role,
+        ) {
+          return StatMetricItem(
+            id: role.apiValue,
+            title: role.label(l10n),
+            value: countForRole(role).toDouble(),
+            color: role.color(context),
+            icon: role.icon,
+            subtitle: role.description(l10n),
+          );
+        }).toList();
 
     final filteredItems = roleFilter != null
         ? allItems.where((x) => x.id == roleFilter.apiValue).toList()

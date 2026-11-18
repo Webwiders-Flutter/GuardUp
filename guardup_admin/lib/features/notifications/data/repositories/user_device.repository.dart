@@ -71,10 +71,7 @@ final class UserDeviceRepository
   }) async {
     final response = await client.rpc(
       DatabaseFunctions.updateUserDeviceLanguage,
-      params: {
-        JsonKeys.pToken: token,
-        JsonKeys.pLanguageCode: languageCode,
-      },
+      params: {JsonKeys.pToken: token, JsonKeys.pLanguageCode: languageCode},
     );
 
     // A NULL composite comes back as null or as a map of nulls.

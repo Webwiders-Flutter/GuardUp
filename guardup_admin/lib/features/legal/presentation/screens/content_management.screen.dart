@@ -576,7 +576,7 @@ class _ContentManagementScreenState
                             spacing: AppSpacing.sm,
                             runSpacing: AppSpacing.xs,
                             children: UserRoleType.values
-                                .where((x) => x != UserRoleType.admin)
+                                .where((x) => !x.isAdmin)
                                 .map((role) {
                                   final isSelected = role == selectedRole;
                                   return ChoiceChip(

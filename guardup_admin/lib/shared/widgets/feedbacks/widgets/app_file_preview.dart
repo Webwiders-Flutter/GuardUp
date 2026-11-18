@@ -120,9 +120,13 @@ class AppFilePreviewSheet extends StatelessWidget {
                         if (fileUrl != null && fileUrl!.isNotEmpty) ...[
                           AppSpacing.sm.h,
                           TextButton.icon(
-                            icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                            icon: const Icon(
+                              Icons.open_in_new_rounded,
+                              size: 16,
+                            ),
                             label: const Text('Open link in browser'),
-                            onPressed: () => AppLauncher.launchUrlString(fileUrl!),
+                            onPressed: () =>
+                                AppLauncher.launchUrlString(fileUrl!),
                           ),
                         ],
                       ],

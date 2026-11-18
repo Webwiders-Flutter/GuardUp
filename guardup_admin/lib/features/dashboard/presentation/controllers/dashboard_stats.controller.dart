@@ -34,9 +34,7 @@ class DashboardStatsController extends AsyncNotifier<DashboardUserStats> {
   Future<DashboardUserStats> _fetchStats() async {
     return asyncHandler(() async {
       // Negate admin role: platform dashboard stats only tracks marketplace clients
-      final role = filterParam.role == UserRoleType.admin
-          ? null
-          : filterParam.role;
+      final role = filterParam.role?.isAdmin == true ? null : filterParam.role;
 
       return _repository.getUserStats(
         option: filterParam.option,

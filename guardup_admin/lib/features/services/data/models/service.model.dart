@@ -87,12 +87,6 @@ class ServiceModel {
           displayOrder == other.displayOrder;
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    name,
-    description,
-    iconName,
-    isActive,
-    displayOrder,
-  );
+  int get hashCode =>
+      Object.hash(id, name, description, iconName, isActive, displayOrder);
 }
