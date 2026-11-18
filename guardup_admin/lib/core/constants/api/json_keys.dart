@@ -9,6 +9,14 @@ final class JsonKeys {
   static const String descriptionHi = 'description_hi';
   static const String sortOrder = 'sort_order';
   static const String displayOrder = 'display_order';
+  static const String isPopular = 'is_popular';
+
+  // Membership plans
+  static const String pricePerMonth = 'price_per_month';
+  static const String pricePerYear = 'price_per_year';
+  static const String discount = 'discount';
+  static const String discountType = 'discount_type';
+  static const String discountUpto = 'discount_upto';
   static const String isActive = 'is_active';
   static const String status = 'status';
   static const String isRequired = 'is_required';

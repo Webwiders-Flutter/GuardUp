@@ -26,4 +26,5 @@ final class DatabaseTables {
   static const String payments = "payments";
   static const String userDevices = "user_devices";
   static const String notifications = "notifications";
+  static const String membershipPlans = "membership_plans";
 }

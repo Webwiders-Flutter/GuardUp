@@ -19,6 +19,8 @@ import '/features/legal/presentation/screens/content_management.screen.dart';
 import '/features/legal/presentation/screens/faq.form.dart';
 import '/features/legal/presentation/screens/faq_management.screen.dart';
 import '/features/legal/presentation/screens/public_legal.screen.dart';
+import '/features/membership/presentation/screens/membership_plan_details.screen.dart';
+import '/features/membership/presentation/screens/membership_plan_management.screen.dart';
 import '/features/notifications/presentation/screens/notification_management.screen.dart';
 import '/features/services/presentation/screens/services_management.screen.dart';
 import '/features/settings/presentation/screens/admin_settings.screen.dart';
@@ -287,6 +289,25 @@ final class AppRouter {
                   path: AppRoutes.documentTypes,
                   builder: (context, state) =>
                       const DocumentTypeManagementScreen(),
+                ),
+              ],
+            ),
+
+            // 3b. Membership Plans
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: AppRoutes.membershipPlans,
+                  builder: (context, state) =>
+                      const MembershipPlanManagementScreen(),
+                  routes: [
+                    GoRoute(
+                      path: 'detail/:id',
+                      builder: (context, state) => MembershipPlanDetailsScreen(
+                        planId: state.pathParameters['id']!,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

@@ -21,6 +21,12 @@ final class AppRoutes {
   static const addFaq = '/faqs/add';
   static const editFaq = '/faqs/edit';
 
+  // Membership Plans
+  static const membershipPlans = '/membership-plans';
+  static String membershipPlanDetail({required String id}) {
+    return '/membership-plans/detail/$id';
+  }
+
   // Users Management
   static const users = '/users';
   static String userDetail({required String id}) {
