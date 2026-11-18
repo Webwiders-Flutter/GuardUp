@@ -1,3 +1,4 @@
+import 'package:guardup_admin/core/extensions/spacing.extension.dart';
 import 'package:guardup_admin/shared/widgets/table/table_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -225,41 +226,14 @@ class _HelpSupportManagementScreenState
           );
         },
       ),
-      TableColumn<ContactUs>(
-        title: 'Status',
-        width: AppSpacing.xxxl * 4 + AppSpacing.md,
-        alignment: Alignment.center,
-        cellBuilder: (item, index) {
-          return PopupMenuButton<ContactUsStatus>(
-            tooltip: 'Change status',
-            initialValue: item.status,
-            onSelected: (status) => _onUpdateStatus(item, status),
-            itemBuilder: (context) => [
-              for (final status in ContactUsStatus.values)
-                PopupMenuItem(
-                  value: status,
-                  child: Row(
-                    children: [
-                      Icon(
-                        status.icon,
-                        size: AppSpacing.md + 2,
-                        color: status.color(context),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Text(status.label(context.l10n)),
-                    ],
-                  ),
-                ),
-            ],
-            child: AppChip(
-              color: item.status.color(context),
-              icon: item.status.icon,
-              title: item.status.label(context.l10n),
-              size: AppChipSize.normal,
-            ),
-          );
-        },
-      ),
+      // TableColumn<ContactUs>(
+      //   title: 'Status',
+      //   width: AppSpacing.xxxl * 4 + AppSpacing.md,
+      //   alignment: Alignment.center,
+      //   cellBuilder: (item, index) {
+      //     return
+      //   },
+      // ),
       TableColumn<ContactUs>(
         title: 'Received At',
         width: AppSpacing.xxxl * 5,
@@ -276,7 +250,7 @@ class _HelpSupportManagementScreenState
       ),
       TableColumn<ContactUs>(
         title: 'Actions',
-        width: AppSpacing.xxxl * 4,
+        width: AppSpacing.xxxl * 7,
         alignment: Alignment.center,
         cellBuilder: (item, index) {
           final userId = item.userId;
@@ -284,7 +258,36 @@ class _HelpSupportManagementScreenState
             mainAxisSize: MainAxisSize.min,
             children: [
               // Registered sender: open their profile.
+              PopupMenuButton<ContactUsStatus>(
+                tooltip: 'Change status',
+                initialValue: item.status,
+                onSelected: (status) => _onUpdateStatus(item, status),
+                itemBuilder: (context) => [
+                  for (final status in ContactUsStatus.values)
+                    PopupMenuItem(
+                      value: status,
+                      child: Row(
+                        children: [
+                          Icon(
+                            status.icon,
+                            size: AppSpacing.md + 2,
+                            color: status.color(context),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(status.label(context.l10n)),
+                        ],
+                      ),
+                    ),
+                ],
+                child: AppChip(
+                  color: item.status.color(context),
+                  icon: item.status.icon,
+                  title: item.status.label(context.l10n),
+                  size: AppChipSize.normal,
+                ),
+              ),
               if (userId != null) ...[
+                AppSpacing.sm.w,
                 Tooltip(
                   message: 'View User',
                   child: InkWell(
