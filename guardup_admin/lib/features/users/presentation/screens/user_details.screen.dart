@@ -367,17 +367,21 @@ class _UserProfileHero extends StatelessWidget {
               ),
             ],
           ),
-          if (user.isRejected &&
-              user.rejectionReason?.trim().isNotEmpty == true) ...[
+          if (user.rejectionReason?.trim().isNotEmpty == true) ...[
             AppSpacing.md.h,
             _RejectionReasonNote(
               label: 'Profile rejection reason',
               reason: user.rejectionReason!,
             ),
           ],
-          AppSpacing.md.h,
-          Divider(color: colors.borderLight.withValues(alpha: 0.6), height: 1),
-          AppSpacing.md.h,
+          if (!user.isRejected) ...[
+            AppSpacing.md.h,
+            Divider(
+              color: colors.borderLight.withValues(alpha: 0.6),
+              height: 1,
+            ),
+            AppSpacing.md.h,
+          ],
 
           // Actions Bar: Approve / Reject profile, Block/Unblock, Delete
           _UserActionsBar(user: user),
@@ -653,7 +657,6 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
     final colors = context.colors;
     final isApproved = widget.user.isApproved;
     final isBlocked = widget.user.isBlocked;
-    final isUnderReview = widget.user.isUnderReview;
     final isReviewing = ref
         .watch(userReviewControllerProvider(widget.user.id))
         .isLoading;
@@ -722,7 +725,7 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
                   ),
                 ),
               ),
-            ] else if (isUnderReview) ...[
+            ] else if (widget.user.isPendingApproval) ...[
               // 1. Approve Profile: only once every document is approved
               if (widget.user.allDocumentsApproved)
                 OutlinedButton.icon(
@@ -759,9 +762,7 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
                   color: colors.error,
                 ),
                 label: Text(
-                  widget.user.isRejected
-                      ? 'Update Rejection Reason'
-                      : 'Reject Profile',
+                  'Reject Profile',
                   style: context.textTheme.bodySmall?.semiBold().colour(
                     colors.error,
                   ),
@@ -1065,8 +1066,7 @@ class _UserDocumentsSection extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
-                      if (isRejected &&
-                          doc.rejectionReason?.trim().isNotEmpty == true) ...[
+                      if (doc.rejectionReason?.trim().isNotEmpty == true) ...[
                         AppSpacing.xs.h,
                         _RejectionReasonNote(
                           label: 'Rejection reason',
@@ -1087,7 +1087,7 @@ class _UserDocumentsSection extends ConsumerWidget {
                 AppSpacing.sm.w,
 
                 // Review Actions (only while the application is under review)
-                if (canReview && !isApproved)
+                if (canReview && !isRejected && !isApproved)
                   IconButton(
                     tooltip: 'Approve Document',
                     icon: Icon(
@@ -1099,7 +1099,7 @@ class _UserDocumentsSection extends ConsumerWidget {
                         ? null
                         : () => _onApproveDocument(context, ref, doc, title),
                   ),
-                if (canReview && !isRejected)
+                if (canReview && !isRejected && !isApproved)
                   IconButton(
                     tooltip: 'Reject Document',
                     icon: Icon(
