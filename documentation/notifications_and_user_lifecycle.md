@@ -129,12 +129,23 @@ One row per phone (FCM token).
 | `user_id` | Owner of the device |
 | `token` | Firebase Cloud Messaging token (unique) |
 | `platform` | `android`, `ios` or `web` |
+| `language_code` | Language this device gets pushes in (`en`, `hi`, …). Default `en`. |
 | `is_active` | Only active devices receive pushes |
 | `last_active_at` | Last time the app registered this device |
 
-The app should call the database function **`register_user_device(p_token, p_platform)`**
-after login and whenever Firebase gives a new token. It safely moves the token to the
-current user (useful when two people log in on the same phone).
+The app should call the database function
+**`register_user_device(p_token, p_platform, p_language_code)`** after login and whenever
+Firebase gives a new token. Everything is keyed on the **token** (one token = one device):
+
+| Situation | What happens |
+|---|---|
+| Token not in the table yet | A new row is created with the user, platform and language. |
+| Token already in the table | The row moves to the logged-in user (two people on one phone), is re-activated and gets the language sent. If no language is sent, it keeps its current one. |
+| User changes the app language | The app calls **`update_user_device_language(p_token, p_language_code)`**. Only that device's row changes. If the token is not registered yet, the app registers it instead. |
+| Two devices with different languages | Two rows, each with its own language. A user can get English on one phone and Hindi on another. |
+| Firebase gives a new token | It is registered as a new row. The old token is deleted after its first failed push. |
+
+Language codes are stored lower-case and without the region (`en-US` → `en`).
 
 Dead tokens (uninstalled app, expired token) are deleted automatically after a failed push.
 
@@ -152,7 +163,8 @@ If a user turns this off, they still get in-app notifications, but no push.
 | `trigger_on_notification_inserted` → `handle_notification_inserted()` | Trigger on `notifications` | Every new row → asks `send-notification` to push it. |
 | `invoke_edge_function(name, payload)` | Internal helper | Calls an Edge Function in the background. Only the database can use it. |
 | `create_and_send_notification(user_ids[], title, body, type, data, image_url)` | RPC (admins only) | Sends the same notification to many users at once. |
-| `register_user_device(token, platform)` | RPC (logged-in users) | Saves / updates the current user's device token. |
+| `register_user_device(token, platform, language_code)` | RPC (logged-in users) | Creates / updates the current user's device row for this token. |
+| `update_user_device_language(token, language_code)` | RPC (logged-in users) | Changes the push language of one of your devices. |
 | `handle_notification_read_at()` | Trigger on `notifications` | Fills / clears `read_at` when `is_read` changes. |
 | `delete_user(p_user_id)` | RPC (logged-in users) | Deletes your own account, or any non-admin user if you are an admin. See [user_deletion.md](user_deletion.md). |
 | `trg_users_guard_status_and_role` | Trigger on `users` | Stops users changing their own `status` / `role` (only `INCOMPLETE` → `PENDING_APPROVAL` is allowed). |
@@ -172,6 +184,7 @@ Migrations (in `supabase/migrations/`):
 | `20261117000018_restrict_registration_conflict_cleanup.sql` | Safer signup cleanup |
 | `20261118000000_add_rejected_user_status.sql` | Adds `REJECTED` back to `user_status` |
 | `20261118000001_user_rejection_flow.sql` | Current lifecycle trigger (`REJECTED` notification), `rejection_reason`, review triggers |
+| `20261118000011_add_language_code_to_user_devices.sql` | `user_devices.language_code`, `register_user_device` with language, `update_user_device_language` |
 
 ---
 
@@ -303,5 +316,8 @@ limit 10;
 
 - The **mobile app** does not yet register device tokens (`register_user_device`), so pushes
   only reach users after that is added. In-app notification rows are already created.
-- Notifications and emails are **English only** for now.
+- Notifications and emails are **English only** for now. Each device already stores its
+  `language_code`, but `send-notification` sends the same text to every device. Sending
+  translated text per language (like Supplr's English/Hindi groups) needs translated
+  title/body fields first.
 - Booking / payment notifications will be added as those features are built.

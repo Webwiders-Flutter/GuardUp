@@ -8,7 +8,7 @@ final class AppConstants {
   static const int sortOrderGap = 1000;
   static const int indiaCountryId = 101;
   static const String globalDistanceUnit = 'km';
-  static const String currencySymbol = '₹';
+  static const String currencySymbol = '\$';
 
   static const int resendSeconds = 60;
 }

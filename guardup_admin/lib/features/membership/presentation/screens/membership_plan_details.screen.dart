@@ -256,7 +256,7 @@ class _PlanHero extends ConsumerWidget {
                       TextSpan(
                         children: [
                           TextSpan(
-                            text: plan.pricePerMonth.toInrAmount,
+                            text: plan.pricePerMonth.toUsdAmount,
                             style: context.textTheme.titleLarge
                                 ?.bold()
                                 .colour(colors.primary),
@@ -270,7 +270,7 @@ class _PlanHero extends ConsumerWidget {
                           if (plan.hasYearlyPrice)
                             TextSpan(
                               text:
-                                  '   ·   ${plan.pricePerYear!.toInrAmount} / year',
+                                  '   ·   ${plan.pricePerYear!.toUsdAmount} / year',
                               style: context.textTheme.bodyMedium
                                   ?.semiBold()
                                   .colour(colors.onSurfaceSecondary),
@@ -399,13 +399,13 @@ class _PlanQuickStats extends StatelessWidget {
     final cards = <Widget>[
       AppMetricCard(
         label: 'Monthly Price',
-        value: plan.pricePerMonth.toInrAmount,
+        value: plan.pricePerMonth.toUsdAmount,
         icon: Icons.calendar_view_month_outlined,
         color: colors.primary,
       ),
       AppMetricCard(
         label: 'Yearly Price',
-        value: plan.pricePerYear.toInrAmountOr('Not offered'),
+        value: plan.pricePerYear.toUsdAmountOr('Not offered'),
         subtitle: savingsPercent != null
             ? 'Saves $savingsPercent% vs. monthly'
             : null,
@@ -515,19 +515,19 @@ class _PricingSection extends StatelessWidget {
       items: [
         (
           label: 'Price per month',
-          value: plan.pricePerMonth.toInrAmount,
+          value: plan.pricePerMonth.toUsdAmount,
           icon: Icons.calendar_view_month_outlined,
         ),
         (
           label: 'Price per year',
-          value: plan.pricePerYear.toInrAmountOr('Not offered'),
+          value: plan.pricePerYear.toUsdAmountOr('Not offered'),
           icon: Icons.event_repeat_outlined,
         ),
         if (savings != null)
           (
             label: 'Yearly saving',
             value:
-                '${savings.toInrAmount} (${plan.yearlySavingsPercent}%) vs. ${plan.yearlyPriceAtMonthlyRate.toInrAmount} paid monthly',
+                '${savings.toUsdAmount} (${plan.yearlySavingsPercent}%) vs. ${plan.yearlyPriceAtMonthlyRate.toUsdAmount} paid monthly',
             icon: Icons.savings_outlined,
           ),
         (
@@ -543,7 +543,7 @@ class _PricingSection extends StatelessWidget {
         if (plan.discountType.isPercentage)
           (
             label: 'Maximum discount per booking',
-            value: plan.discountUpto.toInrAmountOr('No limit'),
+            value: plan.discountUpto.toUsdAmountOr('No limit'),
             icon: Icons.vertical_align_top_rounded,
           ),
         (

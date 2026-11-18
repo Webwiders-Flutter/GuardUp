@@ -273,7 +273,7 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
       ),
       TableColumn<UserModel>(
         title: 'Actions',
-        width: AppSpacing.xxxl * 4,
+        width: AppSpacing.xxxl * 4 + AppSpacing.sm,
         alignment: Alignment.center,
         cellBuilder: (item, index) {
           final isPending =

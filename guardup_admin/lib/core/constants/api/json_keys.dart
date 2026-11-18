@@ -195,6 +195,12 @@ final class JsonKeys {
   static const String platform = 'platform';
   static const String languageCode = 'language_code';
   static const String lastActiveAt = 'last_active_at';
+
+  /// register_user_device / update_user_device_language RPC parameters.
+  static const String pToken = 'p_token';
+  static const String pPlatform = 'p_platform';
+  static const String pLanguageCode = 'p_language_code';
+
   static const String title = 'title';
   static const String titleHi = 'title_hi';
   static const String body = 'body';

@@ -2,8 +2,8 @@
 -- Seed default Membership Plans
 --
 -- The three customer tiers shown in the app:
---   1. Silver Shield    – 10% off bookings (up to ₹500)
---   2. Gold Sentinel    – 20% off bookings (up to ₹1,500), most popular
+--   1. Silver Shield    – 10% off bookings (up to $500)
+--   2. Gold Sentinel    – 20% off bookings (up to $1,500), most popular
 --   3. Platinum Elite   – 30% off bookings (no cap)
 --
 -- Yearly price ≈ 10 × monthly (two months free).
@@ -30,7 +30,7 @@ VALUES
   (
     'Silver Shield',
     ARRAY[
-      '10% off every booking, up to ₹500 per booking',
+      '10% off every booking, up to $500 per booking',
       'Access to all verified bodyguards',
       'Standard customer support'
     ],
@@ -46,7 +46,7 @@ VALUES
   (
     'Gold Sentinel',
     ARRAY[
-      '20% off every booking, up to ₹1,500 per booking',
+      '20% off every booking, up to $1,500 per booking',
       'Access to all verified bodyguards and security companies',
       'Priority customer support',
       'Priority matching for urgent bookings'

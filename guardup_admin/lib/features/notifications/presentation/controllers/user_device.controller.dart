@@ -49,7 +49,6 @@ class UserDeviceController extends AsyncNotifier<UserDeviceModel?> {
         }
 
         final device = await _repository.upsertDevice(
-          userId: userId,
           token: token,
           platform: currentPlatform,
           languageCode: languageCode,
@@ -113,7 +112,6 @@ class UserDeviceController extends AsyncNotifier<UserDeviceModel?> {
         await AsyncValue.guard(
           () => asyncHandler(() async {
             return await _repository.upsertDevice(
-              userId: userId,
               token: newToken,
               platform: currentPlatform,
               languageCode: languageCode,
@@ -124,18 +122,27 @@ class UserDeviceController extends AsyncNotifier<UserDeviceModel?> {
     });
   }
 
-  /// Updates the preferred notification language in Supabase for this device
+  /// Updates the push notification language of this device (its FCM token).
   Future<void> updateDeviceLanguage(String languageCode) async {
     await AsyncValue.guard(
       () => asyncHandler(() async {
         final token = await PushNotificationService.getToken();
-        if (token != null && token.isNotEmpty) {
-          await _repository.updateLanguage(
-            token: token,
-            languageCode: languageCode,
-          );
-        }
-        return null;
+        if (token == null || token.isEmpty) return null;
+
+        // Only this device's language changes; other devices keep theirs.
+        final updated = await _repository.updateLanguage(
+          token: token,
+          languageCode: languageCode,
+        );
+        if (updated != null) return updated;
+
+        // Token not registered for this user yet -> register it with the
+        // new language.
+        return _repository.upsertDevice(
+          token: token,
+          platform: currentPlatform,
+          languageCode: languageCode,
+        );
       }),
     );
   }
