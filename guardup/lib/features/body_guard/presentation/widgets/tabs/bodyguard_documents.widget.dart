@@ -12,6 +12,8 @@ import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/core/services/file_storage/file_storage.service.dart';
 import '/core/services/file_storage/models/file_upload_request.model.dart';
+import '/features/auth/bloc/auth_bloc.dart';
+import '/features/auth/bloc/auth_event.dart';
 import '/features/auth/domain/repositories/auth_repository.dart';
 import '/features/body_guard/data/enum/document_status.enum.dart';
 import '/features/body_guard/data/model/document_type.model.dart';
@@ -66,6 +68,22 @@ class _BodyguardDocumentsWidgetState extends State<BodyguardDocumentsWidget> {
   }
 
   Future<void> _loadDocumentTypesAndFiles() async {
+    if (sl.isRegistered<AuthBloc>()) {
+      final initialDocs = sl<AuthBloc>().state.userDocuments;
+      if (initialDocs.isNotEmpty) {
+        final Map<String, String> urls = {};
+        final Map<String, String> names = {};
+        final Map<String, DocumentStatus> statuses = {};
+        for (final doc in initialDocs) {
+          urls[doc.documentTypeId] = doc.fileUrl;
+          if (doc.fileName != null) names[doc.documentTypeId] = doc.fileName!;
+          statuses[doc.documentTypeId] = doc.status;
+        }
+        _remoteDocsNotifier.value = urls;
+        _remoteFileNamesNotifier.value = names;
+        _remoteStatusesNotifier.value = statuses;
+      }
+    }
     _isInitialLoadingNotifier.value = true;
     try {
       // 1. Fetch active guard document types
@@ -182,6 +200,9 @@ class _BodyguardDocumentsWidgetState extends State<BodyguardDocumentsWidget> {
       if (mounted) {
         _newDocumentsNotifier.value = {};
         AppSnackbar.success('New documents uploaded successfully');
+        if (sl.isRegistered<AuthBloc>()) {
+          sl<AuthBloc>().add(const AuthReloadRoleDataRequested());
+        }
         await _loadDocumentTypesAndFiles();
       }
     } catch (e) {

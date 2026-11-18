@@ -246,15 +246,14 @@ class ProfileScreen extends StatelessWidget {
         ? state.avatarUrl
         : Assets.images.dummyAvatar.path;
 
-    final specialization = state.services.isNotEmpty
-        ? state.services.map((s) => s.replaceAll('_', ' ')).join(', ')
-        : 'Executive & VIP Protection';
+    final specialization = state.specializationText;
+    final location = state.address.isNotEmpty ? state.address : '-';
 
     return _ProfileCard(
       name: guardName.isNotEmpty ? guardName : 'Operative Guard',
       specialization: specialization,
       rating: rating,
-      location: 'Available',
+      location: location,
       hourlyRate: hourlyRate,
       avatarAssetPath: avatar,
       isVerified: true,

@@ -1,18 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:guardup/features/auth/auth.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState, OtpType;
 
 import '/core/constants/api/database_tables.dart';
-import '/core/constants/app_radius.dart';
-import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/di/injection_container.dart';
-import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
-import '/core/extensions/textstyle_extension.dart';
-import '/features/auth/bloc/auth_bloc.dart';
-import '/features/auth/bloc/auth_state.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/navigation/app_tab_bar.dart';
 import '/shared/widgets/sections/app_appbar.dart';
@@ -55,6 +49,12 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: _tabNames.length, vsync: this);
+    if (sl.isRegistered<AuthBloc>()) {
+      final initialServices = sl<AuthBloc>().state.userServices;
+      if (initialServices.isNotEmpty) {
+        _servicesNotifier.value = initialServices;
+      }
+    }
     _loadUserServices();
   }
 
@@ -101,6 +101,9 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
 
       if (mounted) {
         _servicesNotifier.value = loaded;
+        if (sl.isRegistered<AuthBloc>()) {
+          sl<AuthBloc>().add(AuthUpdateUserServices(loaded));
+        }
       }
     } catch (e) {
       debugPrint('Error loading user services: $e');
@@ -149,8 +152,14 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
+    return BlocConsumer<AuthBloc, AuthState>(
       bloc: sl<AuthBloc>(),
+      listenWhen: (prev, curr) => prev.userServices != curr.userServices,
+      listener: (context, state) {
+        if (state.userServices.isNotEmpty) {
+          _servicesNotifier.value = state.userServices;
+        }
+      },
       builder: (context, state) {
         final guard = widget.bodyguard;
         final name =
@@ -165,15 +174,19 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
                 ? state.avatarUrl
                 : Assets.images.dummyAvatar.path);
         final bio = guard?.bio ?? (state.bio.isNotEmpty ? state.bio : null);
-        final location = state.address.isNotEmpty ? state.address : 'Available';
+        final location = state.address.isNotEmpty
+            ? state.address
+            : 'Location not set';
 
         return ValueListenableBuilder<List<ServiceItemModel>>(
           valueListenable: _servicesNotifier,
           builder: (context, userServices, _) {
-            final effectiveServices = userServices;
+            final effectiveServices = userServices.isNotEmpty
+                ? userServices
+                : state.userServices;
             final specialization = effectiveServices.isNotEmpty
                 ? effectiveServices.map((s) => s.name).join(', ')
-                : (guard?.clearanceLevel ?? 'Executive & VIP Protection');
+                : (guard?.clearanceLevel ?? state.specializationText);
 
             return Scaffold(
               appBar: const AppAppBar.transparent(
@@ -242,7 +255,7 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
                               ),
                               onEditServices: () => _showEditServicesSheet(
                                 context,
-                                currentServices: effectiveServices ?? [],
+                                currentServices: effectiveServices,
                               ),
                             ),
                           ),
@@ -283,4 +296,3 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
     );
   }
 }
-

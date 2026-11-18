@@ -23,9 +23,7 @@ class AppAddressPickerSheet extends StatefulWidget {
       isScrollControlled: true,
       backgroundColor: context.colors.surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppRadius.xl),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       builder: (_) => const AppAddressPickerSheet(),
     );
@@ -122,7 +120,7 @@ class _AppAddressPickerSheetState extends State<AppAddressPickerSheet> {
                 AppSpacing.xs.w,
                 Expanded(
                   child: Text(
-                    'Select Company Address',
+                    'Select Address',
                     style: context.textTheme.titleMedium?.bold(),
                   ),
                 ),
@@ -162,9 +160,7 @@ class _AppAddressPickerSheetState extends State<AppAddressPickerSheet> {
             if (_isLoading)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
-                child: Center(
-                  child: CircularProgressIndicator.adaptive(),
-                ),
+                child: Center(child: CircularProgressIndicator.adaptive()),
               )
             else if (_suggestions.isNotEmpty)
               Flexible(
@@ -237,8 +233,9 @@ class _AppAddressPickerSheetState extends State<AppAddressPickerSheet> {
                       Icon(
                         Icons.search_rounded,
                         size: 40,
-                        color: context.colors.onSurfaceVariant
-                            .withValues(alpha: 0.4),
+                        color: context.colors.onSurfaceVariant.withValues(
+                          alpha: 0.4,
+                        ),
                       ),
                       AppSpacing.xs.h,
                       Text(

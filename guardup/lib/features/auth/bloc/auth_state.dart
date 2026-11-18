@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 
 import '/core/state/api_state.dart';
+import '/features/body_guard/data/model/service_item.model.dart';
+import '/features/body_guard/data/model/user_document.model.dart';
 import '../data/enum/gender_type.enum.dart';
 import '../data/enum/user_role.enum.dart';
 import '../data/enum/user_status.enum.dart';
@@ -21,6 +23,8 @@ class AuthState extends Equatable {
   final String? phoneCode;
   final String? phoneNumber;
   final Map<String, dynamic>? userData;
+  final List<ServiceItemModel> userServices;
+  final List<UserDocumentModel> userDocuments;
 
   const AuthState({
     this.sessionStatus = AuthSessionStatus.unknown,
@@ -30,6 +34,8 @@ class AuthState extends Equatable {
     this.phoneCode,
     this.phoneNumber,
     this.userData,
+    this.userServices = const [],
+    this.userDocuments = const [],
   });
 
   const AuthState.unknown()
@@ -46,6 +52,8 @@ class AuthState extends Equatable {
     String? phoneCode,
     String? phoneNumber,
     Map<String, dynamic>? userData,
+    List<ServiceItemModel> userServices = const [],
+    List<UserDocumentModel> userDocuments = const [],
   }) : this(
          sessionStatus: AuthSessionStatus.unauthenticated,
          operationState: operationState,
@@ -54,6 +62,8 @@ class AuthState extends Equatable {
          phoneCode: phoneCode,
          phoneNumber: phoneNumber,
          userData: userData,
+         userServices: userServices,
+         userDocuments: userDocuments,
        );
 
   AuthState.authenticated(
@@ -64,6 +74,8 @@ class AuthState extends Equatable {
     String? phoneCode,
     String? phoneNumber,
     Map<String, dynamic>? userData,
+    List<ServiceItemModel> userServices = const [],
+    List<UserDocumentModel> userDocuments = const [],
   }) : this(
          sessionStatus: AuthSessionStatus.authenticated,
          operationState: operationState ?? ApiSuccess(user),
@@ -72,6 +84,8 @@ class AuthState extends Equatable {
          phoneCode: phoneCode,
          phoneNumber: phoneNumber,
          userData: userData,
+         userServices: userServices,
+         userDocuments: userDocuments,
        );
 
   bool get isAuthenticated => sessionStatus == AuthSessionStatus.authenticated;
@@ -105,6 +119,14 @@ class AuthState extends Equatable {
       email ??
       '';
 
+  String get displayEmail =>
+      (userData?['email'] as String?) ??
+      (userData?['business_email'] as String?) ??
+      email ??
+      '';
+
+  String get userEmail => displayEmail;
+
   String get companyPhoneNumber =>
       (userData?['company_phone_number'] as String?) ?? '';
 
@@ -137,6 +159,9 @@ class AuthState extends Equatable {
   String get bio => (userData?['bio'] as String?) ?? '';
 
   List<String> get services {
+    if (userServices.isNotEmpty) {
+      return userServices.map((s) => s.name).toList();
+    }
     final list = userData?['services'] as List<dynamic>?;
     if (list != null && list.isNotEmpty) {
       return list.map((e) => e.toString()).toList();
@@ -146,6 +171,17 @@ class AuthState extends Equatable {
       return (meta['services'] as List).map((e) => e.toString()).toList();
     }
     return const [];
+  }
+
+  /// Primary specialization text for Guard (dynamic based on user_services)
+  String get specializationText {
+    if (userServices.isNotEmpty) {
+      return userServices.map((s) => s.name).join(', ');
+    }
+    if (services.isNotEmpty) {
+      return services.map((s) => s.replaceAll('_', ' ')).join(', ');
+    }
+    return 'Executive & VIP Protection';
   }
 
   String get avatarUrl =>
@@ -252,6 +288,8 @@ class AuthState extends Equatable {
     String? phoneCode,
     String? phoneNumber,
     Map<String, dynamic>? userData,
+    List<ServiceItemModel>? userServices,
+    List<UserDocumentModel>? userDocuments,
   }) {
     return AuthState(
       sessionStatus: sessionStatus ?? this.sessionStatus,
@@ -261,6 +299,8 @@ class AuthState extends Equatable {
       phoneCode: phoneCode ?? this.phoneCode,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       userData: userData ?? this.userData,
+      userServices: userServices ?? this.userServices,
+      userDocuments: userDocuments ?? this.userDocuments,
     );
   }
 
@@ -273,5 +313,7 @@ class AuthState extends Equatable {
     phoneCode,
     phoneNumber,
     userData,
+    userServices,
+    userDocuments,
   ];
 }

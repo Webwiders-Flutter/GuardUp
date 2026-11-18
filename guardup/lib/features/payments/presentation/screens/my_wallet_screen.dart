@@ -33,12 +33,10 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
   @override
   void initState() {
     super.initState();
-    // Initial 8 items from fakeData matching the design mockup
-    final initialItems = TransactionModel.fakeData.take(8).toList();
 
     _paginationController = PaginationController<TransactionModel>(
       initialState: PaginationState<TransactionModel>(
-        items: initialItems,
+        items: [],
         total: TransactionModel.fakeData.length,
         status: const ApiState.success(null),
       ),

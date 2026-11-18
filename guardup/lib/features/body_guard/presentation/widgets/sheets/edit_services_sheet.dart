@@ -105,10 +105,7 @@ class _EditServicesSheetState extends State<EditServicesSheet> {
         try {
           await Supabase.instance.client.rpc(
             'set_user_services',
-            params: {
-              'p_user_id': userId,
-              'p_service_ids': targetServiceIds,
-            },
+            params: {'p_user_id': userId, 'p_service_ids': targetServiceIds},
           );
         } catch (_) {
           await Supabase.instance.client
@@ -132,8 +129,9 @@ class _EditServicesSheetState extends State<EditServicesSheet> {
           final userRow = await sl<UserRepository>().getUserData(userId);
           if (userRow?['metadata'] is Map &&
               (userRow!['metadata'] as Map).containsKey('services')) {
-            final cleanMeta =
-                Map<String, dynamic>.from(userRow['metadata'] as Map);
+            final cleanMeta = Map<String, dynamic>.from(
+              userRow['metadata'] as Map,
+            );
             cleanMeta.remove('services');
             await sl<UserRepository>().updateProfileFields(
               userId: userId,
@@ -142,7 +140,8 @@ class _EditServicesSheetState extends State<EditServicesSheet> {
           }
         } catch (_) {}
 
-        sl<AuthBloc>().add(const AuthCheckStatusRequested());
+        sl<AuthBloc>().add(AuthUpdateUserServices(_selectedServices));
+        sl<AuthBloc>().add(const AuthReloadRoleDataRequested());
       }
 
       if (mounted) {
@@ -282,4 +281,3 @@ class _EditServicesSheetState extends State<EditServicesSheet> {
     );
   }
 }
-
