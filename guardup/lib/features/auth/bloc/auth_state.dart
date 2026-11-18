@@ -81,6 +81,7 @@ class AuthState extends Equatable {
 
   UserModel? get user => operationState.dataOrNull;
   UserRole get sessionRole => user?.role ?? UserRole.customer;
+  UserRole get role => sessionRole;
   bool get isLoading => operationState.isLoading;
   bool get hasError => operationState.isFailure;
   String? get errorMessage => operationState.errorMessageOrNull;

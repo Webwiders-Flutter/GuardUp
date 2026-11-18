@@ -156,14 +156,14 @@ class ProfileScreen extends StatelessWidget {
                   title: context.l10n.privacyPolicy,
                   icon: Icons.privacy_tip_outlined,
                   onTap: () {
-                    context.push(AppRoutes.privacyPolicy);
+                    context.push(AppRoutes.privacyPolicy, extra: role);
                   },
                 ),
                 _ProfileMenuCard(
                   title: context.l10n.termsAndConditions,
                   icon: Icons.gavel_outlined,
                   onTap: () {
-                    context.push(AppRoutes.termsAndConditions);
+                    context.push(AppRoutes.termsAndConditions, extra: role);
                   },
                 ),
                 _ProfileMenuCard(

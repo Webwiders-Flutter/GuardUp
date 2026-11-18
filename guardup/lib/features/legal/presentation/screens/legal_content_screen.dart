@@ -14,6 +14,7 @@ import '/core/extensions/textstyle_extension.dart';
 import '/shared/widgets/misc/app_rich_text.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
+import '/features/auth/data/enum/user_role.enum.dart';
 import '../../bloc/legal_content/legal_content_bloc.dart';
 import '../../bloc/legal_content/legal_content_event.dart';
 import '../../bloc/legal_content/legal_content_state.dart';
@@ -27,13 +28,19 @@ class LegalContentScreen extends StatelessWidget {
   static const termsRoute = '/terms-and-conditions';
 
   final ContentType type;
+  final UserRole? role;
 
-  const LegalContentScreen({super.key, required this.type});
+  const LegalContentScreen({
+    super.key,
+    required this.type,
+    this.role,
+  });
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => LegalContentBloc()..add(LegalContentRequested(type)),
+      create: (context) => LegalContentBloc()
+        ..add(LegalContentRequested(type, role: role)),
       child: _LegalContentView(type: type),
     );
   }
@@ -119,26 +126,41 @@ class _LegalContentView extends StatelessWidget {
                       fontSize: FontSize(14.0),
                       lineHeight: const LineHeight(1.6),
                     ),
+                    'h1': Style(
+                      color: context.colors.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: FontSize(20.0),
+                      margin: Margins.only(top: 4, bottom: 12),
+                    ),
                     'h2': Style(
                       color: context.colors.primary,
                       fontWeight: FontWeight.bold,
-                      fontSize: FontSize(18.0),
+                      fontSize: FontSize(16.0),
                       margin: Margins.only(top: 16, bottom: 8),
                     ),
                     'h3': Style(
                       color: context.colors.primary,
                       fontWeight: FontWeight.bold,
-                      fontSize: FontSize(16.0),
+                      fontSize: FontSize(15.0),
                       margin: Margins.only(top: 14, bottom: 6),
                     ),
                     'p': Style(
                       color: context.colors.onSurfaceVariant,
-                      lineHeight: const LineHeight(1.5),
+                      lineHeight: const LineHeight(1.6),
                       margin: Margins.only(bottom: 12),
                     ),
                     'strong': Style(
                       color: context.colors.onSurface,
                       fontWeight: FontWeight.bold,
+                    ),
+                    'ul': Style(
+                      margin: Margins.only(bottom: 14),
+                      padding: HtmlPaddings.only(left: 20),
+                    ),
+                    'li': Style(
+                      color: context.colors.onSurfaceVariant,
+                      lineHeight: const LineHeight(1.5),
+                      margin: Margins.only(bottom: 6),
                     ),
                   },
                 ),
