@@ -43,7 +43,7 @@
       "flutterMode": "debug",
       "toolArgs": [
         "--web-port=51657",
-        "--web-hostname=localhost"
+        "--web-hostname=0.0.0.0"
       ]
     },
     {
@@ -55,7 +55,7 @@
       "flutterMode": "debug",
       "toolArgs": [
         "--web-port=51657",
-        "--web-hostname=localhost"
+        "--web-hostname=0.0.0.0"
       ]
     },
     {
@@ -67,7 +67,7 @@
       "flutterMode": "debug",
       "toolArgs": [
         "--web-port=51657",
-        "--web-hostname=localhost"
+        "--web-hostname=0.0.0.0"
       ]
     },
     {
@@ -79,7 +79,7 @@
       "flutterMode": "release",
       "toolArgs": [
         "--web-port=51657",
-        "--web-hostname=localhost"
+        "--web-hostname=0.0.0.0"
       ]
     }
   ]

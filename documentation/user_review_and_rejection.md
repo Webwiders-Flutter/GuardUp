@@ -20,12 +20,19 @@ An application can be reviewed while the user is **`PENDING_APPROVAL`** or **`RE
 | Reject a document (reason required) | `user_documents.status = REJECTED`, `user_documents.rejection_reason = <reason>` | → `REJECTED` |
 | Reject the profile (reason required) | `users.rejection_reason = <reason>` | → `REJECTED` |
 | Approve the profile | `users.rejection_reason` cleared | → `ACTIVE` |
+| Rejected document back to `PENDING` (re-submitted) | `user_documents.status = PENDING`, `rejection_reason` **kept** | `REJECTED` → `PENDING_APPROVAL` once no document is still `REJECTED` |
+| Approve a rejected document | `user_documents.status = APPROVED`, `rejection_reason` cleared | `REJECTED` → `PENDING_APPROVAL` once no document is still `REJECTED` |
 
 - **One rejected document is enough** to move the user to `REJECTED`.
 - **The profile can only be approved once every document is `APPROVED`.** The database
   refuses otherwise (`All documents must be approved before the profile can be approved`).
-- A `REJECTED` user stays `REJECTED` after their documents are approved again, until an
-  admin approves the profile.
+- A document going `REJECTED → PENDING` or `REJECTED → APPROVED` moves a `REJECTED`
+  user back to `PENDING_APPROVAL`, but only when **no other document is still
+  `REJECTED`**. No notification is sent for this move. The admin then approves (or
+  rejects) the profile again.
+- **Rejection reasons are cleared only on approval:** a document's reason when it is
+  `APPROVED`, the profile's reason when the user becomes `ACTIVE`. Every other change
+  (e.g. `REJECTED → PENDING`) keeps the last reason.
 - Rejecting the profile of an already `REJECTED` user only updates the reason (no second
   notification).
 - Rejection **does not delete anything**. The user keeps their login, profile and files.
@@ -79,8 +86,11 @@ RPCs are kept for operations that are not a plain row write (`delete_user`).
 UPDATE user_documents SET status = 'REJECTED', rejection_reason = ...
    │
    ├─ trg_user_documents_review_rules   (BEFORE)  reason required, user must be under review
-   └─ trg_user_documents_reject_user    (AFTER)   UPDATE users SET status = 'REJECTED'
-                                                    (only if PENDING_APPROVAL)
+   ├─ trg_user_documents_reject_user    (AFTER)   UPDATE users SET status = 'REJECTED'
+   │                                                (only if PENDING_APPROVAL)
+   └─ trg_user_documents_pending_user   (AFTER)   REJECTED -> PENDING / APPROVED document:
+                                                    UPDATE users SET status = 'PENDING_APPROVAL'
+                                                    (only if REJECTED and no document still REJECTED)
                                                          │
 UPDATE users SET status = ...                            │
    │◄────────────────────────────────────────────────────┘
@@ -95,8 +105,8 @@ The document update and the user's move to `REJECTED` happen in the **same trans
 Because the document row is already written when the user's status changes, the
 notification can name the rejected document.
 
-Reasons are trimmed. A reason is cleared automatically whenever the document / user
-leaves `REJECTED`.
+Reasons are trimmed. A reason is cleared **only on approval** (document → `APPROVED`,
+user → `ACTIVE`); any other status change keeps it.
 
 Errors (SQLSTATE `22023`, shown as is in the admin panel):
 
@@ -137,12 +147,12 @@ Unchanged from [user_deletion.md](user_deletion.md), plus:
 ## 6. Admin Panel
 
 **User details screen** (`user_details.screen.dart`), while the user is pending or rejected:
-- **Top bar:** "Reject Profile" (or "Update Rejection Reason" when already rejected).
+- **Top bar** (pending users only): "Reject Profile".
   "Approve Profile" appears beside it **only when every document is approved**.
 - **Documents section:** each document has its own approve ✓ / reject ✕ button
-  (approve is hidden once approved, reject once rejected). A rejected document shows its
+  (approve is hidden once approved; reject is hidden once rejected **or approved**). A document shows its
   reason underneath.
-- A rejected profile shows its reason in the header card.
+- The profile and each document show their rejection reason whenever one is stored, whatever the status (a reason is kept until approval).
 - Every reject button opens `AppPopup.showRejectWithReason`, which requires a reason.
 - Review buttons are disabled while a review request is running.
 
@@ -169,9 +179,9 @@ The mobile app already parses `REJECTED` for users and documents. Still to do th
 
 - Show `users.rejection_reason` and each document's `rejection_reason` to the user.
 - A way to fix a rejected application. Today a user cannot re-upload a `REJECTED`
-  document (RLS only allows updating `PENDING` documents) and cannot move themselves
-  from `REJECTED` back to `PENDING_APPROVAL` (status guard). Both need a decision
-  before they are opened up.
+  document (RLS only allows updating `PENDING` documents). Once a document can go
+  `REJECTED → PENDING`, `trg_user_documents_pending_user` already moves the user back
+  to `PENDING_APPROVAL` (it bypasses the status guard), so only the RLS policy needs opening.
 
 ---
 
@@ -181,6 +191,8 @@ The mobile app already parses `REJECTED` for users and documents. Still to do th
 |---|---|
 | `supabase/migrations/20261118000000_add_rejected_user_status.sql` | Adds `REJECTED` back to `user_status` |
 | `supabase/migrations/20261118000001_user_rejection_flow.sql` | `users.rejection_reason`, guards, lifecycle trigger update, `delete_user` update, review triggers |
+| `supabase/migrations/20261118000002_pending_user_on_document_resubmitted.sql` | Rejected document → `PENDING` moves the user back to `PENDING_APPROVAL` (`trg_user_documents_pending_user`) |
+| `supabase/migrations/20261118000003_rejection_reason_cleared_on_approval.sql` | Same trigger also on `REJECTED → APPROVED`; rejection reasons cleared only on approval |
 
 Deploy: `supabase db push`. No Edge Function changes.
 
@@ -198,6 +210,11 @@ select type, title, body, data from public.notifications where user_id = '<user-
 |---|---|
 | Reject one document of a pending user | Document `REJECTED` + reason; user `REJECTED`, `users.rejection_reason` empty; one notification naming the document; no email. |
 | Reject a second document | Document `REJECTED` + reason; no new notification. |
+| Set one of two `REJECTED` documents to `PENDING` | Document `PENDING`, reason kept; user stays `REJECTED`. |
+| Set the last `REJECTED` document to `PENDING` | User `PENDING_APPROVAL`, both reasons kept; no notification. |
+| Approve the last `REJECTED` document | Document `APPROVED`, its reason cleared; user `PENDING_APPROVAL`, profile reason kept. |
+| Approve the profile | User `ACTIVE`, `users.rejection_reason` cleared. |
+| Approved document | No reject button in the admin panel. |
 | Reject the profile of a pending user | User `REJECTED` + reason; notification with the reason; no email. |
 | Approve profile with a pending / rejected document | Fails: `All documents must be approved…`. |
 | Approve every document, then the profile | User `ACTIVE`, reason cleared; "Account approved" notification + email. |
