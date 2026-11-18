@@ -7,7 +7,6 @@ import '/core/error/api_exception.dart';
 import '/core/repositories/base.repository.dart';
 import '/features/users/data/enums/user_role.enum.dart';
 import '/features/users/data/enums/user_status.enum.dart';
-import '/features/users/data/enums/verification_status.enum.dart';
 import '/features/users/data/models/user_model.dart';
 
 final class UsersRepository extends BaseSupabaseRepository<UserModel> {
@@ -102,31 +101,8 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
     return UserModel.fromJson(Map<String, dynamic>.from(response));
   }
 
-  /// Approves user application and marks pending documents as verified.
-  Future<UserModel> markVerified(String id) async {
-    // 1. Update user registration status to active/approved
-    await client
-        .from(tableName)
-        .update({JsonKeys.registrationStatus: UserStatus.active.apiValue})
-        .eq(JsonKeys.id, id);
-
-    // 2. Update user documents to approved
-    try {
-      await client
-          .from(DatabaseTables.userDocuments)
-          .update({JsonKeys.status: VerificationStatus.verified.apiValue})
-          .eq(JsonKeys.userId, id);
-    } catch (_) {}
-
-    return getDetails(id);
-  }
-
-  /// Rejects a pending application.
-  ///
-  /// There is no REJECTED status: rejecting deletes the applicant while they
-  /// are PENDING_APPROVAL, which removes their profile, documents and login.
-  /// See documentation/user_deletion.md.
-  Future<void> rejectUser(String id) => delete(id);
+  // Approving / rejecting an application lives in UserReviewRepository
+  // (admin-only RPCs that enforce the review rules).
 
   /// Blocks user account.
   Future<UserModel> blockUser(String id) async {
@@ -149,8 +125,9 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
   }
 
   /// Deletes a user through the delete_user RPC. The database decides how:
-  /// never approved -> removed completely; otherwise login removed and the
-  /// profile kept with status DELETED. See documentation/user_deletion.md.
+  /// never approved (incomplete / pending / rejected) -> removed completely;
+  /// otherwise login removed and the profile kept with status DELETED.
+  /// See documentation/user_deletion.md.
   @override
   Future<void> delete(String id) async {
     await client.rpc(

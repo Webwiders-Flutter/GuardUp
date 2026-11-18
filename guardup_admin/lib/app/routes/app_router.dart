@@ -184,6 +184,15 @@ final class AppRouter {
                               ),
                         ),
                         GoRoute(
+                          path: 'rejected',
+                          name: 'bodyguard-rejected',
+                          builder: (context, state) =>
+                              const UsersManagementScreen(
+                                role: UserRoleType.guard,
+                                status: UserStatus.rejected,
+                              ),
+                        ),
+                        GoRoute(
                           path: 'blocked',
                           name: 'bodyguard-blocked',
                           builder: (context, state) =>
@@ -222,6 +231,15 @@ final class AppRouter {
                               const UsersManagementScreen(
                                 role: UserRoleType.company,
                                 status: UserStatus.approvalPending,
+                              ),
+                        ),
+                        GoRoute(
+                          path: 'rejected',
+                          name: 'company-rejected',
+                          builder: (context, state) =>
+                              const UsersManagementScreen(
+                                role: UserRoleType.company,
+                                status: UserStatus.rejected,
                               ),
                         ),
                         GoRoute(

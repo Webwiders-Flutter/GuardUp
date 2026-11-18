@@ -17,6 +17,10 @@ import '/features/users/data/enums/user_role.enum.dart';
 import '/features/users/data/enums/user_status.enum.dart';
 import '/features/users/data/models/user_model.dart';
 import '/features/users/di/users.providers.dart';
+import '/core/extensions/riverpod.extension.dart';
+import '/features/users/data/enums/verification_status.enum.dart';
+import '/features/users/data/models/user_document.model.dart';
+import '/features/users/presentation/controllers/user_review.controller.dart';
 import '/features/users/presentation/controllers/users.controller.dart';
 import '/shared/widgets/admin_layout/app_side_panel.dart';
 import '/shared/widgets/feedbacks/widgets/app_file_preview.dart';
@@ -363,11 +367,19 @@ class _UserProfileHero extends StatelessWidget {
               ),
             ],
           ),
+          if (user.isRejected &&
+              user.rejectionReason?.trim().isNotEmpty == true) ...[
+            AppSpacing.md.h,
+            _RejectionReasonNote(
+              label: 'Profile rejection reason',
+              reason: user.rejectionReason!,
+            ),
+          ],
           AppSpacing.md.h,
           Divider(color: colors.borderLight.withValues(alpha: 0.6), height: 1),
           AppSpacing.md.h,
 
-          // Actions Bar: Approve, Block/Unblock, Delete
+          // Actions Bar: Approve / Reject profile, Block/Unblock, Delete
           _UserActionsBar(user: user),
         ],
       ),
@@ -520,87 +532,50 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
     super.dispose();
   }
 
-  Future<void> _onApprove() async {
-    // [COMING SOON GUARD]
-    AppSnackbar.show(
-      message: 'Approve user is coming soon',
-      type: SnackbarType.info,
-    );
-    return;
+  UserReviewController get _reviewController =>
+      ref.read(userReviewControllerProvider(widget.user.id).notifier);
 
-    _isLoadingNotifier.value = true;
-    try {
-      await _controller.markVerified(widget.user.id);
-      if (mounted) {
-        ref.invalidate(userDetailsProvider(widget.user.id));
-        AppSnackbar.show(
-          message: '${widget.user.fullName} has been approved successfully',
-          type: SnackbarType.success,
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        AppSnackbar.show(
-          message: 'Failed to approve user: $e',
-          type: SnackbarType.error,
-        );
-      }
-    } finally {
-      _isLoadingNotifier.value = false;
+  /// Shown only once every document is approved.
+  Future<void> _onApproveProfile() async {
+    await _reviewController.approveUser();
+    if (mounted) {
+      ref
+          .read(userReviewControllerProvider(widget.user.id))
+          .handleResult(
+            successMessage:
+                '${widget.user.fullName} has been approved successfully',
+            fallbackErrorMessage: 'Failed to approve user',
+          );
     }
   }
 
-  Future<void> _onReject() async {
-    // [COMING SOON GUARD]
-    AppSnackbar.show(
-      message: 'Reject user is coming soon',
-      type: SnackbarType.info,
-    );
-    return;
-
-    final result = await AppPopup.showRejectConfirmation(
+  /// Rejects the profile with a reason (stored on the user). The user stays
+  /// in the system with status REJECTED and is notified.
+  Future<void> _onRejectProfile() async {
+    final result = await AppPopup.showRejectWithReason(
       context,
-      itemName: widget.user.fullName,
+      title: 'Reject ${widget.user.fullName}',
+      message:
+          'The user will be notified with this reason. Their account is kept.',
+      confirmLabel: 'Reject Profile',
     );
+    final reason = result?.data;
+    if (result?.action != PopupAction.confirm || reason == null || !mounted) {
+      return;
+    }
 
-    if (result?.action == PopupAction.confirm && mounted) {
-      _isLoadingNotifier.value = true;
-      try {
-        // Rejecting removes the applicant completely
-        // (documentation/user_deletion.md), so leave the details screen.
-        await _controller.rejectUser(widget.user.id);
-        if (mounted) {
-          AppSnackbar.show(
-            message: '${widget.user.fullName} has been rejected',
-            type: SnackbarType.warning,
+    await _reviewController.rejectUser(reason);
+    if (mounted) {
+      ref
+          .read(userReviewControllerProvider(widget.user.id))
+          .handleResult(
+            successMessage: '${widget.user.fullName} has been rejected',
+            fallbackErrorMessage: 'Failed to reject user',
           );
-          if (Navigator.of(context).canPop()) {
-            Navigator.of(context).pop();
-          } else {
-            context.go(AppRoutes.home);
-          }
-        }
-      } catch (e) {
-        if (mounted) {
-          AppSnackbar.show(
-            message: 'Failed to reject user: $e',
-            type: SnackbarType.error,
-          );
-        }
-      } finally {
-        _isLoadingNotifier.value = false;
-      }
     }
   }
 
   Future<void> _onToggleBlock(bool block) async {
-    // [COMING SOON GUARD]
-    AppSnackbar.show(
-      message: '${block ? 'Block' : 'Unblock'} user is coming soon',
-      type: SnackbarType.info,
-    );
-    return;
-
     final result = block
         ? await AppPopup.showBlockConfirmation(
             context,
@@ -639,13 +614,6 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
   }
 
   Future<void> _onDelete() async {
-    // [COMING SOON GUARD]
-    AppSnackbar.show(
-      message: 'Delete user is coming soon',
-      type: SnackbarType.info,
-    );
-    return;
-
     final result = await AppPopup.showDeleteConfirmation(
       context,
       deleteItemName: widget.user.fullName,
@@ -685,10 +653,15 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
     final colors = context.colors;
     final isApproved = widget.user.isApproved;
     final isBlocked = widget.user.isBlocked;
+    final isUnderReview = widget.user.isUnderReview;
+    final isReviewing = ref
+        .watch(userReviewControllerProvider(widget.user.id))
+        .isLoading;
 
     return ValueListenableBuilder<bool>(
       valueListenable: _isLoadingNotifier,
       builder: (context, isLoading, _) {
+        final isBusy = isLoading || isReviewing;
         return Wrap(
           spacing: AppSpacing.sm,
           runSpacing: AppSpacing.sm,
@@ -698,7 +671,7 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
             if (isApproved || isBlocked) ...[
               // 1. Block / Unblock Button
               OutlinedButton.icon(
-                onPressed: isLoading ? null : () => _onToggleBlock(!isBlocked),
+                onPressed: isBusy ? null : () => _onToggleBlock(!isBlocked),
                 icon: Icon(
                   isBlocked ? Icons.lock_open_rounded : Icons.block_outlined,
                   size: 16,
@@ -726,7 +699,7 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
 
               // 2. Delete Button
               OutlinedButton.icon(
-                onPressed: isLoading ? null : _onDelete,
+                onPressed: isBusy ? null : _onDelete,
                 icon: Icon(
                   Icons.delete_outline_rounded,
                   size: 16,
@@ -749,43 +722,46 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
                   ),
                 ),
               ),
-            ] else ...[
-              // 1. Approve User Button
-              OutlinedButton.icon(
-                onPressed: isLoading ? null : _onApprove,
-                icon: Icon(
-                  Icons.check_circle_outline_rounded,
-                  size: 16,
-                  color: colors.success,
-                ),
-                label: Text(
-                  'Approve User',
-                  style: context.textTheme.bodySmall?.semiBold().colour(
-                    colors.success,
+            ] else if (isUnderReview) ...[
+              // 1. Approve Profile: only once every document is approved
+              if (widget.user.allDocumentsApproved)
+                OutlinedButton.icon(
+                  onPressed: isBusy ? null : _onApproveProfile,
+                  icon: Icon(
+                    Icons.check_circle_outline_rounded,
+                    size: 16,
+                    color: colors.success,
+                  ),
+                  label: Text(
+                    'Approve Profile',
+                    style: context.textTheme.bodySmall?.semiBold().colour(
+                      colors.success,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: colors.success),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.sm,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: AppRadius.smRadius,
+                    ),
                   ),
                 ),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: colors.success),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.sm,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AppRadius.smRadius,
-                  ),
-                ),
-              ),
 
-              // 2. Reject User Button
+              // 2. Reject Profile (asks for a reason)
               OutlinedButton.icon(
-                onPressed: isLoading ? null : _onReject,
+                onPressed: isBusy ? null : _onRejectProfile,
                 icon: Icon(
                   Icons.cancel_outlined,
                   size: 16,
                   color: colors.error,
                 ),
                 label: Text(
-                  'Reject User',
+                  widget.user.isRejected
+                      ? 'Update Rejection Reason'
+                      : 'Reject Profile',
                   style: context.textTheme.bodySmall?.semiBold().colour(
                     colors.error,
                   ),
@@ -935,15 +911,73 @@ class _CompanyDetailsSection extends StatelessWidget {
   }
 }
 
-class _UserDocumentsSection extends StatelessWidget {
+class _UserDocumentsSection extends ConsumerWidget {
   const _UserDocumentsSection({required this.user});
 
   final UserModel user;
 
+  Future<void> _onApproveDocument(
+    BuildContext context,
+    WidgetRef ref,
+    UserDocumentModel doc,
+    String title,
+  ) async {
+    await ref
+        .read(userReviewControllerProvider(user.id).notifier)
+        .approveDocument(doc.id);
+    if (context.mounted) {
+      ref
+          .read(userReviewControllerProvider(user.id))
+          .handleResult(
+            successMessage: '$title approved',
+            fallbackErrorMessage: 'Failed to approve document',
+          );
+    }
+  }
+
+  /// Rejecting any document also moves the user to REJECTED.
+  Future<void> _onRejectDocument(
+    BuildContext context,
+    WidgetRef ref,
+    UserDocumentModel doc,
+    String title,
+  ) async {
+    final result = await AppPopup.showRejectWithReason(
+      context,
+      title: 'Reject $title',
+      message:
+          'The reason is saved on this document. Rejecting a document also '
+          'rejects ${user.fullName}\'s profile.',
+      confirmLabel: 'Reject Document',
+    );
+    final reason = result?.data;
+    if (result?.action != PopupAction.confirm ||
+        reason == null ||
+        !context.mounted) {
+      return;
+    }
+
+    await ref
+        .read(userReviewControllerProvider(user.id).notifier)
+        .rejectDocument(doc.id, reason);
+    if (context.mounted) {
+      ref
+          .read(userReviewControllerProvider(user.id))
+          .handleResult(
+            successMessage: '$title rejected',
+            fallbackErrorMessage: 'Failed to reject document',
+          );
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final docs = user.documents ?? [];
+    final canReview = user.isUnderReview;
+    final isReviewing = ref
+        .watch(userReviewControllerProvider(user.id))
+        .isLoading;
 
     if (docs.isEmpty) {
       return AppDetailSection(
@@ -982,6 +1016,11 @@ class _UserDocumentsSection extends StatelessWidget {
           final subtitle = docName?.isNotEmpty == true
               ? (doc.fileName ?? doc.documentTypeId)
               : doc.documentTypeId;
+
+          final isApproved =
+              doc.verificationStatus == VerificationStatus.verified;
+          final isRejected =
+              doc.verificationStatus == VerificationStatus.rejected;
 
           return Container(
             padding: const EdgeInsets.all(AppSpacing.md),
@@ -1026,6 +1065,14 @@ class _UserDocumentsSection extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
+                      if (isRejected &&
+                          doc.rejectionReason?.trim().isNotEmpty == true) ...[
+                        AppSpacing.xs.h,
+                        _RejectionReasonNote(
+                          label: 'Rejection reason',
+                          reason: doc.rejectionReason!,
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -1038,6 +1085,32 @@ class _UserDocumentsSection extends StatelessWidget {
                   size: AppChipSize.small,
                 ),
                 AppSpacing.sm.w,
+
+                // Review Actions (only while the application is under review)
+                if (canReview && !isApproved)
+                  IconButton(
+                    tooltip: 'Approve Document',
+                    icon: Icon(
+                      Icons.check_circle_outline_rounded,
+                      size: 18,
+                      color: colors.success,
+                    ),
+                    onPressed: isReviewing
+                        ? null
+                        : () => _onApproveDocument(context, ref, doc, title),
+                  ),
+                if (canReview && !isRejected)
+                  IconButton(
+                    tooltip: 'Reject Document',
+                    icon: Icon(
+                      Icons.cancel_outlined,
+                      size: 18,
+                      color: colors.error,
+                    ),
+                    onPressed: isReviewing
+                        ? null
+                        : () => _onRejectDocument(context, ref, doc, title),
+                  ),
 
                 // Preview File Action
                 IconButton(
@@ -1061,6 +1134,59 @@ class _UserDocumentsSection extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+/// Highlighted rejection reason (profile or document).
+class _RejectionReasonNote extends StatelessWidget {
+  const _RejectionReasonNote({required this.label, required this.reason});
+
+  final String label;
+  final String reason;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm + 2,
+        vertical: AppSpacing.xs + 2,
+      ),
+      decoration: BoxDecoration(
+        color: colors.error.withValues(alpha: 0.06),
+        borderRadius: AppRadius.smRadius,
+        border: Border.all(color: colors.error.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline_rounded, size: 16, color: colors.error),
+          AppSpacing.xs.w,
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: '$label: ',
+                    style: context.textTheme.bodySmall?.semiBold().colour(
+                      colors.error,
+                    ),
+                  ),
+                  TextSpan(
+                    text: reason,
+                    style: context.textTheme.bodySmall?.colour(
+                      colors.onSurface,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

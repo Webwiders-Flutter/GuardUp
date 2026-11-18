@@ -33,5 +33,7 @@ Refer to [system_analysis_and_architecture.md](documentation/system_analysis_and
 
 For user status changes, push notifications, emails and the related database triggers, see [notifications_and_user_lifecycle.md](documentation/notifications_and_user_lifecycle.md).
 
-For deleting and rejecting users (what is removed, who can do it, security guards), see [user_deletion.md](documentation/user_deletion.md).
+For deleting users (what is removed, who can do it, security guards), see [user_deletion.md](documentation/user_deletion.md).
+
+For reviewing applications (approve / reject documents and profiles, rejection reasons), see [user_review_and_rejection.md](documentation/user_review_and_rejection.md).
 

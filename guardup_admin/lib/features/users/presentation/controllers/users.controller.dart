@@ -136,49 +136,9 @@ class UsersController extends AsyncNotifier<PaginationState<UserModel>> {
     }
   }
 
-  Future<void> markVerified(String id) async {
-    final current = state.value;
-
-    final result = await AsyncValue.guard(
-      () => asyncHandler(() async {
-        final updated = await _repository.markVerified(id);
-        final currentItems = current?.items ?? [];
-        final updatedItems = currentItems.map((item) {
-          return item.id == id ? updated : item;
-        }).toList();
-
-        return (current ?? const PaginationState<UserModel>()).copyWith(
-          items: updatedItems,
-        );
-      }),
-    );
-
-    if (result.hasError) {
-      state = result;
-    } else if (result.hasValue) {
-      state = result;
-    }
-  }
-
-  /// Rejecting removes the applicant completely, so the row leaves the list.
-  Future<void> rejectUser(String id) async {
-    final current = state.value;
-
-    final result = await AsyncValue.guard(
-      () => asyncHandler(() async {
-        await _repository.rejectUser(id);
-        return _withoutRecord(current, id);
-      }),
-    );
-
-    state = result;
-  }
-
   Future<void> toggleBlock(String id, bool block) async {
     final targetStatus = block ? UserStatus.blocked : UserStatus.active;
-    _updateLocalRecords([
-      id,
-    ], (item) => item.copyWith(status: targetStatus));
+    _updateLocalRecords([id], (item) => item.copyWith(status: targetStatus));
     return updateRecord(
       {JsonKeys.registrationStatus: targetStatus.apiValue},
       id,

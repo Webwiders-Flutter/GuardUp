@@ -137,6 +137,12 @@ class _AdminShellState extends ConsumerState<AdminShell> {
           description: 'Manage approved bodyguard operatives',
         ),
         CustomDashboardMenuItem(
+          icon: Icons.cancel_outlined,
+          label: 'Rejected',
+          route: AppRoutes.userGuardRejected,
+          description: 'Review rejected bodyguard applications',
+        ),
+        CustomDashboardMenuItem(
           icon: Icons.block_outlined,
           label: 'Blocked',
           route: AppRoutes.userGuardBlocked,
@@ -161,6 +167,12 @@ class _AdminShellState extends ConsumerState<AdminShell> {
           label: 'Approved',
           route: AppRoutes.userCompanyVerified,
           description: 'Manage approved security companies',
+        ),
+        CustomDashboardMenuItem(
+          icon: Icons.cancel_outlined,
+          label: 'Rejected',
+          route: AppRoutes.userCompanyRejected,
+          description: 'Review rejected company applications',
         ),
         CustomDashboardMenuItem(
           icon: Icons.block_outlined,

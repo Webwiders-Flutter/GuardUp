@@ -36,7 +36,9 @@ Two simple rules:
    the push is sent automatically.
 2. **Emails are only sent for important events** (approved, rejected, deleted).
 
-How deleting and rejecting users works is explained in [user_deletion.md](user_deletion.md).
+How deleting users works is explained in [user_deletion.md](user_deletion.md).
+How applications are reviewed (approve / reject with a reason) is explained in
+[user_review_and_rejection.md](user_review_and_rejection.md).
 
 ---
 
@@ -48,12 +50,13 @@ Every user in `public.users` has a `status`:
 |---|---|
 | `INCOMPLETE` | Bodyguard / company signed up but has not finished their profile yet. |
 | `PENDING_APPROVAL` | Profile submitted, waiting for an admin to review it. |
+| `REJECTED` | An admin rejected the profile or one of its documents. The reason is in `users.rejection_reason` (profile) or `user_documents.rejection_reason` (document). |
 | `ACTIVE` | Approved and allowed to use the app. Customers start here directly. |
 | `BLOCKED` | Admin suspended the account. |
 | `DELETED` | Account removed. The login is always deleted. The profile row is kept only for users who were approved before (see [user_deletion.md](user_deletion.md)). |
 
-There is **no `REJECTED` status**. Rejecting an application means deleting the user while
-they are `PENDING_APPROVAL`, which removes them completely so they can register again.
+Rejecting an application sets `REJECTED` and keeps the user (nothing is deleted).
+See [user_review_and_rejection.md](user_review_and_rejection.md).
 
 ---
 
@@ -62,11 +65,12 @@ they are `PENDING_APPROVAL`, which removes them completely so they can register 
 | Status change | Who gets an in-app + push notification | Email sent? |
 |---|---|---|
 | `INCOMPLETE` → `PENDING_APPROVAL` | **All admins**: "New registration: {name}" | No |
-| `PENDING_APPROVAL` → `ACTIVE` | The user: "Account approved" | ✅ Approved email |
+| `PENDING_APPROVAL` / `REJECTED` → `ACTIVE` | The user: "Account approved" | ✅ Approved email |
+| anything → `REJECTED` | The user: "Application not approved" with the reason, or the rejected document names | No |
 | anything → `BLOCKED` | The user: "Account suspended" | No |
 | `BLOCKED` → `ACTIVE` | The user: "Account restored" | No |
-| `PENDING_APPROVAL` → `DELETED` **by an admin** (= reject) | The user: "Application not approved" (push only, see below) | ✅ Rejected email |
-| `INCOMPLETE` / `PENDING_APPROVAL` → `DELETED` otherwise | The user: "Account deleted" (push only; none for a self-delete) | ✅ Deleted email |
+| `PENDING_APPROVAL` → `DELETED` **by an admin** | The user: "Application not approved" (push only, see below) | ✅ Rejected email |
+| `INCOMPLETE` / `PENDING_APPROVAL` / `REJECTED` → `DELETED` otherwise | The user: "Account deleted" (push only; none for a self-delete) | ✅ Deleted email |
 | `ACTIVE` / `BLOCKED` → `DELETED` | The user: "Account deleted" | ✅ Deleted email |
 
 Notes:
@@ -89,7 +93,7 @@ Stored in the `public.notification_type` enum. The admin app mirrors it in
 | Type | Used for |
 |---|---|
 | `ACCOUNT_APPROVED` | User was approved |
-| `ACCOUNT_REJECTED` | Application rejected (push only; the user is removed) |
+| `ACCOUNT_REJECTED` | Application rejected: in-app + push when the status becomes `REJECTED`; push only when a pending user is deleted by an admin |
 | `ACCOUNT_BLOCKED` | User was blocked |
 | `ACCOUNT_UNBLOCKED` | User was unblocked |
 | `ACCOUNT_DELETED` | User was deleted |
@@ -162,10 +166,12 @@ Migrations (in `supabase/migrations/`):
 | `20261117000012_notification_push_trigger.sql` | `invoke_edge_function`, push trigger, `create_and_send_notification` |
 | `20261117000013_add_lifecycle_notification_types.sql` | Lifecycle notification types |
 | `20261117000014_user_lifecycle_events_trigger.sql` | The user lifecycle trigger (first version) |
-| `20261117000015_remove_rejected_user_status.sql` | Removes `REJECTED` from `user_status` |
-| `20261117000016_user_deletion_rules.sql` | Current lifecycle trigger, deletion rules, `delete_user` |
+| `20261117000015_remove_rejected_user_status.sql` | Removed `REJECTED` from `user_status` (added back later) |
+| `20261117000016_user_deletion_rules.sql` | Lifecycle trigger, deletion rules, `delete_user` |
 | `20261117000017_protect_user_status_and_role.sql` | Status / role guard |
 | `20261117000018_restrict_registration_conflict_cleanup.sql` | Safer signup cleanup |
+| `20261118000000_add_rejected_user_status.sql` | Adds `REJECTED` back to `user_status` |
+| `20261118000001_user_rejection_flow.sql` | Current lifecycle trigger (`REJECTED` notification), `rejection_reason`, review triggers |
 
 ---
 

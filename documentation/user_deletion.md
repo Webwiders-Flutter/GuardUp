@@ -1,8 +1,10 @@
-# 🗑️ GuardUp – Deleting & Rejecting Users
+# 🗑️ GuardUp – Deleting Users
 
-How a user is deleted or rejected, what is removed, and which code does it.
+How a user is deleted, what is removed, and which code does it.
 Notifications and emails for these events are covered in
 [notifications_and_user_lifecycle.md](notifications_and_user_lifecycle.md).
+Rejecting an application (with a reason, without deleting) is covered in
+[user_review_and_rejection.md](user_review_and_rejection.md).
 
 ---
 
@@ -14,7 +16,8 @@ The database does everything else, based on the status the user had **before**:
 | Status before | `public.users` row | Login (`auth.users`) | Uploaded files | Why |
 |---|---|---|---|---|
 | `INCOMPLETE` | ❌ Removed | ❌ Removed | ❌ Removed | Never approved, nothing worth keeping. |
-| `PENDING_APPROVAL` | ❌ Removed | ❌ Removed | ❌ Removed | Same. This is also how an admin **rejects** an application. |
+| `PENDING_APPROVAL` | ❌ Removed | ❌ Removed | ❌ Removed | Same. |
+| `REJECTED` | ❌ Removed | ❌ Removed | ❌ Removed | Same (never approved). |
 | `ACTIVE` | ✅ Kept, `status = DELETED` | ❌ Removed | ✅ Kept | Keeps history (bookings, payments, documents). |
 | `BLOCKED` | ✅ Kept, `status = DELETED` | ❌ Removed | ✅ Kept | Same. |
 
@@ -24,8 +27,10 @@ When the row is removed, everything linked to it goes too (`ON DELETE CASCADE`):
 In every case the email and phone number become free, so the person can register again.
 (The unique indexes on email / phone ignore `DELETED` rows.)
 
-> **There is no `REJECTED` status.** Rejecting = deleting a `PENDING_APPROVAL` user.
-> The user gets a "not approved" email and push, and can register again from scratch.
+> **Rejecting is not deleting.** The admin panel rejects by setting
+> `status = REJECTED` (with a reason) and keeps the user
+> ([user_review_and_rejection.md](user_review_and_rejection.md)).
+> An admin *deleting* a `PENDING_APPROVAL` user still sends the "not approved" email and push.
 
 ---
 
@@ -36,7 +41,7 @@ Everyone goes through the **`delete_user`** RPC:
 | Caller | Call | Allowed |
 |---|---|---|
 | A user (mobile app) | `rpc('delete_user')` (no params) | Their own account. |
-| An admin (admin panel) | `rpc('delete_user', params: {'p_user_id': id})` | Any non-admin user. Also used for **reject**. |
+| An admin (admin panel) | `rpc('delete_user', params: {'p_user_id': id})` | Any non-admin user. |
 | Anyone else | | ❌ `Only admins can delete other users` |
 
 - Admin accounts can't be deleted through the RPC (`Admin accounts cannot be deleted`).
@@ -58,8 +63,8 @@ Decided by who did the deletion (`auth.uid()` = the user → self-delete):
 
 | Case | Email | Push | In-app notification |
 |---|---|---|---|
-| Admin deletes a `PENDING_APPROVAL` user (reject) | "Application update – not approved" | "Application not approved" | – (row removed) |
-| Any other deletion of an `INCOMPLETE` / `PENDING_APPROVAL` user | "Account deleted" | "Account deleted" (none for a self-delete) | – (row removed) |
+| Admin deletes a `PENDING_APPROVAL` user | "Application update – not approved" | "Application not approved" | – (row removed) |
+| Any other deletion of an `INCOMPLETE` / `PENDING_APPROVAL` / `REJECTED` user | "Account deleted" | "Account deleted" (none for a self-delete) | – (row removed) |
 | `ACTIVE` / `BLOCKED` user deleted | "Account deleted" | "Account deleted" | ✅ |
 
 Because the devices are removed with the row, the trigger reads the device tokens
@@ -85,7 +90,7 @@ App / admin panel                              Supabase dashboard
                            │
             B. deletion (failures roll back the whole change)
                ├─ DELETE auth.users          (skipped if the flag says it's already being deleted)
-               └─ if it was INCOMPLETE / PENDING_APPROVAL:
+               └─ if it was INCOMPLETE / PENDING_APPROVAL / REJECTED:
                     ├─ purge_user_storage()  →  Edge Function purge-user-storage (async)
                     └─ DELETE public.users   (cascades to documents, services, devices, notifications)
 ```
@@ -117,7 +122,7 @@ Files live in the `documents` and `avatars` buckets under a folder named after t
 
 | Guard | What it stops |
 |---|---|
-| `trg_users_guard_status_and_role` (BEFORE UPDATE on `users`) | A user changing their own `role`, or their own `status` except `INCOMPLETE` → `PENDING_APPROVAL` (submitting the application). Without it, the "update own profile" RLS policy would let a user approve themselves or make themselves admin. Admins, the dashboard, the service role and `SECURITY DEFINER` functions are not affected. |
+| `trg_users_guard_status_and_role` (BEFORE UPDATE on `users`) | A user changing their own `role` or `rejection_reason`, or their own `status` except `INCOMPLETE` → `PENDING_APPROVAL` (submitting the application). Without it, the "update own profile" RLS policy would let a user approve themselves or make themselves admin. Admins, the dashboard, the service role and `SECURITY DEFINER` functions are not affected. |
 | `delete_user` checks | Users can only delete themselves; admins can't be deleted. |
 | `check_registration_conflict` | During signup, an existing account with the same email / phone is only cleaned up if it is an **abandoned signup** (email never confirmed **and** `INCOMPLETE`). Anything else is reported as a conflict, so a stranger can't wipe a pending applicant by signing up with their email. |
 
@@ -134,9 +139,9 @@ Files live in the `documents` and `avatars` buckets under a folder named after t
 
 **Admin panel (`guardup_admin/`)**
 - `UsersRepository.delete(id)` → `delete_user` with `p_user_id`.
-- `UsersRepository.rejectUser(id)` → same call (reject = delete a pending user).
   The controller removes the user from the list; the details screen closes.
-- The reject / delete buttons are still behind the "coming soon" guard in the UI.
+- Rejecting no longer deletes: see `UserReviewRepository`
+  ([user_review_and_rejection.md](user_review_and_rejection.md)).
 
 ---
 
@@ -144,10 +149,11 @@ Files live in the `documents` and `avatars` buckets under a folder named after t
 
 | File | What |
 |---|---|
-| `supabase/migrations/20261117000015_remove_rejected_user_status.sql` | Removes `REJECTED` from `user_status`. Existing `REJECTED` users were moved back to `PENDING_APPROVAL`. |
+| `supabase/migrations/20261117000015_remove_rejected_user_status.sql` | Removed `REJECTED` from `user_status` (added back by `20261118000000`). |
 | `supabase/migrations/20261117000016_user_deletion_rules.sql` | Lifecycle + deletion trigger, auth-delete trigger, `purge_user_storage`, `delete_user`. |
 | `supabase/migrations/20261117000017_protect_user_status_and_role.sql` | Status / role guard. |
 | `supabase/migrations/20261117000018_restrict_registration_conflict_cleanup.sql` | Safer signup cleanup. |
+| `supabase/migrations/20261118000001_user_rejection_flow.sql` | `REJECTED` users are hard deleted; `rejection_reason` guard. |
 | `supabase/functions/purge-user-storage/` | File cleanup Edge Function. |
 
 Deploy: `supabase db push`, then `supabase functions deploy purge-user-storage`
@@ -172,7 +178,8 @@ select status_code, content, created from net._http_response order by created de
 
 | Scenario | Expected |
 |---|---|
-| Admin rejects a `PENDING_APPROVAL` user | Row, login and files gone. "Not approved" email + push. Same email can register again. |
+| Admin deletes a `PENDING_APPROVAL` user | Row, login and files gone. "Not approved" email + push. Same email can register again. |
+| Admin deletes a `REJECTED` user | Row, login and files gone. "Account deleted" email + push. |
 | Pending user deletes their own account | Row, login and files gone. "Account deleted" email, no push. |
 | `ACTIVE` user deletes their own account | Row kept as `DELETED`, login gone, files kept. "Account deleted" email + notification. |
 | Admin deletes a `BLOCKED` user | Same as above. |

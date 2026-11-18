@@ -11,6 +11,7 @@ class DashboardUserStats {
   final int activeUsers;
   final int pendingUsers;
   final int approvalPendingUsers;
+  final int rejectedUsers;
   final int blockedUsers;
   final int deletedUsers;
 
@@ -28,6 +29,7 @@ class DashboardUserStats {
     required this.activeUsers,
     required this.pendingUsers,
     required this.approvalPendingUsers,
+    this.rejectedUsers = 0,
     required this.blockedUsers,
     required this.deletedUsers,
     required this.customerCount,
@@ -45,6 +47,7 @@ class DashboardUserStats {
       activeUsers = 0,
       pendingUsers = 0,
       approvalPendingUsers = 0,
+      rejectedUsers = 0,
       blockedUsers = 0,
       deletedUsers = 0,
       customerCount = 0,
@@ -71,6 +74,8 @@ class DashboardUserStats {
         return activeUsers;
       case UserStatus.approvalPending:
         return approvalPendingUsers;
+      case UserStatus.rejected:
+        return rejectedUsers;
       case UserStatus.incomplete:
         return pendingUsers;
       case UserStatus.blocked:

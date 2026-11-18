@@ -2,7 +2,9 @@ import '/core/providers/supabase/supabase.provider.dart';
 import '/features/users/data/enums/user_role.enum.dart';
 import '/features/users/data/enums/user_status.enum.dart';
 import '/features/users/data/models/user_model.dart';
+import '/features/users/data/repositories/user_review.repository.dart';
 import '/features/users/data/repositories/users.repository.dart';
+import '/features/users/presentation/controllers/user_review.controller.dart';
 import '/features/users/presentation/controllers/users.controller.dart';
 import '/shared/states/pagination.state.dart';
 
@@ -24,3 +26,12 @@ final userDetailsProvider = FutureProvider.autoDispose
       final repository = ref.read(usersRepositoryProvider);
       return repository.getDetails(userId);
     });
+
+final userReviewRepositoryProvider = Provider<UserReviewRepository>((ref) {
+  return UserReviewRepository(ref.watch(supabaseClientProvider));
+});
+
+/// Application review actions (approve / reject documents and profile) for
+/// the user with the given id.
+final userReviewControllerProvider = AsyncNotifierProvider.autoDispose
+    .family<UserReviewController, void, String>(UserReviewController.new);

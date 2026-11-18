@@ -22,7 +22,6 @@ import '/features/users/di/users.providers.dart';
 import '/shared/states/pagination.state.dart';
 import '../../../../shared/widgets/feedbacks/widgets/app_file_preview.dart';
 import '../../../../shared/widgets/feedbacks/widgets/app_popup.dart';
-import '../../../../shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/misc/app_chip.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/table/admin_table_builder.dart';
@@ -64,64 +63,48 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
     super.dispose();
   }
 
-  Future<void> _onVerifyUser(UserModel item) async {
-    // [COMING SOON GUARD]
-    AppSnackbar.show(
-      message: 'Approve user is coming soon',
-      type: SnackbarType.info,
-    );
-    return;
+  // Approve / reject moved to the user details screen, where each document
+  // is reviewed on its own and a reason is required for every rejection
+  // (UserReviewController, documentation/user_review_and_rejection.md).
+  // Future<void> _onVerifyUser(UserModel item) async {
 
-    await controller.markVerified(item.id);
-    if (mounted) {
-      ref
-          .read(provider)
-          .handleResult(
-            successMessage: '${item.fullName} has been approved successfully',
-            fallbackErrorMessage: 'Failed to approve user',
-          );
-    }
-  }
+  //   await controller.markVerified(item.id);
+  //   if (mounted) {
+  //     ref
+  //         .read(provider)
+  //         .handleResult(
+  //           successMessage: '${item.fullName} has been approved successfully',
+  //           fallbackErrorMessage: 'Failed to approve user',
+  //         );
+  //   }
+  // }
+
+  // Future<void> _onRejectUser(UserModel item) async {
+
+  //   final result = await AppPopup.showRejectConfirmation(
+  //     context,
+  //     itemName: item.fullName,
+  //   );
+
+  //   if (result?.action == PopupAction.confirm && mounted) {
+  //     await controller.rejectUser(item.id);
+
+  //     if (mounted) {
+  //       ref
+  //           .read(provider)
+  //           .handleResult(
+  //             successMessage: '${item.fullName} has been rejected',
+  //             fallbackErrorMessage: 'Failed to reject user',
+  //           );
+  //     }
+  //   }
+  // }
 
   Future<void> _onViewUser(UserModel item) async {
     UserDetailsScreen.showAsSidebar(context: context, userId: item.id);
   }
 
-  Future<void> _onRejectUser(UserModel item) async {
-    // [COMING SOON GUARD]
-    AppSnackbar.show(
-      message: 'Reject user is coming soon',
-      type: SnackbarType.info,
-    );
-    return;
-
-    final result = await AppPopup.showRejectConfirmation(
-      context,
-      itemName: item.fullName,
-    );
-
-    if (result?.action == PopupAction.confirm && mounted) {
-      await controller.rejectUser(item.id);
-
-      if (mounted) {
-        ref
-            .read(provider)
-            .handleResult(
-              successMessage: '${item.fullName} has been rejected',
-              fallbackErrorMessage: 'Failed to reject user',
-            );
-      }
-    }
-  }
-
   Future<void> _onToggleBlock(UserModel item, bool block) async {
-    // [COMING SOON GUARD]
-    AppSnackbar.show(
-      message: '${block ? 'Block' : 'Unblock'} user is coming soon',
-      type: SnackbarType.info,
-    );
-    return;
-
     final result = block
         ? await AppPopup.showBlockConfirmation(context, itemName: item.fullName)
         : await AppPopup.showUnblockConfirmation(
@@ -146,13 +129,6 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
   }
 
   Future<void> _onDeleteUser(UserModel item) async {
-    // [COMING SOON GUARD]
-    AppSnackbar.show(
-      message: 'Delete user is coming soon',
-      type: SnackbarType.info,
-    );
-    return;
-
     final result = await AppPopup.showDeleteConfirmation(
       context,
       deleteItemName: item.fullName,
@@ -309,49 +285,50 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (isPending) ...[
-                // Verify button
-                Tooltip(
-                  message: 'Verify User',
-                  child: InkWell(
-                    onTap: () => _onVerifyUser(item),
-                    borderRadius: AppRadius.smRadius,
-                    child: QuickContainer(
-                      p: AppSpacing.xs + 2,
-                      radius: AppRadius.sm,
-                      color: colors.success.withValues(alpha: 0.1),
-                      border: Border.all(
-                        color: colors.success.withValues(alpha: 0.3),
-                      ),
-                      child: Icon(
-                        Icons.check_circle_outline_rounded,
-                        size: AppSpacing.lg,
-                        color: colors.success,
-                      ),
-                    ),
-                  ),
-                ),
-                AppSpacing.xs.w,
-                // Reject button (deletes user)
-                Tooltip(
-                  message: 'Reject & Delete User',
-                  child: InkWell(
-                    onTap: () => _onRejectUser(item),
-                    borderRadius: AppRadius.smRadius,
-                    child: QuickContainer(
-                      p: AppSpacing.xs + 2,
-                      radius: AppRadius.sm,
-                      color: colors.error.withValues(alpha: 0.1),
-                      border: Border.all(
-                        color: colors.error.withValues(alpha: 0.3),
-                      ),
-                      child: Icon(
-                        Icons.cancel_outlined,
-                        size: AppSpacing.lg,
-                        color: colors.error,
-                      ),
-                    ),
-                  ),
-                ),
+                // Approve / reject live on the user details screen.
+                // // Verify button
+                // Tooltip(
+                // message: 'Verify User',
+                // child: InkWell(
+                // onTap: () => _onVerifyUser(item),
+                // borderRadius: AppRadius.smRadius,
+                // child: QuickContainer(
+                // p: AppSpacing.xs + 2,
+                // radius: AppRadius.sm,
+                // color: colors.success.withValues(alpha: 0.1),
+                // border: Border.all(
+                // color: colors.success.withValues(alpha: 0.3),
+                // ),
+                // child: Icon(
+                // Icons.check_circle_outline_rounded,
+                // size: AppSpacing.lg,
+                // color: colors.success,
+                // ),
+                // ),
+                // ),
+                // ),
+                // AppSpacing.xs.w,
+                // // Reject button (deletes user)
+                // Tooltip(
+                // message: 'Reject & Delete User',
+                // child: InkWell(
+                // onTap: () => _onRejectUser(item),
+                // borderRadius: AppRadius.smRadius,
+                // child: QuickContainer(
+                // p: AppSpacing.xs + 2,
+                // radius: AppRadius.sm,
+                // color: colors.error.withValues(alpha: 0.1),
+                // border: Border.all(
+                // color: colors.error.withValues(alpha: 0.3),
+                // ),
+                // child: Icon(
+                // Icons.cancel_outlined,
+                // size: AppSpacing.lg,
+                // color: colors.error,
+                // ),
+                // ),
+                // ),
+                // ),
               ] else if (isVerified) ...[
                 // Block button
                 Tooltip(
@@ -441,28 +418,28 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
                   ),
                 ),
               ] else ...[
-                // Unverified state: allow verify, block, or delete
-                Tooltip(
-                  message: 'Verify User',
-                  child: InkWell(
-                    onTap: () => _onVerifyUser(item),
-                    borderRadius: AppRadius.smRadius,
-                    child: QuickContainer(
-                      p: AppSpacing.xs + 2,
-                      radius: AppRadius.sm,
-                      color: colors.success.withValues(alpha: 0.1),
-                      border: Border.all(
-                        color: colors.success.withValues(alpha: 0.3),
-                      ),
-                      child: Icon(
-                        Icons.check_circle_outline_rounded,
-                        size: AppSpacing.lg,
-                        color: colors.success,
-                      ),
-                    ),
-                  ),
-                ),
-                AppSpacing.xs.w,
+                // Other states: delete only. Approval happens on the details screen.
+                // Tooltip(
+                // message: 'Verify User',
+                // child: InkWell(
+                // onTap: () => _onVerifyUser(item),
+                // borderRadius: AppRadius.smRadius,
+                // child: QuickContainer(
+                // p: AppSpacing.xs + 2,
+                // radius: AppRadius.sm,
+                // color: colors.success.withValues(alpha: 0.1),
+                // border: Border.all(
+                // color: colors.success.withValues(alpha: 0.3),
+                // ),
+                // child: Icon(
+                // Icons.check_circle_outline_rounded,
+                // size: AppSpacing.lg,
+                // color: colors.success,
+                // ),
+                // ),
+                // ),
+                // ),
+                // AppSpacing.xs.w,
                 Tooltip(
                   message: 'Delete User',
                   child: InkWell(

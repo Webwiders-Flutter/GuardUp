@@ -38,12 +38,14 @@ final class AppRoutes {
   static const userGuardPending = '/users/bodyguard/pending';
   static const userGuardVerified = '/users/bodyguard/verified';
   static const userGuardBlocked = '/users/bodyguard/blocked';
+  static const userGuardRejected = '/users/bodyguard/rejected';
 
   // Company subroutes
   static const userCompany = '/users/company';
   static const userCompanyPending = '/users/company/pending';
   static const userCompanyVerified = '/users/company/verified';
   static const userCompanyBlocked = '/users/company/blocked';
+  static const userCompanyRejected = '/users/company/rejected';
 
   // Content / Legal
   static const content = '/content';

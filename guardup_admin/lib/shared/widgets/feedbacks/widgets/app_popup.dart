@@ -7,7 +7,9 @@ import '/core/constants/app_spacing.dart';
 import '../../../../core/extensions/context.extension.dart';
 import '../../../../core/extensions/spacing.extension.dart';
 import '../../../../core/extensions/textstyle_extension.dart';
+import '/core/utils/validators.dart';
 import '/shared/widgets/buttons/app_button.dart';
+import '/shared/widgets/inputs/app_text_field.dart';
 import 'app_dialog.dart';
 
 enum PopupAction { confirm, cancel, dismiss }
@@ -231,6 +233,44 @@ class AppPopup {
     itemName: itemName,
     alsoDelete: alsoDelete,
   );
+
+  // ── Predefined: Reject With Reason ───────────────────────────────────────────
+  /// Asks for a rejection reason. On confirm, [PopupResult.data] holds the
+  /// trimmed reason (never empty).
+  static Future<PopupResult<String>?> showRejectWithReason(
+    BuildContext context, {
+    required String title,
+    String? message,
+    String confirmLabel = 'Reject',
+    String hintText = 'Explain why this is being rejected',
+  }) async {
+    final result = await show(
+      context: context,
+      title: title,
+      message: message,
+      icon: Icons.cancel_outlined,
+      variant: PopupVariant.danger,
+      // The form renders its own buttons so it can validate the reason.
+      buttons: const [],
+      extraContent: _RejectReasonForm(
+        confirmLabel: confirmLabel,
+        hintText: hintText,
+        onCancel: (formContext) => _popResult(
+          formContext,
+          const PopupResult<String>(action: PopupAction.cancel),
+        ),
+        onSubmit: (formContext, reason) => _popResult(
+          formContext,
+          PopupResult<String>(action: PopupAction.confirm, data: reason),
+        ),
+      ),
+    );
+    if (result == null) return null;
+    return PopupResult<String>(
+      action: result.action,
+      data: result.data is String ? result.data as String : null,
+    );
+  }
 
   // ── Predefined: Block Confirmation ───────────────────────────────────────────
   static Future<PopupResult?> showBlockConfirmation(
@@ -468,6 +508,91 @@ class AppPopup {
       variant: PopupVariant.custom,
       buttons: buttons,
       showCloseButton: showCloseButton,
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REJECT REASON FORM (owns its text controller, so it is disposed with the
+// dialog rather than while the close animation is still running)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _RejectReasonForm extends StatefulWidget {
+  const _RejectReasonForm({
+    required this.confirmLabel,
+    required this.hintText,
+    required this.onCancel,
+    required this.onSubmit,
+  });
+
+  final String confirmLabel;
+  final String hintText;
+  final void Function(BuildContext context) onCancel;
+  final void Function(BuildContext context, String reason) onSubmit;
+
+  @override
+  State<_RejectReasonForm> createState() => _RejectReasonFormState();
+}
+
+class _RejectReasonFormState extends State<_RejectReasonForm> {
+  final _formKey = GlobalKey<FormState>();
+  final _reasonController = TextEditingController();
+
+  @override
+  void dispose() {
+    _reasonController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    widget.onSubmit(context, _reasonController.text.trim());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AppTextField.multiline(
+            controller: _reasonController,
+            autofocus: true,
+            maxLength: 500,
+            validator: (value) =>
+                Validators.required(context, value, fieldName: 'Reason'),
+            decoration: InputDecoration(hintText: widget.hintText),
+          ),
+          AppSpacing.md.h,
+          Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  text: context.l10n.cancel,
+                  type: ButtonType.secondaryOff,
+                  size: ButtonSize.normal,
+                  onPressed: () => widget.onCancel(context),
+                ),
+              ),
+              AppSpacing.sm.w,
+              Expanded(
+                child: AppButton(
+                  text: widget.confirmLabel,
+                  type: ButtonType.danger,
+                  size: ButtonSize.normal,
+                  leading: const Icon(
+                    Icons.cancel_outlined,
+                    size: AppSpacing.lg,
+                  ),
+                  onPressed: _submit,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

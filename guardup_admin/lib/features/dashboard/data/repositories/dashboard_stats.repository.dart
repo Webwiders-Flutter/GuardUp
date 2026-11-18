@@ -83,6 +83,7 @@ final class DashboardStatsRepository implements IDashboardStatsRepository {
       var active = 0;
       var pending = 0;
       var approvalPending = 0;
+      var rejected = 0;
       var blocked = 0;
       var deleted = 0;
 
@@ -108,6 +109,9 @@ final class DashboardStatsRepository implements IDashboardStatsRepository {
             break;
           case UserStatus.approvalPending:
             approvalPending++;
+            break;
+          case UserStatus.rejected:
+            rejected++;
             break;
           case UserStatus.incomplete:
             pending++;
@@ -146,6 +150,7 @@ final class DashboardStatsRepository implements IDashboardStatsRepository {
         activeUsers: active,
         pendingUsers: pending,
         approvalPendingUsers: approvalPending,
+        rejectedUsers: rejected,
         blockedUsers: blocked,
         deletedUsers: deleted,
         customerCount: customers,

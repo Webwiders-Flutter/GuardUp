@@ -42,8 +42,11 @@ final class JsonKeys {
   static const String phoneCode = 'phone_code';
   static const String registrationStatus = 'status';
   static const String userId = 'user_id';
+
   /// delete_user RPC parameter.
   static const String pUserId = 'p_user_id';
+
+  static const String rejectionReason = 'rejection_reason';
   static const String appliesTo = 'applies_to';
   static const String businessName = 'company_name';
   static const String companyName = 'company_name';

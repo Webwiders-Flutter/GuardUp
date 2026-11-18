@@ -14,6 +14,9 @@ enum UserStatus {
   @JsonValue("PENDING_APPROVAL")
   approvalPending("PENDING_APPROVAL"),
 
+  @JsonValue('REJECTED')
+  rejected('REJECTED'),
+
   @JsonValue('BLOCKED')
   blocked('BLOCKED'),
 
@@ -32,6 +35,8 @@ enum UserStatus {
         return 'Approved';
       case UserStatus.approvalPending:
         return 'Pending Approval';
+      case UserStatus.rejected:
+        return 'Rejected';
       case UserStatus.blocked:
         return 'Blocked';
       case UserStatus.deleted:
@@ -48,6 +53,8 @@ enum UserStatus {
         return colors.success;
       case UserStatus.approvalPending:
         return colors.warning;
+      case UserStatus.rejected:
+        return colors.error;
       case UserStatus.blocked:
         return colors.error;
       case UserStatus.deleted:
@@ -63,6 +70,8 @@ enum UserStatus {
         return Icons.verified_user_outlined;
       case UserStatus.approvalPending:
         return Icons.hourglass_top_outlined;
+      case UserStatus.rejected:
+        return Icons.cancel_outlined;
       case UserStatus.blocked:
         return Icons.block_outlined;
       case UserStatus.deleted:
@@ -76,6 +85,8 @@ enum UserStatus {
         return 'Fully approved and active GuardUp accounts';
       case UserStatus.approvalPending:
         return 'Documents submitted, pending compliance review';
+      case UserStatus.rejected:
+        return 'Profile or documents rejected by an admin';
       case UserStatus.incomplete:
         return 'Profile onboarding in progress';
       case UserStatus.blocked:
