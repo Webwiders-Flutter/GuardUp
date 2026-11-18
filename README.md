@@ -39,5 +39,7 @@ For reviewing applications (approve / reject documents and profiles, rejection r
 
 For user profile data (users, availability, bank accounts, documents) and what the admin User Details screen shows, see [user_profile_data.md](documentation/user_profile_data.md).
 
+For contact / support requests (statuses, RLS, admin Help & Support screen), see [contact_us.md](documentation/contact_us.md).
+
 For customer membership plans (pricing, booking discount rules, admin management), see [membership_plans.md](documentation/membership_plans.md).
 
