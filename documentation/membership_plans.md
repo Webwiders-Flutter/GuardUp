@@ -34,9 +34,9 @@ Migration: `supabase/migrations/20261118000009_seed_membership_plans.sql`
 
 | Plan | Monthly | Yearly | Discount | Popular | Order |
 |---|---|---|---|---|---|
-| Silver Shield | ₹499 | ₹4,999 | 10%, up to ₹500 | | 1000 |
-| Gold Sentinel | ₹999 | ₹9,999 | 20%, up to ₹1,500 | ⭐ | 2000 |
-| Platinum Elite | ₹1,999 | ₹19,999 | 30%, no cap | | 3000 |
+| Silver Shield | $499 | $4,999 | 10%, up to $500 | | 1000 |
+| Gold Sentinel | $999 | $9,999 | 20%, up to $1,500 | ⭐ | 2000 |
+| Platinum Elite | $1,999 | $19,999 | 30%, no cap | | 3000 |
 
 Safe to re-run: a plan whose name already exists (ignoring case and spaces) is skipped,
 so edits made by an admin are never overwritten.
@@ -49,7 +49,7 @@ so edits made by an admin are never overwritten.
 | `FLAT` | Fixed amount off the booking total | `>= 0` | Must be `NULL` |
 
 Example: `discount = 20`, `PERCENTAGE`, `discount_upto = 500`.
-A ₹1,000 booking gets ₹200 off; a ₹5,000 booking gets ₹500 off (not ₹1,000).
+A $1,000 booking gets $200 off; a $5,000 booking gets $500 off (not $1,000).
 
 The admin form clears `discount_upto` automatically when the type is `FLAT`
 (see `MembershipPlanRequest.toJson`).

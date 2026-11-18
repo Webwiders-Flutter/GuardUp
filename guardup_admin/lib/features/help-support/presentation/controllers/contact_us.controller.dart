@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:guardup_admin/core/constants/api/json_keys.dart';
-
 import '/core/constants/app_constants.dart';
 import '/core/utils/helpers/pagination.helper.dart';
 
@@ -9,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '/core/utils/callback/async_callback.handler.dart';
 import '/shared/states/pagination.state.dart';
+import '../../data/enums/contact_us_status.enum.dart';
 import '../../data/models/contact_us.model.dart';
 import '../../data/models/contact_us_filters.model.dart';
 import '../../data/repositories/contact_us.repository.dart';
@@ -20,7 +19,7 @@ class ContactUsController extends AsyncNotifier<PaginationState<ContactUs>> {
   ContactUsFilters _filters = const ContactUsFilters();
   ContactUsFilters get filters => _filters;
 
-  dynamic get currentFilter => _filters.isResolved ?? _filters.role;
+  dynamic get currentFilter => _filters.status ?? _filters.role;
 
   String? _currentSearch;
   String? get currentSearch => _currentSearch;
@@ -31,7 +30,7 @@ class ContactUsController extends AsyncNotifier<PaginationState<ContactUs>> {
       final items = await _repository.getPaginated(
         page: 1,
         pageSize: AppConstants.paginationLimit,
-        isResolved: _filters.isResolved,
+        status: _filters.status,
         role: _filters.role,
         search: _currentSearch,
       );
@@ -82,7 +81,7 @@ class ContactUsController extends AsyncNotifier<PaginationState<ContactUs>> {
         final items = await _repository.getPaginated(
           page: page,
           pageSize: pageSize,
-          isResolved: _filters.isResolved,
+          status: _filters.status,
           role: _filters.role,
           search: _currentSearch,
         );
@@ -112,16 +111,16 @@ class ContactUsController extends AsyncNotifier<PaginationState<ContactUs>> {
     }
   }
 
-  Future<void> toggleResolvedStatus(String id, bool isResolved) async {
+  Future<void> updateStatus(String id, ContactUsStatus status) async {
     final target = _getLocalRecords([id]).firstOrNull;
     if (target == null) return;
 
     final current = state.value;
-    _updateLocalRecords([id], (item) => item.copyWith(isResolved: isResolved));
+    _updateLocalRecords([id], (item) => item.copyWith(status: status));
 
     final result = await AsyncValue.guard(
       () => asyncHandler(() async {
-        final updated = await _repository.toggleResolved(id, isResolved);
+        final updated = await _repository.updateStatus(id, status);
         _updateLocalRecords([id], (_) => updated);
         return state.value ?? current ?? const PaginationState<ContactUs>();
       }),
@@ -153,9 +152,9 @@ class ContactUsController extends AsyncNotifier<PaginationState<ContactUs>> {
     state = result;
   }
 
-  Future<void> updateResolvedStatusMany(
+  Future<void> updateStatusMany(
     List<String> ids,
-    bool isResolved,
+    ContactUsStatus status,
   ) async {
     if (ids.isEmpty) return;
     final current = state.value;
@@ -163,9 +162,7 @@ class ContactUsController extends AsyncNotifier<PaginationState<ContactUs>> {
 
     final result = await AsyncValue.guard(
       () => asyncHandler(() async {
-        final updatedList = await _repository.updateMany({
-          JsonKeys.isResolved: isResolved,
-        }, ids);
+        final updatedList = await _repository.updateStatusMany(ids, status);
         final currentItems = current?.items ?? [];
         final updatedMap = {for (final item in updatedList) item.id: item};
         final updatedItems = currentItems.map((item) {

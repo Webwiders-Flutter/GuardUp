@@ -4,11 +4,11 @@ import '../constants/app_constants.dart';
 
 /// Extensions on [num] (covering [double] and [int]) for currency and number formatting.
 extension NumberFormattingExtension on num {
-  /// Formats this number into INR currency format (e.g. `₹ 28,000` or `₹ 2,45,000`).
-  String get toInrAmount {
+  /// Formats this number into USD currency format (e.g. `$28,000` or `$245,000.50`).
+  String get toUsdAmount {
     final formatter = NumberFormat.currency(
-      locale: 'en_IN',
-      symbol: '${AppConstants.currencySymbol} ',
+      locale: 'en_US',
+      symbol: AppConstants.currencySymbol,
       decimalDigits: this is double && (this % 1 != 0) ? 2 : 0,
     );
     return formatter.format(this);
@@ -17,7 +17,7 @@ extension NumberFormattingExtension on num {
   String get toDistance {
     final value = this;
 
-    final formatter = NumberFormat.decimalPattern('en_IN')
+    final formatter = NumberFormat.decimalPattern('en_US')
       ..maximumFractionDigits = value is double && value % 1 != 0 ? 2 : 0
       ..minimumFractionDigits = 0;
 
@@ -26,8 +26,8 @@ extension NumberFormattingExtension on num {
 }
 
 extension NullableNumberFormattingExtension on num? {
-  String toInrAmountOr([String fallback = '—']) =>
-      this != null ? this!.toInrAmount : fallback;
+  String toUsdAmountOr([String fallback = '—']) =>
+      this != null ? this!.toUsdAmount : fallback;
 
   String toDistanceOr([String fallback = '—']) =>
       this != null ? this!.toDistance : fallback;

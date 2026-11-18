@@ -2,9 +2,11 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '/features/services/data/models/service.model.dart';
 import '/features/users/data/enums/business_type.enum.dart';
+import '/features/users/data/enums/gender_type.enum.dart';
 import '/features/users/data/enums/user_role.enum.dart';
 import '/features/users/data/enums/user_status.enum.dart';
-import '/features/users/data/enums/verification_status.enum.dart';
+import 'user_availability.model.dart';
+import 'user_bank_account.model.dart';
 import 'user_document.model.dart';
 
 part 'user_model.freezed.dart';
@@ -34,7 +36,7 @@ abstract class UserModel with _$UserModel {
     required String name,
     required String email,
     String? phoneNumber,
-    @JsonKey(defaultValue: '+91') String? phoneCode,
+    @Default('+91') String phoneCode,
     @Default(UserRoleType.customer)
     @JsonKey(unknownEnumValue: UserRoleType.customer)
     UserRoleType role,
@@ -46,20 +48,41 @@ abstract class UserModel with _$UserModel {
     /// document reasons live on each [UserDocumentModel]).
     String? rejectionReason,
     String? profileImageUrl,
+    @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
+    GenderType? gender,
+    String? address,
+    double? latitude,
+    double? longitude,
+    @Default(true) bool isPushNotificationEnabled,
+
+    // Bodyguard profile
     double? hourlyRate,
     String? bio,
+    int? experienceYears,
+
+    /// Free text, comma separated (e.g. "English, Hindi").
+    String? languages,
+
+    /// Free text, comma separated (e.g. "CPR, First Aid").
+    String? certifications,
     @JsonKey(name: 'user_services', fromJson: _serviceListFromJson)
     List<ServiceModel>? serviceListData,
     double? rating,
+
+    // Company profile
     String? companyName,
     String? businessEmail,
     @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
     BusinessType? companyType,
+    @Default('+91') String companyPhoneCode,
+    String? companyPhoneNumber,
     Map<String, dynamic>? metadata,
     DateTime? createdAt,
     DateTime? updatedAt,
-    // Joined / related documents
+    // Embedded relations (details query only; see UsersRepository)
     List<UserDocumentModel>? documents,
+    List<UserBankAccountModel>? bankAccounts,
+    List<UserAvailabilityModel>? availabilities,
   }) = _UserModel;
 
   factory UserModel.fromJson(Map<String, dynamic> json) =>
@@ -74,31 +97,4 @@ abstract class UserModel with _$UserModel {
   String get fullName => name.isNotEmpty ? name : (companyName ?? email);
   String get mobileNumber => phoneNumber ?? '';
   String? get businessName => companyName;
-  UserStatus get registrationStatus => status;
-
-  String get displayPhone {
-    if (phoneNumber == null || phoneNumber!.isEmpty) return '—';
-    final code = phoneCode?.isNotEmpty == true ? phoneCode! : '+91';
-    return '$code $phoneNumber';
-  }
-
-  String get displayCompanyType => companyType?.label() ?? '—';
-
-  bool get isApproved => status == UserStatus.active;
-  bool get isPendingApproval => status == UserStatus.approvalPending;
-  bool get isBlocked => status == UserStatus.blocked;
-  bool get isRejected => status == UserStatus.rejected;
-
-  /// Pending or rejected applications can be reviewed (documents approved /
-  /// rejected, profile approved / rejected).
-  bool get isUnderReview => isPendingApproval || isRejected;
-
-  /// The profile can be approved only once every document is approved.
-  bool get allDocumentsApproved => (documents ?? const []).every(
-    (doc) => doc.verificationStatus == VerificationStatus.verified,
-  );
-  bool get isCustomer => role == UserRoleType.customer;
-  bool get isGuard => role == UserRoleType.guard;
-  bool get isCompany => role == UserRoleType.company;
-  bool get isAdmin => role == UserRoleType.admin;
 }

@@ -124,6 +124,14 @@ extension StringMaskingExtension on String {
   // SAFE PARSERS
   // =========================================================
 
+  /// Splits free text on commas / new lines into trimmed, non-empty items
+  /// (e.g. "English, Hindi" → ["English", "Hindi"]).
+  List<String> get toCommaSeparatedList =>
+      split(RegExp(r'[,\n]'))
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+
   int? get toIntOrNull => int.tryParse(trim());
 
   double? get toDoubleOrNull => double.tryParse(trim());

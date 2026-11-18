@@ -11,7 +11,8 @@ final class DatabaseTables {
   static const String businessTypes = "business_types";
   static const String materialTypes = "material_types";
   static const String userDealtMaterials = "user_dealt_materials";
-  static const String userBankDetails = "user_bank_details";
+  static const String userBankAccounts = "user_bank_accounts";
+  static const String userAvailabilities = "user_availabilities";
   static const String userDocuments = "user_documents";
   static const String trucks = "trucks";
   static const String truckDocuments = "truck_documents";

@@ -79,17 +79,53 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
       document_type:document_types(
         id, name, description, target_role, is_required, is_active, display_order
       )
+    ),
+    bank_accounts:user_bank_accounts(
+      id,
+      user_id,
+      account_number,
+      account_holder,
+      bank_name,
+      branch,
+      ifsc_code,
+      branch_address,
+      is_primary,
+      created_at,
+      updated_at
+    ),
+    availabilities:user_availabilities(
+      id,
+      user_id,
+      day_of_week,
+      is_available,
+      from_time,
+      to_time,
+      created_at,
+      updated_at
     )
   ''';
 
-  /// Embedded relations resolve to `[]` when the user has no services or
-  /// documents, so those users load fine.
+  /// Embedded relations resolve to `[]` when the user has none (services,
+  /// documents, bank accounts, availability), so those users load fine.
+  /// Bank accounts are visible to admins through the
+  /// "Admins can read all bank accounts" RLS policy.
   @override
   Future<UserModel> getDetails(String id) async {
     final response = await client
         .from(tableName)
         .select(_detailsSelect)
         .eq(JsonKeys.id, id)
+        // Bank accounts: primary first, then newest first.
+        .order(
+          JsonKeys.isPrimary,
+          referencedTable: JsonKeys.bankAccounts,
+          ascending: false,
+        )
+        .order(
+          JsonKeys.createdAt,
+          referencedTable: JsonKeys.bankAccounts,
+          ascending: false,
+        )
         .maybeSingle();
 
     if (response == null) {

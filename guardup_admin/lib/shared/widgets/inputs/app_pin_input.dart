@@ -1,6 +1,5 @@
 import 'package:guardup_admin/core/constants/app_radius.dart';
-import 'package:guardup_admin/core/constants/app_spacing.dart'
-    show AppSpacing;
+import 'package:guardup_admin/core/constants/app_spacing.dart' show AppSpacing;
 import 'package:guardup_admin/core/extensions/textstyle_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

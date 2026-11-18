@@ -151,30 +151,30 @@ class _PlanHero extends ConsumerWidget {
 
   // Delete is disabled for now.
   // Future<void> _onDelete(BuildContext context, WidgetRef ref) async {
-    // final result = await AppPopup.showDeleteConfirmation(
-      // context,
-      // deleteItemName: plan.name,
-    // );
-    // if (result?.action != PopupAction.confirm || !context.mounted) return;
+  // final result = await AppPopup.showDeleteConfirmation(
+  // context,
+  // deleteItemName: plan.name,
+  // );
+  // if (result?.action != PopupAction.confirm || !context.mounted) return;
 
-    // await ref
-        // .read(membershipPlanControllerProvider.notifier)
-        // .deleteRecord(plan.id);
-    // if (!context.mounted) return;
+  // await ref
+  // .read(membershipPlanControllerProvider.notifier)
+  // .deleteRecord(plan.id);
+  // if (!context.mounted) return;
 
-    // final deleted = ref
-        // .read(membershipPlanControllerProvider)
-        // .handleResult(
-          // successMessage: '${plan.name} deleted successfully',
-          // fallbackErrorMessage: 'Failed to delete membership plan',
-        // );
-    // if (!deleted) return;
+  // final deleted = ref
+  // .read(membershipPlanControllerProvider)
+  // .handleResult(
+  // successMessage: '${plan.name} deleted successfully',
+  // fallbackErrorMessage: 'Failed to delete membership plan',
+  // );
+  // if (!deleted) return;
 
-    // if (context.canPop()) {
-      // context.pop();
-    // } else {
-      // context.go(AppRoutes.membershipPlans);
-    // }
+  // if (context.canPop()) {
+  // context.pop();
+  // } else {
+  // context.go(AppRoutes.membershipPlans);
+  // }
   // }
 
   @override
@@ -256,10 +256,10 @@ class _PlanHero extends ConsumerWidget {
                       TextSpan(
                         children: [
                           TextSpan(
-                            text: plan.pricePerMonth.toInrAmount,
-                            style: context.textTheme.titleLarge
-                                ?.bold()
-                                .colour(colors.primary),
+                            text: plan.pricePerMonth.toUsdAmount,
+                            style: context.textTheme.titleLarge?.bold().colour(
+                              colors.primary,
+                            ),
                           ),
                           TextSpan(
                             text: ' / month',
@@ -270,7 +270,7 @@ class _PlanHero extends ConsumerWidget {
                           if (plan.hasYearlyPrice)
                             TextSpan(
                               text:
-                                  '   ·   ${plan.pricePerYear!.toInrAmount} / year',
+                                  '   ·   ${plan.pricePerYear!.toUsdAmount} / year',
                               style: context.textTheme.bodyMedium
                                   ?.semiBold()
                                   .colour(colors.onSurfaceSecondary),
@@ -316,15 +316,15 @@ class _PlanHero extends ConsumerWidget {
               ),
               // Delete is disabled for now.
               // AppButton(
-                // text: 'Delete',
-                // leading: Icon(
-                  // Icons.delete_outline_rounded,
-                  // size: AppSpacing.md + 2,
-                // ),
-                // size: ButtonSize.small,
-                // type: ButtonType.danger,
-                // fullWidth: false,
-                // onPressed: () => _onDelete(context, ref),
+              // text: 'Delete',
+              // leading: Icon(
+              // Icons.delete_outline_rounded,
+              // size: AppSpacing.md + 2,
+              // ),
+              // size: ButtonSize.small,
+              // type: ButtonType.danger,
+              // fullWidth: false,
+              // onPressed: () => _onDelete(context, ref),
               // ),
             ],
           ),
@@ -367,9 +367,9 @@ class _IdChip extends StatelessWidget {
           children: [
             Text(
               'ID: #${id.length > 8 ? id.substring(0, 8) : id}',
-              style: context.textTheme.bodySmall
-                  ?.semiBold()
-                  .colour(colors.onSurfaceSecondary),
+              style: context.textTheme.bodySmall?.semiBold().colour(
+                colors.onSurfaceSecondary,
+              ),
             ),
             AppSpacing.xs.w,
             Icon(
@@ -399,13 +399,13 @@ class _PlanQuickStats extends StatelessWidget {
     final cards = <Widget>[
       AppMetricCard(
         label: 'Monthly Price',
-        value: plan.pricePerMonth.toInrAmount,
+        value: plan.pricePerMonth.toUsdAmount,
         icon: Icons.calendar_view_month_outlined,
         color: colors.primary,
       ),
       AppMetricCard(
         label: 'Yearly Price',
-        value: plan.pricePerYear.toInrAmountOr('Not offered'),
+        value: plan.pricePerYear.toUsdAmountOr('Not offered'),
         subtitle: savingsPercent != null
             ? 'Saves $savingsPercent% vs. monthly'
             : null,
@@ -515,19 +515,19 @@ class _PricingSection extends StatelessWidget {
       items: [
         (
           label: 'Price per month',
-          value: plan.pricePerMonth.toInrAmount,
+          value: plan.pricePerMonth.toUsdAmount,
           icon: Icons.calendar_view_month_outlined,
         ),
         (
           label: 'Price per year',
-          value: plan.pricePerYear.toInrAmountOr('Not offered'),
+          value: plan.pricePerYear.toUsdAmountOr('Not offered'),
           icon: Icons.event_repeat_outlined,
         ),
         if (savings != null)
           (
             label: 'Yearly saving',
             value:
-                '${savings.toInrAmount} (${plan.yearlySavingsPercent}%) vs. ${plan.yearlyPriceAtMonthlyRate.toInrAmount} paid monthly',
+                '${savings.toUsdAmount} (${plan.yearlySavingsPercent}%) vs. ${plan.yearlyPriceAtMonthlyRate.toUsdAmount} paid monthly',
             icon: Icons.savings_outlined,
           ),
         (
@@ -543,7 +543,7 @@ class _PricingSection extends StatelessWidget {
         if (plan.discountType.isPercentage)
           (
             label: 'Maximum discount per booking',
-            value: plan.discountUpto.toInrAmountOr('No limit'),
+            value: plan.discountUpto.toUsdAmountOr('No limit'),
             icon: Icons.vertical_align_top_rounded,
           ),
         (

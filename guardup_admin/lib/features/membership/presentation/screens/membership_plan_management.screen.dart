@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:quick_container/quick_container.dart';
 
+import '../../../../shared/widgets/feedbacks/widgets/app_popup.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
@@ -19,7 +20,6 @@ import '../../data/models/membership_plan.model.dart';
 import '../../di/membership_plan.providers.dart';
 import '../controllers/membership_plan.controller.dart';
 import 'membership_plan.form.dart';
-import 'membership_plan_details.screen.dart';
 
 class MembershipPlanManagementScreen extends ConsumerStatefulWidget {
   const MembershipPlanManagementScreen({super.key});
@@ -55,55 +55,55 @@ class _MembershipPlanManagementScreenState
     await MembershipPlanFormScreen.showAsSidebar(context: context, plan: item);
   }
 
-  void _openDetails(MembershipPlan item) {
-    MembershipPlanDetailsScreen.showAsSidebar(context: context, planId: item.id);
-  }
+  // void _openDetails(MembershipPlan item) {
+  //   MembershipPlanDetailsScreen.showAsSidebar(context: context, planId: item.id);
+  // }
 
   // Delete is disabled for now.
-  // Future<void> _onDeleteSelected() async {
-    // final items = _selectedItemsNotifier.value;
-    // if (items.isEmpty) return;
+  Future<void> _onDeleteSelected() async {
+    final items = _selectedItemsNotifier.value;
+    if (items.isEmpty) return;
 
-    // final result = await AppPopup.showDeleteConfirmation(
-      // context,
-      // deleteItemName:
-          // '${items.length} Membership Plan${items.length > 1 ? 's' : ''}',
-    // );
+    final result = await AppPopup.showDeleteConfirmation(
+      context,
+      deleteItemName:
+          '${items.length} Membership Plan${items.length > 1 ? 's' : ''}',
+    );
 
-    // if (result?.action == PopupAction.confirm && mounted) {
-      // await _controller.deleteRecords(items.map((e) => e.id).toList());
-      // _selectedItemsNotifier.value = [];
+    if (result?.action == PopupAction.confirm && mounted) {
+      await _controller.deleteRecords(items.map((e) => e.id).toList());
+      _selectedItemsNotifier.value = [];
 
-      // if (mounted) {
-        // ref
-            // .read(membershipPlanControllerProvider)
-            // .handleResult(
-              // successMessage: 'Selected membership plans deleted',
-              // fallbackErrorMessage: 'Failed to delete selected plans',
-            // );
-      // }
-    // }
-  // }
+      if (mounted) {
+        ref
+            .read(membershipPlanControllerProvider)
+            .handleResult(
+              successMessage: 'Selected membership plans deleted',
+              fallbackErrorMessage: 'Failed to delete selected plans',
+            );
+      }
+    }
+  }
 
-  // Future<void> _onDelete(MembershipPlan item) async {
-    // final result = await AppPopup.showDeleteConfirmation(
-      // context,
-      // deleteItemName: item.name,
-    // );
+  Future<void> _onDelete(MembershipPlan item) async {
+    final result = await AppPopup.showDeleteConfirmation(
+      context,
+      deleteItemName: item.name,
+    );
 
-    // if (result?.action == PopupAction.confirm && mounted) {
-      // await _controller.deleteRecord(item.id);
+    if (result?.action == PopupAction.confirm && mounted) {
+      await _controller.deleteRecord(item.id);
 
-      // if (mounted) {
-        // ref
-            // .read(membershipPlanControllerProvider)
-            // .handleResult(
-              // successMessage: '${item.name} deleted successfully',
-              // fallbackErrorMessage: 'Failed to delete membership plan',
-            // );
-      // }
-    // }
-  // }
+      if (mounted) {
+        ref
+            .read(membershipPlanControllerProvider)
+            .handleResult(
+              successMessage: '${item.name} deleted successfully',
+              fallbackErrorMessage: 'Failed to delete membership plan',
+            );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -187,7 +187,7 @@ class _MembershipPlanManagementScreenState
         alignment: Alignment.centerLeft,
         cellBuilder: (item, index) {
           return Text(
-            item.pricePerMonth.toInrAmount,
+            item.pricePerMonth.toUsdAmount,
             style: cellStyle?.semiBold(),
           );
         },
@@ -203,7 +203,7 @@ class _MembershipPlanManagementScreenState
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                item.pricePerYear.toInrAmountOr(),
+                item.pricePerYear.toUsdAmountOr(),
                 style: cellStyle?.semiBold(),
               ),
               if (savingsPercent != null) ...[
@@ -247,18 +247,6 @@ class _MembershipPlanManagementScreenState
         },
       ),
       TableColumn<MembershipPlan>(
-        title: 'Status',
-        width: (AppSpacing.xxxl * 3),
-        alignment: Alignment.center,
-        cellBuilder: (item, index) {
-          return AppChip(
-            color: item.isActive ? colors.success : colors.error,
-            title: item.isActive ? 'Active' : 'Inactive',
-            size: AppChipSize.small,
-          );
-        },
-      ),
-      TableColumn<MembershipPlan>(
         title: 'Actions',
         width: (AppSpacing.xxxl * 6),
         alignment: Alignment.center,
@@ -278,13 +266,13 @@ class _MembershipPlanManagementScreenState
                   ),
                 ),
               ),
-              AppSpacing.sm.w,
-              _ActionIcon(
-                tooltip: 'View Plan',
-                icon: Icons.visibility_outlined,
-                color: colors.secondary,
-                onTap: () => _openDetails(item),
-              ),
+              // AppSpacing.sm.w,
+              // _ActionIcon(
+              //   tooltip: 'View Plan',
+              //   icon: Icons.visibility_outlined,
+              //   color: colors.secondary,
+              //   onTap: () => _openDetails(item),
+              // ),
               AppSpacing.sm.w,
               _ActionIcon(
                 tooltip: 'Edit Plan',
@@ -293,14 +281,14 @@ class _MembershipPlanManagementScreenState
                 onTap: () => _openForm(item: item),
               ),
               // Delete is disabled for now.
-              // AppSpacing.sm.w,
-              // _ActionIcon(
-                // tooltip: 'Delete Plan',
-                // icon: Icons.delete_outline_rounded,
-                // color: colors.error,
-                // isDanger: true,
-                // onTap: () => _onDelete(item),
-              // ),
+              AppSpacing.sm.w,
+              _ActionIcon(
+                tooltip: 'Delete Plan',
+                icon: Icons.delete_outline_rounded,
+                color: colors.error,
+                isDanger: true,
+                onTap: () => _onDelete(item),
+              ),
             ],
           );
         },
@@ -313,8 +301,7 @@ class _MembershipPlanManagementScreenState
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: AdminTableBuilder<MembershipPlan>(
             title: 'Membership Plans',
-            subtitle:
-                'Customer membership tiers, pricing and booking discounts. Drag to reorder tiers.',
+            subtitle: 'Customer membership tiers, pricing and booking discounts. Drag to reorder tiers.',
             columns: columns,
             tableData: paginationState.items,
             searchController: _searchController,
@@ -323,22 +310,22 @@ class _MembershipPlanManagementScreenState
             totalEntries: paginationState.total,
             rowsPerPage: paginationState.pageSize,
             // Delete is disabled for now.
-            // showCheckbox: true,
-            // selectedItemsNotifier: _selectedItemsNotifier,
-            onRowTap: _openDetails,
-            // selectionActions: [
-              // AppButton(
-                // text: 'Delete',
-                // leading: Icon(
-                  // Icons.delete_outline_rounded,
-                  // size: AppSpacing.md + 2,
-                // ),
-                // size: ButtonSize.small,
-                // type: ButtonType.danger,
-                // fullWidth: false,
-                // onPressed: _onDeleteSelected,
-              // ),
-            // ],
+            showCheckbox: true,
+            selectedItemsNotifier: _selectedItemsNotifier,
+            // onRowTap: _openDetails,
+            selectionActions: [
+              AppButton(
+                text: 'Delete',
+                leading: Icon(
+                  Icons.delete_outline_rounded,
+                  size: AppSpacing.md + 2,
+                ),
+                size: ButtonSize.small,
+                type: ButtonType.danger,
+                fullWidth: false,
+                onPressed: _onDeleteSelected,
+              ),
+            ],
             onReorder: (oldIndex, newIndex) async {
               await _controller.reorderRecords(
                 paginationState.items[oldIndex].id,

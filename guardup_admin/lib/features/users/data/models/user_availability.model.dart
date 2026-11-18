@@ -1,0 +1,25 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+import '/features/users/data/enums/week_day.enum.dart';
+
+part 'user_availability.model.freezed.dart';
+part 'user_availability.model.g.dart';
+
+/// One row of `user_availabilities`: a user's working hours for one day.
+@freezed
+abstract class UserAvailabilityModel with _$UserAvailabilityModel {
+  const factory UserAvailabilityModel({
+    required String id,
+    required String userId,
+    @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
+    WeekDay? dayOfWeek,
+    @Default(true) bool isAvailable,
+    @Default('09:00 AM') String fromTime,
+    @Default('05:00 PM') String toTime,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) = _UserAvailabilityModel;
+
+  factory UserAvailabilityModel.fromJson(Map<String, dynamic> json) =>
+      _$UserAvailabilityModelFromJson(json);
+}

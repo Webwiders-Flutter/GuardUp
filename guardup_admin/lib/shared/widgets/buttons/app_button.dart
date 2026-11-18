@@ -243,7 +243,8 @@ class AppButton extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final canBeFullWidth = fullWidth && constraints.hasBoundedWidth;
-        final resolvedWidth = width ?? (canBeFullWidth ? double.infinity : null);
+        final resolvedWidth =
+            width ?? (canBeFullWidth ? double.infinity : null);
 
         Widget button = SizedBox(
           width: resolvedWidth,

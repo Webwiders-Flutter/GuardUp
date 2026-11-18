@@ -866,7 +866,9 @@ class _AppTextFieldState extends State<AppTextField> {
                 icon: Icon(
                   Icons.cancel_rounded,
                   size: _sizeSpec.iconSize,
-                  color: context.colors.onSurfaceSecondary.withValues(alpha: 0.7),
+                  color: context.colors.onSurfaceSecondary.withValues(
+                    alpha: 0.7,
+                  ),
                 ),
                 tooltip: 'Clear',
               ),

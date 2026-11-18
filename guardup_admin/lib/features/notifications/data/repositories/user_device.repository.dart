@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/core/constants/api/database_functions.dart';
 import '/core/constants/api/database_tables.dart';
 import '/core/constants/api/json_keys.dart';
 import '/core/repositories/base.repository.dart';
@@ -24,29 +25,26 @@ final class UserDeviceRepository
         primarySortAscending: false,
       );
 
-  /// Registers or updates the device token in Supabase on conflict of 'token'.
+  /// Registers the device token for the signed-in user (register_user_device).
+  ///
+  /// New token -> new row. Known token -> moved to the signed-in user,
+  /// re-activated and its language updated. Each token keeps its own
+  /// language, so two devices can use different languages.
   Future<UserDeviceModel> upsertDevice({
-    required String userId,
     required String token,
     required String platform,
     String languageCode = 'en',
   }) async {
-    final payload = {
-      JsonKeys.userId: userId,
-      JsonKeys.token: token,
-      JsonKeys.platform: platform,
-      JsonKeys.languageCode: languageCode,
-      JsonKeys.isActive: true,
-      JsonKeys.lastActiveAt: DateTime.now().toIso8601String(),
-    };
+    final response = await client.rpc(
+      DatabaseFunctions.registerUserDevice,
+      params: {
+        JsonKeys.pToken: token,
+        JsonKeys.pPlatform: platform,
+        JsonKeys.pLanguageCode: languageCode,
+      },
+    );
 
-    final response = await client
-        .from(tableName)
-        .upsert(payload, onConflict: 'token')
-        .select()
-        .single();
-
-    return fromJson(response);
+    return fromJson(Map<String, dynamic>.from(response as Map));
   }
 
   /// Deactivates a device token upon user sign-out so notifications stop being delivered.
@@ -65,17 +63,19 @@ final class UserDeviceRepository
     await client.from(tableName).delete().eq(JsonKeys.token, token);
   }
 
-  /// Updates the device's preferred language for notifications.
-  Future<void> updateLanguage({
+  /// Updates the push language of this token only (update_user_device_language).
+  /// Returns null when the token is not registered for the signed-in user.
+  Future<UserDeviceModel?> updateLanguage({
     required String token,
     required String languageCode,
   }) async {
-    await client
-        .from(tableName)
-        .update({
-          JsonKeys.languageCode: languageCode,
-          JsonKeys.lastActiveAt: DateTime.now().toIso8601String(),
-        })
-        .eq(JsonKeys.token, token);
+    final response = await client.rpc(
+      DatabaseFunctions.updateUserDeviceLanguage,
+      params: {JsonKeys.pToken: token, JsonKeys.pLanguageCode: languageCode},
+    );
+
+    // A NULL composite comes back as null or as a map of nulls.
+    if (response is! Map || response[JsonKeys.id] == null) return null;
+    return fromJson(Map<String, dynamic>.from(response));
   }
 }

@@ -1,10 +1,10 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '/features/document-type/data/models/document_type.model.dart';
 import '/features/users/data/enums/verification_status.enum.dart';
 
 part 'user_document.model.freezed.dart';
 part 'user_document.model.g.dart';
-
 
 @freezed
 abstract class UserDocumentModel with _$UserDocumentModel {
@@ -19,10 +19,13 @@ abstract class UserDocumentModel with _$UserDocumentModel {
     required String fileUrl,
     String? fileName,
     @Default(VerificationStatus.pending)
-    @JsonKey(name: 'status')
+    @JsonKey(name: 'status', unknownEnumValue: VerificationStatus.pending)
     VerificationStatus verificationStatus,
     String? rejectionReason,
-    DateTime? createdAt,
+
+    /// Expiry date of the document, when the user provided one.
+    DateTime? validTill,
+    DateTime? uploadedAt,
     DateTime? updatedAt,
   }) = _UserDocumentModel;
 

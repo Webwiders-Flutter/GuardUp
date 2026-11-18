@@ -116,8 +116,7 @@ class DocumentTypeFormScreenState
     final request = DocumentTypeRequest(
       name: _nameController.text.trim(),
       description: _descriptionController.text.trim(),
-      targetRole:
-          _targetRoleController.value.firstOrNull ?? UserRoleType.guard,
+      targetRole: _targetRoleController.value.firstOrNull ?? UserRoleType.guard,
       isRequired: _complianceController.isSelected(JsonKeys.isRequired),
       isActive: _complianceController.isSelected(JsonKeys.isActive),
       displayOrder: widget.documentType?.displayOrder,
@@ -176,8 +175,7 @@ class DocumentTypeFormScreenState
             controller: _descriptionController,
             maxLines: 3,
             decoration: const InputDecoration(
-              hintText:
-                  'Explain what this document is and how it should be uploaded for verification.',
+              hintText: 'Explain what this document is and how it should be uploaded for verification.',
             ),
           ),
 
@@ -230,14 +228,12 @@ class DocumentTypeFormScreenState
                 AppRadioOption(
                   value: JsonKeys.isRequired,
                   label: 'Mandatory Document',
-                  subtitle:
-                      'Users of the selected role must upload this document before their account can be verified.',
+                  subtitle: 'Users of the selected role must upload this document before their account can be verified.',
                 ),
                 AppRadioOption(
                   value: JsonKeys.isActive,
                   label: 'Active in Onboarding',
-                  subtitle:
-                      'Show this document type in registration and verification flows.',
+                  subtitle: 'Show this document type in registration and verification flows.',
                 ),
               ],
             ),

@@ -276,8 +276,7 @@ final class AppRouter {
               routes: [
                 GoRoute(
                   path: AppRoutes.services,
-                  builder: (context, state) =>
-                      const ServicesManagementScreen(),
+                  builder: (context, state) => const ServicesManagementScreen(),
                 ),
               ],
             ),

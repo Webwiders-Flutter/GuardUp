@@ -262,7 +262,8 @@ class MembershipPlanFormScreenState
                 AppRadioOption(
                   value: _PlanFlag.popular,
                   label: 'Mark as Most Popular',
-                  subtitle: 'Highlights this plan on the plan comparison screen.',
+                  subtitle:
+                      'Highlights this plan on the plan comparison screen.',
                 ),
               ],
             ),
@@ -355,15 +356,16 @@ class MembershipPlanFormScreenState
             final String hint;
             Color hintColor = colors.onSurfaceSecondary;
             if (savings == null) {
-              hint = '12 months at the monthly price: ${atMonthlyRate.toInrAmount}';
+              hint =
+                  '12 months at the monthly price: ${atMonthlyRate.toUsdAmount}';
             } else if (savings > 0) {
               final percent = (savings / atMonthlyRate * 100).round();
               hint =
-                  'Yearly saves ${savings.toInrAmount} ($percent%) vs. ${atMonthlyRate.toInrAmount} paid monthly';
+                  'Yearly saves ${savings.toUsdAmount} ($percent%) vs. ${atMonthlyRate.toUsdAmount} paid monthly';
               hintColor = colors.success;
             } else {
               hint =
-                  'Yearly costs the same or more than 12 monthly payments (${atMonthlyRate.toInrAmount})';
+                  'Yearly costs the same or more than 12 monthly payments (${atMonthlyRate.toUsdAmount})';
               hintColor = colors.warning;
             }
 

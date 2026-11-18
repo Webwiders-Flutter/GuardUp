@@ -21,11 +21,8 @@ sealed class AdminSettingsModel with _$AdminSettingsModel {
       'A new version of the app is available. Please update to continue using GuardUp.',
     )
     String? updateMessageAndroid,
-    @Default('https://apps.apple.com/app/guardup')
-    String? iosAppUrl,
-    @Default(
-      'https://play.google.com/store/apps/details?id=com.guardup.app',
-    )
+    @Default('https://apps.apple.com/app/guardup') String? iosAppUrl,
+    @Default('https://play.google.com/store/apps/details?id=com.guardup.app')
     String? androidAppUrl,
     @Default('support@guardup.com') String supportEmail,
     @Default('+919876543210') String supportCallPhoneNumber,

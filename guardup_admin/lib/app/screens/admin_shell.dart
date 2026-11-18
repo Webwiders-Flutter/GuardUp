@@ -183,13 +183,14 @@ class _AdminShellState extends ConsumerState<AdminShell> {
       ],
     ),
 
-    // const CustomDashboardMenuItem(
-    //   sectionTitle: "Legal",
-    //   icon: Icons.support_agent_rounded,
-    //   label: 'Help & Support',
-    //   route: AppRoutes.helpSupport,
-    //   description: 'Operational support, ticket logs and contact center',
-    // ),
+    // ── SUPPORT ──────────────────────────────────────────
+    const CustomDashboardMenuItem(
+      sectionTitle: 'Support',
+      icon: Icons.support_agent_rounded,
+      label: 'Help & Support',
+      route: AppRoutes.helpSupport,
+      description: 'Contact requests from the app and their resolution status',
+    ),
     // const CustomDashboardMenuItem(
     //   icon: Icons.quiz_outlined,
     //   label: 'FAQs',
@@ -198,21 +199,21 @@ class _AdminShellState extends ConsumerState<AdminShell> {
     //       'Frequently asked questions, localized answers and role guides',
     // ),
     // Legal is not production-ready yet: visible in debug builds only.
-      CustomDashboardMenuItem(
-        sectionTitle: 'Legal',
-        icon: Icons.article_outlined,
-        label: 'Policies & Content',
-        route: AppRoutes.content,
-        description: 'Manage Terms & Conditions, Privacy Policy, About Us, Delete Account, and Support',
-        children: ContentType.values.map((e) {
-          return CustomDashboardMenuItem(
-            icon: e.icon,
-            label: e.label,
-            route: AppRoutes.contentUrl(e),
-            description: e.description,
-          );
-        }).toList(),
-      ),
+    CustomDashboardMenuItem(
+      sectionTitle: 'Legal',
+      icon: Icons.article_outlined,
+      label: 'Policies & Content',
+      route: AppRoutes.content,
+      description: 'Manage Terms & Conditions, Privacy Policy, About Us, Delete Account, and Support',
+      children: ContentType.values.map((e) {
+        return CustomDashboardMenuItem(
+          icon: e.icon,
+          label: e.label,
+          route: AppRoutes.contentUrl(e),
+          description: e.description,
+        );
+      }).toList(),
+    ),
 
     // ── PLATFORM & MASTER DATA ───────────────────────────
     const CustomDashboardMenuItem(
@@ -236,7 +237,6 @@ class _AdminShellState extends ConsumerState<AdminShell> {
     ),
 
     // ── SYSTEM ───────────────────────────────────────────
-   
     const CustomDashboardMenuItem(
       sectionTitle: 'System',
       icon: Icons.tune_rounded,
@@ -244,13 +244,13 @@ class _AdminShellState extends ConsumerState<AdminShell> {
       route: AppRoutes.settings,
       description: 'Platform preferences, role permissions & configuration',
     ),
-    if(kDebugMode)
-     const CustomDashboardMenuItem(
-      icon: Icons.notifications_outlined,
-      label: 'Notifications',
-      route: AppRoutes.notifications,
-      description: 'System broadcasts, push notifications and delivery logs',
-    ),
+    if (kDebugMode)
+      const CustomDashboardMenuItem(
+        icon: Icons.notifications_outlined,
+        label: 'Notifications',
+        route: AppRoutes.notifications,
+        description: 'System broadcasts, push notifications and delivery logs',
+      ),
   ];
 
   final List<CustomDashboardMenuItem> bottomItems = [

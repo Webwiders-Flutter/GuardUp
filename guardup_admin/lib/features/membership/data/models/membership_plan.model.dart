@@ -45,7 +45,7 @@ sealed class MembershipPlan with _$MembershipPlan {
 
   bool get hasYearlyPrice => pricePerYear != null;
 
-  /// e.g. `20% off (up to ₹ 500)`, `₹ 200 off`, or `No discount`.
+  /// e.g. `20% off (up to $500)`, `$200 off`, or `No discount`.
   String get discountLabel {
     if (!hasDiscount) return 'No discount';
     if (discountType.isPercentage) {
@@ -53,11 +53,11 @@ sealed class MembershipPlan with _$MembershipPlan {
           ? discount.toStringAsFixed(0)
           : discount.toString();
       final cap = discountUpto != null
-          ? ' (up to ${discountUpto!.toInrAmount})'
+          ? ' (up to ${discountUpto!.toUsdAmount})'
           : '';
       return '$percent% off$cap';
     }
-    return '${discount.toInrAmount} off';
+    return '${discount.toUsdAmount} off';
   }
 
   /// What 12 months cost when paid monthly.

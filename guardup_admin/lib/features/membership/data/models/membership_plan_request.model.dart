@@ -39,8 +39,9 @@ class MembershipPlanRequest {
       JsonKeys.discount: discount,
       JsonKeys.discountType: discountType.apiValue,
       // A cap only makes sense for percentage discounts (enforced by a DB check).
-      JsonKeys.discountUpto:
-          discountType.isPercentage && discount > 0 ? discountUpto : null,
+      JsonKeys.discountUpto: discountType.isPercentage && discount > 0
+          ? discountUpto
+          : null,
       JsonKeys.isPopular: isPopular,
       JsonKeys.isActive: isActive,
     };

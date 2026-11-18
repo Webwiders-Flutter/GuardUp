@@ -136,11 +136,10 @@ class DocumentTypeController
         final updatedItems = [newDocumentType, ...currentItems]
           ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
 
-        return (current ?? const PaginationState<DocumentTypeModel>())
-            .copyWith(
-              items: updatedItems,
-              total: current != null ? current.total + 1 : 1,
-            );
+        return (current ?? const PaginationState<DocumentTypeModel>()).copyWith(
+          items: updatedItems,
+          total: current != null ? current.total + 1 : 1,
+        );
       }),
     );
 
@@ -169,8 +168,9 @@ class DocumentTypeController
           return item.id == id ? updated : item;
         }).toList()..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
 
-        return (current ?? const PaginationState<DocumentTypeModel>())
-            .copyWith(items: updatedItems);
+        return (current ?? const PaginationState<DocumentTypeModel>()).copyWith(
+          items: updatedItems,
+        );
       }),
     );
 
@@ -233,13 +233,10 @@ class DocumentTypeController
             .where((item) => item.id != id)
             .toList();
 
-        return (current ?? const PaginationState<DocumentTypeModel>())
-            .copyWith(
-              items: updatedItems,
-              total: current != null && current.total > 0
-                  ? current.total - 1
-                  : 0,
-            );
+        return (current ?? const PaginationState<DocumentTypeModel>()).copyWith(
+          items: updatedItems,
+          total: current != null && current.total > 0 ? current.total - 1 : 0,
+        );
       }),
     );
 
@@ -262,13 +259,12 @@ class DocumentTypeController
             .where((item) => !idSet.contains(item.id))
             .toList();
 
-        return (current ?? const PaginationState<DocumentTypeModel>())
-            .copyWith(
-              items: updatedItems,
-              total: current != null && current.total >= items.length
-                  ? current.total - items.length
-                  : 0,
-            );
+        return (current ?? const PaginationState<DocumentTypeModel>()).copyWith(
+          items: updatedItems,
+          total: current != null && current.total >= items.length
+              ? current.total - items.length
+              : 0,
+        );
       }),
     );
 
