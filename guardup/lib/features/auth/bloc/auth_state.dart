@@ -137,7 +137,14 @@ class AuthState extends Equatable {
 
   List<String> get services {
     final list = userData?['services'] as List<dynamic>?;
-    return list?.map((e) => e.toString()).toList() ?? const [];
+    if (list != null && list.isNotEmpty) {
+      return list.map((e) => e.toString()).toList();
+    }
+    final meta = userData?['metadata'];
+    if (meta is Map && meta['services'] is List) {
+      return (meta['services'] as List).map((e) => e.toString()).toList();
+    }
+    return const [];
   }
 
   String get avatarUrl =>
@@ -179,6 +186,35 @@ class AuthState extends Equatable {
     if (raw is String) return double.tryParse(raw);
     return null;
   }
+
+  int get experienceYears {
+    final raw = userData?['experience_years'] ??
+        (userData?['metadata'] is Map
+            ? (userData!['metadata'] as Map)['experience_years']
+            : null);
+    if (raw is num) return raw.toInt();
+    if (raw is String) return int.tryParse(raw) ?? 0;
+    return 0;
+  }
+
+  String get experienceYearsFormatted {
+    final yrs = experienceYears;
+    return yrs > 0 ? '$yrs+ Yrs Exp' : '0 Yrs Exp';
+  }
+
+  String get languages =>
+      (userData?['languages'] as String?) ??
+      (userData?['metadata'] is Map
+          ? (userData!['metadata'] as Map)['languages'] as String?
+          : null) ??
+      '';
+
+  String get certifications =>
+      (userData?['certifications'] as String?) ??
+      (userData?['metadata'] is Map
+          ? (userData!['metadata'] as Map)['certifications'] as String?
+          : null) ??
+      '';
 
   // ── Role Helpers ────────────────────────────────────────────────────────────
   bool get isCustomer => sessionRole == UserRole.customer;

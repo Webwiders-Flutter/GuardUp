@@ -50,6 +50,7 @@ final class AppRoutes {
   static const companyEditProfile = CompanyEditProfileScreen.route;
   static const companyInformation = CompanyInformationScreen.route;
   static const companyDetails = CompanyDetailsScreen.route;
+  static const businessDocuments = CompanyDocumentsScreen.route;
   static const bodyguardInformation = BodyGuardProfileScreen.route;
   static const changePassword = ChangePasswordScreen.route;
 

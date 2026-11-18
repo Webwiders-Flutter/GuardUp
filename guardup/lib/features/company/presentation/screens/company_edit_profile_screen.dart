@@ -49,6 +49,7 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
+  final _experienceController = TextEditingController();
   final _businessTypeController = SelectionController<BusinessType>.single(
     initial: BusinessType.pvtLtd,
     allowDeselect: false,
@@ -74,6 +75,8 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
         ? state.companyPhoneCode
         : state.userPhoneCode;
     _addressController.text = state.address;
+    _experienceController.text =
+        state.experienceYears > 0 ? state.experienceYears.toString() : '';
     _latitude = state.latitude;
     _longitude = state.longitude;
     _existingLogoUrl = state.avatarUrl;
@@ -89,6 +92,7 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
     _emailController.dispose();
     _phoneController.dispose();
     _addressController.dispose();
+    _experienceController.dispose();
     _businessTypeController.dispose();
     _logoImageNotifier.dispose();
     super.dispose();
@@ -157,12 +161,14 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
           ? _businessTypeController.selectedItem!.label(l10n)
           : 'Private Limited (Pvt Ltd)';
       final addressText = _addressController.text.trim();
+      final expYears = int.tryParse(_experienceController.text.trim()) ?? 0;
 
       final updateData = <String, dynamic>{
         'company_name': companyName,
         'name': companyName,
         'company_type': typeLabel,
         'address': addressText,
+        'experience_years': expYears,
         'latitude': ?_latitude,
         'longitude': ?_longitude,
         'profile_image_url': ?logoUrl,
@@ -176,6 +182,7 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
       } catch (e) {
         if (e.toString().contains('column') ||
             e.toString().contains('address') ||
+            e.toString().contains('experience') ||
             e.toString().contains('latitude')) {
           final userRow =
               await sl<UserRepository>().getUserData(currentUserId);
@@ -183,6 +190,7 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
               ? Map<String, dynamic>.from(userRow!['metadata'] as Map)
               : <String, dynamic>{};
           existingMeta['address'] = addressText;
+          existingMeta['experience_years'] = expYears;
           if (_latitude != null) existingMeta['latitude'] = _latitude;
           if (_longitude != null) existingMeta['longitude'] = _longitude;
 
@@ -227,9 +235,10 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
             padding: context.horizontalEdgeInsets,
             child: ConstrainedBox(
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: IntrinsicHeight(
+              child: Form(
                 key: _formKey,
-                child: Column(
+                child: IntrinsicHeight(
+                  child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     AppSpacing.xl.h,
@@ -475,6 +484,18 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
                           ),
                           AppSpacing.md.h,
 
+                          // Experience (Years) Field
+                          AppTextField(
+                            controller: _experienceController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              hintText: 'Experience (Years)',
+                              prefixIcon: Icon(Icons.work_history_outlined),
+                            ),
+                            textInputAction: TextInputAction.next,
+                          ),
+                          AppSpacing.md.h,
+
                           // Company Type Dropdown
                           AppDropdown<BusinessType>(
                             controller: _businessTypeController,
@@ -523,7 +544,8 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
                 ),
               ),
             ),
-          );
+          ),
+        );
         },
       ),
     );

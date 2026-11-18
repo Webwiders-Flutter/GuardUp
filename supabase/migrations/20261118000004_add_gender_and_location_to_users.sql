@@ -39,4 +39,3 @@ COMMENT ON COLUMN public.users.latitude IS
   'Latitude coordinate of the address';
 COMMENT ON COLUMN public.users.longitude IS
   'Longitude coordinate of the address';
-

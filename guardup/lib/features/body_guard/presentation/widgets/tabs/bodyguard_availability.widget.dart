@@ -1,19 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:quick_container/quick_container.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../data/enum/week_day.enum.dart';
+import '/core/constants/api/database_tables.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
+import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
+import '/features/auth/bloc/auth_bloc.dart';
+import '/features/auth/domain/repositories/auth_repository.dart';
+import '/features/auth/domain/repositories/user_repository.dart';
+import '/shared/widgets/buttons/app_button.dart';
+import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 import '/shared/widgets/selection/selection.controller.dart';
 
 /// Tab content widget allowing bodyguards to manage their active weekly
-/// availability hours and designated days off.
+/// availability hours and designated days off dynamically via user_availabilities table.
 class BodyguardAvailabilityWidget extends StatefulWidget {
   final ValueChanged<List<WeekDay>>? onAvailabilityChanged;
 
@@ -26,16 +34,7 @@ class BodyguardAvailabilityWidget extends StatefulWidget {
 
 class _BodyguardAvailabilityWidgetState
     extends State<BodyguardAvailabilityWidget> {
-  late final _selectionController = SelectionController<WeekDay>.multi(
-    initial: const [
-      WeekDay.monday,
-      WeekDay.tuesday,
-      WeekDay.thursday,
-      WeekDay.friday,
-      WeekDay.sunday,
-    ],
-    onChanged: widget.onAvailabilityChanged,
-  );
+  late final SelectionController<WeekDay> _selectionController;
 
   final Map<WeekDay, TextEditingController> _fromControllers = {
     for (final day in WeekDay.values)
@@ -46,6 +45,109 @@ class _BodyguardAvailabilityWidgetState
     for (final day in WeekDay.values)
       day: TextEditingController(text: '12:00 PM'),
   };
+
+  bool _isLoading = true;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectionController = SelectionController<WeekDay>.multi(
+      initial: const [],
+      onChanged: widget.onAvailabilityChanged,
+    );
+    _loadAvailability();
+  }
+
+  Future<void> _loadAvailability() async {
+    final currentUserId = sl.isRegistered<AuthRepository>()
+        ? sl<AuthRepository>().currentUserId
+        : null;
+
+    if (currentUserId == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+
+    try {
+      // 1. Fetch from user_availabilities table
+      final rows = await Supabase.instance.client
+          .from(DatabaseTables.userAvailabilities)
+          .select()
+          .eq('user_id', currentUserId);
+
+      final availableDays = <WeekDay>[];
+
+      if (rows.isNotEmpty) {
+        for (final row in rows) {
+          final dayStr = (row['day_of_week'] as String?)?.toLowerCase() ?? '';
+          final day = WeekDay.values.firstWhere(
+            (d) => d.name.toLowerCase() == dayStr,
+            orElse: () => WeekDay.monday,
+          );
+
+          final isAvailable = row['is_available'] as bool? ?? false;
+          if (isAvailable && !availableDays.contains(day)) {
+            availableDays.add(day);
+          }
+
+          final fromStr = row['from_time'] as String?;
+          if (fromStr != null && fromStr.isNotEmpty) {
+            _fromControllers[day]?.text = fromStr;
+          }
+
+          final toStr = row['to_time'] as String?;
+          if (toStr != null && toStr.isNotEmpty) {
+            _toControllers[day]?.text = toStr;
+          }
+        }
+      } else {
+        // Fallback to metadata['availability'] if table is not yet populated
+        final rawAvailability = sl<AuthBloc>()
+            .state
+            .userData?['metadata'] is Map
+            ? (sl<AuthBloc>().state.userData!['metadata'] as Map)['availability']
+                as Map<String, dynamic>?
+            : null;
+
+        if (rawAvailability != null && rawAvailability.isNotEmpty) {
+          for (final day in WeekDay.values) {
+            final dayData =
+                rawAvailability[day.name] as Map<String, dynamic>?;
+            if (dayData != null) {
+              final isAvailable = dayData['is_available'] as bool? ?? false;
+              if (isAvailable) availableDays.add(day);
+
+              final fromStr = dayData['from'] as String?;
+              if (fromStr != null && fromStr.isNotEmpty) {
+                _fromControllers[day]!.text = fromStr;
+              }
+
+              final toStr = dayData['to'] as String?;
+              if (toStr != null && toStr.isNotEmpty) {
+                _toControllers[day]!.text = toStr;
+              }
+            }
+          }
+        } else {
+          availableDays.addAll([
+            WeekDay.monday,
+            WeekDay.tuesday,
+            WeekDay.wednesday,
+            WeekDay.thursday,
+            WeekDay.friday,
+          ]);
+        }
+      }
+
+      if (mounted) {
+        _selectionController.value = availableDays;
+      }
+    } catch (_) {
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -90,6 +192,69 @@ class _BodyguardAvailabilityWidgetState
       return TimeOfDay(hour: hour, minute: minute);
     } catch (_) {
       return const TimeOfDay(hour: 9, minute: 0);
+    }
+  }
+
+  Future<void> _handleSaveAvailability() async {
+    final currentUserId = sl.isRegistered<AuthRepository>()
+        ? sl<AuthRepository>().currentUserId
+        : null;
+    if (currentUserId == null) return;
+
+    setState(() => _isSaving = true);
+    try {
+      final selectedDays = _selectionController.value;
+
+      // 1. Save to user_availabilities table
+      final rows = WeekDay.values.map((day) {
+        return {
+          'user_id': currentUserId,
+          'day_of_week': day.name.toLowerCase(),
+          'is_available': selectedDays.contains(day),
+          'from_time': _fromControllers[day]!.text.trim(),
+          'to_time': _toControllers[day]!.text.trim(),
+          'updated_at': DateTime.now().toIso8601String(),
+        };
+      }).toList();
+
+      await Supabase.instance.client
+          .from(DatabaseTables.userAvailabilities)
+          .upsert(rows, onConflict: 'user_id, day_of_week');
+
+      // 2. Also keep metadata['availability'] in sync for backward compatibility
+      if (sl.isRegistered<UserRepository>()) {
+        try {
+          final availabilityMap = <String, dynamic>{};
+          for (final day in WeekDay.values) {
+            availabilityMap[day.name] = {
+              'is_available': selectedDays.contains(day),
+              'from': _fromControllers[day]!.text.trim(),
+              'to': _toControllers[day]!.text.trim(),
+            };
+          }
+          final userRow =
+              await sl<UserRepository>().getUserData(currentUserId);
+          final existingMeta = (userRow?['metadata'] is Map)
+              ? Map<String, dynamic>.from(userRow!['metadata'] as Map)
+              : <String, dynamic>{};
+          existingMeta['availability'] = availabilityMap;
+
+          await sl<UserRepository>().updateProfileFields(
+            userId: currentUserId,
+            data: {'metadata': existingMeta},
+          );
+        } catch (_) {}
+      }
+
+      if (mounted) {
+        AppSnackbar.success('Availability updated successfully.');
+      }
+    } catch (e) {
+      if (mounted) {
+        AppSnackbar.error('Failed to update availability: $e');
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -189,13 +354,22 @@ class _BodyguardAvailabilityWidgetState
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Center(
+        child: Padding(
+          padding: AppSpacing.xxl.allPadding,
+          child: CircularProgressIndicator(
+            color: context.colors.primary,
+          ),
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         AppSpacing.md.h,
-        // ---------------------------------------------------------------------
         // Header Section
-        // ---------------------------------------------------------------------
         Text(
           'Select your Availability',
           style: context.textTheme.titleMedium?.semiBold(),
@@ -209,9 +383,7 @@ class _BodyguardAvailabilityWidgetState
         ),
         AppSpacing.xl.h,
 
-        // ---------------------------------------------------------------------
         // Weekly Day Cards List
-        // ---------------------------------------------------------------------
         ValueListenableBuilder<List<WeekDay>>(
           valueListenable: _selectionController,
           builder: (context, selectedDays, _) {
@@ -220,18 +392,16 @@ class _BodyguardAvailabilityWidgetState
                 final isSelected = selectedDays.contains(day);
                 final fromController = _fromControllers[day]!;
                 final toController = _toControllers[day]!;
-                // Tuesday to-time is highlighted to reflect active input focus
-                final isTuesdayToTime = day == WeekDay.tuesday;
 
                 return Padding(
                   padding: AppSpacing.md.bPadding,
                   child: WrapperCard(
-                    padding: .symmetric(horizontal: 12, vertical: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
                     onTap: () => _selectionController.toggle(day),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        05.w,
+                        5.w,
                         // Left: Checkbox Icon + Weekday Label
                         _buildSelectionCircle(
                           context: context,
@@ -270,7 +440,7 @@ class _BodyguardAvailabilityWidgetState
                               _buildTimeInputField(
                                 context: context,
                                 controller: toController,
-                                isHighlighted: isTuesdayToTime,
+                                isHighlighted: false,
                               ),
                             ],
                           )
@@ -286,6 +456,14 @@ class _BodyguardAvailabilityWidgetState
               }).toList(),
             );
           },
+        ),
+        AppSpacing.md.h,
+
+        // Save Availability Button
+        AppButton(
+          text: 'Save Availability',
+          isLoading: _isSaving,
+          onPressed: _handleSaveAvailability,
         ),
         AppSpacing.xl.h,
       ],

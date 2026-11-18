@@ -1,8 +1,8 @@
-// import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../enum/guard_service.enum.dart';
 
-/// Represents a service item managed dynamically by Admin or fallback enum.
+/// Represents a service item managed dynamically by Admin or database.
 class ServiceItemModel {
   final String id;
   final String code;
@@ -14,7 +14,7 @@ class ServiceItemModel {
 
   const ServiceItemModel({
     required this.id,
-    required this.code,
+    this.code = '',
     required this.name,
     this.description,
     this.iconName,
@@ -46,32 +46,44 @@ class ServiceItemModel {
     };
   }
 
-  /// Maps to local [GuardService] enum if matching code exists.
-  GuardService? get guardService => GuardService.tryFromApiValue(code);
+  /// Maps to local [GuardService] enum if matching code or name exists.
+  GuardService? get guardService =>
+      GuardService.tryFromApiValue(code.isNotEmpty ? code : name);
 
-  // IconData get icon {
-  //   final guard = guardService;
-  //   if (guard != null) return guard.icon;
-  //   switch (code.toUpperCase()) {
-  //     case 'VIP_CLOSE_PROTECTION':
-  //       return Icons.shield_outlined;
-  //     case 'ARMED_ESCORT':
-  //       return Icons.security_rounded;
-  //     case 'TACTICAL_DRIVER':
-  //       return Icons.directions_car_filled_outlined;
-  //     case 'EVENT_SECURITY':
-  //       return Icons.event_seat_rounded;
-  //     case 'RESIDENTIAL_PROTECTION':
-  //       return Icons.home_work_outlined;
-  //     case 'ASSET_PROTECTION':
-  //       return Icons.account_balance_wallet_outlined;
-  //     case 'SURVEILLANCE_RECON':
-  //       return Icons.visibility_outlined;
-  //     case 'CRISIS_MANAGEMENT':
-  //       return Icons.emergency_outlined;
-  //     default:
-  //       return Icons.verified_user_outlined;
-  //   }
-  // }
+  IconData get icon {
+    final guard = guardService;
+    if (guard != null) return guard.icon;
+
+    final lowerName = name.toLowerCase();
+    if (lowerName.contains('close') || lowerName.contains('vip')) {
+      return Icons.shield_outlined;
+    }
+    if (lowerName.contains('arm') || lowerName.contains('escort')) {
+      return Icons.security_rounded;
+    }
+    if (lowerName.contains('driver') ||
+        lowerName.contains('car') ||
+        lowerName.contains('vehicle')) {
+      return Icons.directions_car_filled_outlined;
+    }
+    if (lowerName.contains('event')) {
+      return Icons.event_seat_rounded;
+    }
+    if (lowerName.contains('residen') ||
+        lowerName.contains('home') ||
+        lowerName.contains('estate')) {
+      return Icons.home_work_outlined;
+    }
+    if (lowerName.contains('asset')) {
+      return Icons.account_balance_wallet_outlined;
+    }
+    if (lowerName.contains('surveil') || lowerName.contains('recon')) {
+      return Icons.visibility_outlined;
+    }
+    if (lowerName.contains('crisis')) {
+      return Icons.emergency_outlined;
+    }
+    return Icons.verified_user_outlined;
+  }
 }
 

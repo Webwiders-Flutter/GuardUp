@@ -100,7 +100,7 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
 
         // Upper Balance Card with luxury SVG background
         WalletBalanceCard(
-          balance: 250,
+          balance: 0,
           onWithdraw: _handleWithdraw,
           onAddBankAccount: _handleAddBankAccount,
         ),

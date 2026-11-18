@@ -79,7 +79,7 @@ class ProfileScreen extends StatelessWidget {
                 // 3. Role-Specific Menu Cards
                 if (role == UserRole.guard) ...[
                   _ProfileMenuCard(
-                    title: context.l10n.personalInformation,
+                    title: context.l10n.personalInformation.toUpperCase(),
                     icon: Icons.person,
                     onTap: () {
                       context.push(AppRoutes.bodyguardInformation);
@@ -108,7 +108,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ] else if (role == UserRole.company) ...[
                   _ProfileMenuCard(
-                    title: context.l10n.companyInformation,
+                    title: context.l10n.companyInformation.toUpperCase(),
                     icon: Icons.person_outline_rounded,
                     onTap: () {
                       context.push(AppRoutes.companyInformation);
@@ -132,7 +132,7 @@ class ProfileScreen extends StatelessWidget {
                     title: context.l10n.businessDocuments,
                     icon: Icons.folder_shared_outlined,
                     onTap: () {
-                      context.push(AppRoutes.uploadDocuments);
+                      context.push(AppRoutes.businessDocuments);
                     },
                   ),
                 ],
@@ -227,6 +227,7 @@ class ProfileScreen extends StatelessWidget {
       logoUrl: logoUrl,
       rating: rating,
       bio: companyType,
+      experienceYears: state.experienceYearsFormatted,
       isVerified: true,
       isOnline: true,
     );

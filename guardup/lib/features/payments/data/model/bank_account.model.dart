@@ -19,6 +19,18 @@ abstract class BankAccount with _$BankAccount {
   factory BankAccount.fromJson(Map<String, dynamic> json) =>
       _$BankAccountFromJson(json);
 
+  factory BankAccount.fromSupabase(Map<String, dynamic> map) {
+    return BankAccount(
+      id: (map['id'] ?? '') as String,
+      accountNumber: (map['account_number'] ?? '').toString(),
+      accountHolder: (map['account_holder'] ?? '').toString(),
+      bankName: (map['bank_name'] ?? '').toString(),
+      branch: (map['branch'] ?? '').toString(),
+      ifscCode: (map['ifsc_code'] ?? '').toString(),
+      branchAddress: map['branch_address'] as String?,
+    );
+  }
+
   static List<BankAccount> get fakeData => const [
     BankAccount(
       id: '1',

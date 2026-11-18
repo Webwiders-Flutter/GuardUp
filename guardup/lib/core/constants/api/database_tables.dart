@@ -5,6 +5,8 @@ final class DatabaseTables {
   static const String userServices = "user_services";
   static const String documentTypes = "document_types";
   static const String userDocuments = "user_documents";
+  static const String userAvailabilities = "user_availabilities";
+  static const String userBankAccounts = "user_bank_accounts";
   static const String documents = "documents";
   static const String faqs = "faqs";
   static const String legalContent = "legal_content";

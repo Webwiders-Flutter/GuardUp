@@ -101,6 +101,12 @@ class CompanyInformationScreen extends StatelessWidget {
                           value: effectiveCompanyType,
                         ),
 
+                        // 6. Experience Card
+                        _InfoCard(
+                          label: 'Experience',
+                          value: state.experienceYearsFormatted,
+                        ),
+
                         Spacer(),
                         AppSpacing.xl.h,
 

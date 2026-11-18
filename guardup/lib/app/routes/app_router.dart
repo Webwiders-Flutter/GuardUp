@@ -409,6 +409,10 @@ final class AppRouter {
         builder: (context, state) => const CompanyInformationScreen(),
       ),
       GoRoute(
+        path: CompanyDocumentsScreen.route,
+        builder: (context, state) => const CompanyDocumentsScreen(),
+      ),
+      GoRoute(
         path: BodyguardsListScreen.route,
         builder: (context, state) => const BodyguardsListScreen(),
       ),
