@@ -39,4 +39,12 @@ class StagingConfig implements AppConfig {
   @override
   bool get enableLogging =>
       dotenv.maybeGet('ENABLE_LOGGING')?.toLowerCase() == 'true' || true;
+
+  @override
+  String get googlePlacesApiKey =>
+      dotenv.maybeGet('STAGE_GOOGLE_PLACES_API_KEY') ??
+      dotenv.maybeGet('GOOGLE_PLACES_API_KEY') ??
+      dotenv.maybeGet('GOOGLE_MAPS_API_KEY') ??
+      dotenv.maybeGet('GOOGLE_API_KEY') ??
+      '';
 }

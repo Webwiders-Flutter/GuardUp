@@ -55,7 +55,7 @@ class CustomerHeaderWidget extends StatelessWidget {
               child: AppImage.auto(
                 source: avatarUrl?.isNotEmpty == true
                     ? avatarUrl!
-                    : Assets.images.profilePicture.path,
+                    : Assets.images.dummyAvatar.path,
                 fit: BoxFit.cover,
                 width: 48,
                 height: 48,

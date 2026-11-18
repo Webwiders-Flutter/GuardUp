@@ -39,7 +39,7 @@ class BodyGuardHeaderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final effectiveAvatar = avatarAssetPath.isNotEmpty
         ? avatarAssetPath
-        : Assets.images.profilePicture.path;
+        : Assets.images.dummyAvatar.path;
 
     return WrapperCard(
       onTap: onTap,

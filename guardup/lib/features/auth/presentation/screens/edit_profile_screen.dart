@@ -45,9 +45,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _genderController = SelectionController<GenderType>.single(
-    initial: GenderType.male,
-  );
+  late final SelectionController<GenderType> _genderController;
   final ValueNotifier<XFile?> _profileImageNotifier = ValueNotifier<XFile?>(
     null,
   );
@@ -65,6 +63,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _phoneController.text = state.userPhoneNumber;
     _phoneCode = state.userPhoneCode;
     _existingAvatarUrl = state.avatarUrl;
+    _genderController = SelectionController<GenderType>.single(
+      initial: state.genderType,
+    );
   }
 
   @override
@@ -125,16 +126,45 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       final updatedName = _nameController.text.trim();
       final updatedPhone = _phoneController.text.trim();
+      final selectedGender = _genderController.selectedItem ?? GenderType.male;
 
-      await sl<UserRepository>().updateProfileFields(
-        userId: currentUserId,
-        data: {
-          'name': updatedName,
-          'phone_number': updatedPhone,
-          'phone_code': _phoneCode,
-          'profile_image_url': ?avatarUrl,
-        },
-      );
+      final updateData = <String, dynamic>{
+        'name': updatedName,
+        'phone_number': updatedPhone,
+        'phone_code': _phoneCode,
+        'gender': selectedGender.apiValue,
+        'profile_image_url': ?avatarUrl,
+      };
+
+      try {
+        await sl<UserRepository>().updateProfileFields(
+          userId: currentUserId,
+          data: updateData,
+        );
+      } catch (e) {
+        if (e.toString().contains('gender') ||
+            e.toString().contains('column')) {
+          final userRow =
+              await sl<UserRepository>().getUserData(currentUserId);
+          final existingMeta = (userRow?['metadata'] is Map)
+              ? Map<String, dynamic>.from(userRow!['metadata'] as Map)
+              : <String, dynamic>{};
+          existingMeta['gender'] = selectedGender.apiValue;
+
+          await sl<UserRepository>().updateProfileFields(
+            userId: currentUserId,
+            data: {
+              'name': updatedName,
+              'phone_number': updatedPhone,
+              'phone_code': _phoneCode,
+              'metadata': existingMeta,
+              'profile_image_url': ?avatarUrl,
+            },
+          );
+        } else {
+          rethrow;
+        }
+      }
 
       if (mounted) {
         AppSnackbar.success('Profile updated successfully.');
@@ -202,7 +232,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                                 ? _existingAvatarUrl!
                                                 : Assets
                                                     .images
-                                                    .profilePicture
+                                                    .dummyAvatar
                                                     .path,
                                         width: AppSizes.avatarColossal - 4,
                                         height: AppSizes.avatarColossal - 4,

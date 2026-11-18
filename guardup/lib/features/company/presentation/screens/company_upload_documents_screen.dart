@@ -313,7 +313,7 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
                                                   ),
                                                   isRequired: doc.isRequired,
                                                   isOptional: !doc.isRequired,
-                                                  isLoading: isLoading,
+                                                  isLoading: false,
                                                   initialUrl: remoteUrl,
                                                   fileName: remoteName,
                                                   selectedFilePath:

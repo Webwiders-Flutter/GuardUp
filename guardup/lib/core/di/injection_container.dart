@@ -5,6 +5,7 @@ import '/core/services/file_storage/file_storage.service.dart';
 import '/core/services/file_storage/supabase_file_storage.service.dart';
 import '/core/services/local_storage/local_storage.service.dart';
 import '/core/services/local_storage/storage.dart';
+import '/core/services/location/address_search_service.dart';
 import '/features/auth/auth.dart';
 import '/shared/functionalities/connectivity/connectivity.dart';
 import '/shared/functionalities/language/language.dart';
@@ -23,6 +24,9 @@ Future<void> initDependencies() async {
   );
   sl.registerLazySingleton<FileStorageService>(
     () => SupabaseFileStorageService(),
+  );
+  sl.registerLazySingleton<AddressSearchService>(
+    () => AddressSearchService(),
   );
 
   // ------------------------------------------------------------

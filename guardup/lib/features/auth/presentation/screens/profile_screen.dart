@@ -43,6 +43,7 @@ class ProfileScreen extends StatelessWidget {
             fontSize: 16,
             showBackIcon: false,
             alignTitle: .left,
+            showNotificationIcon: true,
           ),
           body: SingleChildScrollView(
             padding: context.horizontalEdgeInsets,
@@ -144,13 +145,13 @@ class ProfileScreen extends StatelessWidget {
                     context.push(AppRoutes.changePassword);
                   },
                 ),
-                _ProfileMenuCard(
-                  title: context.l10n.notifications.toUpperCase(),
-                  icon: Icons.notifications_none_rounded,
-                  onTap: () {
-                    context.push(AppRoutes.notifications);
-                  },
-                ),
+                // _ProfileMenuCard(
+                //   title: context.l10n.notifications.toUpperCase(),
+                //   icon: Icons.notifications_none_rounded,
+                //   onTap: () {
+                //     context.push(AppRoutes.notifications);
+                //   },
+                // ),
                 _ProfileMenuCard(
                   title: context.l10n.privacyPolicy,
                   icon: Icons.privacy_tip_outlined,
@@ -242,7 +243,7 @@ class ProfileScreen extends StatelessWidget {
     final rating = state.rating;
     final avatar = state.avatarUrl.isNotEmpty
         ? state.avatarUrl
-        : Assets.images.profilePicture.path;
+        : Assets.images.dummyAvatar.path;
 
     final specialization = state.services.isNotEmpty
         ? state.services.map((s) => s.replaceAll('_', ' ')).join(', ')
@@ -265,7 +266,7 @@ class ProfileScreen extends StatelessWidget {
     final email = state.businessEmail;
     final avatar = state.avatarUrl.isNotEmpty
         ? state.avatarUrl
-        : Assets.images.profilePicture.path;
+        : Assets.images.dummyAvatar.path;
 
     return _ProfileCard(
       name: customerName.isNotEmpty ? customerName : 'Client Member',
@@ -317,7 +318,7 @@ class _ProfileCard extends StatelessWidget {
               AppImage.auto(
                 source: avatarAssetPath.isNotEmpty
                     ? avatarAssetPath
-                    : Assets.images.profilePicture.path,
+                    : Assets.images.dummyAvatar.path,
                 width: 22.wPercent(context),
                 height: 22.wPercent(context),
                 borderRadius: AppRadius.md.toBorderRadius,

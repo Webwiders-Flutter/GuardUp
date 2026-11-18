@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import '/core/state/api_state.dart';
+import '../data/enum/gender_type.enum.dart';
 import '../data/enum/user_role.enum.dart';
 import '../data/enum/user_status.enum.dart';
 import '../data/model/user.model.dart';
@@ -143,6 +144,41 @@ class AuthState extends Equatable {
       (userData?['profile_image_url'] as String?) ??
       user?.profileImageUrl ??
       '';
+
+  String? get gender =>
+      (userData?['gender'] as String?) ??
+      (userData?['metadata'] is Map
+          ? (userData!['metadata'] as Map)['gender'] as String?
+          : null);
+
+  GenderType get genderType => GenderType.fromApiValue(gender);
+
+  String get address =>
+      (userData?['address'] as String?) ??
+      (userData?['metadata'] is Map
+          ? (userData!['metadata'] as Map)['address'] as String?
+          : null) ??
+      '';
+
+  double? get latitude {
+    final raw = userData?['latitude'] ??
+        (userData?['metadata'] is Map
+            ? (userData!['metadata'] as Map)['latitude']
+            : null);
+    if (raw is num) return raw.toDouble();
+    if (raw is String) return double.tryParse(raw);
+    return null;
+  }
+
+  double? get longitude {
+    final raw = userData?['longitude'] ??
+        (userData?['metadata'] is Map
+            ? (userData!['metadata'] as Map)['longitude']
+            : null);
+    if (raw is num) return raw.toDouble();
+    if (raw is String) return double.tryParse(raw);
+    return null;
+  }
 
   // ── Role Helpers ────────────────────────────────────────────────────────────
   bool get isCustomer => sessionRole == UserRole.customer;

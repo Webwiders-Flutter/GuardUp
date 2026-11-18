@@ -4,12 +4,15 @@ import 'package:quick_container/quick_container.dart';
 
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
+import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/core/utils/validators.dart';
+import '/features/auth/domain/repositories/auth_repository.dart';
 import '/shared/widgets/buttons/app_button.dart';
+import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/misc/app_input_label.dart';
 import '/shared/widgets/sections/app_appbar.dart';
@@ -42,9 +45,47 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     super.dispose();
   }
 
-  void _handleUpdatePassword() {
-    if (_formKey.currentState?.validate() ?? false) {
-      context.pop();
+  Future<void> _handleUpdatePassword() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (_isLoadingNotifier.value) return;
+
+    final oldPassword = _oldPasswordController.text.trim();
+    final newPassword = _newPasswordController.text.trim();
+
+    if (oldPassword == newPassword) {
+      AppSnackbar.error(
+        'New password must be different from current password.',
+      );
+      return;
+    }
+
+    _isLoadingNotifier.value = true;
+    try {
+      final authRepo = sl<AuthRepository>();
+      await authRepo.changePassword(
+        newPassword: newPassword,
+        oldPassword: oldPassword,
+      );
+
+      if (mounted) {
+        AppSnackbar.success('Password updated successfully.');
+        context.pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        final err = e.toString().toLowerCase();
+        final message = (err.contains('invalid') ||
+                err.contains('credential'))
+            ? 'The current password you entered is incorrect.'
+            : (err.contains('network') || err.contains('connection'))
+                ? 'Network error. Please check your connection.'
+                : 'Failed to update password: ${e.toString().replaceAll('Exception:', '').trim()}';
+        AppSnackbar.error(message);
+      }
+    } finally {
+      if (mounted) {
+        _isLoadingNotifier.value = false;
+      }
     }
   }
 
@@ -127,12 +168,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     AppSpacing.xs.h,
                     AppTextField.password(
                       controller: _oldPasswordController,
-
                       decoration: InputDecoration(
                         hintText: context.l10n.oldPassword,
-                        // fillColor: context.colors.onPrimary,
                       ),
-                      style: TextStyle(color: Colors.black),
                       textInputAction: TextInputAction.next,
                       validator: (value) => Validators.password(context, value),
                     ),
@@ -148,9 +186,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       controller: _newPasswordController,
                       decoration: InputDecoration(
                         hintText: context.l10n.newPassword,
-                        // fillColor: context.colors.onPrimary,
                       ),
-                      style: TextStyle(color: Colors.black),
                       textInputAction: TextInputAction.next,
                       validator: (value) => Validators.password(context, value),
                     ),
@@ -166,9 +202,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       controller: _confirmPasswordController,
                       decoration: InputDecoration(
                         hintText: context.l10n.confirmPassword,
-                        // fillColor: context.colors.onPrimary,
                       ),
-                      style: TextStyle(color: Colors.black),
                       textInputAction: TextInputAction.done,
                       validator: (value) => Validators.confirmPassword(
                         context,

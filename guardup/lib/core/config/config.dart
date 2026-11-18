@@ -11,6 +11,7 @@ abstract class AppConfig {
   String get supabasePublishableKey;
   String get deepLinkScheme;
   bool get enableLogging;
+  String get googlePlacesApiKey;
 }
 
 final class AppEnvironment {

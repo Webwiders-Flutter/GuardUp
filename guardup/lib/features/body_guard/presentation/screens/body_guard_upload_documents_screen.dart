@@ -360,7 +360,7 @@ class _BodyGuardUploadDocumentsScreenState
                                                   ),
                                                   isRequired: doc.isRequired,
                                                   isOptional: !doc.isRequired,
-                                                  isLoading: isLoading,
+                                                  isLoading: false,
                                                   initialUrl: remoteUrl,
                                                   fileName: remoteName,
                                                   selectedFilePath:

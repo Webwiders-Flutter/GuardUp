@@ -82,7 +82,7 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
         final avatar = guard?.user.profileImageUrl ??
             (state.avatarUrl.isNotEmpty
                 ? state.avatarUrl
-                : Assets.images.profilePicture.path);
+                : Assets.images.dummyAvatar.path);
         final bio = guard?.bio ?? (state.bio.isNotEmpty ? state.bio : null);
 
         return Scaffold(

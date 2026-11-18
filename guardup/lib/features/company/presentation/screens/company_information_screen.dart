@@ -47,11 +47,13 @@ class CompanyInformationScreen extends StatelessWidget {
         final effectiveEmail = email ?? state.businessEmail;
         final effectivePhone = phone ?? state.displayPhone;
         final effectiveAddress = address ??
-            (state.userData?['address'] as String? ?? 'Toronto, ON, Canada');
+            (state.address.isNotEmpty
+                ? state.address
+                : 'Not specified');
         final effectiveCompanyType = companyType ??
             (state.companyType.isNotEmpty
                 ? state.companyType
-                : 'Private Limited Company');
+                : 'Private Limited (Pvt Ltd)');
 
         return Scaffold(
           appBar: AppAppBar.transparent(

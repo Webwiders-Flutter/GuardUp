@@ -341,6 +341,22 @@ class SupabaseAuthRepository implements AuthRepository {
   }) async {
     SupabaseLogger.request('changePassword');
     try {
+      if (oldPassword != null && oldPassword.isNotEmpty) {
+        final currentEmail = _supabase.auth.currentUser?.email;
+        final currentPhone = _supabase.auth.currentUser?.phone;
+        if (currentEmail != null && currentEmail.isNotEmpty) {
+          await _supabase.auth.signInWithPassword(
+            email: currentEmail,
+            password: oldPassword,
+          );
+        } else if (currentPhone != null && currentPhone.isNotEmpty) {
+          await _supabase.auth.signInWithPassword(
+            phone: currentPhone,
+            password: oldPassword,
+          );
+        }
+      }
+
       await _supabase.auth.updateUser(
         supa.UserAttributes(password: newPassword),
       );

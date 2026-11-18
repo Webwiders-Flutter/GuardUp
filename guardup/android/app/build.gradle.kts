@@ -30,6 +30,29 @@ android {
         versionName = flutter.versionName
     }
 
+    flavorDimensions += "default"
+
+    productFlavors {
+        create("dev") {
+            dimension = "default"
+            applicationIdSuffix = ".dev"
+            resValue("string", "app_name", "GuardUp Dev")
+        }
+        create("staging") {
+            dimension = "default"
+            applicationIdSuffix = ".staging"
+            resValue("string", "app_name", "GuardUp Staging")
+        }
+        create("prod") {
+            dimension = "default"
+            resValue("string", "app_name", "GuardUp")
+        }
+    }
+
+    buildFeatures {
+        resValues = true
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
