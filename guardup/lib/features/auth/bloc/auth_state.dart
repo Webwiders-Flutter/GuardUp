@@ -276,6 +276,12 @@ class AuthState extends Equatable {
   /// Whether the application was rejected by administrator.
   bool get isRejected => status == UserStatus.rejected;
 
+  /// The administrator rejection reason if rejected.
+  String? get rejectionReason =>
+      (userData?['rejection_reason'] as String?)?.trim().isNotEmpty == true
+          ? userData!['rejection_reason'] as String
+          : null;
+
   /// Whether the guard or company still needs to finish onboarding steps
   /// (profile information, documents upload, registration fee).
   bool get requiresOnboarding => status == UserStatus.incomplete;

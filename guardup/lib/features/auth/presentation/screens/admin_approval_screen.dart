@@ -52,10 +52,10 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
       if (!mounted) return;
 
       if (data != null) {
+        authBloc?.add(const AuthCheckStatusRequested());
         final rawStatus = (data['status'] as String? ?? '').toUpperCase();
 
         if (rawStatus == 'APPROVED' || rawStatus == 'ACTIVE') {
-          authBloc?.add(const AuthCheckStatusRequested());
           AppSnackbar.success(
             'Your profile has been approved! Welcome to GuardUp.',
           );
@@ -64,14 +64,17 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
           }
           return;
         } else if (rawStatus == 'REJECTED') {
+          final reason = data['rejection_reason'] as String?;
           AppSnackbar.error(
-            'Your application was not approved. Please contact support.',
+            reason != null && reason.isNotEmpty
+                ? 'Application Rejected: $reason'
+                : 'Your application was rejected. Please review feedback and resubmit.',
           );
         } else if (rawStatus == 'BLOCKED') {
           AppSnackbar.error('Your account has been suspended.');
         } else {
           AppSnackbar.info(
-            'Your application is still under review by our compliance team.',
+            'Your application is under review by our compliance team.',
           );
         }
       } else {
@@ -93,6 +96,10 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthBloc>().state;
+    final isRejected = authState.isRejected;
+    final statusColor = isRejected
+        ? context.colors.error
+        : context.colors.primary;
 
     return Scaffold(
       appBar: AppAppBar.transparent(
@@ -113,6 +120,9 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
 
                       // Main Application Status Card (NO GLOW, clean border)
                       WrapperCard(
+                        borderColor: isRejected
+                            ? context.colors.error.withValues(alpha: 0.4)
+                            : null,
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -128,13 +138,16 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                                       w: 10,
                                       h: 10,
                                       radius: AppRadius.full,
-                                      color: context.colors.primary,
+                                      color: statusColor,
                                     ),
                                     AppSpacing.sm.w,
                                     Text(
-                                      context.l10n.applicationStatus,
+                                      isRejected
+                                          ? 'APPLICATION REJECTED'
+                                          : context.l10n.applicationStatus,
                                       style: context.textTheme.labelMedium
-                                          ?.colour(context.colors.primary)
+                                          ?.bold()
+                                          .colour(statusColor)
                                           .textSpacing(1.2),
                                     ),
                                   ],
@@ -154,19 +167,26 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
 
                             // 2. Application Submitted Title
                             Text(
-                              context.l10n.applicationSubmitted,
+                              isRejected
+                                  ? 'Application Needs Revision'
+                                  : context.l10n.applicationSubmitted,
                               textAlign: TextAlign.center,
-                              style: context.textTheme.titleMedium,
+                              style: context.textTheme.titleMedium?.bold(),
                             ),
                             AppSpacing.xxl.h,
 
                             // 3. Horizontal 3-Step Stepper
-                            _buildStepper(context),
+                            _buildStepper(context, isRejected: isRejected),
                             AppSpacing.xxxl.h,
 
-                            // 4. Under Review Info Box (Rounded-square clock container)
+                            // 4. Under Review or Rejection Info Box
                             WrapperCard(
-                              backgroundColor: context.colors.surfaceDim,
+                              backgroundColor: isRejected
+                                  ? context.colors.error.withValues(alpha: 0.08)
+                                  : context.colors.surfaceDim,
+                              borderColor: isRejected
+                                  ? context.colors.error.withValues(alpha: 0.3)
+                                  : null,
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -174,28 +194,39 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                                     w: 32,
                                     h: 32,
                                     radius: AppRadius.md,
-                                    color: context.colors.primary.withValues(
-                                      alpha: 0.2,
-                                    ),
+                                    color: statusColor.withValues(alpha: 0.2),
                                     border: Border.all(
-                                      color: context.colors.primary.withValues(
-                                        alpha: 0.4,
-                                      ),
+                                      color: statusColor.withValues(alpha: 0.4),
                                       width: 1,
                                     ),
                                     alignment: Alignment.center,
-                                    child: Assets.svg.clock.svg(
-                                      width: AppSizes.iconXs,
-                                      height: AppSizes.iconXs,
-                                    ),
+                                    child: isRejected
+                                        ? Icon(
+                                            Icons.error_outline_rounded,
+                                            size: AppSizes.iconSm,
+                                            color: context.colors.error,
+                                          )
+                                        : Assets.svg.clock.svg(
+                                            width: AppSizes.iconXs,
+                                            height: AppSizes.iconXs,
+                                          ),
                                   ),
                                   AppSpacing.md.w,
                                   Expanded(
                                     child: Text(
-                                      context.l10n.applicationUnderReviewNotice,
+                                      isRejected
+                                          ? (authState.rejectionReason ??
+                                                'One or more of your documents or details did not meet our verification standards. Please review the reasons and resubmit.')
+                                          : context
+                                                .l10n
+                                                .applicationUnderReviewNotice,
                                       style: context.textTheme.bodySmall
                                           ?.colour(
-                                            context.colors.onSurfaceVariant,
+                                            isRejected
+                                                ? context.colors.error
+                                                : context
+                                                      .colors
+                                                      .onSurfaceVariant,
                                           )
                                           .lineHeight(1.45),
                                     ),
@@ -221,6 +252,83 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                             context.go(AppRoutes.home);
                           },
                         ),
+                      ] else if (isRejected) ...[
+                        AppButton(
+                          text: 'Review & Re-upload Documents',
+                          trailing: const Icon(
+                            Icons.upload_file_rounded,
+                            size: AppSizes.iconSmd,
+                          ),
+                          onPressed: () {
+                            if (authState.isGuard) {
+                              context.push(AppRoutes.bodyguardUploadDocuments);
+                            } else {
+                              context.push(AppRoutes.uploadDocuments);
+                            }
+                          },
+                        ),
+                        AppSpacing.md.h,
+                        AppButton(
+                          type: ButtonType.secondaryOff,
+                          text: 'Edit Profile Details',
+                          trailing: const Icon(
+                            Icons.edit_outlined,
+                            size: AppSizes.iconSmd,
+                          ),
+                          onPressed: () {
+                            if (authState.isGuard) {
+                              context.push(AppRoutes.bodyguardProfile);
+                            } else {
+                              context.push(AppRoutes.companyProfile);
+                            }
+                          },
+                        ),
+                        AppSpacing.md.h,
+                        AppButton(
+                          type: ButtonType.secondaryOff,
+                          text: 'Check Status',
+                          leading: _isChecking
+                              ? const SizedBox(
+                                  width: AppSizes.iconSmd,
+                                  height: AppSizes.iconSmd,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.black,
+                                    ),
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.refresh_rounded,
+                                  size: AppSizes.iconSmd,
+                                ),
+                          onPressed: _isChecking ? null : _checkStatus,
+                        ),
+                        AppSpacing.md.h,
+                        AppButton(
+                          type: ButtonType.text,
+                          text: context.l10n.contactUs,
+                          leading: Icon(
+                            Icons.support_agent_rounded,
+                            size: AppSizes.iconSmd,
+                            color: context.colors.primary,
+                          ),
+                          onPressed: () => context.push(AppRoutes.contactUs),
+                        ),
+                        AppSpacing.md.h,
+                        AppButton(
+                          type: ButtonType.text,
+                          text: context.l10n.logoutButton,
+                          leading: Icon(
+                            Icons.logout_rounded,
+                            size: AppSizes.iconSmd,
+                            color: context.colors.error,
+                          ),
+                          onPressed: () {
+                            sl<AuthBloc>().add(const AuthSignOutRequested());
+                            context.go(AppRoutes.login);
+                          },
+                        ),
                       ] else ...[
                         AppButton(
                           text: 'Check Status',
@@ -239,9 +347,7 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                                   Icons.refresh_rounded,
                                   size: AppSizes.iconSmd,
                                 ),
-                          onPressed: _isChecking
-                              ? null
-                              : _checkStatus,
+                          onPressed: _isChecking ? null : _checkStatus,
                         ),
                         AppSpacing.md.h,
 
@@ -271,7 +377,7 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
     );
   }
 
-  Widget _buildStepper(BuildContext context) {
+  Widget _buildStepper(BuildContext context, {bool isRejected = false}) {
     const circleSize = 36.0;
 
     return Padding(
@@ -295,25 +401,41 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                 ),
               ),
 
-              // Connecting Line 1-2 (Active Gold)
+              // Connecting Line 1-2
               Expanded(
-                child: Container(height: 2, color: context.colors.primary),
+                child: Container(
+                  height: 2,
+                  color: isRejected
+                      ? context.colors.error.withValues(alpha: 0.5)
+                      : context.colors.primary,
+                ),
               ),
 
-              // Step 2: Review (Current Active)
+              // Step 2: Review (Current Active / Rejected)
               QuickContainer(
                 w: circleSize,
                 h: circleSize,
                 radius: AppRadius.full,
                 color: context.colors.surfaceDim,
-                border: Border.all(color: context.colors.primary, width: 2),
-                alignment: Alignment.center,
-                child: QuickContainer(
-                  w: 8,
-                  h: 8,
-                  radius: AppRadius.full,
-                  color: context.colors.primary,
+                border: Border.all(
+                  color: isRejected
+                      ? context.colors.error
+                      : context.colors.primary,
+                  width: 2,
                 ),
+                alignment: Alignment.center,
+                child: isRejected
+                    ? Icon(
+                        Icons.close_rounded,
+                        size: AppSizes.iconSm,
+                        color: context.colors.error,
+                      )
+                    : QuickContainer(
+                        w: 8,
+                        h: 8,
+                        radius: AppRadius.full,
+                        color: context.colors.primary,
+                      ),
               ),
 
               // Connecting Line 2-3 (Inactive Outline)
@@ -362,9 +484,13 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
               SizedBox(
                 width: 72,
                 child: Text(
-                  context.l10n.review,
+                  isRejected ? 'Rejected' : context.l10n.review,
                   textAlign: TextAlign.center,
-                  style: context.textTheme.labelSmall,
+                  style: context.textTheme.labelSmall?.colour(
+                    isRejected
+                        ? context.colors.error
+                        : context.colors.onSurface,
+                  ),
                 ),
               ),
               SizedBox(

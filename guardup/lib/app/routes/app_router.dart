@@ -58,7 +58,7 @@ final class AppRouter {
         if (authState.isBlocked) {
           return AccountStatusScreen.blockedRoute;
         }
-        if (authState.isPendingApproval) {
+        if (authState.isPendingApproval || authState.isRejected) {
           return AdminApprovalScreen.route;
         }
         if (authState.requiresOnboarding) {
@@ -114,11 +114,19 @@ final class AppRouter {
           return LoginScreen.route;
         }
 
-        // B. Application submitted, waiting for Admin review
-        if (authState.isPendingApproval) {
+        // C. Application submitted (waiting for Admin review) or Rejected by Admin
+        if (authState.isPendingApproval || authState.isRejected) {
           final isAllowedPending =
               location == AdminApprovalScreen.route ||
-              location == PaymentSuccessScreen.route;
+              location == PaymentSuccessScreen.route ||
+              location == ContactUsScreen.route ||
+              location == LegalContentScreen.privacyPolicyRoute ||
+              location == LegalContentScreen.termsRoute ||
+              (authState.isRejected &&
+                  (location == BodyGuardUploadDocumentsScreen.route ||
+                      location == UploadDocumentsScreen.route ||
+                      location == BodyGuardCompleteProfileScreen.route ||
+                      location == CompanyCompleteProfileScreen.route));
 
           if (!isAllowedPending) {
             return AdminApprovalScreen.route;

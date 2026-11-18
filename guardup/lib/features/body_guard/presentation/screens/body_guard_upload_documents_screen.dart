@@ -2,13 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:quick_container/quick_container.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../../core/constants/api/database_tables.dart';
-import '../../../../core/constants/api/storage_buckets.dart';
 import '../../../../core/di/injection_container.dart';
-import '../../../../core/services/file_storage/file_storage.service.dart';
-import '../../../../core/services/file_storage/models/file_upload_request.model.dart';
+import '../../../../core/services/document_submission/document_submission_service.dart';
 import '../../../auth/auth.dart';
 import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
@@ -26,6 +22,7 @@ import '/shared/widgets/inputs/document_upload_card.dart';
 import '/shared/widgets/misc/app_rich_text.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
+import '../../data/enum/document_status.enum.dart';
 import '../../data/model/document_type.model.dart';
 
 /// Screen for bodyguard verification credentials and document upload.
@@ -60,6 +57,10 @@ class _BodyGuardUploadDocumentsScreenState
       ValueNotifier<Map<String, String>>({});
   final ValueNotifier<Map<String, String>> _remoteFileNamesNotifier =
       ValueNotifier<Map<String, String>>({});
+  final ValueNotifier<Map<String, DocumentStatus>> _remoteStatusesNotifier =
+      ValueNotifier<Map<String, DocumentStatus>>({});
+  final ValueNotifier<Map<String, String>> _rejectionReasonsNotifier =
+      ValueNotifier<Map<String, String>>({});
   final ValueNotifier<bool> _isLoadingNotifier = ValueNotifier<bool>(false);
 
   @override
@@ -69,57 +70,30 @@ class _BodyGuardUploadDocumentsScreenState
   }
 
   Future<void> _loadDocumentTypesAndFiles() async {
-    // 1. Dynamically fetch guard document types from document_types table where target_role = 'GUARD' and is_active = true
     try {
-      final typeRows = await Supabase.instance.client
-          .from(DatabaseTables.documentTypes)
-          .select()
-          .eq('target_role', 'GUARD')
-          .eq('is_active', true)
-          .order('display_order', ascending: true);
+      final docService = sl<DocumentSubmissionService>();
+      final types = await docService.getDocumentTypes(UserRole.guard);
+      if (mounted) _docTypesNotifier.value = types;
 
-      if (mounted) {
-        _docTypesNotifier.value = typeRows
-            .map((r) => DocumentTypeModel.fromJson(r))
-            .toList();
+      final currentUserId = sl.isRegistered<AuthRepository>()
+          ? sl<AuthRepository>().currentUserId
+          : null;
+      if (currentUserId != null) {
+        final records = await docService.getUserDocuments(currentUserId);
+        if (mounted) {
+          _remoteDocsNotifier.value = records.urls;
+          _remoteFileNamesNotifier.value = records.names;
+          _remoteStatusesNotifier.value = records.statuses;
+          _rejectionReasonsNotifier.value = records.rejectionReasons;
+        }
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Error loading bodyguard document types & files: $e');
     } finally {
       if (mounted) {
         _isDocTypesLoadingNotifier.value = false;
       }
     }
-
-    // 2. Fetch already uploaded documents from user_documents table
-    final currentUserId = sl.isRegistered<AuthRepository>()
-        ? sl<AuthRepository>().currentUserId
-        : null;
-    if (currentUserId == null) return;
-
-    try {
-      final rows = await Supabase.instance.client
-          .from(DatabaseTables.userDocuments)
-          .select()
-          .eq('user_id', currentUserId);
-
-      if (rows.isNotEmpty && mounted) {
-        final Map<String, String> urls = {};
-        final Map<String, String> names = {};
-        for (final row in rows) {
-          final docCode = row['document_type_id'] as String?;
-          final fileUrl = row['file_url'] as String?;
-          final fileName = row['file_name'] as String?;
-          if (docCode != null && fileUrl != null && fileUrl.isNotEmpty) {
-            urls[docCode] = fileUrl;
-            if (fileName != null && fileName.isNotEmpty) {
-              names[docCode] = fileName;
-            }
-          }
-        }
-        _remoteDocsNotifier.value = urls;
-        _remoteFileNamesNotifier.value = names;
-      }
-    } catch (_) {}
   }
 
   @override
@@ -129,6 +103,8 @@ class _BodyGuardUploadDocumentsScreenState
     _documentsNotifier.dispose();
     _remoteDocsNotifier.dispose();
     _remoteFileNamesNotifier.dispose();
+    _remoteStatusesNotifier.dispose();
+    _rejectionReasonsNotifier.dispose();
     _isLoadingNotifier.dispose();
     super.dispose();
   }
@@ -154,8 +130,20 @@ class _BodyGuardUploadDocumentsScreenState
     final docTypes = _docTypesNotifier.value;
     final localDocs = _documentsNotifier.value;
     final remoteDocs = _remoteDocsNotifier.value;
+    final remoteStatuses = _remoteStatusesNotifier.value;
 
-    // Validate required documents from dynamic docTypes:
+    // 1. Ensure any rejected documents have an updated replacement file selected
+    for (final doc in docTypes) {
+      final key = doc.docKey;
+      final status = remoteStatuses[key] ??
+          (doc.code.isNotEmpty ? remoteStatuses[doc.code] : null);
+      if (status == DocumentStatus.rejected && !localDocs.containsKey(key)) {
+        AppSnackbar.error('Please upload an updated document for ${doc.name}');
+        return;
+      }
+    }
+
+    // 2. Validate required documents from dynamic docTypes:
     for (final doc in docTypes.where((d) => d.isRequired)) {
       final key = doc.docKey;
       final hasLocal = localDocs.containsKey(key);
@@ -176,44 +164,46 @@ class _BodyGuardUploadDocumentsScreenState
           : null;
 
       if (currentUserId != null) {
-        if (sl.isRegistered<FileStorageService>()) {
-          for (final entry in localDocs.entries) {
-            final docKey = entry.key;
-            final xFile = entry.value;
-            try {
-              final ext = xFile.name.split('.').last;
-              final storagePath =
-                  '$currentUserId/${docKey.toLowerCase()}_${DateTime.now().millisecondsSinceEpoch}.$ext';
-              final fileUrl = await sl<FileStorageService>().uploadSingleFile(
-                FileUploadRequest.fromXFile(
-                  bucket: StorageBuckets.documents,
-                  path: storagePath,
-                  xFile: xFile,
-                  upsert: true,
-                ),
-              );
-
-              // Record in user_documents
-              await Supabase.instance.client
-                  .from(DatabaseTables.userDocuments)
-                  .upsert({
-                    'user_id': currentUserId,
-                    'document_type_id': docKey,
-                    'file_url': fileUrl,
-                    'file_name': xFile.name,
-                    'status': 'PENDING',
-                  });
-            } catch (_) {}
-          }
+        if (localDocs.isNotEmpty) {
+          await sl<DocumentSubmissionService>().uploadDocuments(
+            userId: currentUserId,
+            documents: localDocs,
+            docTypes: docTypes,
+            isCompany: false,
+          );
+        } else {
+          // Documents already uploaded & valid. Transition user status back to PENDING_APPROVAL
+          await sl<DocumentSubmissionService>()
+              .submitApplicationForReview(currentUserId);
         }
       }
 
       if (mounted) {
-        context.go(AppRoutes.registrationFee);
+        _documentsNotifier.value = {};
+        await _loadDocumentTypesAndFiles();
+        if (!mounted) return;
+
+        final authState = sl.isRegistered<AuthBloc>()
+            ? sl<AuthBloc>().state
+            : null;
+        final isPreviouslySubmitted =
+            authState?.isRejected == true ||
+            authState?.isPendingApproval == true;
+
+        if (isPreviouslySubmitted) {
+          AppSnackbar.success(
+            localDocs.isNotEmpty
+                ? 'Documents resubmitted successfully. Your application is under review.'
+                : 'Application resubmitted successfully. Your profile is under review.',
+          );
+          context.go(AppRoutes.adminApproval);
+        } else {
+          context.go(AppRoutes.registrationFee);
+        }
       }
     } catch (e) {
       if (mounted) {
-        AppSnackbar.error('Failed to submit documents: $e');
+        AppSnackbar.error('Failed to submit application: $e');
       }
     } finally {
       if (mounted) {
@@ -255,206 +245,272 @@ class _BodyGuardUploadDocumentsScreenState
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: IntrinsicHeight(
-                  child: ValueListenableBuilder<bool>(
-                    valueListenable: _isLoadingNotifier,
-                    builder: (context, isLoading, _) {
-                      return ValueListenableBuilder<List<DocumentTypeModel>>(
-                        valueListenable: _docTypesNotifier,
-                        builder: (context, docTypes, _) {
-                          return ValueListenableBuilder<Map<String, XFile>>(
-                            valueListenable: _documentsNotifier,
-                            builder: (context, docs, _) {
-                              return ValueListenableBuilder<
-                                Map<String, String>
-                              >(
-                                valueListenable: _remoteDocsNotifier,
-                                builder: (context, remoteDocs, _) {
-                                  return ValueListenableBuilder<
-                                    Map<String, String>
-                                  >(
-                                    valueListenable: _remoteFileNamesNotifier,
-                                    builder: (context, remoteNames, _) {
-                                      return Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.stretch,
-                                        children: [
-                                          AppSpacing.lg.h,
+                  child: ListenableBuilder(
+                    listenable: Listenable.merge([
+                      _isLoadingNotifier,
+                      _isDocTypesLoadingNotifier,
+                      _docTypesNotifier,
+                      _documentsNotifier,
+                      _remoteDocsNotifier,
+                      _remoteFileNamesNotifier,
+                      _remoteStatusesNotifier,
+                      _rejectionReasonsNotifier,
+                    ]),
+                    builder: (context, _) {
+                      final isDocTypesLoading =
+                          _isDocTypesLoadingNotifier.value;
+                      if (isDocTypesLoading) {
+                        return Center(
+                          child: Padding(
+                            padding: AppSpacing.xxl.allPadding,
+                            child: CircularProgressIndicator(
+                              color: context.colors.primary,
+                            ),
+                          ),
+                        );
+                      }
 
-                                          // 1. Partner Tag
-                                          Row(
-                                            children: [
-                                              QuickContainer(
-                                                w: 8,
-                                                h: 8,
-                                                shape:
-                                                    QuickContainerShape.circle,
-                                                color: context.colors.primary,
-                                              ),
-                                              AppSpacing.xs.w,
-                                              Text(
-                                                'ELITE PROTECTION PARTNER',
-                                                style: context
-                                                    .textTheme
-                                                    .labelSmall
-                                                    ?.bold()
-                                                    .copyWith(
-                                                      color: context
-                                                          .colors
-                                                          .primary,
-                                                      letterSpacing: 0.8,
-                                                    ),
-                                              ),
-                                            ],
-                                          ),
-                                          AppSpacing.sm.h,
+                      final isLoading = _isLoadingNotifier.value;
+                      final docTypes = _docTypesNotifier.value;
+                      final docs = _documentsNotifier.value;
+                      final remoteDocs = _remoteDocsNotifier.value;
+                      final remoteNames = _remoteFileNamesNotifier.value;
+                      final remoteStatuses = _remoteStatusesNotifier.value;
+                      final rejectionReasons = _rejectionReasonsNotifier.value;
 
-                                          // 2. Main Heading
-                                          Text(
-                                            'Verification Credentials',
-                                            style: context
-                                                .textTheme
-                                                .headlineMedium
-                                                ?.bold(),
-                                          ),
-                                          AppSpacing.sm.h,
+                      final hasRejectedDoc = remoteStatuses.values.any(
+                        (s) => s == DocumentStatus.rejected,
+                      );
 
-                                          // 3. Subtitle Description
-                                          Text(
-                                            'Submit your official documentation to unlock high-tier VIP assignments & priority instant payouts.',
-                                            style: context.textTheme.bodyMedium
-                                                ?.colour(
-                                                  context
-                                                      .colors
-                                                      .onSurfaceVariant,
-                                                ),
-                                          ),
-                                          AppSpacing.lg.h,
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          AppSpacing.lg.h,
 
-                                          // Dynamic Document Types from Supabase
-                                          ...docTypes.map((doc) {
-                                            final key = doc.docKey;
-                                            final localFile = docs[key];
-                                            final remoteUrl =
-                                                remoteDocs[key] ??
-                                                (doc.code.isNotEmpty
-                                                    ? remoteDocs[doc.code]
-                                                    : null);
-                                            final remoteName =
-                                                remoteNames[key] ??
-                                                (doc.code.isNotEmpty
-                                                    ? remoteNames[doc.code]
-                                                    : null);
+                          if (hasRejectedDoc) ...[
+                            QuickContainer(
+                              p: AppSpacing.md,
+                              radius: AppRadius.md,
+                              color: context.colors.error.withValues(
+                                alpha: 0.12,
+                              ),
+                              border: Border.all(
+                                color: context.colors.error.withValues(
+                                  alpha: 0.35,
+                                ),
+                                width: 1,
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(
+                                    Icons.warning_amber_rounded,
+                                    color: context.colors.error,
+                                    size: 22,
+                                  ),
+                                  AppSpacing.sm.w,
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Revisions Required',
+                                          style: context.textTheme.labelMedium
+                                              ?.bold()
+                                              .colour(context.colors.error),
+                                        ),
+                                        AppSpacing.xxs.h,
+                                        Text(
+                                          'One or more documents were rejected by the compliance team. Please review the reasons highlighted below, select updated files, and resubmit.',
+                                          style: context.textTheme.bodySmall
+                                              ?.colour(context.colors.onSurface),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            AppSpacing.md.h,
+                          ],
 
-                                            return Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                DocumentUploadCard(
-                                                  key: ValueKey('doc_$key'),
-                                                  title: doc.name,
-                                                  description: doc.description,
-                                                  icon: Icon(
-                                                    doc.icon,
-                                                    color:
-                                                        context.colors.primary,
-                                                    size: AppSizes.iconLg,
-                                                  ),
-                                                  isRequired: doc.isRequired,
-                                                  isOptional: !doc.isRequired,
-                                                  isLoading: false,
-                                                  initialUrl: remoteUrl,
-                                                  fileName: remoteName,
-                                                  selectedFilePath:
-                                                      localFile?.path,
-                                                  onPick: () =>
-                                                      _pickDocument(doc),
-                                                ),
-                                                AppSpacing.lg.h,
-                                              ],
-                                            );
-                                          }),
+                          // 1. Partner Tag
+                          Row(
+                            children: [
+                              QuickContainer(
+                                w: 8,
+                                h: 8,
+                                shape: QuickContainerShape.circle,
+                                color: context.colors.primary,
+                              ),
+                              AppSpacing.xs.w,
+                              Text(
+                                'ELITE PROTECTION PARTNER',
+                                style: context.textTheme.labelSmall
+                                    ?.bold()
+                                    .copyWith(
+                                      color: context.colors.primary,
+                                      letterSpacing: 0.8,
+                                    ),
+                              ),
+                            ],
+                          ),
+                          AppSpacing.sm.h,
 
-                                          // 4. 256-Bit Encrypted & Compliant Security Notice
-                                          WrapperCard(
-                                            padding: AppSpacing.md.allPadding,
-                                            borderRadius: AppRadius.md,
-                                            child: Row(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                QuickContainer(
-                                                  w: 36,
-                                                  h: 36,
-                                                  radius: AppRadius.sm,
-                                                  color: context
-                                                      .colors
-                                                      .surfaceContainerHigh
-                                                      .withValues(alpha: 0.5),
-                                                  border: Border.all(
-                                                    color: context
-                                                        .colors
-                                                        .outlineVariant
-                                                        .withValues(alpha: 0.5),
-                                                    width: 1,
-                                                  ),
-                                                  alignment: Alignment.center,
-                                                  child: Icon(
-                                                    Icons.lock_outline_rounded,
-                                                    size: AppSizes.iconSmd,
-                                                    color:
-                                                        context.colors.primary,
-                                                  ),
-                                                ),
-                                                AppSpacing.sm.w,
-                                                Expanded(
-                                                  child: AppRichText(
-                                                    spans: [
-                                                      AppTextSpan(
-                                                        text: '256-Bit Encrypted & Compliant: ',
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: context
-                                                            .colors
-                                                            .onSurface,
-                                                        fontSize: 12,
-                                                      ),
-                                                      AppTextSpan(
-                                                        text: 'Documents are stored in an encrypted vault and reviewed only by authorized government compliance officers.',
-                                                        color: context
-                                                            .colors
-                                                            .onSurfaceVariant,
-                                                        fontSize: 12,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
+                          // 2. Main Heading
+                          Text(
+                            'Verification Credentials',
+                            style: context.textTheme.headlineMedium?.bold(),
+                          ),
+                          AppSpacing.sm.h,
 
-                                          const Spacer(),
-                                          AppSpacing.lg.h,
+                          // 3. Subtitle Description
+                          Text(
+                            'Submit your official documentation to unlock high-tier VIP assignments & priority instant payouts.',
+                            style: context.textTheme.bodyMedium?.colour(
+                              context.colors.onSurfaceVariant,
+                            ),
+                          ),
+                          AppSpacing.lg.h,
 
-                                          // 5. Submit for Review Button
-                                          AppButton(
-                                            text: 'Submit for Review',
-                                            isLoading: isLoading,
-                                            trailing: Icon(
-                                              Icons.arrow_forward_rounded,
-                                              size: AppSizes.iconMd,
-                                              color: context.colors.onPrimary,
-                                            ),
-                                            onPressed: _handleSubmit,
-                                          ),
-                                          AppSpacing.huge.h,
-                                        ],
-                                      );
-                                    },
-                                  );
-                                },
-                              );
-                            },
-                          );
-                        },
+                          // Dynamic Document Types from Supabase
+                          ...docTypes.map((doc) {
+                            final key = doc.docKey;
+                            final localFile = docs[key];
+                            final remoteUrl =
+                                remoteDocs[key] ??
+                                (doc.code.isNotEmpty
+                                    ? remoteDocs[doc.code]
+                                    : null);
+                            final remoteName =
+                                remoteNames[key] ??
+                                (doc.code.isNotEmpty
+                                    ? remoteNames[doc.code]
+                                    : null);
+                            final remoteStatus =
+                                remoteStatuses[key] ??
+                                (doc.code.isNotEmpty
+                                    ? remoteStatuses[doc.code]
+                                    : null);
+                            final rejectionReason =
+                                rejectionReasons[key] ??
+                                (doc.code.isNotEmpty
+                                    ? rejectionReasons[doc.code]
+                                    : null);
+
+                            final wasRejected =
+                                remoteStatus == DocumentStatus.rejected;
+                            final isResubmitted =
+                                (wasRejected && localFile != null) ||
+                                (remoteStatus == DocumentStatus.pending &&
+                                    rejectionReason != null &&
+                                    rejectionReason.isNotEmpty);
+
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                DocumentUploadCard(
+                                  key: ValueKey('doc_$key'),
+                                  title: doc.name,
+                                  description: doc.description,
+                                  icon: Icon(
+                                    doc.icon,
+                                    color: context.colors.primary,
+                                    size: AppSizes.iconLg,
+                                  ),
+                                  isRequired: doc.isRequired,
+                                  isOptional: !doc.isRequired,
+                                  isLoading: false,
+                                  initialUrl: localFile == null
+                                      ? remoteUrl
+                                      : null,
+                                  fileName: localFile != null
+                                      ? localFile.name
+                                      : remoteName,
+                                  selectedFilePath: localFile?.path,
+                                  status: isResubmitted || localFile != null
+                                      ? DocumentStatus.pending
+                                      : remoteStatus,
+                                  isResubmitted: isResubmitted,
+                                  statusLabel: isResubmitted
+                                      ? 'Resubmitted'
+                                      : null,
+                                  rejectionReason:
+                                      (isResubmitted || localFile != null)
+                                          ? null
+                                          : rejectionReason,
+                                  onPick: () => _pickDocument(doc),
+                                ),
+                                AppSpacing.lg.h,
+                              ],
+                            );
+                          }),
+
+                          // 4. 256-Bit Encrypted & Compliant Security Notice
+                          WrapperCard(
+                            padding: AppSpacing.md.allPadding,
+                            borderRadius: AppRadius.md,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                QuickContainer(
+                                  w: 36,
+                                  h: 36,
+                                  radius: AppRadius.sm,
+                                  color: context.colors.surfaceContainerHigh
+                                      .withValues(alpha: 0.5),
+                                  border: Border.all(
+                                    color: context.colors.outlineVariant
+                                        .withValues(alpha: 0.5),
+                                    width: 1,
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Icon(
+                                    Icons.lock_outline_rounded,
+                                    size: AppSizes.iconSmd,
+                                    color: context.colors.primary,
+                                  ),
+                                ),
+                                AppSpacing.sm.w,
+                                Expanded(
+                                  child: AppRichText(
+                                    spans: [
+                                      AppTextSpan(
+                                        text: '256-Bit Encrypted & Compliant: ',
+                                        fontWeight: FontWeight.bold,
+                                        color: context.colors.onSurface,
+                                        fontSize: 12,
+                                      ),
+                                      AppTextSpan(
+                                        text:
+                                            'Documents are stored in an encrypted vault and reviewed only by authorized government compliance officers.',
+                                        color: context.colors.onSurfaceVariant,
+                                        fontSize: 12,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const Spacer(),
+                          AppSpacing.lg.h,
+
+                          // 5. Submit for Review Button
+                          AppButton(
+                            text: 'Submit for Review',
+                            isLoading: isLoading,
+                            trailing: Icon(
+                              Icons.arrow_forward_rounded,
+                              size: AppSizes.iconMd,
+                              color: context.colors.onPrimary,
+                            ),
+                            onPressed: _handleSubmit,
+                          ),
+                          AppSpacing.huge.h,
+                        ],
                       );
                     },
                   ),

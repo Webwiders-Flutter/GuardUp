@@ -68,6 +68,15 @@ class DocumentUploadCard extends StatelessWidget {
   /// styled with semantic colors retrieved directly from [DocumentStatus].
   final DocumentStatus? status;
 
+  /// Optional rejection reason provided by administrator when [status] is rejected.
+  final String? rejectionReason;
+
+  /// Whether this document was previously rejected and has now been resubmitted.
+  final bool isResubmitted;
+
+  /// Optional override for the status badge label (e.g. "Resubmitted").
+  final String? statusLabel;
+
   /// Explicitly control whether to show the "Upload" button instead of "+".
   /// If null, automatically shown when [onUpload] is provided.
   final bool? showUploadButton;
@@ -113,6 +122,9 @@ class DocumentUploadCard extends StatelessWidget {
     this.isReadOnly = false,
     this.showPreview = true,
     this.status,
+    this.rejectionReason,
+    this.isResubmitted = false,
+    this.statusLabel,
     this.showUploadButton,
     this.onPick,
     this.onUpload,
@@ -183,50 +195,98 @@ class DocumentUploadCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool hasDescription =
         description != null && description!.trim().isNotEmpty;
+    final bool hasRejection = !isResubmitted &&
+        status == DocumentStatus.rejected &&
+        rejectionReason != null &&
+        rejectionReason!.trim().isNotEmpty;
 
     final VoidCallback? tapCallback = isReadOnly && _hasFile && showPreview
         ? () => _handlePreview(context)
-        : (!_hasFile && !isReadOnly ? onPick : null);
+        : (!_hasFile && (!isReadOnly || status == DocumentStatus.rejected)
+            ? onPick
+            : null);
 
     return IgnorePointer(
       ignoring: isLoading,
       child: WrapperCard(
         onTap: tapCallback,
         padding: AppSpacing.lg.allPadding,
-        child: Row(
+        borderColor: (!isResubmitted && status == DocumentStatus.rejected)
+            ? context.colors.error.withValues(alpha: 0.4)
+            : (isResubmitted
+                ? context.colors.primary.withValues(alpha: 0.35)
+                : null),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 1. Leading Icon / Thumbnail
-            _buildLeading(context, hasDescription),
-            AppSpacing.md.w,
+            Row(
+              children: [
+                // 1. Leading Icon / Thumbnail
+                _buildLeading(context, hasDescription),
+                AppSpacing.md.w,
 
-            // 2. Title & Status / Description
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildTitleRow(context),
-                  if (_hasFile && showPreview) ...[
-                    AppSpacing.xxs.h,
-                    _buildFileStatusRow(context),
-                  ] else if (hasDescription) ...[
-                    AppSpacing.xxs.h,
-                    Text(
-                      description!,
-                      style: context.textTheme.labelSmall?.colour(
-                        context.colors.onSurfaceVariant,
+                // 2. Title & Status / Description
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildTitleRow(context),
+                      if (_hasFile && showPreview) ...[
+                        AppSpacing.xxs.h,
+                        _buildFileStatusRow(context),
+                      ] else if (hasDescription) ...[
+                        AppSpacing.xxs.h,
+                        Text(
+                          description!,
+                          style: context.textTheme.labelSmall?.colour(
+                            context.colors.onSurfaceVariant,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                AppSpacing.sm.w,
+
+                // 3. Trailing Actions / Loading
+                _buildTrailingActions(context),
+              ],
+            ),
+            if (hasRejection) ...[
+              AppSpacing.sm.h,
+              QuickContainer(
+                p: AppSpacing.sm,
+                radius: AppRadius.sm,
+                color: context.colors.error.withValues(alpha: 0.1),
+                border: Border.all(
+                  color: context.colors.error.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.error_outline_rounded,
+                      size: 16,
+                      color: context.colors.error,
+                    ),
+                    AppSpacing.xs.w,
+                    Expanded(
+                      child: Text(
+                        'Reason: ${rejectionReason!.trim()}',
+                        style: context.textTheme.labelSmall
+                            ?.colour(context.colors.error)
+                            .copyWith(height: 1.3),
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
-                ],
+                ),
               ),
-            ),
-            AppSpacing.sm.w,
-
-            // 3. Trailing Actions / Loading
-            _buildTrailingActions(context),
+            ],
           ],
         ),
       ),
@@ -433,21 +493,26 @@ class DocumentUploadCard extends StatelessWidget {
     return Icon(Icons.image_outlined, size: size * 0.5);
   }
 
-  /// Builds the filename with green checkmark when a file is selected.
+  /// Builds the filename with checkmark or resubmitted indicator when a file is selected.
   Widget _buildFileStatusRow(BuildContext context) {
+    final statusColor =
+        isResubmitted ? context.colors.primary : context.colors.success;
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
-          Icons.check_circle_rounded,
-          color: context.colors.success,
+          isResubmitted
+              ? Icons.published_with_changes_rounded
+              : Icons.check_circle_rounded,
+          color: statusColor,
           size: 15,
         ),
         AppSpacing.xxs.w,
         Flexible(
           child: Text(
-            _resolvedFileName,
-            style: context.textTheme.bodySmall?.colour(context.colors.success),
+            isResubmitted ? '$_resolvedFileName (Resubmitted)' : _resolvedFileName,
+            style: context.textTheme.bodySmall?.colour(statusColor),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -487,23 +552,32 @@ class DocumentUploadCard extends StatelessWidget {
             )
           : null;
 
-      final changeButton = !isReadOnly
+      final canChange = !isReadOnly || status == DocumentStatus.rejected;
+      final isActionRejected =
+          status == DocumentStatus.rejected && !isResubmitted;
+      final changeButton = canChange
           ? GestureDetector(
               onTap: onPick,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    changeLabel,
+                    isActionRejected ? 'Re-upload' : changeLabel,
                     style: context.textTheme.labelMedium?.semiBold().colour(
-                      context.colors.onSurfaceVariant,
+                      isActionRejected
+                          ? context.colors.error
+                          : context.colors.onSurfaceVariant,
                     ),
                   ),
                   AppSpacing.xs.w,
                   Icon(
-                    Icons.change_circle,
+                    isActionRejected
+                        ? Icons.upload_file_rounded
+                        : Icons.change_circle,
                     size: 14,
-                    color: context.colors.onSurfaceVariant,
+                    color: isActionRejected
+                        ? context.colors.error
+                        : context.colors.onSurfaceVariant,
                   ),
                 ],
               ),
@@ -558,11 +632,19 @@ class DocumentUploadCard extends StatelessWidget {
     return actionButton;
   }
 
-  /// Builds the status pill badge (e.g. "Verified", "Pending", "Rejected").
+  /// Builds the status pill badge (e.g. "Verified", "Pending", "Resubmitted", "Rejected").
   Widget _buildStatusBadge(BuildContext context, DocumentStatus status) {
-    final color = status.badgeColor(context);
-    final bgColor = status.badgeBackgroundColor(context);
-    final borderColor = status.badgeBorderColor(context);
+    final color = isResubmitted
+        ? context.colors.primary
+        : status.badgeColor(context);
+    final bgColor = isResubmitted
+        ? context.colors.primary.withValues(alpha: 0.12)
+        : status.badgeBackgroundColor(context);
+    final borderColor = isResubmitted
+        ? context.colors.primary.withValues(alpha: 0.35)
+        : status.badgeBorderColor(context);
+    final label =
+        statusLabel ?? (isResubmitted ? 'Resubmitted' : status.label);
 
     return QuickContainer(
       px: 14,
@@ -571,7 +653,7 @@ class DocumentUploadCard extends StatelessWidget {
       color: bgColor,
       border: Border.all(color: borderColor, width: 1.0),
       child: Text(
-        status.label,
+        label,
         style: context.textTheme.labelSmall?.semiBold().colour(color),
       ),
     );
