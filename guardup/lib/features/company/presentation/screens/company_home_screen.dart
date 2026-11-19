@@ -291,7 +291,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
             : 'Agency';
 
         return GestureDetector(
-          onTap: () => context.push(AppRoutes.companyInformation),
+          onTap: () => context.go(AppRoutes.profile),
           behavior: HitTestBehavior.opaque,
           child: Row(
             children: [

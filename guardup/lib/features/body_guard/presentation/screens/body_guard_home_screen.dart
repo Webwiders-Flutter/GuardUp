@@ -245,7 +245,7 @@ class _BodyGuardHomeScreenState extends State<BodyGuardHomeScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             GestureDetector(
-              onTap: () => context.push(AppRoutes.bodyguardProfile),
+              onTap: () => context.go(AppRoutes.profile),
               child: Container(
                 padding: const EdgeInsets.all(2),
                 decoration: BoxDecoration(

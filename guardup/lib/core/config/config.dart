@@ -7,9 +7,7 @@ abstract class AppConfig {
   String get appName;
   String get baseUrl;
   String get apiKey;
-  String get supabaseUrl;
-  String get supabasePublishableKey;
-  String get deepLinkScheme;
+  String get firebaseVapidKey;
   bool get enableLogging;
   String get googlePlacesApiKey;
 }

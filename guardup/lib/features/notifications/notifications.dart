@@ -1,6 +1,15 @@
 export 'data/models/notification.model.dart';
 export 'data/models/user_device.model.dart';
+export 'data/models/notification_filters.model.dart';
 export 'data/enums/notification_type.enum.dart';
+export 'data/repositories/notification_repository.dart';
+export 'data/repositories/user_device_repository.dart';
+export 'bloc/unread_count/unread_notification_count_cubit.dart';
+export 'bloc/user_device/user_device_cubit.dart';
+export 'bloc/notifications/notifications_bloc.dart';
+export 'bloc/notifications/notifications_event.dart';
+export 'bloc/notifications/notifications_state.dart';
 export 'presentation/screens/notifications_screen.dart';
 export 'presentation/widgets/notification_card.dart';
 export 'presentation/widgets/notification_icon.widget.dart';
+export 'presentation/widgets/foreground_notification_banner.widget.dart';

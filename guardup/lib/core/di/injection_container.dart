@@ -8,6 +8,7 @@ import '/core/services/local_storage/local_storage.service.dart';
 import '/core/services/local_storage/storage.dart';
 import '/core/services/location/address_search_service.dart';
 import '/features/auth/auth.dart';
+import '/features/notifications/notifications.dart';
 import '/shared/functionalities/connectivity/connectivity.dart';
 import '/shared/functionalities/language/language.dart';
 
@@ -67,5 +68,52 @@ Future<void> initDependencies() async {
   // ------------------------------------------------------------
   sl.registerFactory<LanguageCubit>(
     () => LanguageCubit(storage: sl<LocalStorage>()),
+  );
+
+  // ------------------------------------------------------------
+  // Notifications & User Devices
+  // ------------------------------------------------------------
+  sl.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepository(),
+  );
+  sl.registerLazySingleton<UserDeviceRepository>(
+    () => UserDeviceRepository(),
+  );
+
+  sl.registerLazySingleton<UnreadNotificationCountCubit>(
+    () => UnreadNotificationCountCubit(
+      repository: sl<NotificationRepository>(),
+    ),
+  );
+
+  sl.registerLazySingleton<UserDeviceCubit>(
+    () => UserDeviceCubit(
+      repository: sl<UserDeviceRepository>(),
+    ),
+  );
+
+  sl.registerFactory<NotificationsBloc>(
+    () => NotificationsBloc(
+      repository: sl<NotificationRepository>(),
+      getUserId: () => sl<AuthBloc>().state.user?.id ?? '',
+      unreadCountCubit: sl<UnreadNotificationCountCubit>(),
+    ),
+  );
+
+  // Synchronize notifications & devices on auth state changes
+  sl<AuthBloc>().stream.listen((authState) {
+    final userId = authState.user?.id;
+    if (authState.isAuthenticated && userId != null && userId.isNotEmpty) {
+      sl<UnreadNotificationCountCubit>().loadCount(userId);
+      sl<UserDeviceCubit>().syncCurrentDevice(userId: userId);
+    } else if (authState.isUnauthenticated) {
+      sl<UnreadNotificationCountCubit>().clearAll();
+      sl<UserDeviceCubit>().clearCurrentDevice();
+    }
+  });
+
+  // Listen to FCM token refresh events automatically
+  sl<UserDeviceCubit>().listenToTokenRefresh(
+    () => sl<AuthBloc>().state.user?.id ?? '',
   );
 }

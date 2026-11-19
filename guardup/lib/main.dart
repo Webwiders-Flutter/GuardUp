@@ -3,5 +3,5 @@ import '/bootstrap/bootstrap.dart';
 import '/bootstrap/flavor.dart';
 
 void main() async {
-  await bootstrap(flavor: Flavor.staging, builder: () => App());
+  await bootstrap(flavor: Flavor.prod, builder: () => App());
 }

@@ -1,0 +1,39 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "App (Dev)",
+      "cwd": "guardup",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_dev.dart",
+      "args": [
+        "--flavor",
+        "dev"
+      ]
+    },
+    {
+      "name": "App (Staging)",
+      "cwd": "guardup",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_staging.dart",
+      "args": [
+        "--flavor",
+        "staging"
+      ]
+    },
+    {
+      "name": "App (Prod)",
+      "cwd": "guardup",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_prod.dart",
+      "args": [
+        "--flavor",
+        "prod"
+      ]
+    },
+   
+  ]
+}

@@ -9,6 +9,7 @@ import '/app/theme/app_theme.dart';
 import '/core/config/config.dart';
 import '/core/di/injection_container.dart';
 import '/features/auth/auth.dart';
+import '/features/notifications/notifications.dart';
 import '/gen/app_localizations.dart';
 import '/gen/assets.gen.dart';
 import '/shared/functionalities/connectivity/connectivity.dart';
@@ -25,6 +26,12 @@ class App extends StatelessWidget {
         BlocProvider<AuthBloc>.value(value: sl<AuthBloc>()),
         BlocProvider<LanguageCubit>(create: (_) => sl<LanguageCubit>()),
         BlocProvider<ConnectivityCubit>(create: (_) => sl<ConnectivityCubit>()),
+        BlocProvider<UnreadNotificationCountCubit>.value(
+          value: sl<UnreadNotificationCountCubit>(),
+        ),
+        BlocProvider<UserDeviceCubit>.value(
+          value: sl<UserDeviceCubit>(),
+        ),
       ],
       child: BlocBuilder<LanguageCubit, LanguageState>(
         builder: (context, languageState) {
@@ -66,6 +73,10 @@ class App extends StatelessWidget {
                   const Align(
                     alignment: Alignment.topCenter,
                     child: NoInternetBanner(),
+                  ),
+                  const Align(
+                    alignment: Alignment.topCenter,
+                    child: ForegroundNotificationBanner(),
                   ),
                 ],
               );

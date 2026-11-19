@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:guardup/shared/widgets/state/app_state_view.dart';
 
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
@@ -116,7 +117,8 @@ class AppPagination<T> extends StatefulWidget {
           return ListView.separated(
             controller: shrinkWrap ? null : scrollController,
             shrinkWrap: shrinkWrap,
-            physics: physics ??
+            physics:
+                physics ??
                 (shrinkWrap
                     ? const NeverScrollableScrollPhysics()
                     : const AlwaysScrollableScrollPhysics()),
@@ -140,7 +142,8 @@ class AppPagination<T> extends StatefulWidget {
         return ListView.builder(
           controller: shrinkWrap ? null : scrollController,
           shrinkWrap: shrinkWrap,
-          physics: physics ??
+          physics:
+              physics ??
               (shrinkWrap
                   ? const NeverScrollableScrollPhysics()
                   : const AlwaysScrollableScrollPhysics()),
@@ -408,18 +411,7 @@ class _AppPaginationState<T> extends State<AppPagination<T>> {
         /// 3. Empty State (Empty List + Idle)
         if (state.items.isEmpty) {
           final emptyWidget =
-              widget.emptyBuilder?.call(context) ??
-              Center(
-                child: Padding(
-                  padding: AppSpacing.xl.allPadding,
-                  child: Text(
-                    context.l10n.noDataFound,
-                    style: context.textTheme.bodyMedium?.colour(
-                      context.colors.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              );
+              widget.emptyBuilder?.call(context) ?? AppStateView.empty();
 
           return _buildRefreshable(
             child: ListView(

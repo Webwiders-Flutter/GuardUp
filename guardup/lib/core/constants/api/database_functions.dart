@@ -17,4 +17,10 @@ final class DatabaseFunctions {
 
   /// Checks administrative role access.
   static const String isAdmin = 'is_admin';
+
+  /// Creates or updates the caller's device row, keyed on the FCM token.
+  static const String registerUserDevice = 'register_user_device';
+
+  /// Changes the push language of one of the caller's devices.
+  static const String updateUserDeviceLanguage = 'update_user_device_language';
 }

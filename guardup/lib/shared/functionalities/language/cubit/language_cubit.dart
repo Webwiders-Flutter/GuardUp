@@ -3,8 +3,10 @@ import 'dart:ui';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '/core/constants/app_local_storage_keys.dart';
+import '/core/di/injection_container.dart';
 import '/core/services/local_storage/local_storage.service.dart';
 import '/core/services/local_storage/storage.dart';
+import '/features/notifications/bloc/user_device/user_device_cubit.dart';
 import '../enum/language.enum.dart';
 import 'language_state.dart';
 
@@ -39,6 +41,9 @@ class LanguageCubit extends Cubit<LanguageState> {
         key: AppLocalStorageKeys.language,
         value: language.apiValue,
       );
+      if (sl.isRegistered<UserDeviceCubit>()) {
+        sl<UserDeviceCubit>().updateDeviceLanguage(language.apiValue);
+      }
     } catch (_) {}
   }
 

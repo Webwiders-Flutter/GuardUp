@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/app/routes/app_routes.dart';
 import 'package:guardup/core/constants/app_spacing.dart';
+import 'package:guardup/core/di/injection_container.dart';
 import 'package:guardup/core/extensions/context.extension.dart';
 import 'package:quick_container/quick_container.dart';
+
+import '../../bloc/unread_count/unread_notification_count_cubit.dart';
 
 /// A standard notification icon action widget (e.g. for app bars, navigation headers).
 /// Automatically observes the live unread count and renders an indicator badge.
@@ -25,7 +29,7 @@ class NotificationIconWidget extends StatelessWidget {
   /// Optional tooltip message.
   final String tooltip;
 
-  /// Optional count override. If null, automatically reads [unreadNotificationCountControllerProvider].
+  /// Optional count override. If null, automatically reads [UnreadNotificationCountCubit].
   final int? count;
 
   /// Custom background color for the badge (defaults to [context.colors.error]).
@@ -48,7 +52,16 @@ class NotificationIconWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final unreadCount = count;
+    int unreadCount = count ?? 0;
+    if (count == null) {
+      try {
+        unreadCount = context.watch<UnreadNotificationCountCubit>().state;
+      } catch (_) {
+        unreadCount = sl.isRegistered<UnreadNotificationCountCubit>()
+            ? sl<UnreadNotificationCountCubit>().state
+            : 0;
+      }
+    }
 
     final button = IconButton(
       padding: EdgeInsets.zero,
@@ -69,7 +82,7 @@ class NotificationIconWidget extends StatelessWidget {
       tooltip: tooltip,
     );
 
-    if (unreadCount != null && unreadCount > 0) {
+    if (unreadCount > 0) {
       return Badge.count(
         count: unreadCount,
         backgroundColor: badgeColor ?? context.colors.error,
