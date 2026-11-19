@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 
@@ -13,7 +14,7 @@ import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/string.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
-import '/core/services/admin_settings/admin_settings.service.dart';
+import '/core/config/admin_settings/admin_settings.dart';
 import '/features/auth/bloc/auth_bloc.dart';
 import '/features/auth/data/enum/user_role.enum.dart';
 import '/features/auth/data/model/user.model.dart';
@@ -65,7 +66,7 @@ class PaymentSuccessScreen extends StatelessWidget {
         double.tryParse(
           authState?.userData?['metadata']?['payment_amount']?.toString() ?? '',
         ) ??
-        AdminSettingsService.instance.getRegistrationFee(
+        context.read<AdminSettingsCubit>().getRegistrationFee(
           isGuard ? UserRole.guard : UserRole.company,
         );
     final amountText = dynamicFee.toUsd;

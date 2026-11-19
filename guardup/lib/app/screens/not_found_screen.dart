@@ -1,14 +1,16 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:guardup/core/extensions/context.extension.dart';
+import 'package:guardup/core/extensions/spacing.extension.dart';
+import 'package:guardup/core/extensions/textstyle_extension.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '/app/routes/app_routes.dart';
 import '/app/theme/colors/color_accessor.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
-import '../../core/extensions/context.extension.dart';
-import '../../core/extensions/spacing.extension.dart';
-import '../../core/extensions/textstyle_extension.dart';
 import '/shared/widgets/buttons/app_button.dart';
 
 /// 404 Not Found screen displayed when a requested route doesn't exist.
@@ -23,10 +25,26 @@ class NotFoundScreen extends StatefulWidget {
 
 class _NotFoundScreenState extends State<NotFoundScreen>
     with TickerProviderStateMixin {
+  /// Keeps the layout readable on tablets / web.
+  static const double _contentMaxWidth = 520;
+  static const double _bodyMaxWidth = 360;
+
   late final AnimationController _floatController;
-  late final AnimationController _fadeController;
+  late final AnimationController _roadController;
+  late final AnimationController _entranceController;
+
   late final Animation<double> _floatAnimation;
-  late final Animation<double> _fadeAnimation;
+
+  // Staggered entrance animations
+  late final Animation<double> _illustrationIn;
+  late final Animation<double> _badgeIn;
+  late final Animation<double> _titleIn;
+  late final Animation<double> _bodyIn;
+  late final Animation<double> _actionsIn;
+
+  double get _illustrationWidth => (AppSpacing.xxxl * 8) + AppSpacing.xs;
+  double get _illustrationHeight =>
+      (AppSpacing.xxxl * 6) + AppSpacing.xxl + AppSpacing.xs;
 
   @override
   void initState() {
@@ -35,29 +53,71 @@ class _NotFoundScreenState extends State<NotFoundScreen>
     _floatController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
-    )..repeat(reverse: true);
+    );
 
     _floatAnimation = Tween<double>(begin: -(AppSpacing.md), end: AppSpacing.md)
         .animate(
           CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
         );
 
-    _fadeController = AnimationController(
+    _roadController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
-    )..forward();
-
-    _fadeAnimation = CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeOut,
+      duration: const Duration(milliseconds: 900),
     );
+
+    _entranceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    );
+
+    _illustrationIn = _interval(0.00, 0.55);
+    _badgeIn = _interval(0.25, 0.70);
+    _titleIn = _interval(0.35, 0.80);
+    _bodyIn = _interval(0.45, 0.90);
+    _actionsIn = _interval(0.55, 1.00);
   }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Respect the OS "reduce motion" accessibility setting.
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+
+    if (reduceMotion) {
+      _floatController
+        ..stop()
+        ..value = 0.5;
+      _roadController.stop();
+      _entranceController.value = 1;
+    } else {
+      if (!_floatController.isAnimating) {
+        _floatController.repeat(reverse: true);
+      }
+      if (!_roadController.isAnimating) _roadController.repeat();
+      if (_entranceController.value == 0) _entranceController.forward();
+    }
+  }
+
+  Animation<double> _interval(double begin, double end) => CurvedAnimation(
+    parent: _entranceController,
+    curve: Interval(begin, end, curve: Curves.easeOutCubic),
+  );
 
   @override
   void dispose() {
     _floatController.dispose();
-    _fadeController.dispose();
+    _roadController.dispose();
+    _entranceController.dispose();
     super.dispose();
+  }
+
+  void _goBack() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(AppRoutes.home);
+    }
   }
 
   @override
@@ -66,113 +126,123 @@ class _NotFoundScreenState extends State<NotFoundScreen>
 
     return Scaffold(
       backgroundColor: colors.surface,
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: AppSpacing.xxxl,
-                vertical: AppSpacing.xxxl + AppSpacing.lg,
-              ),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.xxl,
+              vertical: AppSpacing.xxxl + AppSpacing.lg,
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: _contentMaxWidth),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   // Floating Illustration
-                  AnimatedBuilder(
-                    animation: _floatAnimation,
-                    builder: (context, child) {
-                      return Transform.translate(
-                        offset: Offset(0, _floatAnimation.value),
-                        child: child,
-                      );
-                    },
-                    child: SizedBox(
-                      width: (AppSpacing.xxxl * 8) + AppSpacing.xs,
-                      height:
-                          (AppSpacing.xxxl * 6) +
-                          AppSpacing.xxl +
-                          AppSpacing.xs,
-                      child: CustomPaint(
-                        painter: _NotFoundPainter(
-                          colors: colors,
-                          textTheme: context.textTheme,
-                        ),
-                      ),
-                    ),
+                  _Reveal(
+                    animation: _illustrationIn,
+                    child: _buildIllustration(colors),
                   ),
 
-                  (AppSpacing.xxxl + AppSpacing.lg).h,
+                  AppSpacing.xxxl.h,
 
                   // 404 Badge
-                  QuickContainer(
-                    px: AppSpacing.lg,
-                    py: AppSpacing.sm - 2,
-                    color: colors.primary.withValues(alpha: 0.12),
-                    radius: AppRadius.full,
-                    border: Border.all(
-                      color: colors.primary.withValues(alpha: 0.35),
-                    ),
-                    child: Text(
-                      'Error 404',
-                      style: context.textTheme.labelMedium
-                          ?.medium()
-                          .textSpacing(1.2),
+                  _Reveal(
+                    animation: _badgeIn,
+                    child: QuickContainer(
+                      px: AppSpacing.lg,
+                      py: AppSpacing.sm - 2,
+                      color: colors.primary.withValues(alpha: 0.12),
+                      radius: AppRadius.full,
+                      border: Border.all(
+                        color: colors.primary.withValues(alpha: 0.35),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.wrong_location_outlined,
+                            size: AppSpacing.lg,
+                            color: colors.primary,
+                          ),
+                          (AppSpacing.xs + 2).w,
+                          Text(
+                            'Error 404',
+                            style: context.textTheme.labelMedium
+                                ?.medium()
+                                .textSpacing(1.2)
+                                .colour(colors.primary),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
 
                   AppSpacing.xl.h,
 
                   // Headline
-                  Text(
-                    'Page Not Found',
-                    style: context.textTheme.displaySmall
-                        ?.weight(FontWeight.w800)
-                        .colour(colors.primary),
-                    textAlign: TextAlign.center,
+                  _Reveal(
+                    animation: _titleIn,
+                    child: Semantics(
+                      header: true,
+                      child: Text(
+                        'Page Not Found',
+                        style: context.textTheme.displaySmall
+                            ?.weight(FontWeight.w800)
+                            .colour(colors.primary),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ),
 
                   AppSpacing.lg.h,
 
                   // Sub-text
-                  Text(
-                    "The page you're looking for doesn't exist\nor may have been moved.",
-                    style: context.textTheme.bodyLarge?.regular().colour(
-                      colors.onSurfaceVariant,
+                  _Reveal(
+                    animation: _bodyIn,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: _bodyMaxWidth,
+                      ),
+                      child: Text(
+                        "Looks like this route took a wrong turn. The page "
+                        "you're looking for doesn't exist or may have been moved.",
+                        style: context.textTheme.bodyLarge
+                            ?.regular()
+                            .lineHeight(1.5)
+                            .colour(colors.onSurfaceVariant),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                    textAlign: TextAlign.center,
                   ),
 
                   (AppSpacing.xxl + AppSpacing.lg).h,
 
-                  // Primary CTA
-                  Row(
-                    mainAxisAlignment: .center,
-                    children: [
-                      // Secondary CTA
-                      AppButton(
-                        text: 'Go Back',
-                        type: ButtonType.secondaryOff,
+                  // CTAs
+                  _Reveal(
+                    animation: _actionsIn,
+                    child: Row(
+                      mainAxisAlignment: .center,
+                      children: [
+                        // Secondary CTA
+                        AppButton(
+                          text: 'Go Back',
+                          type: ButtonType.secondaryPrimary,
+                          isFlexible: true,
+                          onPressed: _goBack,
+                        ),
 
-                        isFlexible: true,
-                        onPressed: () {
-                          if (context.canPop()) {
-                            context.pop();
-                          } else {
-                            context.go(AppRoutes.home);
-                          }
-                        },
-                      ),
-                      (AppSpacing.md + 2).w,
+                        (AppSpacing.md + 2).w,
 
-                      AppButton(
-                        text: 'Go to Dashboard',
-                        type: ButtonType.primary,
-                        isFlexible: true,
-
-                        onPressed: () => context.go(AppRoutes.home),
-                      ),
-                    ],
+                        // Primary CTA
+                        AppButton(
+                          text: 'Go to Dashboard',
+                          type: ButtonType.primary,
+                          isFlexible: true,
+                          onPressed: () => context.go(AppRoutes.home),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -182,14 +252,120 @@ class _NotFoundScreenState extends State<NotFoundScreen>
       ),
     );
   }
+
+  /// Illustration that scales down on narrow screens, floats, and casts a
+  /// soft shadow that grows/shrinks with the float for a sense of depth.
+  Widget _buildIllustration(AppThemeAccessor colors) {
+    return Semantics(
+      image: true,
+      label: 'Illustration of a delivery truck stopped at a question-mark sign',
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = math.min(_illustrationWidth, constraints.maxWidth);
+          final scale = width / _illustrationWidth;
+
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedBuilder(
+                animation: _floatAnimation,
+                builder: (context, child) => Transform.translate(
+                  offset: Offset(0, _floatAnimation.value * scale),
+                  child: child,
+                ),
+                child: SizedBox(
+                  width: width,
+                  height: _illustrationHeight * scale,
+                  child: FittedBox(
+                    child: SizedBox(
+                      width: _illustrationWidth,
+                      height: _illustrationHeight,
+                      child: RepaintBoundary(
+                        child: CustomPaint(
+                          // Animated layer: background + moving road
+                          painter: _RoadPainter(
+                            colors: colors,
+                            progress: _roadController,
+                          ),
+                          // Static layer: truck, sign, 404, dots
+                          foregroundPainter: _NotFoundPainter(
+                            colors: colors,
+                            textTheme: context.textTheme,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              AppSpacing.sm.h,
+
+              // Ground shadow
+              AnimatedBuilder(
+                animation: _floatAnimation,
+                builder: (context, _) {
+                  // 0 = highest point, 1 = lowest point
+                  final t =
+                      ((_floatAnimation.value + AppSpacing.md) /
+                              (AppSpacing.md * 2))
+                          .clamp(0.0, 1.0);
+
+                  return Transform.scale(
+                    scaleX: 0.8 + (0.2 * t),
+                    child: SizedBox(
+                      width: width * 0.55,
+                      height: AppSpacing.sm,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: colors.onSurface.withValues(
+                            alpha: 0.04 + (0.05 * t),
+                          ),
+                          borderRadius: BorderRadius.circular(AppSpacing.sm),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 }
 
-/// Custom painter for rendering the 404 transport-themed illustration.
-class _NotFoundPainter extends CustomPainter {
-  final AppThemeAccessor colors;
-  final TextTheme textTheme;
+/// Fade + slide-up reveal used for the staggered entrance.
+class _Reveal extends StatelessWidget {
+  final Animation<double> animation;
+  final Widget child;
 
-  const _NotFoundPainter({required this.colors, required this.textTheme});
+  const _Reveal({required this.animation, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: animation,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.15),
+          end: Offset.zero,
+        ).animate(animation),
+        child: child,
+      ),
+    );
+  }
+}
+
+/// Background circle + road with dashes that scroll to make the truck
+/// look like it's driving. Repaints on every tick of [progress].
+class _RoadPainter extends CustomPainter {
+  final AppThemeAccessor colors;
+  final Animation<double> progress;
+
+  _RoadPainter({required this.colors, required this.progress})
+    : super(repaint: progress);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -206,30 +382,36 @@ class _NotFoundPainter extends CustomPainter {
     );
 
     // Road / ground
+    final roadRect = Rect.fromLTWH(
+      AppSpacing.sm + 2,
+      h - (AppSpacing.xxl + AppSpacing.xl),
+      w - (AppSpacing.xl),
+      AppSpacing.xl,
+    );
     canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(
-          AppSpacing.sm + 2,
-          h - (AppSpacing.xxl + AppSpacing.xl),
-          w - (AppSpacing.xl),
-          AppSpacing.xl,
-        ),
-        Radius.circular(AppSpacing.sm + 2),
-      ),
+      RRect.fromRectAndRadius(roadRect, Radius.circular(AppSpacing.sm + 2)),
       Paint()
         ..color = colors.outlineVariant
         ..style = PaintingStyle.fill,
     );
 
-    // Road dashes
+    // Road dashes (scrolling right → left, truck faces right)
+    final step = AppSpacing.xxxl - 2;
+    final shift = progress.value * step;
     final dashPaint = Paint()
       ..color = colors.onSurface
       ..style = PaintingStyle.fill;
-    for (
-      double x = AppSpacing.xxxl - 2;
-      x < w - (AppSpacing.xxl + AppSpacing.lg);
-      x += (AppSpacing.xxxl - 2)
-    ) {
+
+    canvas.save();
+    canvas.clipRect(
+      Rect.fromLTRB(
+        step,
+        roadRect.top,
+        w - (AppSpacing.xxl + AppSpacing.lg) + AppSpacing.lg,
+        roadRect.bottom,
+      ),
+    );
+    for (double x = -shift; x < w; x += step) {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromLTWH(
@@ -243,6 +425,26 @@ class _NotFoundPainter extends CustomPainter {
         dashPaint,
       );
     }
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _RoadPainter oldDelegate) =>
+      oldDelegate.colors != colors || oldDelegate.progress != progress;
+}
+
+/// Custom painter for rendering the static parts of the 404
+/// transport-themed illustration (truck, sign, 404 text, dots).
+class _NotFoundPainter extends CustomPainter {
+  final AppThemeAccessor colors;
+  final TextTheme textTheme;
+
+  const _NotFoundPainter({required this.colors, required this.textTheme});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
 
     // Cargo container
     canvas.drawRRect(
@@ -306,11 +508,14 @@ class _NotFoundPainter extends CustomPainter {
     canvas.drawPath(
       windowPath,
       Paint()
-        ..color = colors.secondary.withValues(alpha: 0.85)
+        ..color = colors.primary.withValues(alpha: 0.85)
         ..style = PaintingStyle.fill,
     );
 
     // Cargo stripes
+    final stripePaint = Paint()
+      ..color = colors.primary.withValues(alpha: 0.3)
+      ..style = PaintingStyle.fill;
     for (int i = 0; i < 3; i++) {
       final xPos = w * 0.27 + i * (w * 0.14);
       canvas.drawRRect(
@@ -323,35 +528,26 @@ class _NotFoundPainter extends CustomPainter {
           ),
           Radius.circular(AppSpacing.xs),
         ),
-        Paint()
-          ..color = colors.secondary.withValues(alpha: 0.3)
-          ..style = PaintingStyle.fill,
+        stripePaint,
       );
     }
 
     // Wheels
+    final tyrePaint = Paint()
+      ..color = colors.surfaceDim
+      ..style = PaintingStyle.fill;
+    final rimPaint = Paint()
+      ..color = colors.outlineVariant
+      ..style = PaintingStyle.fill;
+    final hubPaint = Paint()
+      ..color = colors.primary
+      ..style = PaintingStyle.fill;
+
     void drawWheel(double cx, double cy) {
-      canvas.drawCircle(
-        Offset(cx, cy),
-        AppSpacing.md + 2,
-        Paint()
-          ..color = colors.surfaceDim
-          ..style = PaintingStyle.fill,
-      );
-      canvas.drawCircle(
-        Offset(cx, cy),
-        AppSpacing.sm + 1,
-        Paint()
-          ..color = colors.outlineVariant
-          ..style = PaintingStyle.fill,
-      );
-      canvas.drawCircle(
-        Offset(cx, cy),
-        AppSpacing.xs,
-        Paint()
-          ..color = colors.secondary
-          ..style = PaintingStyle.fill,
-      );
+      final center = Offset(cx, cy);
+      canvas.drawCircle(center, AppSpacing.md + 2, tyrePaint);
+      canvas.drawCircle(center, AppSpacing.sm + 1, rimPaint);
+      canvas.drawCircle(center, AppSpacing.xs, hubPaint);
     }
 
     drawWheel(w * 0.35, h - AppSpacing.xxxl);
@@ -368,7 +564,7 @@ class _NotFoundPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round,
     );
 
-    // Warning triangle sign
+    // Warning triangle sign (rounded corners for a softer look)
     final signPath = Path()
       ..moveTo(
         w * 0.12,
@@ -388,6 +584,14 @@ class _NotFoundPainter extends CustomPainter {
       Paint()
         ..color = colors.warning
         ..style = PaintingStyle.fill,
+    );
+    canvas.drawPath(
+      signPath,
+      Paint()
+        ..color = colors.warning
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = AppSpacing.xs
+        ..strokeJoin = StrokeJoin.round,
     );
 
     // "?" text on sign
@@ -416,7 +620,7 @@ class _NotFoundPainter extends CustomPainter {
         text: '404',
         style: textTheme.displayLarge
             ?.weight(FontWeight.w900)
-            .colour(colors.primary.withValues(alpha: 0.07))
+            .colour(colors.primary.withValues(alpha: 0.7))
             .increaseSize(1)
             .lineHeight(1)
             .textSpacing(-2),
@@ -437,7 +641,7 @@ class _NotFoundPainter extends CustomPainter {
         w * 0.05,
         h * 0.15,
         AppSpacing.xs + 1.0,
-        colors.secondary.withValues(alpha: 0.4),
+        colors.primary.withValues(alpha: 0.4),
       ),
       (
         w * 0.95,
@@ -449,7 +653,7 @@ class _NotFoundPainter extends CustomPainter {
         w * 0.90,
         h * 0.55,
         AppSpacing.xs,
-        colors.secondary.withValues(alpha: 0.3),
+        colors.primary.withValues(alpha: 0.3),
       ),
       (
         w * 0.08,
@@ -471,5 +675,5 @@ class _NotFoundPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _NotFoundPainter oldDelegate) =>
-      oldDelegate.colors != colors;
+      oldDelegate.colors != colors || oldDelegate.textTheme != textTheme;
 }

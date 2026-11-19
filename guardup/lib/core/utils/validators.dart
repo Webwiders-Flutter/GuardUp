@@ -503,6 +503,35 @@ final class Validators {
     return null;
   }
 
+  /// Compares two SemVer strings [a] and [b].
+  ///
+  /// Returns:
+  /// - `< 0` if `a < b`
+  /// - `0` if `a == b`
+  /// - `> 0` if `a > b`
+  ///
+  /// Automatically strips build metadata (e.g. `+1`) and pre-release tags (e.g. `-beta`).
+  static int compareSemver(String a, String b) {
+    final cleanA = a.split('+').first.split('-').first.trim();
+    final cleanB = b.split('+').first.split('-').first.trim();
+    final aParts =
+        cleanA.split('.').map((p) => int.tryParse(p) ?? 0).toList();
+    final bParts =
+        cleanB.split('.').map((p) => int.tryParse(p) ?? 0).toList();
+
+    final maxLen = [aParts.length, bParts.length, 3]
+        .reduce((curr, next) => curr > next ? curr : next);
+
+    for (var i = 0; i < maxLen; i++) {
+      final aVal = i < aParts.length ? aParts[i] : 0;
+      final bVal = i < bParts.length ? bParts[i] : 0;
+      if (aVal != bVal) {
+        return aVal.compareTo(bVal);
+      }
+    }
+    return 0;
+  }
+
   // ---------------------------------------------------------------------------
   // Combination
   // ---------------------------------------------------------------------------

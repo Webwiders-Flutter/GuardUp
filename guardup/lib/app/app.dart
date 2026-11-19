@@ -4,8 +4,10 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 // ignore: depend_on_referenced_packages
 import 'package:material_ui/material_ui.dart' as mui;
 
+import '/app/gate/gate.dart';
 import '/app/routes/app_router.dart';
 import '/app/theme/app_theme.dart';
+import '/core/config/admin_settings/admin_settings.dart';
 import '/core/config/config.dart';
 import '/core/di/injection_container.dart';
 import '/features/auth/auth.dart';
@@ -31,6 +33,12 @@ class App extends StatelessWidget {
         ),
         BlocProvider<UserDeviceCubit>.value(
           value: sl<UserDeviceCubit>(),
+        ),
+        BlocProvider<AdminSettingsCubit>.value(
+          value: sl<AdminSettingsCubit>(),
+        ),
+        BlocProvider<AppGateCubit>.value(
+          value: sl<AppGateCubit>(),
         ),
       ],
       child: BlocBuilder<LanguageCubit, LanguageState>(
@@ -69,7 +77,9 @@ class App extends StatelessWidget {
                       fit: BoxFit.cover,
                     ),
                   ),
-                  ?child,
+                  AppGate(
+                    child: child ?? const SizedBox.shrink(),
+                  ),
                   const Align(
                     alignment: Alignment.topCenter,
                     child: NoInternetBanner(),
