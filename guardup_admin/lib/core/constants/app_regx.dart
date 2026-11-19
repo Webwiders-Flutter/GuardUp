@@ -44,6 +44,12 @@ final class AppRegex {
 
   static final htmlTags = RegExp(r'<[^>]*>');
 
+  /// Semantic versioning format: MAJOR.MINOR.PATCH (e.g. 1.0.0, 2.12.3)
+  static final semver = RegExp(r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$');
+
+  /// Allowed characters when typing a version string
+  static final semverInput = RegExp(r'[0-9.]');
+
   static final emoji = RegExp(
     r'(\u00a9|\u00ae|[\u2000-\u3300]|'
     r'\ud83c[\ud000-\udfff]|'

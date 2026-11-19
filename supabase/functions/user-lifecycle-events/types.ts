@@ -7,6 +7,8 @@ export interface UserLifecyclePayload {
   email: string;
   name?: string;
   role?: string;
+  rejection_reason?: string;
+  rejected_documents?: string;
 }
 
 export interface SupportSettings {

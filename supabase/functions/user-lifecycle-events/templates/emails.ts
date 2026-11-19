@@ -13,8 +13,10 @@ export function buildLifecycleEmail(params: {
   name: string;
   roleLabel: string;
   support: SupportSettings;
+  rejectionReason?: string;
+  rejectedDocuments?: string;
 }): EmailContent {
-  const { event, support } = params;
+  const { event, support, rejectionReason, rejectedDocuments } = params;
   const name = strong(escapeHtml(params.name));
   const roleLabel = strong(escapeHtml(params.roleLabel));
   const greeting = paragraph(`Hello ${name},`);
@@ -38,7 +40,13 @@ export function buildLifecycleEmail(params: {
         }),
       };
 
-    case "REJECTED":
+    case "REJECTED": {
+      const reasonDetail = rejectionReason
+        ? `Reason: ${escapeHtml(rejectionReason)}`
+        : rejectedDocuments
+        ? `Rejected documents: ${escapeHtml(rejectedDocuments)}`
+        : "";
+
       return {
         subject: "Update on your GuardUp application",
         html: renderLayout({
@@ -51,13 +59,18 @@ export function buildLifecycleEmail(params: {
             paragraph(
               `Thank you for applying to join GuardUp as a ${roleLabel}. After reviewing your profile and documents, we are unable to approve your application at this time.`,
             ),
-            paragraph(
-              "This is usually due to missing, unclear or expired documents. Your application and uploaded documents have been removed, so you are welcome to register again with the same email and phone number. Please contact our support team if you would like to know what is needed before re-applying.",
-              { small: true },
-            ),
+            reasonDetail
+              ? paragraph(
+                  `<strong>${reasonDetail}</strong><br><br>Please open the GuardUp app to update your details or re-upload the required documents to resubmit your profile for review.`,
+                )
+              : paragraph(
+                  "This is usually due to missing, unclear or expired documents. Please open the GuardUp app to review your submission and re-upload any required documents.",
+                ),
+            support.androidAppUrl ? button("Open GuardUp App", support.androidAppUrl) : "",
           ].join(""),
         }),
       };
+    }
 
     case "DELETED":
       return {

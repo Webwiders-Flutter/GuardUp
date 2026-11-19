@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '/core/constants/app_radius.dart';
+import '/core/constants/app_regx.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
@@ -225,11 +227,28 @@ class MobileAppsSettingsCard extends StatelessWidget {
                     AppSpacing.xs.h,
                     AppTextField(
                       controller: latestIosVersionController,
-                      validator: (value) => Validators.version(
-                        context,
-                        value,
-                        fieldName: 'Latest iOS Version',
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
                       ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(AppRegex.semverInput),
+                      ],
+                      validator: (value) {
+                        final err = Validators.version(
+                          context,
+                          value,
+                          fieldName: 'Latest iOS Version',
+                        );
+                        if (err != null) return err;
+                        final minText = minimumIosVersionController.text.trim();
+                        if (minText.isNotEmpty &&
+                            AppRegex.semver.hasMatch(minText) &&
+                            Validators.compareSemver(minText, value!.trim()) >
+                                0) {
+                          return 'Cannot be lower than Minimum Version';
+                        }
+                        return null;
+                      },
                       decoration: const InputDecoration(
                         hintText: 'e.g. 1.2.0',
                         prefixIcon: Icon(Icons.tag_rounded),
@@ -251,11 +270,32 @@ class MobileAppsSettingsCard extends StatelessWidget {
                     AppSpacing.xs.h,
                     AppTextField(
                       controller: minimumIosVersionController,
-                      validator: (value) => Validators.version(
-                        context,
-                        value,
-                        fieldName: 'Minimum iOS Version',
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
                       ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(AppRegex.semverInput),
+                      ],
+                      validator: (value) {
+                        final err = Validators.version(
+                          context,
+                          value,
+                          fieldName: 'Minimum iOS Version',
+                        );
+                        if (err != null) return err;
+                        final latestText =
+                            latestIosVersionController.text.trim();
+                        if (latestText.isNotEmpty &&
+                            AppRegex.semver.hasMatch(latestText) &&
+                            Validators.compareSemver(
+                                  value!.trim(),
+                                  latestText,
+                                ) >
+                                0) {
+                          return 'Cannot be higher than Latest Version';
+                        }
+                        return null;
+                      },
                       decoration: const InputDecoration(
                         hintText: 'e.g. 1.0.0',
                         prefixIcon: Icon(Icons.lock_clock_rounded),
@@ -402,11 +442,29 @@ class MobileAppsSettingsCard extends StatelessWidget {
                     AppSpacing.xs.h,
                     AppTextField(
                       controller: latestAndroidVersionController,
-                      validator: (value) => Validators.version(
-                        context,
-                        value,
-                        fieldName: 'Latest Android Version',
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
                       ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(AppRegex.semverInput),
+                      ],
+                      validator: (value) {
+                        final err = Validators.version(
+                          context,
+                          value,
+                          fieldName: 'Latest Android Version',
+                        );
+                        if (err != null) return err;
+                        final minText =
+                            minimumAndroidVersionController.text.trim();
+                        if (minText.isNotEmpty &&
+                            AppRegex.semver.hasMatch(minText) &&
+                            Validators.compareSemver(minText, value!.trim()) >
+                                0) {
+                          return 'Cannot be lower than Minimum Version';
+                        }
+                        return null;
+                      },
                       decoration: const InputDecoration(
                         hintText: 'e.g. 1.2.0',
                         prefixIcon: Icon(Icons.tag_rounded),
@@ -428,11 +486,32 @@ class MobileAppsSettingsCard extends StatelessWidget {
                     AppSpacing.xs.h,
                     AppTextField(
                       controller: minimumAndroidVersionController,
-                      validator: (value) => Validators.version(
-                        context,
-                        value,
-                        fieldName: 'Minimum Android Version',
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
                       ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(AppRegex.semverInput),
+                      ],
+                      validator: (value) {
+                        final err = Validators.version(
+                          context,
+                          value,
+                          fieldName: 'Minimum Android Version',
+                        );
+                        if (err != null) return err;
+                        final latestText =
+                            latestAndroidVersionController.text.trim();
+                        if (latestText.isNotEmpty &&
+                            AppRegex.semver.hasMatch(latestText) &&
+                            Validators.compareSemver(
+                                  value!.trim(),
+                                  latestText,
+                                ) >
+                                0) {
+                          return 'Cannot be higher than Latest Version';
+                        }
+                        return null;
+                      },
                       decoration: const InputDecoration(
                         hintText: 'e.g. 1.0.0',
                         prefixIcon: Icon(Icons.lock_clock_rounded),

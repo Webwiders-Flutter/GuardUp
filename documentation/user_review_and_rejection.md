@@ -49,16 +49,17 @@ Where the reason goes:
 
 ## 2. What the User Is Told
 
-Moving to `REJECTED` sends **only an in-app notification** (type `ACCOUNT_REJECTED`,
-title "Application not approved"); the notifications INSERT trigger pushes it to the
-user's devices. **No email** is sent, and nothing is deleted.
+Moving to `REJECTED` sends an **in-app notification** (type `ACCOUNT_REJECTED`,
+title "Application not approved"), a **push notification** via FCM, and an **email**
+explaining the rejection reason (with guidance to update and resubmit their profile).
+Nothing is deleted.
 
-The body depends on why the user was rejected:
+The message and email content depend on why the user was rejected:
 
-| Case | Body |
-|---|---|
-| Profile rejected | "Your application was not approved. Reason: {reason}" |
-| Document(s) rejected | "Some of your documents were rejected: {document names}. Please check them in the app for details." |
+| Case | Body | Email Details |
+|---|---|---|
+| Profile rejected | "Your application was not approved. Reason: {reason}" | Highlights the profile rejection reason and provides a link to open the app and resubmit. |
+| Document(s) rejected | "Some of your documents were rejected: {document names}. Please check them in the app for details." | Lists the rejected document names and prompts the user to re-upload them. |
 
 `data` carries `event = PROFILE_REJECTED`, `user_id`, `role` and `rejection_reason`
 (the profile reason, or `null` for a document rejection).
@@ -193,8 +194,10 @@ The mobile app already parses `REJECTED` for users and documents. Still to do th
 | `supabase/migrations/20261118000001_user_rejection_flow.sql` | `users.rejection_reason`, guards, lifecycle trigger update, `delete_user` update, review triggers |
 | `supabase/migrations/20261118000002_pending_user_on_document_resubmitted.sql` | Rejected document → `PENDING` moves the user back to `PENDING_APPROVAL` (`trg_user_documents_pending_user`) |
 | `supabase/migrations/20261118000003_rejection_reason_cleared_on_approval.sql` | Same trigger also on `REJECTED → APPROVED`; rejection reasons cleared only on approval |
+| `supabase/migrations/20261118000014_allow_rejected_user_to_resubmit_profile.sql` | Allows rejected users to update bio/services/documents to resubmit profile |
+| `supabase/migrations/20261119000015_send_email_on_profile_rejection.sql` | Sends notification email on application rejection with reason/documents |
 
-Deploy: `supabase db push`. No Edge Function changes.
+Deploy: `supabase db push`. Deploy Edge Function: `supabase functions deploy user-lifecycle-events`.
 
 ---
 
@@ -208,14 +211,14 @@ select type, title, body, data from public.notifications where user_id = '<user-
 
 | Scenario | Expected |
 |---|---|
-| Reject one document of a pending user | Document `REJECTED` + reason; user `REJECTED`, `users.rejection_reason` empty; one notification naming the document; no email. |
+| Reject one document of a pending user | Document `REJECTED` + reason; user `REJECTED`, `users.rejection_reason` empty; notification naming the document; rejected email listing document sent. |
 | Reject a second document | Document `REJECTED` + reason; no new notification. |
 | Set one of two `REJECTED` documents to `PENDING` | Document `PENDING`, reason kept; user stays `REJECTED`. |
 | Set the last `REJECTED` document to `PENDING` | User `PENDING_APPROVAL`, both reasons kept; no notification. |
 | Approve the last `REJECTED` document | Document `APPROVED`, its reason cleared; user `PENDING_APPROVAL`, profile reason kept. |
 | Approve the profile | User `ACTIVE`, `users.rejection_reason` cleared. |
 | Approved document | No reject button in the admin panel. |
-| Reject the profile of a pending user | User `REJECTED` + reason; notification with the reason; no email. |
+| Reject the profile of a pending user | User `REJECTED` + reason; notification with the reason; rejected email with reason sent. |
 | Approve profile with a pending / rejected document | Fails: `All documents must be approved…`. |
 | Approve every document, then the profile | User `ACTIVE`, reason cleared; "Account approved" notification + email. |
 | Reject an `ACTIVE` user, or review one of their documents | Fails: `Only applications awaiting review…` / `Documents can only be reviewed…`. |
