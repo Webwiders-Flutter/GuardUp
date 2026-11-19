@@ -1,6 +1,8 @@
 import 'package:get_it/get_it.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide LocalStorage;
 
-import '/core/services/admin_settings/admin_settings.service.dart';
+import '/app/gate/gate.dart';
+import '/core/config/admin_settings/admin_settings.dart';
 import '/core/services/document_submission/document_submission_service.dart';
 import '/core/services/file_storage/file_storage.service.dart';
 import '/core/services/file_storage/supabase_file_storage.service.dart';
@@ -21,8 +23,14 @@ Future<void> initDependencies() async {
   // Storage & Core Services
   // ------------------------------------------------------------
   sl.registerLazySingleton<LocalStorage>(() => PrefsStorageService.instance);
-  sl.registerLazySingleton<AdminSettingsService>(
-    () => AdminSettingsService.instance,
+  sl.registerLazySingleton<AdminSettingsRepository>(
+    () => AdminSettingsRepository(Supabase.instance.client),
+  );
+  sl.registerLazySingleton<AdminSettingsCubit>(
+    () => AdminSettingsCubit(sl<AdminSettingsRepository>()),
+  );
+  sl.registerLazySingleton<AppGateCubit>(
+    () => AppGateCubit(sl<AdminSettingsCubit>()),
   );
   sl.registerLazySingleton<FileStorageService>(
     () => SupabaseFileStorageService(),

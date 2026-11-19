@@ -9,6 +9,7 @@ import '/core/error/api_exception.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/string.extension.dart';
+import '/core/utils/validators.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/feedbacks/widgets/app_popup.dart';
 import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
@@ -283,6 +284,28 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
     if (!isCoreValid || !isFeesValid || !isMobileValid || !isSupportValid) {
       AppSnackbar.show(
         message: 'Please correct the validation errors before saving.',
+        type: SnackbarType.error,
+      );
+      return false;
+    }
+
+    final latestAndroid = _latestAndroidVersionController.text.trim();
+    final minAndroid = _minimumAndroidVersionController.text.trim();
+    if (Validators.compareSemver(minAndroid, latestAndroid) > 0) {
+      AppSnackbar.show(
+        message:
+            'Minimum Android version ($minAndroid) cannot be higher than Latest version ($latestAndroid).',
+        type: SnackbarType.error,
+      );
+      return false;
+    }
+
+    final latestIos = _latestIosVersionController.text.trim();
+    final minIos = _minimumIosVersionController.text.trim();
+    if (Validators.compareSemver(minIos, latestIos) > 0) {
+      AppSnackbar.show(
+        message:
+            'Minimum iOS version ($minIos) cannot be higher than Latest version ($latestIos).',
         type: SnackbarType.error,
       );
       return false;

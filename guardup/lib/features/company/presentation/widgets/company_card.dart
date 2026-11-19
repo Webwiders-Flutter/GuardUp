@@ -32,6 +32,9 @@ class CompanyCard extends StatelessWidget {
   /// Optional callback when the card container is tapped.
   final VoidCallback? onTap;
 
+  /// Optional callback when the avatar is tapped.
+  final VoidCallback? onAvatarTap;
+
   /// Optional callback when the "Book now" action button is tapped.
   final VoidCallback? onBookNow;
 
@@ -39,6 +42,7 @@ class CompanyCard extends StatelessWidget {
     super.key,
     required this.company,
     this.onTap,
+    this.onAvatarTap,
     this.onBookNow,
   });
 
@@ -96,39 +100,48 @@ class CompanyCard extends StatelessWidget {
     final logoUrl = company.logoUrl;
     final isNetwork = logoUrl != null && logoUrl.startsWith('http');
 
+    final avatarContainer = QuickContainer(
+      shape: QuickContainerShape.circle,
+      w: 16.wPercent(context),
+      h: 16.wPercent(context),
+      color: context.colors.surfaceDim,
+      border: Border.all(color: context.colors.primary, width: 1.5),
+      alignment: Alignment.center,
+      child: logoUrl != null
+          ? ClipOval(
+              child: isNetwork
+                  ? AppImage.network(
+                      imageUrl: logoUrl,
+                      width: 54,
+                      height: 54,
+                      fit: BoxFit.cover,
+                    )
+                  : AppImage.asset(
+                      assetPath: logoUrl,
+                      width: 54,
+                      height: 54,
+                      fit: BoxFit.cover,
+                    ),
+            )
+          : Text(
+              company.initials ?? company.name.getInitials(),
+              style: context.textTheme.titleMedium?.bold().colour(
+                context.colors.primary,
+              ),
+            ),
+    );
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        QuickContainer(
-          shape: QuickContainerShape.circle,
-          w: 16.wPercent(context),
-          h: 16.wPercent(context),
-          color: context.colors.surfaceDim,
-          border: Border.all(color: context.colors.primary, width: 1.5),
-          alignment: Alignment.center,
-          child: logoUrl != null
-              ? ClipOval(
-                  child: isNetwork
-                      ? AppImage.network(
-                          imageUrl: logoUrl,
-                          width: 54,
-                          height: 54,
-                          fit: BoxFit.cover,
-                        )
-                      : AppImage.asset(
-                          assetPath: logoUrl,
-                          width: 54,
-                          height: 54,
-                          fit: BoxFit.cover,
-                        ),
-                )
-              : Text(
-                  company.initials ?? company.name.getInitials(),
-                  style: context.textTheme.titleMedium?.bold().colour(
-                    context.colors.primary,
-                  ),
-                ),
-        ),
+        if (onAvatarTap != null)
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onAvatarTap,
+            child: avatarContainer,
+          )
+        else
+          avatarContainer,
         if (company.isOnline)
           Positioned(
             right: 0,

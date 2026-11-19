@@ -138,7 +138,7 @@ class PlanSelectionCard extends StatelessWidget {
                           ),
                           AppSpacing.xxs.h,
                           Text(
-                            '${plan.monthlyPrice.toUsd} / month',
+                            '${plan.monthlyPrice.toInrAmount} / month',
                             style: context.textTheme.bodySmall?.colour(
                               context.colors.onSurfaceVariant,
                             ),
@@ -197,7 +197,7 @@ class PlanSelectionCard extends StatelessWidget {
                         ),
                         AppTextSpan(
                           text:
-                              'Save ${plan.calculateSavings(bookingAmount!).toUsd} (Pay ${plan.calculatePayable(bookingAmount!).toUsd})',
+                              'Save ${plan.calculateSavings(bookingAmount!).toInrAmount} (Pay ${plan.calculatePayable(bookingAmount!).toInrAmount})',
                           style: context.textTheme.bodySmall
                               ?.bold()
                               .colour(context.colors.primary)

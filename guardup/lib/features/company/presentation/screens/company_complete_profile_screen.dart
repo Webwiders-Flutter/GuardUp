@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:guardup/core/constants/app_radius.dart';
 import 'package:guardup/core/constants/app_sizes.dart';
+import 'package:guardup/core/services/document_submission/document_submission_service.dart';
 
 import '../../../../core/di/injection_container.dart';
 import '../../../auth/auth.dart';
@@ -136,7 +138,29 @@ class _CompanyCompleteProfileScreenState
 
     if (mounted) {
       _isLoadingNotifier.value = false;
-      context.go(AppRoutes.uploadDocuments);
+      final authState =
+          sl.isRegistered<AuthBloc>() ? sl<AuthBloc>().state : null;
+      final isRejected = authState?.isRejected == true;
+      final hasRejectedDocs = authState?.hasRejectedDocuments == true;
+
+      if (isRejected && !hasRejectedDocs) {
+        if (currentUserId != null) {
+          await sl<DocumentSubmissionService>()
+              .submitApplicationForReview(currentUserId);
+          if (sl.isRegistered<AuthBloc>()) {
+            sl<AuthBloc>().add(const AuthCheckStatusRequested());
+            sl<AuthBloc>().add(const AuthReloadRoleDataRequested());
+          }
+        }
+        if (mounted) {
+          AppSnackbar.success(
+            'Company details updated successfully! Your application has been resubmitted for review.',
+          );
+          context.go(AppRoutes.adminApproval);
+        }
+      } else {
+        context.go(AppRoutes.uploadDocuments);
+      }
     }
   }
 
@@ -203,7 +227,78 @@ class _CompanyCompleteProfileScreenState
                             context.colors.onSurfaceVariant,
                           ),
                         ),
-                        AppSpacing.xxl.h,
+                        AppSpacing.lg.h,
+
+                        // Profile Rejection Reason Banner
+                        Builder(
+                          builder: (context) {
+                            final authState = sl.isRegistered<AuthBloc>()
+                                ? sl<AuthBloc>().state
+                                : null;
+                            final profileReason =
+                                authState?.profileRejectionReason;
+                            if (authState?.isRejected != true ||
+                                profileReason == null ||
+                                profileReason.isEmpty) {
+                              return const SizedBox.shrink();
+                            }
+
+                            return Padding(
+                              padding: EdgeInsets.only(bottom: AppSpacing.lg),
+                              child: Container(
+                                width: double.infinity,
+                                padding: AppSpacing.md.allPadding,
+                                decoration: BoxDecoration(
+                                  color: context.colors.error
+                                      .withValues(alpha: 0.12),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.md),
+                                  border: Border.all(
+                                    color: context.colors.error
+                                        .withValues(alpha: 0.4),
+                                    width: 1.2,
+                                  ),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(
+                                      Icons.error_outline_rounded,
+                                      color: context.colors.error,
+                                      size: 20,
+                                    ),
+                                    AppSpacing.sm.w,
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            'Company Profile Revision Requested',
+                                            style: context.textTheme.labelMedium
+                                                ?.bold()
+                                                .colour(context.colors.error),
+                                          ),
+                                          AppSpacing.xxs.h,
+                                          Text(
+                                            profileReason,
+                                            style: context.textTheme.bodySmall
+                                                ?.colour(
+                                                  context.colors.onSurface,
+                                                )
+                                                .copyWith(height: 1.35),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        AppSpacing.sm.h,
 
                         // 3. Company Name Field
                         AppTextField(
@@ -274,9 +369,24 @@ class _CompanyCompleteProfileScreenState
                         ValueListenableBuilder<bool>(
                           valueListenable: _isLoadingNotifier,
                           builder: (context, isLoading, _) {
+                            final authState = sl.isRegistered<AuthBloc>()
+                                ? sl<AuthBloc>().state
+                                : null;
+                            final isResubmit = authState?.isRejected == true &&
+                                authState?.hasRejectedDocuments == false;
+
                             return AppButton(
-                              text: context.l10n.next,
+                              text: isResubmit
+                                  ? 'Resubmit Company Profile for Review'
+                                  : context.l10n.next,
                               isLoading: isLoading,
+                              trailing: Icon(
+                                isResubmit
+                                    ? Icons.check_circle_outline_rounded
+                                    : Icons.arrow_forward_rounded,
+                                size: AppSizes.iconMd,
+                                color: context.colors.onPrimary,
+                              ),
                               onPressed: _handleNext,
                             );
                           },

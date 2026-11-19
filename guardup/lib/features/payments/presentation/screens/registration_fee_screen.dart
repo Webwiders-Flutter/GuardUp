@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/core/constants/app_sizes.dart';
 import 'package:quick_container/quick_container.dart';
@@ -14,7 +15,7 @@ import '/core/extensions/localization.extension.dart';
 import '/core/extensions/number.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
-import '/core/services/admin_settings/admin_settings.service.dart';
+import '/core/config/admin_settings/admin_settings.dart';
 import '/features/auth/auth.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/buttons/app_button.dart';
@@ -59,16 +60,12 @@ class _RegistrationFeeScreenState extends State<RegistrationFeeScreen> {
   }
 
   double get _registrationFee {
-    return AdminSettingsService.instance.getRegistrationFee(_currentUser.role);
+    return context.read<AdminSettingsCubit>().getRegistrationFee(_currentUser.role);
   }
 
   @override
   void initState() {
     super.initState();
-    // Ensures settings are loaded if opened before bootstrap finished
-    AdminSettingsService.instance.init().then((_) {
-      if (mounted) setState(() {});
-    });
   }
 
   @override

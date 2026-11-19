@@ -7,7 +7,6 @@ import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
-import '/core/logger/app_logger.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/feedbacks/widgets/app_popup.dart';
 
@@ -33,8 +32,7 @@ class MainNavigationScreen extends StatefulWidget {
   State<MainNavigationScreen> createState() => _MainNavigationScreenState();
 }
 
-class _MainNavigationScreenState extends State<MainNavigationScreen>
-    with WidgetsBindingObserver {
+class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int get _currentIndex => widget.navigationShell.currentIndex;
 
   List<_NavItemData> _getNavItems(BuildContext context) {
@@ -62,40 +60,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
         branchIndex: 4,
       ),
     ];
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-    switch (state) {
-      case AppLifecycleState.resumed:
-        AppLogger.i('AppLifecycleState.resumed');
-        break;
-      case AppLifecycleState.inactive:
-        AppLogger.i('AppLifecycleState.inactive');
-        break;
-      case AppLifecycleState.paused:
-        AppLogger.i('AppLifecycleState.paused');
-        break;
-      case AppLifecycleState.detached:
-        AppLogger.i('AppLifecycleState.detached');
-        break;
-      case AppLifecycleState.hidden:
-        AppLogger.i('AppLifecycleState.hidden');
-        break;
-    }
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
   }
 
   void _onTap(int branchIndex) {

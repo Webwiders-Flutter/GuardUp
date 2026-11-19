@@ -1059,5 +1059,135 @@
   "editCompanyProfile": "Edit Company Profile",
   "@editCompanyProfile": {
     "description": "Edit company profile screen title"
+  },
+  "maintenanceTitle": "App Under Maintenance",
+  "@maintenanceTitle": {
+    "description": "Default maintenance screen title"
+  },
+  "maintenanceMessage": "We are currently upgrading our systems. Please check back shortly.",
+  "@maintenanceMessage": {
+    "description": "Default maintenance screen message"
+  },
+  "maintenanceInProgress": "MAINTENANCE IN PROGRESS",
+  "@maintenanceInProgress": {
+    "description": "Maintenance in progress badge text"
+  },
+  "checkAgain": "Check Again",
+  "@checkAgain": {
+    "description": "Check again button label"
+  },
+  "needUrgentAssistance": "Need urgent assistance?",
+  "@needUrgentAssistance": {
+    "description": "Assistance text on maintenance screen"
+  },
+  "maintenanceWhatsAppMessage": "Hello GuardUp Support, I have a query regarding app maintenance.",
+  "@maintenanceWhatsAppMessage": {
+    "description": "Default message for WhatsApp maintenance support"
+  },
+  "whatsappSupport": "WhatsApp Support",
+  "@whatsappSupport": {
+    "description": "Tooltip for WhatsApp support icon"
+  },
+  "callSupport": "Call Support",
+  "@callSupport": {
+    "description": "Tooltip for call support icon"
+  },
+  "maintenanceEmailSubject": "GuardUp App Maintenance Inquiry",
+  "@maintenanceEmailSubject": {
+    "description": "Default email subject for maintenance inquiry"
+  },
+  "emailSupport": "Email Support",
+  "@emailSupport": {
+    "description": "Tooltip for email support icon"
+  },
+  "mandatoryUpdate": "MANDATORY UPDATE",
+  "@mandatoryUpdate": {
+    "description": "Mandatory update badge text"
+  },
+  "timeToUpdate": "Time to Update",
+  "@timeToUpdate": {
+    "description": "Force update heading"
+  },
+  "forceUpdateDefaultMessage": "A newer version of GuardUp ({version}) is required to continue. Please update your app from the store.",
+  "@forceUpdateDefaultMessage": {
+    "description": "Default force update message",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "1.2.0"
+      }
+    }
+  },
+  "yourVersion": "Your Version",
+  "@yourVersion": {
+    "description": "Your version label in version compare box"
+  },
+  "requiredVersion": "Required Version",
+  "@requiredVersion": {
+    "description": "Required version label in version compare box"
+  },
+  "updateNow": "Update Now",
+  "@updateNow": {
+    "description": "Update now button label"
+  },
+  "forceUpdateWhatsAppMessage": "Hello GuardUp Support, I need help updating the app to version {version}.",
+  "@forceUpdateWhatsAppMessage": {
+    "description": "WhatsApp message for update assistance",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "1.2.0"
+      }
+    }
+  },
+  "havingTroubleUpdating": "Having trouble updating?",
+  "@havingTroubleUpdating": {
+    "description": "Trouble updating help link text"
+  },
+  "newUpdateAvailable": "New Update Available",
+  "@newUpdateAvailable": {
+    "description": "Optional update dialog title"
+  },
+  "updateReadyToInstall": "Version {version} is now available",
+  "@updateReadyToInstall": {
+    "description": "Optional update dialog subtitle",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "1.2.0"
+      }
+    }
+  },
+  "optionalUpdateDefaultMessage": "A new version of GuardUp is available with new features and performance improvements.",
+  "@optionalUpdateDefaultMessage": {
+    "description": "Default optional update dialog description"
+  },
+  "currentVersionLabel": "Current",
+  "@currentVersionLabel": {
+    "description": "Current version label"
+  },
+  "latestVersionLabel": "Latest",
+  "@latestVersionLabel": {
+    "description": "Latest version label"
+  },
+  "later": "Later",
+  "@later": {
+    "description": "Later button label on optional update dialog"
+  },
+  "error404": "Error 404",
+  "@error404": {
+    "description": "404 error badge label"
+  },
+  "pageNotFound": "Page Not Found",
+  "@pageNotFound": {
+    "description": "404 headline"
+  },
+  "pageNotFoundMessage": "The page you're looking for doesn't exist\nor may have been moved.",
+  "@pageNotFoundMessage": {
+    "description": "404 description message"
+  },
+  "goToDashboard": "Go to Dashboard",
+  "@goToDashboard": {
+    "description": "Button to navigate to home/dashboard"
   }
 }

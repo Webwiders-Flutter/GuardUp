@@ -9,6 +9,7 @@ import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/gen/assets.gen.dart';
+import '/shared/widgets/feedbacks/widgets/app_file_preview.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 
@@ -51,12 +52,22 @@ class BodyGuardHeaderCard extends StatelessWidget {
           Stack(
             clipBehavior: Clip.none,
             children: [
-              AppImage.auto(
-                source: effectiveAvatar,
-                width: 22.wPercent(context),
-                height: 22.wPercent(context),
-                borderRadius: AppRadius.md.toBorderRadius,
-                fit: BoxFit.cover,
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  AppFilePreviewSheet.openInViewer(
+                    context,
+                    title: name,
+                    fileUrl: effectiveAvatar,
+                  );
+                },
+                child: AppImage.auto(
+                  source: effectiveAvatar,
+                  width: 22.wPercent(context),
+                  height: 22.wPercent(context),
+                  borderRadius: AppRadius.md.toBorderRadius,
+                  fit: BoxFit.cover,
+                ),
               ),
               if (isVerified)
                 Positioned(

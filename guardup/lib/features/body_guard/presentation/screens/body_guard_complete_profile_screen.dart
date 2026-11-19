@@ -17,6 +17,7 @@ import '../../../auth/auth.dart';
 import '/app/routes/app_routes.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
+import '/core/services/document_submission/document_submission_service.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
@@ -316,7 +317,34 @@ class _BodyGuardCompleteProfileScreenState
       }
 
       if (mounted) {
-        context.go(AppRoutes.bodyguardUploadDocuments);
+        final authState =
+            sl.isRegistered<AuthBloc>() ? sl<AuthBloc>().state : null;
+        final isRejected = authState?.isRejected == true;
+        final hasRejectedDocs = authState?.hasRejectedDocuments == true;
+
+        if (isRejected && !hasRejectedDocs) {
+          // Only profile was rejected, documents are already fine.
+          // Resubmit application directly to PENDING_APPROVAL!
+          final currentUserId = sl.isRegistered<AuthRepository>()
+              ? sl<AuthRepository>().currentUserId
+              : null;
+          if (currentUserId != null) {
+            await sl<DocumentSubmissionService>()
+                .submitApplicationForReview(currentUserId);
+            if (sl.isRegistered<AuthBloc>()) {
+              sl<AuthBloc>().add(const AuthCheckStatusRequested());
+              sl<AuthBloc>().add(const AuthReloadRoleDataRequested());
+            }
+          }
+          if (mounted) {
+            AppSnackbar.success(
+              'Profile updated successfully! Your application has been resubmitted for review.',
+            );
+            context.go(AppRoutes.adminApproval);
+          }
+        } else {
+          context.go(AppRoutes.bodyguardUploadDocuments);
+        }
       }
     } catch (e, stack) {
       debugPrint('Failed to save bodyguard profile: $e\n$stack');
@@ -359,17 +387,95 @@ class _BodyGuardCompleteProfileScreenState
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            return SingleChildScrollView(
-              padding: context.horizontalEdgeInsets,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
+            return RefreshIndicator(
+              color: context.colors.primary,
+              backgroundColor: context.colors.surface,
+              onRefresh: _loadServices,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: context.horizontalEdgeInsets,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
                   child: Form(
                     key: _formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        AppSpacing.xxl.h,
+                        AppSpacing.lg.h,
+
+                        // Profile Rejection Reason Banner
+                        Builder(
+                          builder: (context) {
+                            final authState = sl.isRegistered<AuthBloc>()
+                                ? sl<AuthBloc>().state
+                                : null;
+                            final profileReason =
+                                authState?.profileRejectionReason;
+                            if (authState?.isRejected != true ||
+                                profileReason == null ||
+                                profileReason.isEmpty) {
+                              return const SizedBox.shrink();
+                            }
+
+                            return Padding(
+                              padding: EdgeInsets.only(bottom: AppSpacing.lg),
+                              child: Container(
+                                width: double.infinity,
+                                padding: AppSpacing.md.allPadding,
+                                decoration: BoxDecoration(
+                                  color: context.colors.error
+                                      .withValues(alpha: 0.12),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.md),
+                                  border: Border.all(
+                                    color: context.colors.error
+                                        .withValues(alpha: 0.4),
+                                    width: 1.2,
+                                  ),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(
+                                      Icons.error_outline_rounded,
+                                      color: context.colors.error,
+                                      size: 20,
+                                    ),
+                                    AppSpacing.sm.w,
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            'Profile Revision Requested',
+                                            style: context
+                                                .textTheme.labelMedium
+                                                ?.bold()
+                                                .colour(context.colors.error),
+                                          ),
+                                          AppSpacing.xxs.h,
+                                          Text(
+                                            profileReason,
+                                            style: context
+                                                .textTheme.bodySmall
+                                                ?.colour(
+                                                  context.colors.onSurface,
+                                                )
+                                                .copyWith(height: 1.35),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
 
                         // 1. Profile Picture (Dashed Circular Border Picker)
                         Center(
@@ -755,11 +861,21 @@ class _BodyGuardCompleteProfileScreenState
                         ValueListenableBuilder<bool>(
                           valueListenable: _isLoadingNotifier,
                           builder: (context, isLoading, _) {
+                            final authState = sl.isRegistered<AuthBloc>()
+                                ? sl<AuthBloc>().state
+                                : null;
+                            final isResubmit = authState?.isRejected == true &&
+                                authState?.hasRejectedDocuments == false;
+
                             return AppButton(
-                              text: context.l10n.next,
+                              text: isResubmit
+                                  ? 'Resubmit Profile for Review'
+                                  : context.l10n.next,
                               isLoading: isLoading,
                               trailing: Icon(
-                                Icons.arrow_forward_rounded,
+                                isResubmit
+                                    ? Icons.check_circle_outline_rounded
+                                    : Icons.arrow_forward_rounded,
                                 size: AppSizes.iconMd,
                                 color: context.colors.onPrimary,
                               ),
@@ -773,7 +889,8 @@ class _BodyGuardCompleteProfileScreenState
                   ),
                 ),
               ),
-            );
+            ),
+          );
           },
         ),
       ),

@@ -137,7 +137,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     switch (_effectiveRole) {
       case UserRole.customer:
         context.go(
-          AppRoutes.membershipPlans,
+          '${AppRoutes.membershipPlans}?mode=onboarding',
           extra: (
             mode: MembershipPlanMode.onboarding,
             bookingAmount: null,

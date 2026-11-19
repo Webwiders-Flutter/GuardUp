@@ -6,11 +6,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 
 import '../firebase_options.dart';
+import '/app/gate/gate.dart';
 import '/app/theme/colors/app_colors.dart';
 import '/bootstrap/flavor.dart';
+import '/core/config/admin_settings/admin_settings.dart';
 import '/core/config/config.dart';
 import '/core/di/injection_container.dart';
-import '/core/services/admin_settings/admin_settings.service.dart';
 import '/core/services/notification/push_notification_service.dart';
 import '/shared/functionalities/location-and-phone-code/services/phone_code_picker.services.dart';
 
@@ -45,12 +46,12 @@ Future<void> bootstrap({
     LocationPhoneCodeServices.init(),
 
     Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform),
-     PushNotificationService.init(),
+    PushNotificationService.init(),
   ]);
-  
-  await AdminSettingsService.instance.init();
-  await initDependencies();
 
+  await initDependencies();
+  await sl<AdminSettingsCubit>().init();
+  await sl<AppGateCubit>().init();
 
   runApp(builder());
 }

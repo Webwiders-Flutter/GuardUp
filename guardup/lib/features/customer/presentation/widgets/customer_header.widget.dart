@@ -32,7 +32,7 @@ class CustomerHeaderWidget extends StatelessWidget {
       children: [
         // User Profile Avatar
         GestureDetector(
-          onTap: onProfileTap ?? () => context.push(AppRoutes.editProfile),
+          onTap: onProfileTap ?? () => context.go(AppRoutes.profile),
           behavior: HitTestBehavior.opaque,
           child: Container(
             width: 48,

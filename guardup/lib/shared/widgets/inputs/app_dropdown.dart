@@ -54,6 +54,7 @@ class AppDropdown<V> extends StatefulWidget {
   final Function(List<String> labels)? onItemTap;
   final ValueChanged<V>? onSelected;
   final bool? closeOnSelect;
+  final Future<void> Function()? onRefresh;
   final Future<PaginationState<SelectableItem<V, String>>> Function({
     String? value,
     bool forceRefresh,
@@ -74,6 +75,7 @@ class AppDropdown<V> extends StatefulWidget {
     this.onItemTap,
     this.onSelected,
     this.closeOnSelect,
+    this.onRefresh,
     this.onLoad,
     this.dropdownItemChild,
     this.isSearchEnabled = false,
@@ -113,20 +115,14 @@ class _AppDropdownState<V> extends State<AppDropdown<V>> {
           paginationController.updateState(res);
         }
       },
-      onRefresh: () async {
-        final res = await widget.onLoad?.call(
-          value: searchController.text,
-          forceRefresh: true,
-        );
-        if (res != null) {
-          paginationController.updateState(res);
-        }
-      },
+      onRefresh: () => widget.onRefresh!(),
     );
   }
 
   void _updateDisplayText() {
-    final selected = widget.items.where((i) => widget.controller.value.contains(i.id));
+    final selected = widget.items.where(
+      (i) => widget.controller.value.contains(i.id),
+    );
     final displayText = selected.map((e) => e.data).join(', ');
     if (_displayTextController.text != displayText) {
       _displayTextController.text = displayText;
@@ -502,15 +498,19 @@ class _AppDropdownState<V> extends State<AppDropdown<V>> {
   }
 
   Widget _buildDropdownList(BuildContext context, {required bool isSheet}) {
+    final bool canRefresh = widget.onRefresh != null || widget.onLoad != null;
+
     return ValueListenableBuilder<List<V>>(
       valueListenable: widget.controller,
       builder: (context, value, child) {
         return AppPagination<SelectableItem<V, String>>(
           controller: paginationController,
+          enablePullToRefresh: canRefresh,
           builder: (scrollController, itemBuilder, itemCount) {
             return ListView.builder(
               controller: scrollController,
               shrinkWrap: true,
+              physics: const AlwaysScrollableScrollPhysics(),
               padding: EdgeInsets.zero,
               itemCount: itemCount,
               itemBuilder: itemBuilder,

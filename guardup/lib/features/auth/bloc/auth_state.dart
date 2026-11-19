@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import '/core/state/api_state.dart';
+import '/features/body_guard/data/enum/document_status.enum.dart';
 import '/features/body_guard/data/model/service_item.model.dart';
 import '/features/body_guard/data/model/user_document.model.dart';
 import '../data/enum/gender_type.enum.dart';
@@ -276,11 +277,40 @@ class AuthState extends Equatable {
   /// Whether the application was rejected by administrator.
   bool get isRejected => status == UserStatus.rejected;
 
-  /// The administrator rejection reason if rejected.
-  String? get rejectionReason =>
+  /// The administrator profile rejection reason from `users` table.
+  String? get profileRejectionReason =>
       (userData?['rejection_reason'] as String?)?.trim().isNotEmpty == true
-          ? userData!['rejection_reason'] as String
+          ? (userData!['rejection_reason'] as String).trim()
           : null;
+
+  /// The user's active membership plan ID from `users` table or metadata.
+  String? get membershipPlanId =>
+      (userData?['membership_plan_id'] as String?) ??
+      (userData?['metadata'] is Map
+          ? (userData!['metadata'] as Map)['membership_plan_id'] as String?
+          : null);
+
+  /// Backwards compatibility getter for profile rejection reason.
+  String? get rejectionReason => profileRejectionReason;
+
+  /// Whether the profile itself was rejected (reason in `users` table).
+  bool get isProfileRejected => isRejected && profileRejectionReason != null;
+
+  /// Whether one or more documents were rejected (status == REJECTED in `user_documents`).
+  bool get hasRejectedDocuments =>
+      userDocuments.any((doc) => doc.status == DocumentStatus.rejected);
+
+  /// Whether both profile and documents are rejected.
+  bool get isBothProfileAndDocumentRejected =>
+      isProfileRejected && hasRejectedDocuments;
+
+  /// Whether ONLY the profile is rejected (no documents rejected).
+  bool get isOnlyProfileRejected =>
+      isRejected && isProfileRejected && !hasRejectedDocuments;
+
+  /// Whether ONLY document(s) are rejected (no profile rejection reason).
+  bool get isOnlyDocumentRejected =>
+      isRejected && hasRejectedDocuments && !isProfileRejected;
 
   /// Whether the guard or company still needs to finish onboarding steps
   /// (profile information, documents upload, registration fee).

@@ -105,16 +105,24 @@ final class AppRouter {
 
         // A. Account is blocked by Admin
         if (authState.isBlocked) {
-          return location == AccountStatusScreen.blockedRoute
-              ? null
-              : AccountStatusScreen.blockedRoute;
+          final isAllowedBlocked =
+              location == AccountStatusScreen.blockedRoute ||
+              location == ContactUsScreen.route ||
+              location == LegalContentScreen.privacyPolicyRoute ||
+              location == LegalContentScreen.termsRoute;
+
+          return isAllowedBlocked ? null : AccountStatusScreen.blockedRoute;
         }
 
         // B. Account is deleted by Admin or User
         if (authState.isDeleted) {
-          return location == AccountStatusScreen.deletedRoute
-              ? null
-              : AccountStatusScreen.deletedRoute;
+          final isAllowedDeleted =
+              location == AccountStatusScreen.deletedRoute ||
+              location == ContactUsScreen.route ||
+              location == LegalContentScreen.privacyPolicyRoute ||
+              location == LegalContentScreen.termsRoute;
+
+          return isAllowedDeleted ? null : AccountStatusScreen.deletedRoute;
         }
 
         // C. Application submitted (waiting for Admin review) or Rejected by Admin
@@ -126,8 +134,9 @@ final class AppRouter {
               location == LegalContentScreen.privacyPolicyRoute ||
               location == LegalContentScreen.termsRoute ||
               (authState.isRejected &&
-                  (location == BodyGuardUploadDocumentsScreen.route ||
-                      location == UploadDocumentsScreen.route ||
+                  ((authState.hasRejectedDocuments &&
+                          (location == BodyGuardUploadDocumentsScreen.route ||
+                              location == UploadDocumentsScreen.route)) ||
                       location == BodyGuardCompleteProfileScreen.route ||
                       location == CompanyCompleteProfileScreen.route));
 
@@ -485,16 +494,54 @@ final class AppRouter {
       GoRoute(
         path: MembershipPlansScreen.route,
         builder: (context, state) {
+          final queryModeStr = state.uri.queryParameters['mode'];
+          final queryMode = queryModeStr != null
+              ? MembershipPlanMode.tryFromApiValue(queryModeStr)
+              : null;
+
           final extra = state.extra;
-          if (extra is MembershipPlanArgs) {
-            return MembershipPlansScreen(
-              mode: extra.mode ?? MembershipPlanMode.profile,
-              bookingAmount: extra.bookingAmount,
-              operativeName: extra.operativeName,
-              activePlanId: extra.activePlanId ?? 'gold_sentinel',
-            );
+          MembershipPlanMode? mode = queryMode;
+          double? bookingAmount;
+          String? operativeName;
+          String? activePlanId;
+
+          if (extra is MembershipPlanMode) {
+            mode ??= extra;
+          } else if (extra is MembershipPlanArgs) {
+            mode ??= extra.mode;
+            bookingAmount = extra.bookingAmount;
+            operativeName = extra.operativeName;
+            activePlanId = extra.activePlanId;
+          } else if (extra is Map) {
+            if (extra['mode'] is MembershipPlanMode) {
+              mode ??= extra['mode'] as MembershipPlanMode;
+            } else if (extra['mode'] is String) {
+              mode ??=
+                  MembershipPlanMode.tryFromApiValue(extra['mode'] as String);
+            }
+            bookingAmount = (extra['bookingAmount'] as num?)?.toDouble();
+            operativeName = extra['operativeName'] as String?;
+            activePlanId = extra['activePlanId'] as String?;
           }
-          return const MembershipPlansScreen();
+
+          final authState = sl.isRegistered<AuthBloc>()
+              ? sl<AuthBloc>().state
+              : null;
+
+          // If not specified, default to onboarding for customer without plan, else profile
+          mode ??= (authState?.isCustomer == true &&
+                  authState?.membershipPlanId == null)
+              ? MembershipPlanMode.onboarding
+              : MembershipPlanMode.profile;
+
+          activePlanId ??= authState?.membershipPlanId;
+
+          return MembershipPlansScreen(
+            mode: mode,
+            bookingAmount: bookingAmount,
+            operativeName: operativeName,
+            activePlanId: activePlanId,
+          );
         },
       ),
       GoRoute(

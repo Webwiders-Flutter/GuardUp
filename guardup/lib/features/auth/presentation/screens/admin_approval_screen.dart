@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/core/di/injection_container.dart';
-import 'package:guardup/features/auth/domain/repositories/auth_repository.dart';
-import 'package:guardup/features/auth/domain/repositories/user_repository.dart';
+import 'package:guardup/features/auth/auth.dart';
 import 'package:guardup/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import 'package:guardup/shared/widgets/sections/wrapper_card.dart';
 import 'package:quick_container/quick_container.dart';
@@ -19,8 +18,6 @@ import '/core/extensions/textstyle_extension.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/sections/app_appbar.dart';
-import '../../bloc/auth_bloc.dart';
-import '../../bloc/auth_event.dart';
 
 /// Screen displaying the application status / review stage for onboarding operatives & companies.
 class AdminApprovalScreen extends StatefulWidget {
@@ -34,6 +31,30 @@ class AdminApprovalScreen extends StatefulWidget {
 
 class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
   bool _isChecking = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && sl.isRegistered<AuthBloc>()) {
+        sl<AuthBloc>().add(const AuthReloadRoleDataRequested());
+      }
+    });
+  }
+
+  String _buildRejectionMessage(AuthState state) {
+    final profileReason = state.profileRejectionReason;
+    final hasDocRejection = state.hasRejectedDocuments;
+
+    if (profileReason != null && hasDocRejection) {
+      return 'Application Needs Revision:\n• Profile: $profileReason\n• Documents: One or more documents were rejected. Please review feedback and re-upload.';
+    } else if (profileReason != null) {
+      return 'Profile Revision Required:\n$profileReason\n\nPlease tap "Edit Profile Details" below to correct your information.';
+    } else if (hasDocRejection) {
+      return 'Document Revision Required:\nOne or more documents did not meet our verification standards. Please tap "Review & Re-upload Documents" below to re-upload.';
+    }
+    return 'Your application was rejected. Please review feedback and resubmit.';
+  }
 
   Future<void> _checkStatus() async {
     final authBloc = sl.isRegistered<AuthBloc>() ? sl<AuthBloc>() : null;
@@ -53,6 +74,7 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
 
       if (data != null) {
         authBloc?.add(const AuthCheckStatusRequested());
+        authBloc?.add(const AuthReloadRoleDataRequested());
         final rawStatus = (data['status'] as String? ?? '').toUpperCase();
 
         if (rawStatus == 'APPROVED' || rawStatus == 'ACTIVE') {
@@ -215,8 +237,7 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                                   Expanded(
                                     child: Text(
                                       isRejected
-                                          ? (authState.rejectionReason ??
-                                                'One or more of your documents or details did not meet our verification standards. Please review the reasons and resubmit.')
+                                          ? _buildRejectionMessage(authState)
                                           : context
                                                 .l10n
                                                 .applicationUnderReviewNotice,
@@ -253,23 +274,29 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                           },
                         ),
                       ] else if (isRejected) ...[
-                        AppButton(
-                          text: 'Review & Re-upload Documents',
-                          trailing: const Icon(
-                            Icons.upload_file_rounded,
-                            size: AppSizes.iconSmd,
+                        if (authState.hasRejectedDocuments) ...[
+                          AppButton(
+                            text: 'Review & Re-upload Documents',
+                            trailing: const Icon(
+                              Icons.upload_file_rounded,
+                              size: AppSizes.iconSmd,
+                            ),
+                            onPressed: () {
+                              if (authState.isGuard) {
+                                context.push(
+                                  AppRoutes.bodyguardUploadDocuments,
+                                );
+                              } else {
+                                context.push(AppRoutes.uploadDocuments);
+                              }
+                            },
                           ),
-                          onPressed: () {
-                            if (authState.isGuard) {
-                              context.push(AppRoutes.bodyguardUploadDocuments);
-                            } else {
-                              context.push(AppRoutes.uploadDocuments);
-                            }
-                          },
-                        ),
-                        AppSpacing.md.h,
+                          AppSpacing.md.h,
+                        ],
                         AppButton(
-                          type: ButtonType.secondaryOff,
+                          type: authState.hasRejectedDocuments
+                              ? ButtonType.secondaryOff
+                              : ButtonType.primary,
                           text: 'Edit Profile Details',
                           trailing: const Icon(
                             Icons.edit_outlined,

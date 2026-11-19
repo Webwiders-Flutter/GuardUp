@@ -4,6 +4,7 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:quick_container/quick_container.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
+import '../../../../shared/widgets/misc/skeleton_effect.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
@@ -30,17 +31,13 @@ class LegalContentScreen extends StatelessWidget {
   final ContentType type;
   final UserRole? role;
 
-  const LegalContentScreen({
-    super.key,
-    required this.type,
-    this.role,
-  });
+  const LegalContentScreen({super.key, required this.type, this.role});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => LegalContentBloc()
-        ..add(LegalContentRequested(type, role: role)),
+      create: (context) =>
+          LegalContentBloc()..add(LegalContentRequested(type, role: role)),
       child: _LegalContentView(type: type),
     );
   }
@@ -81,6 +78,7 @@ class _LegalContentView extends StatelessWidget {
           // If structured clauses exist, render as individual sleek cards with Skeletonizer
           if (data.clauses.isNotEmpty) {
             return Skeletonizer(
+              effect: SkeletonEffect.adaptiveShimmer(context),
               enabled: isLoading,
               child: SingleChildScrollView(
                 padding: context.screenPadding,
@@ -112,6 +110,7 @@ class _LegalContentView extends StatelessWidget {
 
           // Fallback to HTML widget
           return Skeletonizer(
+            effect: SkeletonEffect.adaptiveShimmer(context),
             enabled: isLoading,
             child: SingleChildScrollView(
               padding: context.screenPadding,

@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
     }
 
     const payload: UserLifecyclePayload = await req.json();
-    const { event, user_id, email, name, role } = payload;
+    const { event, user_id, email, name, role, rejection_reason, rejected_documents } = payload;
 
     if (!EMAIL_EVENTS.includes(event)) {
       return json(
@@ -97,6 +97,8 @@ Deno.serve(async (req) => {
       name: name || "there",
       roleLabel: roleLabel(role),
       support,
+      rejectionReason: rejection_reason,
+      rejectedDocuments: rejected_documents,
     });
 
     const result = await sendEmail({

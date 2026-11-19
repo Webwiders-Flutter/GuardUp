@@ -12,6 +12,7 @@ final class DatabaseTables {
   static const String legalContent = "legal_content";
   static const String contactUs = "contact_us";
   static const String adminSettings = "admin_settings";
+  static const String membershipPlans = "membership_plans";
   static const String notifications = "notifications";
   static const String userDevices = "user_devices";
 }

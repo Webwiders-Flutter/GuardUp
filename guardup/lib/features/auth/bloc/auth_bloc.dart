@@ -289,7 +289,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         return;
       }
 
-      // Realtime Admin Action: Approved / Active / Pending Approval
+      // Realtime Admin Action: Approved / Active / Pending Approval / Rejected
       emit(
         state.copyWith(
           sessionStatus: AuthSessionStatus.authenticated,
@@ -299,6 +299,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           userData: event.userData ?? state.userData,
         ),
       );
+
+      // Realtime sync: reload documents and services when status changes to rejected or pending
+      if (newStatus == UserStatus.rejected ||
+          newStatus == UserStatus.pendingApproval) {
+        add(const AuthReloadRoleDataRequested());
+      }
     } else {
       emit(const AuthState.unauthenticated());
     }

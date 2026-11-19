@@ -19,10 +19,12 @@ import '/features/auth/bloc/auth_bloc.dart';
 import '/features/auth/bloc/auth_event.dart';
 import '/features/auth/bloc/auth_state.dart';
 import '/gen/assets.gen.dart';
+import '/shared/widgets/feedbacks/widgets/app_file_preview.dart';
 import '/shared/widgets/feedbacks/widgets/app_popup.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
+import '/features/payments/presentation/screens/membership_plans_screen.dart';
 import '../../data/enum/user_role.enum.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -75,7 +77,14 @@ class ProfileScreen extends StatelessWidget {
                       }
                     },
                   ),
-
+                // 4. Common Settings Menu Cards
+                _ProfileMenuCard(
+                  title: context.l10n.changePassword,
+                  icon: Icons.lock_outline_rounded,
+                  onTap: () {
+                    context.push(AppRoutes.changePassword);
+                  },
+                ),
                 // 3. Role-Specific Menu Cards
                 if (role == UserRole.guard) ...[
                   _ProfileMenuCard(
@@ -135,16 +144,23 @@ class ProfileScreen extends StatelessWidget {
                       context.push(AppRoutes.businessDocuments);
                     },
                   ),
-                ],
+                ] else
+                  _ProfileMenuCard(
+                    title: 'Membership Plan'.toUpperCase(),
+                    icon: Icons.card_membership_outlined,
+                    onTap: () {
+                      context.push(
+                        AppRoutes.membershipPlans,
+                        extra: (
+                          mode: MembershipPlanMode.profile,
+                          bookingAmount: null,
+                          operativeName: null,
+                          activePlanId: state.membershipPlanId,
+                        ),
+                      );
+                    },
+                  ),
 
-                // 4. Common Settings Menu Cards
-                _ProfileMenuCard(
-                  title: context.l10n.changePassword,
-                  icon: Icons.lock_outline_rounded,
-                  onTap: () {
-                    context.push(AppRoutes.changePassword);
-                  },
-                ),
                 // _ProfileMenuCard(
                 //   title: context.l10n.notifications.toUpperCase(),
                 //   icon: Icons.notifications_none_rounded,
@@ -236,6 +252,14 @@ class ProfileScreen extends StatelessWidget {
     return CompanyCard(
       company: dynamicCompany,
       onTap: () => context.push(AppRoutes.companyInformation),
+      onAvatarTap: () {
+        final imagePath = logoUrl ?? Assets.images.appLogo.path;
+        AppFilePreviewSheet.openInViewer(
+          context,
+          title: companyName,
+          fileUrl: imagePath,
+        );
+      },
     );
   }
 
@@ -304,6 +328,14 @@ class _ProfileCard extends StatelessWidget {
     this.isVerified = true,
   });
 
+  void _openImagePreview(BuildContext context) {
+    final imagePath = avatarAssetPath.isNotEmpty
+        ? avatarAssetPath
+        : Assets.images.dummyAvatar.path;
+
+    AppFilePreviewSheet.openInViewer(context, title: name, fileUrl: imagePath);
+  }
+
   @override
   Widget build(BuildContext context) {
     return WrapperCard(
@@ -316,14 +348,18 @@ class _ProfileCard extends StatelessWidget {
           Stack(
             clipBehavior: Clip.none,
             children: [
-              AppImage.auto(
-                source: avatarAssetPath.isNotEmpty
-                    ? avatarAssetPath
-                    : Assets.images.dummyAvatar.path,
-                width: 22.wPercent(context),
-                height: 22.wPercent(context),
-                borderRadius: AppRadius.md.toBorderRadius,
-                fit: BoxFit.cover,
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _openImagePreview(context),
+                child: AppImage.auto(
+                  source: avatarAssetPath.isNotEmpty
+                      ? avatarAssetPath
+                      : Assets.images.dummyAvatar.path,
+                  width: 22.wPercent(context),
+                  height: 22.wPercent(context),
+                  borderRadius: AppRadius.md.toBorderRadius,
+                  fit: BoxFit.cover,
+                ),
               ),
               if (isVerified)
                 Positioned(

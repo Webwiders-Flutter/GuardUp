@@ -66,7 +66,7 @@ See [user_review_and_rejection.md](user_review_and_rejection.md).
 |---|---|---|
 | `INCOMPLETE` → `PENDING_APPROVAL` | **All admins**: "New registration: {name}" | No |
 | `PENDING_APPROVAL` / `REJECTED` → `ACTIVE` | The user: "Account approved" | ✅ Approved email |
-| anything → `REJECTED` | The user: "Application not approved" with the reason, or the rejected document names | No |
+| anything → `REJECTED` | The user: "Application not approved" with the reason, or the rejected document names | ✅ Rejected email (with reason/documents) |
 | anything → `BLOCKED` | The user: "Account suspended" | No |
 | `BLOCKED` → `ACTIVE` | The user: "Account restored" | No |
 | `PENDING_APPROVAL` → `DELETED` **by an admin** | The user: "Application not approved" (push only, see below) | ✅ Rejected email |
@@ -87,8 +87,9 @@ Notes:
 
 ## 4. Notification Types
 
-Stored in the `public.notification_type` enum. The admin app mirrors it in
-`guardup_admin/lib/features/notifications/data/enums/notification_type.enum.dart`.
+Stored in the `public.notification_type` enum. Both the mobile app and admin app mirror it in:
+- `guardup/lib/features/notifications/data/enums/notification_type.enum.dart`
+- `guardup_admin/lib/features/notifications/data/enums/notification_type.enum.dart`
 
 | Type | Used for |
 |---|---|
@@ -185,6 +186,8 @@ Migrations (in `supabase/migrations/`):
 | `20261118000000_add_rejected_user_status.sql` | Adds `REJECTED` back to `user_status` |
 | `20261118000001_user_rejection_flow.sql` | Current lifecycle trigger (`REJECTED` notification), `rejection_reason`, review triggers |
 | `20261118000011_add_language_code_to_user_devices.sql` | `user_devices.language_code`, `register_user_device` with language, `update_user_device_language` |
+| `20261118000014_allow_rejected_user_to_resubmit_profile.sql` | Allows rejected users to update bio/services/documents to resubmit profile |
+| `20261119000015_send_email_on_profile_rejection.sql` | Sends notification email on application rejection with reason/documents |
 
 ---
 
@@ -312,10 +315,9 @@ limit 10;
 
 ---
 
-## 12. Not Done Yet
+## 12. Implementation Status & Next Steps
 
-- The **mobile app** does not yet register device tokens (`register_user_device`), so pushes
-  only reach users after that is added. In-app notification rows are already created.
+- ✅ **Mobile app device registration & notifications**: The mobile app (`guardup`) automatically registers device tokens (`register_user_device`), updates language preferences (`update_user_device_language`), and displays notifications via BLoC (`NotificationsBloc`, `UnreadNotificationCountCubit`, `UserDeviceCubit`).
 - Notifications and emails are **English only** for now. Each device already stores its
   `language_code`, but `send-notification` sends the same text to every device. Sending
   translated text per language (like Supplr's English/Hindi groups) needs translated

@@ -104,7 +104,7 @@ final class Validators {
     return null;
   }
 
-  /// Version validation (e.g. 1.0.0)
+  /// Version validation (e.g. 1.0.0, 2.12.3)
   static String? version(
     BuildContext context,
     String? value, {
@@ -115,12 +115,32 @@ final class Validators {
     }
 
     final trimmed = value.trim();
-    final versionRegex = RegExp(r'^\d+(\.\d+)*$');
-    if (!versionRegex.hasMatch(trimmed)) {
-      return '${fieldName ?? "Version"} must follow version format (e.g. 1.0.0)';
+    if (!AppRegex.semver.hasMatch(trimmed)) {
+      return '${fieldName ?? "Version"} must follow semantic format (e.g. 1.0.0)';
     }
 
     return null;
+  }
+
+  /// Compares two semver strings: a and b.
+  /// Returns:
+  ///   < 0 if a < b
+  ///   0   if a == b
+  ///   > 0 if a > b
+  static int compareSemver(String a, String b) {
+    final aParts =
+        a.trim().split('.').map((p) => int.tryParse(p) ?? 0).toList();
+    final bParts =
+        b.trim().split('.').map((p) => int.tryParse(p) ?? 0).toList();
+
+    for (var i = 0; i < 3; i++) {
+      final aVal = i < aParts.length ? aParts[i] : 0;
+      final bVal = i < bParts.length ? bParts[i] : 0;
+      if (aVal != bVal) {
+        return aVal.compareTo(bVal);
+      }
+    }
+    return 0;
   }
 
   /// Min length
