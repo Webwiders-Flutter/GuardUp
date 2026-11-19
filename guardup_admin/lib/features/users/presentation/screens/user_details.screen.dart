@@ -67,6 +67,13 @@ class UserDetailsScreen extends ConsumerStatefulWidget {
 
 class _UserDetailsScreenState extends ConsumerState<UserDetailsScreen> {
   @override
+  void dispose() {
+    ref.invalidate(userDetailsProvider(widget.userId));
+    ref.invalidate(userReviewControllerProvider(widget.userId));
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final asyncUser = ref.watch(userDetailsProvider(widget.userId));
 

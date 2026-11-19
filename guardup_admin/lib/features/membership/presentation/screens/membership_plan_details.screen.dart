@@ -28,7 +28,7 @@ import 'membership_plan.form.dart';
 
 /// Full view of a single membership plan: pricing, discount, benefits and
 /// record metadata, with edit / activate / delete actions.
-class MembershipPlanDetailsScreen extends ConsumerWidget {
+class MembershipPlanDetailsScreen extends ConsumerStatefulWidget {
   const MembershipPlanDetailsScreen({
     super.key,
     required this.planId,
@@ -54,8 +54,21 @@ class MembershipPlanDetailsScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final asyncPlan = ref.watch(membershipPlanDetailsProvider(planId));
+  ConsumerState<MembershipPlanDetailsScreen> createState() =>
+      _MembershipPlanDetailsScreenState();
+}
+
+class _MembershipPlanDetailsScreenState
+    extends ConsumerState<MembershipPlanDetailsScreen> {
+  @override
+  void dispose() {
+    ref.invalidate(membershipPlanDetailsProvider(widget.planId));
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final asyncPlan = ref.watch(membershipPlanDetailsProvider(widget.planId));
 
     final body = asyncPlan.when(
       skipLoadingOnReload: true,
@@ -65,12 +78,13 @@ class MembershipPlanDetailsScreen extends ConsumerWidget {
         message: 'Failed to load membership plan',
         subtitle: asyncPlan.errorMessage,
         actionText: 'Retry',
-        onAction: () => ref.invalidate(membershipPlanDetailsProvider(planId)),
+        onAction: () =>
+            ref.invalidate(membershipPlanDetailsProvider(widget.planId)),
       ),
       data: (plan) => _PlanDetailsBody(plan: plan),
     );
 
-    if (asSidebar) {
+    if (widget.asSidebar) {
       return SizedBox(height: context.screenHeight, child: body);
     }
 
