@@ -7,12 +7,12 @@ import '../../domain/repositories/auth_repository.dart';
 
 /// Concrete Supabase implementation of [AuthRepository] with full logging.
 class SupabaseAuthRepository implements AuthRepository {
-  final supa.SupabaseClient? _client;
+  final supa.SupabaseClient? client;
 
-  SupabaseAuthRepository({supa.SupabaseClient? client}) : _client = client;
+  SupabaseAuthRepository({this.client});
 
   supa.SupabaseClient get _supabase {
-    return _client ?? supa.Supabase.instance.client;
+    return client ?? supa.Supabase.instance.client;
   }
 
   @override
@@ -422,9 +422,13 @@ class SupabaseAuthRepository implements AuthRepository {
     SupabaseLogger.warning('deleteAccount requested for userId=$uid');
     try {
       if (uid != null) {
-        await _supabase.from('users').delete().eq('id', uid);
+        await _supabase.rpc('delete_user', params: {'p_user_id': uid});
       }
-      await signOut();
+      try {
+        await signOut();
+      } catch (_) {
+        // Ignored: session could already be destroyed by delete_user RPC
+      }
       SupabaseLogger.success('deleteAccount', message: 'Account deleted');
     } catch (e, st) {
       SupabaseLogger.error('deleteAccount', e, st);

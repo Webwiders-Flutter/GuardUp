@@ -322,13 +322,14 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                           leading: Icon(
                             Icons.logout_rounded,
                             size: AppSizes.iconSmd,
-                            color: context.colors.error,
+                            color: context.colors.onSurfaceVariant,
                           ),
                           onPressed: () {
                             sl<AuthBloc>().add(const AuthSignOutRequested());
                             context.go(AppRoutes.login);
                           },
                         ),
+                        AppSpacing.sm.h,
                       ] else ...[
                         AppButton(
                           text: 'Check Status',
@@ -357,13 +358,14 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                           leading: Icon(
                             Icons.logout_rounded,
                             size: AppSizes.iconSmd,
-                            color: context.colors.error,
+                            color: context.colors.onSurfaceVariant,
                           ),
                           onPressed: () {
                             sl<AuthBloc>().add(const AuthSignOutRequested());
                             context.go(AppRoutes.login);
                           },
                         ),
+                        AppSpacing.sm.h,
                       ],
                       AppSpacing.huge.h,
                     ],

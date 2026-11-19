@@ -3,7 +3,6 @@ import 'package:guardup/core/extensions/number.extension.dart';
 import 'package:guardup/gen/assets.gen.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '../../../data/enum/guard_service.enum.dart';
 import '../../../data/model/body_guard.model.dart';
 import '../../../data/model/service_item.model.dart';
 import '/core/constants/app_radius.dart';
@@ -126,8 +125,8 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
     final bioText = widget.bio?.isNotEmpty == true
         ? widget.bio!
         : (widget.bodyguard?.bio.isNotEmpty == true
-            ? widget.bodyguard!.bio
-            : _defaultBio);
+              ? widget.bodyguard!.bio
+              : _defaultBio);
 
     final selectedServices = widget.services ?? [];
 
@@ -222,7 +221,9 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
                 context: context,
                 icon: Assets.svg.work,
                 label: 'Experience',
-                value: widget.experienceYears != null && widget.experienceYears! > 0
+                value:
+                    widget.experienceYears != null &&
+                        widget.experienceYears! > 0
                     ? '${widget.experienceYears}+ Years'
                     : '0 Years',
               ),
@@ -306,8 +307,8 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
                     Text(
                       service.name,
                       style: context.textTheme.labelMedium?.semiBold().colour(
-                            context.colors.primary,
-                          ),
+                        context.colors.primary,
+                      ),
                     ),
                   ],
                 ),
@@ -340,8 +341,8 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
                     Text(
                       service.label,
                       style: context.textTheme.labelMedium?.semiBold().colour(
-                            context.colors.primary,
-                          ),
+                        context.colors.primary,
+                      ),
                     ),
                   ],
                 ),

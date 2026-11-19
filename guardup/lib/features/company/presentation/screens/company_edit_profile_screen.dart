@@ -75,14 +75,17 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
         ? state.companyPhoneCode
         : state.userPhoneCode;
     _addressController.text = state.address;
-    _experienceController.text =
-        state.experienceYears > 0 ? state.experienceYears.toString() : '';
+    _experienceController.text = state.experienceYears > 0
+        ? state.experienceYears.toString()
+        : '';
     _latitude = state.latitude;
     _longitude = state.longitude;
     _existingLogoUrl = state.avatarUrl;
 
     if (state.companyType.isNotEmpty) {
-      _businessTypeController.select(BusinessType.fromApiValue(state.companyType));
+      _businessTypeController.select(
+        BusinessType.fromApiValue(state.companyType),
+      );
     }
   }
 
@@ -184,8 +187,7 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
             e.toString().contains('address') ||
             e.toString().contains('experience') ||
             e.toString().contains('latitude')) {
-          final userRow =
-              await sl<UserRepository>().getUserData(currentUserId);
+          final userRow = await sl<UserRepository>().getUserData(currentUserId);
           final existingMeta = (userRow?['metadata'] is Map)
               ? Map<String, dynamic>.from(userRow!['metadata'] as Map)
               : <String, dynamic>{};
@@ -239,313 +241,317 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
                 key: _formKey,
                 child: IntrinsicHeight(
                   child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    AppSpacing.xl.h,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      AppSpacing.xl.h,
 
-                    // 1. Avatar Card with Monogram / Logo, Camera Badge & Company Name
-                    WrapperCard(
-                      borderColor: context.colors.surface.withValues(
-                        alpha: 0.7,
-                      ),
-                      backgroundColor: context.colors.surface.withValues(
-                        alpha: 0.7,
-                      ),
-                      padding: AppSpacing.xxl.allPadding,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              // Circular Avatar with Gold Ring Border
-                              QuickContainer(
-                                w: AppSizes.avatarColossal,
-                                h: AppSizes.avatarColossal,
-                                shape: QuickContainerShape.circle,
-                                border: Border.all(
-                                  color: context.colors.primary,
-                                  width: 2.5,
+                      // 1. Avatar Card with Monogram / Logo, Camera Badge & Company Name
+                      WrapperCard(
+                        borderColor: context.colors.surface.withValues(
+                          alpha: 0.7,
+                        ),
+                        backgroundColor: context.colors.surface.withValues(
+                          alpha: 0.7,
+                        ),
+                        padding: AppSpacing.xxl.allPadding,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                // Circular Avatar with Gold Ring Border
+                                QuickContainer(
+                                  w: AppSizes.avatarColossal,
+                                  h: AppSizes.avatarColossal,
+                                  shape: QuickContainerShape.circle,
+                                  border: Border.all(
+                                    color: context.colors.primary,
+                                    width: 2.5,
+                                  ),
+                                  p: 2,
+                                  child: ValueListenableBuilder<XFile?>(
+                                    valueListenable: _logoImageNotifier,
+                                    builder: (context, logoImage, _) {
+                                      return ClipOval(
+                                        child: logoImage != null
+                                            ? AppImage.xFile(
+                                                xFile: logoImage,
+                                                width:
+                                                    AppSizes.avatarColossal - 4,
+                                                height:
+                                                    AppSizes.avatarColossal - 4,
+                                                fit: BoxFit.cover,
+                                                onTap: _handleChangePhoto,
+                                              )
+                                            : (_existingLogoUrl != null &&
+                                                      _existingLogoUrl!
+                                                          .isNotEmpty
+                                                  ? AppImage.auto(
+                                                      source: _existingLogoUrl!,
+                                                      width:
+                                                          AppSizes
+                                                              .avatarColossal -
+                                                          4,
+                                                      height:
+                                                          AppSizes
+                                                              .avatarColossal -
+                                                          4,
+                                                      fit: BoxFit.cover,
+                                                      onTap: _handleChangePhoto,
+                                                    )
+                                                  : ValueListenableBuilder<
+                                                      TextEditingValue
+                                                    >(
+                                                      valueListenable:
+                                                          _companyNameController,
+                                                      builder: (context, textVal, _) {
+                                                        final initials =
+                                                            textVal
+                                                                .text
+                                                                .isNotEmpty
+                                                            ? textVal.text
+                                                                  .getInitials()
+                                                            : 'CO';
+                                                        return QuickContainer(
+                                                          color: context
+                                                              .colors
+                                                              .surfaceContainer,
+                                                          alignment:
+                                                              Alignment.center,
+                                                          onTap:
+                                                              _handleChangePhoto,
+                                                          child: Text(
+                                                            initials,
+                                                            style: context
+                                                                .textTheme
+                                                                .headlineMedium
+                                                                ?.bold()
+                                                                .colour(
+                                                                  context
+                                                                      .colors
+                                                                      .primary,
+                                                                ),
+                                                          ),
+                                                        );
+                                                      },
+                                                    )),
+                                      );
+                                    },
+                                  ),
                                 ),
-                                p: 2,
-                                child: ValueListenableBuilder<XFile?>(
-                                  valueListenable: _logoImageNotifier,
-                                  builder: (context, logoImage, _) {
-                                    return ClipOval(
-                                      child: logoImage != null
-                                          ? AppImage.xFile(
-                                              xFile: logoImage,
-                                              width:
-                                                  AppSizes.avatarColossal - 4,
-                                              height:
-                                                  AppSizes.avatarColossal - 4,
-                                              fit: BoxFit.cover,
-                                              onTap: _handleChangePhoto,
-                                            )
-                                          : (_existingLogoUrl != null &&
-                                                  _existingLogoUrl!.isNotEmpty
-                                              ? AppImage.auto(
-                                                  source: _existingLogoUrl!,
-                                                  width:
-                                                      AppSizes.avatarColossal -
-                                                      4,
-                                                  height:
-                                                      AppSizes.avatarColossal -
-                                                      4,
-                                                  fit: BoxFit.cover,
-                                                  onTap: _handleChangePhoto,
-                                                )
-                                              : ValueListenableBuilder<
-                                                  TextEditingValue
-                                                >(
-                                                  valueListenable:
-                                                      _companyNameController,
-                                                  builder: (context, textVal, _) {
-                                                    final initials = textVal
-                                                            .text
-                                                            .isNotEmpty
-                                                        ? textVal.text
-                                                            .getInitials()
-                                                        : 'CO';
-                                                    return QuickContainer(
-                                                      color: context
-                                                          .colors
-                                                          .surfaceContainer,
-                                                      alignment:
-                                                          Alignment.center,
-                                                      onTap:
-                                                          _handleChangePhoto,
-                                                      child: Text(
-                                                        initials,
-                                                        style: context
-                                                            .textTheme
-                                                            .headlineMedium
-                                                            ?.bold()
-                                                            .colour(
-                                                              context
-                                                                  .colors
-                                                                  .primary,
-                                                            ),
-                                                      ),
-                                                    );
-                                                  },
-                                                )),
+
+                                // Camera Icon Badge
+                                Positioned(
+                                  right: 0,
+                                  bottom: 2,
+                                  child: GestureDetector(
+                                    onTap: _handleChangePhoto,
+                                    child: QuickContainer(
+                                      w: AppSizes.iconMdl,
+                                      h: AppSizes.iconMdl,
+                                      shape: QuickContainerShape.circle,
+                                      color: context.colors.primary,
+                                      alignment: Alignment.center,
+                                      child: Icon(
+                                        Icons.camera_alt,
+                                        size: AppSizes.iconSm,
+                                        color: context.colors.surface,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            AppSpacing.sm.h,
+
+                            // Company Name with Verified Checkmark Icon
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ValueListenableBuilder<TextEditingValue>(
+                                  valueListenable: _companyNameController,
+                                  builder: (context, textVal, _) {
+                                    final name = textVal.text.trim();
+                                    return Text(
+                                      name.isEmpty
+                                          ? 'SecurePro Security Ltd.'
+                                          : name,
+                                      style: context.textTheme.titleMedium
+                                          ?.bold(),
                                     );
                                   },
                                 ),
-                              ),
-
-                              // Camera Icon Badge
-                              Positioned(
-                                right: 0,
-                                bottom: 2,
-                                child: GestureDetector(
-                                  onTap: _handleChangePhoto,
-                                  child: QuickContainer(
-                                    w: AppSizes.iconMdl,
-                                    h: AppSizes.iconMdl,
-                                    shape: QuickContainerShape.circle,
-                                    color: context.colors.primary,
-                                    alignment: Alignment.center,
-                                    child: Icon(
-                                      Icons.camera_alt,
-                                      size: AppSizes.iconSm,
-                                      color: context.colors.surface,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          AppSpacing.sm.h,
-
-                          // Company Name with Verified Checkmark Icon
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ValueListenableBuilder<TextEditingValue>(
-                                valueListenable: _companyNameController,
-                                builder: (context, textVal, _) {
-                                  final name = textVal.text.trim();
-                                  return Text(
-                                    name.isEmpty
-                                        ? 'SecurePro Security Ltd.'
-                                        : name,
-                                    style: context.textTheme.titleMedium
-                                        ?.bold(),
-                                  );
-                                },
-                              ),
-                              AppSpacing.xs.w,
-                              Icon(
-                                Icons.check_circle_rounded,
-                                size: AppSizes.iconSm,
-                                color: context.colors.primary,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    AppSpacing.xl.h,
-
-                    // 2. Company Information Section Heading
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.business_center_outlined,
-                          color: context.colors.primary,
-                          size: AppSizes.iconMd,
-                        ),
-                        AppSpacing.xs.w,
-                        Text(
-                          context.l10n.companyInformation,
-                          style: context.textTheme.titleMedium?.bold(),
-                        ),
-                      ],
-                    ),
-                    AppSpacing.sm.h,
-
-                    // 3. Company Information Form Fields Card
-                    WrapperCard(
-                      borderColor: context.colors.surface,
-
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // Company Name Field
-                          AppTextField(
-                            controller: _companyNameController,
-                            decoration: InputDecoration(
-                              hintText: context.l10n.companyName,
-                            ),
-                            keyboardType: TextInputType.text,
-                            textCapitalization: TextCapitalization.words,
-                            textInputAction: TextInputAction.next,
-                            validator: (value) =>
-                                Validators.required(context, value),
-                          ),
-                          AppSpacing.md.h,
-
-                          // Email Address Field (Read-only)
-                          AppTextField.email(
-                            controller: _emailController,
-                            readOnly: true,
-                            decoration: InputDecoration(
-                              hintText: context.l10n.emailAddress,
-                              suffixIcon: Icon(
-                                Icons.lock_outline_rounded,
-                                size: AppSizes.iconSm,
-                                color: context.colors.onSurfaceVariant,
-                              ),
-                            ),
-                            textInputAction: TextInputAction.next,
-                          ),
-                          AppSpacing.md.h,
-
-                          // Phone Number Field (Read-only)
-                          AppTextField.phone(
-                            controller: _phoneController,
-                            readOnly: true,
-                            phoneCountryCode: _phoneCode,
-                            decoration: InputDecoration(
-                              hintText: context.l10n.phoneNumber,
-                              suffixIcon: Icon(
-                                Icons.lock_outline_rounded,
-                                size: AppSizes.iconSm,
-                                color: context.colors.onSurfaceVariant,
-                              ),
-                            ),
-                            textInputAction: TextInputAction.next,
-                          ),
-                          AppSpacing.md.h,
-
-                          // Address Field (Google / Places Autocomplete)
-                          AppTextField(
-                            controller: _addressController,
-                            readOnly: true,
-                            onTap: _handleSelectAddress,
-                            decoration: InputDecoration(
-                              hintText: context.l10n.address,
-                              prefixIcon: Icon(
-                                Icons.location_on_outlined,
-                                color: context.colors.primary,
-                              ),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  Icons.search_rounded,
+                                AppSpacing.xs.w,
+                                Icon(
+                                  Icons.check_circle_rounded,
+                                  size: AppSizes.iconSm,
                                   color: context.colors.primary,
                                 ),
-                                onPressed: _handleSelectAddress,
-                              ),
+                              ],
                             ),
-                            validator: (value) =>
-                                Validators.required(context, value),
-                          ),
-                          AppSpacing.md.h,
+                          ],
+                        ),
+                      ),
+                      AppSpacing.xl.h,
 
-                          // Experience (Years) Field
-                          AppTextField(
-                            controller: _experienceController,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              hintText: 'Experience (Years)',
-                              prefixIcon: Icon(Icons.work_history_outlined),
-                            ),
-                            textInputAction: TextInputAction.next,
+                      // 2. Company Information Section Heading
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.business_center_outlined,
+                            color: context.colors.primary,
+                            size: AppSizes.iconMd,
                           ),
-                          AppSpacing.md.h,
-
-                          // Company Type Dropdown
-                          AppDropdown<BusinessType>(
-                            controller: _businessTypeController,
-                            hintText: context.l10n.companyType,
-                            items: BusinessType.values
-                                .map(
-                                  (e) => DropdownItem<BusinessType>(
-                                    id: e,
-                                    data: e.label(context.l10n),
-                                    icon: Icon(
-                                      e.icon,
-                                      size: AppSizes.iconSmd,
-                                      color: e.color(context),
-                                    ),
-                                  ),
-                                )
-                                .toList(),
-                            validator: (_) =>
-                                _businessTypeController.selectedItem == null
-                                ? context.l10n.selectCompanyType
-                                : null,
+                          AppSpacing.xs.w,
+                          Text(
+                            context.l10n.companyInformation,
+                            style: context.textTheme.titleMedium?.bold(),
                           ),
                         ],
                       ),
-                    ),
-                    const Spacer(),
-                    AppSpacing.xl.h,
+                      AppSpacing.sm.h,
 
-                    // 4. Save Changes Primary Button
-                    AppButton(
-                      text: context.l10n.saveChanges,
-                      isLoading: _isLoading,
-                      onPressed: _handleSave,
-                    ),
-                    AppSpacing.md.h,
+                      // 3. Company Information Form Fields Card
+                      WrapperCard(
+                        borderColor: context.colors.surface,
 
-                    // 5. Cancel Secondary Button
-                    AppButton(
-                      text: context.l10n.cancel,
-                      type: ButtonType.secondaryOff,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Company Name Field
+                            AppTextField(
+                              controller: _companyNameController,
+                              decoration: InputDecoration(
+                                hintText: context.l10n.companyName,
+                              ),
+                              keyboardType: TextInputType.text,
+                              textCapitalization: TextCapitalization.words,
+                              textInputAction: TextInputAction.next,
+                              validator: (value) =>
+                                  Validators.required(context, value),
+                            ),
+                            AppSpacing.md.h,
 
-                      onPressed: () => context.pop(),
-                    ),
-                    AppSpacing.huge.h,
-                  ],
+                            // Email Address Field (Read-only)
+                            AppTextField.email(
+                              controller: _emailController,
+                              enabled: false,
+                              decoration: InputDecoration(
+                                hintText: context.l10n.emailAddress,
+                                suffixIcon: Icon(
+                                  Icons.lock_outline_rounded,
+                                  size: AppSizes.iconSm,
+                                  color: context.colors.onSurfaceVariant,
+                                ),
+                              ),
+                              textInputAction: TextInputAction.next,
+                            ),
+                            AppSpacing.md.h,
+
+                            // Phone Number Field (Read-only)
+                            AppTextField.phone(
+                              controller: _phoneController,
+                              enabled: false,
+                              phoneCountryCode: _phoneCode,
+                              decoration: InputDecoration(
+                                hintText: context.l10n.phoneNumber,
+                                suffixIcon: Icon(
+                                  Icons.lock_outline_rounded,
+                                  size: AppSizes.iconSm,
+                                  color: context.colors.onSurfaceVariant,
+                                ),
+                              ),
+                              textInputAction: TextInputAction.next,
+                            ),
+                            AppSpacing.md.h,
+
+                            // Address Field (Google / Places Autocomplete)
+                            AppTextField(
+                              controller: _addressController,
+                              readOnly: true,
+                              onTap: _handleSelectAddress,
+                              decoration: InputDecoration(
+                                hintText: context.l10n.address,
+                                prefixIcon: Icon(
+                                  Icons.location_on_outlined,
+                                  color: context.colors.primary,
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    Icons.search_rounded,
+                                    color: context.colors.primary,
+                                  ),
+                                  onPressed: _handleSelectAddress,
+                                ),
+                              ),
+                              validator: (value) =>
+                                  Validators.required(context, value),
+                            ),
+                            AppSpacing.md.h,
+
+                            // Experience (Years) Field
+                            AppTextField(
+                              controller: _experienceController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                hintText: 'Experience (Years)',
+                                prefixIcon: Icon(Icons.work_history_outlined),
+                              ),
+                              textInputAction: TextInputAction.next,
+                            ),
+                            AppSpacing.md.h,
+
+                            // Company Type Dropdown
+                            AppDropdown<BusinessType>(
+                              controller: _businessTypeController,
+                              hintText: context.l10n.companyType,
+                              items: BusinessType.values
+                                  .map(
+                                    (e) => DropdownItem<BusinessType>(
+                                      id: e,
+                                      data: e.label(context.l10n),
+                                      icon: Icon(
+                                        e.icon,
+                                        size: AppSizes.iconSmd,
+                                        color: e.color(context),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                              validator: (_) =>
+                                  _businessTypeController.selectedItem == null
+                                  ? context.l10n.selectCompanyType
+                                  : null,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      AppSpacing.xl.h,
+
+                      // 4. Save Changes Primary Button
+                      AppButton(
+                        text: context.l10n.saveChanges,
+                        isLoading: _isLoading,
+                        onPressed: _handleSave,
+                      ),
+                      AppSpacing.md.h,
+
+                      // 5. Cancel Secondary Button
+                      AppButton(
+                        text: context.l10n.cancel,
+                        type: ButtonType.secondaryOff,
+
+                        onPressed: () => context.pop(),
+                      ),
+                      AppSpacing.huge.h,
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        );
+          );
         },
       ),
     );

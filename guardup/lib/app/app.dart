@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+// ignore: depend_on_referenced_packages
 import 'package:material_ui/material_ui.dart' as mui;
 
 import '/app/routes/app_router.dart';

@@ -176,6 +176,11 @@ class AuthSignOutRequested extends AuthEvent {
   const AuthSignOutRequested();
 }
 
+/// Dispatched when the user permanently deletes their account.
+class AuthDeleteAccountRequested extends AuthEvent {
+  const AuthDeleteAccountRequested();
+}
+
 /// Dispatched to refresh user services and documents according to their role.
 class AuthReloadRoleDataRequested extends AuthEvent {
   const AuthReloadRoleDataRequested();

@@ -41,6 +41,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthUpdateProfileRequested>(_onUpdateProfileRequested);
     on<AuthSetSessionRoleRequested>(_onSetSessionRoleRequested);
     on<AuthSignOutRequested>(_onSignOutRequested);
+    on<AuthDeleteAccountRequested>(_onDeleteAccountRequested);
     on<AuthReloadRoleDataRequested>(_onReloadRoleDataRequested);
     on<AuthUpdateUserServices>(_onUpdateUserServices);
     on<AuthUpdateUserDocuments>(_onUpdateUserDocuments);
@@ -336,7 +337,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             userData['status'] as String?,
           );
 
-          // If account is deleted: sign out immediately and show error (do not show deleted screen)
+          // If account is deleted: sign out immediately and show invalid credentials
           if (status == UserStatus.deleted) {
             await authRepo.signOut();
             emit(
@@ -344,7 +345,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
                 sessionStatus: AuthSessionStatus.unauthenticated,
                 status: UserStatus.deleted,
                 operationState: const ApiState.failure(
-                  'This account has been deleted. Please register or contact support.',
+                  'Invalid email or password. Please try again.',
                 ),
               ),
             );
@@ -713,6 +714,32 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final authRepo = _authRepo;
     if (authRepo != null) {
       await authRepo.signOut();
+    }
+    _profileSubscription?.cancel();
+    _profileSubscription = null;
+    emit(const AuthState.unauthenticated());
+  }
+
+  Future<void> _onDeleteAccountRequested(
+    AuthDeleteAccountRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(state.copyWith(operationState: const ApiState.loading()));
+    final authRepo = _authRepo;
+    if (authRepo != null) {
+      try {
+        await authRepo.deleteAccount();
+      } catch (e, st) {
+        SupabaseLogger.error('AuthBloc._onDeleteAccountRequested', e, st);
+        emit(
+          state.copyWith(
+            operationState: ApiState.failure(
+              'Failed to delete account. Please try again.',
+            ),
+          ),
+        );
+        return;
+      }
     }
     _profileSubscription?.cancel();
     _profileSubscription = null;

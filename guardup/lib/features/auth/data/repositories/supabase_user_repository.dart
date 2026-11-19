@@ -9,15 +9,15 @@ import '../model/user.model.dart';
 
 /// Concrete Supabase implementation of [UserRepository] with structured logging.
 class SupabaseUserRepository extends UserRepository {
-  final supa.SupabaseClient? _client;
+  final supa.SupabaseClient? client;
 
   SupabaseUserRepository(
     super.fileStorageService, {
-    supa.SupabaseClient? client,
-  }) : _client = client;
+    this.client,
+  });
 
   supa.SupabaseClient get _supabase {
-    return _client ?? supa.Supabase.instance.client;
+    return client ?? supa.Supabase.instance.client;
   }
 
   @override

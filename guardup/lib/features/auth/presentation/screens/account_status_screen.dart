@@ -45,7 +45,7 @@ class AccountStatusScreen extends StatelessWidget {
         ? 'Account Deleted'
         : 'Account Suspended';
     final descriptionText = isAccountDeleted
-        ? 'This account has been deleted or deactivated by an administrator. All operational privileges, memberships, and records have been terminated.'
+        ? 'Your account has been deleted. All operational privileges, memberships, and records have been terminated.'
         : 'Your account access has been suspended by an administrator due to security compliance or terms of service violations.';
 
     final iconData = isAccountDeleted
@@ -146,40 +146,42 @@ class AccountStatusScreen extends StatelessWidget {
                             AppSpacing.xxl.h,
 
                             // 5. Account Details Box
-                            QuickContainer(
-                              p: AppSpacing.md,
-                              radius: AppRadius.sm,
-                              color: context.colors.surfaceContainerHigh
-                                  .withValues(alpha: 0.5),
-                              border: Border.all(
-                                color: context.colors.outlineVariant.withValues(
-                                  alpha: 0.4,
+                            if (userIdentifier != 'User') ...[
+                              QuickContainer(
+                                p: AppSpacing.md,
+                                radius: AppRadius.sm,
+                                color: context.colors.surfaceContainerHigh
+                                    .withValues(alpha: 0.5),
+                                border: Border.all(
+                                  color: context.colors.outlineVariant.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                  width: 1,
                                 ),
-                                width: 1,
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.info_outline_rounded,
-                                    size: AppSizes.iconSm,
-                                    color: context.colors.onSurfaceVariant,
-                                  ),
-                                  AppSpacing.sm.w,
-                                  Expanded(
-                                    child: Text(
-                                      'Account: $userIdentifier',
-                                      style: context.textTheme.bodySmall
-                                          ?.colour(
-                                            context.colors.onSurfaceVariant,
-                                          ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.info_outline_rounded,
+                                      size: AppSizes.iconSm,
+                                      color: context.colors.onSurfaceVariant,
                                     ),
-                                  ),
-                                ],
+                                    AppSpacing.sm.w,
+                                    Expanded(
+                                      child: Text(
+                                        'Account: $userIdentifier',
+                                        style: context.textTheme.bodySmall
+                                            ?.colour(
+                                              context.colors.onSurfaceVariant,
+                                            ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            AppSpacing.md.h,
+                              AppSpacing.md.h,
+                            ],
                           ],
                         ),
                       ),

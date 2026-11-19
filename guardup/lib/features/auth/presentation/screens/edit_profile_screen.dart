@@ -144,8 +144,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       } catch (e) {
         if (e.toString().contains('gender') ||
             e.toString().contains('column')) {
-          final userRow =
-              await sl<UserRepository>().getUserData(currentUserId);
+          final userRow = await sl<UserRepository>().getUserData(currentUserId);
           final existingMeta = (userRow?['metadata'] is Map)
               ? Map<String, dynamic>.from(userRow!['metadata'] as Map)
               : <String, dynamic>{};
@@ -228,12 +227,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                     : AppImage.auto(
                                         source:
                                             _existingAvatarUrl?.isNotEmpty ==
-                                                    true
-                                                ? _existingAvatarUrl!
-                                                : Assets
-                                                    .images
-                                                    .dummyAvatar
-                                                    .path,
+                                                true
+                                            ? _existingAvatarUrl!
+                                            : Assets.images.dummyAvatar.path,
                                         width: AppSizes.avatarColossal - 4,
                                         height: AppSizes.avatarColossal - 4,
                                         fit: BoxFit.cover,
@@ -331,7 +327,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     // Email Address Field (Read-only)
                     AppTextField.email(
                       controller: _emailController,
-                      readOnly: true,
+                      enabled: false,
                       decoration: InputDecoration(
                         hintText: context.l10n.emailAddress,
                       ),
@@ -349,6 +345,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           _phoneCode = code;
                         });
                       },
+                      enabled: false,
                       decoration: InputDecoration(
                         hintText: context.l10n.phoneNumber,
                       ),

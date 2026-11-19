@@ -200,7 +200,10 @@ class DocumentUploadCard extends StatelessWidget {
         rejectionReason != null &&
         rejectionReason!.trim().isNotEmpty;
 
-    final VoidCallback? tapCallback = isReadOnly && _hasFile && showPreview
+    final statusBadge =
+        status != null ? _buildStatusBadge(context, status!) : null;
+
+    final VoidCallback? tapCallback = _hasFile && showPreview
         ? () => _handlePreview(context)
         : (!_hasFile && (!isReadOnly || status == DocumentStatus.rejected)
             ? onPick
@@ -221,6 +224,7 @@ class DocumentUploadCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // 1. Leading Icon / Thumbnail
                 _buildLeading(context, hasDescription),
@@ -232,28 +236,51 @@ class DocumentUploadCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _buildTitleRow(context),
-                      if (_hasFile && showPreview) ...[
-                        AppSpacing.xxs.h,
-                        _buildFileStatusRow(context),
-                      ] else if (hasDescription) ...[
-                        AppSpacing.xxs.h,
-                        Text(
-                          description!,
-                          style: context.textTheme.labelSmall?.colour(
-                            context.colors.onSurfaceVariant,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                      // Top Row: Title + Status Badge
+                      Row(
+                        children: [
+                          Expanded(child: _buildTitleRow(context)),
+                          if (_hasFile && statusBadge != null) ...[
+                            AppSpacing.xs.w,
+                            statusBadge,
+                          ],
+                        ],
+                      ),
+                      AppSpacing.xxs.h,
+
+                      // Bottom Row: File Name / Subtitle + Actions
+                      Row(
+                        children: [
+                          if (_hasFile && showPreview)
+                            Expanded(child: _buildFileStatusRow(context))
+                          else if (hasDescription)
+                            Expanded(
+                              child: Text(
+                                description!,
+                                style: context.textTheme.labelSmall?.colour(
+                                  context.colors.onSurfaceVariant,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            )
+                          else
+                            const Spacer(),
+                          if (_hasFile) ...[
+                            AppSpacing.sm.w,
+                            _buildCompactFileActions(context),
+                          ],
+                        ],
+                      ),
                     ],
                   ),
                 ),
-                AppSpacing.sm.w,
 
-                // 3. Trailing Actions / Loading
-                _buildTrailingActions(context),
+                // 3. Trailing button when NO file is selected (+ button or loading)
+                if (!_hasFile) ...[
+                  AppSpacing.sm.w,
+                  _buildTrailingActions(context),
+                ],
               ],
             ),
             if (hasRejection) ...[
@@ -521,8 +548,86 @@ class DocumentUploadCard extends StatelessWidget {
     );
   }
 
-  /// Builds the right-side action ("+" button, "Upload" button with icon,
-  /// "View" button with icon, status badge, or loading spinner).
+  /// Compact inline actions for uploaded files: "View  •  Change / Re-upload".
+  Widget _buildCompactFileActions(BuildContext context) {
+    final canChange = !isReadOnly || status == DocumentStatus.rejected;
+    final isActionRejected =
+        status == DocumentStatus.rejected && !isResubmitted;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (showPreview)
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => _handlePreview(context),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.visibility_outlined,
+                    size: 14,
+                    color: context.colors.primary,
+                  ),
+                  AppSpacing.xxs.w,
+                  Text(
+                    viewLabel,
+                    style: context.textTheme.labelSmall?.bold().colour(
+                          context.colors.primary,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        if (showPreview && canChange)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Text(
+              '•',
+              style: context.textTheme.labelSmall?.colour(
+                    context.colors.onSurfaceVariant.withValues(alpha: 0.5),
+                  ),
+            ),
+          ),
+        if (canChange)
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onPick,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isActionRejected
+                        ? Icons.upload_file_rounded
+                        : Icons.change_circle_outlined,
+                    size: 14,
+                    color: isActionRejected
+                        ? context.colors.error
+                        : context.colors.onSurfaceVariant,
+                  ),
+                  AppSpacing.xxs.w,
+                  Text(
+                    isActionRejected ? 'Re-upload' : changeLabel,
+                    style: context.textTheme.labelSmall?.semiBold().colour(
+                          isActionRejected
+                              ? context.colors.error
+                              : context.colors.onSurfaceVariant,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// Builds the right-side action for unselected state ("+" button, status badge, or loading spinner).
   Widget _buildTrailingActions(BuildContext context) {
     if (isLoading) {
       return SizedBox(
@@ -538,84 +643,10 @@ class DocumentUploadCard extends StatelessWidget {
     final statusBadge =
         status != null ? _buildStatusBadge(context, status!) : null;
 
-    if (isReadOnly && !_hasFile) {
+    if (isReadOnly) {
       return statusBadge ?? const SizedBox.shrink();
     }
 
-    if (_hasFile) {
-      final viewButton = showPreview
-          ? _buildActionButton(
-              context: context,
-              label: viewLabel,
-              icon: Icons.visibility_outlined,
-              onTap: () => _handlePreview(context),
-            )
-          : null;
-
-      final canChange = !isReadOnly || status == DocumentStatus.rejected;
-      final isActionRejected =
-          status == DocumentStatus.rejected && !isResubmitted;
-      final changeButton = canChange
-          ? GestureDetector(
-              onTap: onPick,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    isActionRejected ? 'Re-upload' : changeLabel,
-                    style: context.textTheme.labelMedium?.semiBold().colour(
-                      isActionRejected
-                          ? context.colors.error
-                          : context.colors.onSurfaceVariant,
-                    ),
-                  ),
-                  AppSpacing.xs.w,
-                  Icon(
-                    isActionRejected
-                        ? Icons.upload_file_rounded
-                        : Icons.change_circle,
-                    size: 14,
-                    color: isActionRejected
-                        ? context.colors.error
-                        : context.colors.onSurfaceVariant,
-                  ),
-                ],
-              ),
-            )
-          : null;
-
-      if (viewButton == null && changeButton == null) {
-        return statusBadge ?? const SizedBox.shrink();
-      }
-
-      final buttonStack = Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ?viewButton,
-          if (changeButton != null) ...[
-            if (viewButton != null) AppSpacing.xxs.h,
-            changeButton,
-          ],
-        ],
-      );
-
-      if (statusBadge != null) {
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            buttonStack,
-            AppSpacing.sm.w,
-            statusBadge,
-          ],
-        );
-      }
-
-      return buttonStack;
-    }
-
-    // When no file is selected:
     final actionButton = _buildAddButton(context);
     if (statusBadge != null) {
       return Row(
@@ -646,51 +677,20 @@ class DocumentUploadCard extends StatelessWidget {
     final label =
         statusLabel ?? (isResubmitted ? 'Resubmitted' : status.label);
 
-    return QuickContainer(
-      px: 14,
-      py: 6,
-      radius: AppRadius.full,
-      color: bgColor,
-      border: Border.all(color: borderColor, width: 1.0),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(AppRadius.full),
+        border: Border.all(color: borderColor, width: 1.0),
+      ),
       child: Text(
         label,
-        style: context.textTheme.labelSmall?.semiBold().colour(color),
-      ),
-    );
-  }
-
-  /// Action button with outline border, leading icon, and gold text (used for "Upload" and "View").
-  Widget _buildActionButton({
-    required BuildContext context,
-    required String label,
-    required IconData icon,
-    required VoidCallback? onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: QuickContainer(
-        px: 14,
-        py: 8,
-        radius: AppRadius.md,
-        color: context.colors.surfaceContainerHigh.withValues(alpha: 0.4),
-        border: Border.all(
-          color: context.colors.primary.withValues(alpha: 0.45),
-          width: 1,
-        ),
-        alignment: Alignment.center,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 16, color: context.colors.primary),
-            AppSpacing.xs.w,
-            Text(
-              label,
-              style: context.textTheme.labelMedium?.bold().colour(
-                context.colors.primary,
-              ),
+        style: context.textTheme.labelSmall?.semiBold().copyWith(
+              color: color,
+              fontSize: 11,
+              height: 1.1,
             ),
-          ],
-        ),
       ),
     );
   }

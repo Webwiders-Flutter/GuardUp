@@ -10,13 +10,12 @@ import 'models/file_upload_response.model.dart';
 
 /// Production-ready Supabase implementation of [FileStorageService].
 class SupabaseFileStorageService implements FileStorageService {
-  final SupabaseClient? _client;
+  final SupabaseClient? client;
 
-  SupabaseFileStorageService({SupabaseClient? client})
-      : _client = client;
+  SupabaseFileStorageService({this.client});
 
   SupabaseClient get _supabase {
-    return _client ?? Supabase.instance.client;
+    return client ?? Supabase.instance.client;
   }
 
   @override

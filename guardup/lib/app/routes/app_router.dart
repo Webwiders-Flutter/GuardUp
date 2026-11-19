@@ -82,7 +82,8 @@ final class AppRouter {
             location == ResetPasswordScreen.route ||
             location == ContactUsScreen.route ||
             location == LegalContentScreen.privacyPolicyRoute ||
-            location == LegalContentScreen.termsRoute;
+            location == LegalContentScreen.termsRoute ||
+            location == AccountStatusScreen.deletedRoute;
 
         return isPublicRoute ? null : LoginScreen.route;
       }
@@ -109,9 +110,11 @@ final class AppRouter {
               : AccountStatusScreen.blockedRoute;
         }
 
-        // B. Account is deleted by Admin
+        // B. Account is deleted by Admin or User
         if (authState.isDeleted) {
-          return LoginScreen.route;
+          return location == AccountStatusScreen.deletedRoute
+              ? null
+              : AccountStatusScreen.deletedRoute;
         }
 
         // C. Application submitted (waiting for Admin review) or Rejected by Admin

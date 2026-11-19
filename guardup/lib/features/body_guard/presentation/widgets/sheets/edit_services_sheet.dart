@@ -258,8 +258,7 @@ class _EditServicesSheetState extends State<EditServicesSheet> {
                   )
                   .toList(),
               onSelected: (service) {
-                if (service != null &&
-                    !_selectedServices.any((x) => x.id == service.id)) {
+                if (!_selectedServices.any((x) => x.id == service.id)) {
                   setState(() {
                     _selectedServices.add(service);
                   });

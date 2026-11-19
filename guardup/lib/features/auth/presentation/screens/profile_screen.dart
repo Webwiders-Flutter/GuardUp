@@ -198,8 +198,8 @@ class ProfileScreen extends StatelessWidget {
                     );
                     if (result?.action == PopupAction.confirm &&
                         context.mounted) {
-                      sl<AuthBloc>().add(const AuthSignOutRequested());
-                      context.go(AppRoutes.login);
+                      sl<AuthBloc>().add(const AuthDeleteAccountRequested());
+                      context.go(AppRoutes.accountDeleted);
                     }
                   },
                 ),
@@ -230,6 +230,7 @@ class ProfileScreen extends StatelessWidget {
       experienceYears: state.experienceYearsFormatted,
       isVerified: true,
       isOnline: true,
+      bookingsCount: '0',
     );
 
     return CompanyCard(
@@ -271,7 +272,7 @@ class ProfileScreen extends StatelessWidget {
     return _ProfileCard(
       name: customerName.isNotEmpty ? customerName : 'Client Member',
       specialization: email.isNotEmpty ? email : 'Elite Member',
-      rating: 5.0,
+      rating: 0.0,
       location: 'Member',
       hourlyRate: 0,
       avatarAssetPath: avatar,
