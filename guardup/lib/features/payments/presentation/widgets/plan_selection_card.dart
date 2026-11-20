@@ -8,7 +8,6 @@ import '/core/extensions/context.extension.dart';
 import '/core/extensions/number.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
-import '/gen/assets.gen.dart';
 import '/shared/widgets/misc/app_rich_text.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 import '../../data/model/plan.model.dart';
@@ -218,7 +217,7 @@ class PlanSelectionCard extends StatelessWidget {
                       children: [
                         Padding(
                           padding: const EdgeInsets.only(top: AppSpacing.xxs),
-                          child: (plan.featureIcon ?? Assets.svg.checked).svg(
+                          child: plan.featureIcon.svg(
                             width: AppSizes.iconXs,
                             height: AppSizes.iconXs,
                           ),

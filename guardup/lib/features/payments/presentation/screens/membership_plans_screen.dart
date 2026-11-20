@@ -15,7 +15,6 @@ import '/core/extensions/number.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/features/auth/bloc/auth_bloc.dart';
-import '/features/auth/bloc/auth_event.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
