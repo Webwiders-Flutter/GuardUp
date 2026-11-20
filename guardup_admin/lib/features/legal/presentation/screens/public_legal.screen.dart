@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/enums/language.enum.dart';
@@ -35,6 +34,34 @@ import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 /// Features dynamic selection across all [ContentType], [UserRoleType], and [LanguageType]
 /// with synchronized browser URL routing, fast caching, and one-click link sharing.
 class PublicLegalScreen extends ConsumerStatefulWidget {
+  /// Prefix of every public (unauthenticated) legal page.
+  static const pathPrefix = '/public';
+
+  /// Route pattern of this screen.
+  static const route = '$pathPrefix/:contentType/:role/:language';
+
+  /// Relative location of a public legal page.
+  static String location({
+    ContentType contentType = ContentType.terms,
+    UserRoleType role = UserRoleType.customer,
+    LanguageType language = LanguageType.english,
+  }) => '$pathPrefix/${contentType.slug}/${role.slug}/${language.code}';
+
+  /// Absolute URL (with the current origin) of a public legal page, for
+  /// sharing outside the console.
+  static String fullUrl({
+    ContentType contentType = ContentType.terms,
+    UserRoleType role = UserRoleType.customer,
+    LanguageType language = LanguageType.english,
+  }) {
+    final path = location(
+      contentType: contentType,
+      role: role,
+      language: language,
+    );
+    return '${Uri.base.origin}$path';
+  }
+
   final ContentType initialContentType;
   final UserRoleType initialRole;
   final LanguageType initialLanguage;
@@ -105,7 +132,7 @@ class _PublicLegalScreenState extends ConsumerState<PublicLegalScreen> {
     _languageNotifier.value = nextLang;
 
     // Synchronize browser URL
-    final targetPath = AppRoutes.publicLegalUrl(
+    final targetPath = PublicLegalScreen.location(
       contentType: nextType,
       role: nextRole,
       language: nextLang,
@@ -114,7 +141,7 @@ class _PublicLegalScreenState extends ConsumerState<PublicLegalScreen> {
   }
 
   void _copyCurrentLink() {
-    final url = AppRoutes.fullPublicLegalUrl(
+    final url = PublicLegalScreen.fullUrl(
       contentType: _contentTypeNotifier.value,
       role: _roleNotifier.value,
       language: _languageNotifier.value,

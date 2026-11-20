@@ -38,6 +38,24 @@ enum UserStatus {
   /// rejected, profile approved / rejected).
   bool get isUnderReview => isPendingApproval || isRejected;
 
+  /// URL path segment for user-list routes (e.g. `/users/bodyguard/pending`).
+  String get slug {
+    switch (this) {
+      case UserStatus.incomplete:
+        return 'incomplete';
+      case UserStatus.active:
+        return 'verified';
+      case UserStatus.approvalPending:
+        return 'pending';
+      case UserStatus.rejected:
+        return 'rejected';
+      case UserStatus.blocked:
+        return 'blocked';
+      case UserStatus.deleted:
+        return 'deleted';
+    }
+  }
+
   String label([AppLocalizations? l10n]) {
     switch (this) {
       case UserStatus.incomplete:

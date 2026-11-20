@@ -23,11 +23,50 @@ import '/features/users/di/users.providers.dart';
 import '/shared/states/pagination.state.dart';
 import '../../../../shared/widgets/feedbacks/widgets/app_file_preview.dart';
 import '../../../../shared/widgets/feedbacks/widgets/app_popup.dart';
+import '/shared/widgets/admin_layout/admin_page_body.dart';
 import '/shared/widgets/misc/app_chip.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/table/admin_table_builder.dart';
 
 class UsersManagementScreen extends ConsumerStatefulWidget {
+  /// Base route of the users section (redirects to [defaultLocation]).
+  static const route = '/users';
+
+  /// Status lists available per role, in display order. Drives the router,
+  /// so adding a status here adds its route.
+  static const Map<UserRoleType, List<UserStatus>> listsByRole = {
+    UserRoleType.customer: [
+      UserStatus.active,
+      UserStatus.approvalPending,
+      UserStatus.blocked,
+    ],
+    UserRoleType.guard: [
+      UserStatus.approvalPending,
+      UserStatus.active,
+      UserStatus.rejected,
+      UserStatus.blocked,
+    ],
+    UserRoleType.company: [
+      UserStatus.approvalPending,
+      UserStatus.active,
+      UserStatus.rejected,
+      UserStatus.blocked,
+    ],
+  };
+
+  /// Status opened when only a role (or nothing) is in the URL.
+  static const defaultStatus = UserStatus.active;
+
+  /// `/users/<role>`, e.g. `/users/bodyguard`.
+  static String roleLocation(UserRoleType role) => '$route/${role.slug}';
+
+  /// `/users/<role>/<status>`, e.g. `/users/bodyguard/pending`.
+  static String location(UserRoleType role, UserStatus status) =>
+      '${roleLocation(role)}/${status.slug}';
+
+  static String get defaultLocation =>
+      location(UserRoleType.customer, defaultStatus);
+
   const UsersManagementScreen({
     super.key,
     required this.role,
@@ -491,60 +530,48 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
 
     final roleLabel = widget.role.label(context.l10n);
 
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: AdminTableBuilder<UserModel>(
-            title: '$roleLabel Management',
-            subtitle:
-                'Manage $roleLabel accounts, verification statuses, and credentials',
-            columns: columns,
-            rowHeight: AppSpacing.xxxl * 2,
-            tableData: paginationState.items,
-            searchController: _searchController,
-            showSearchField: true,
-            currentPage: paginationState.page,
-            totalEntries: paginationState.total,
-            rowsPerPage: paginationState.pageSize,
-            load: asyncState.isLoading,
-            onRowTap: _onViewUser,
-            onFilterChanged: (filter) {
-              controller.getPaginatedRecords(
-                forceRefresh: true,
-                search: _searchController.text,
-              );
-            },
-            onSearch: (query) {
-              controller.getPaginatedRecords(
-                forceRefresh: true,
-                search: query?.toString(),
-              );
-            },
-            onRefresh: () async {
-              await controller.getPaginatedRecords(forceRefresh: true);
-            },
-            onPrevious: () async {
-              await controller.getPaginatedRecords(
-                page: paginationState.page - 1,
-              );
-            },
-            onLoadMore: () async {
-              await controller.getPaginatedRecords(
-                page: paginationState.page + 1,
-              );
-            },
-            onPageSelected: (page) async {
-              await controller.getPaginatedRecords(page: page);
-            },
-            onLimitChange: (limit) {
-              controller.getPaginatedRecords(
-                forceRefresh: true,
-                pageSize: limit,
-              );
-            },
-          ),
-        ),
+    return AdminPageBody(
+      child: AdminTableBuilder<UserModel>(
+        title: '$roleLabel Management',
+        subtitle:
+            'Manage $roleLabel accounts, verification statuses, and credentials',
+        columns: columns,
+        rowHeight: AppSpacing.xxxl * 2,
+        tableData: paginationState.items,
+        searchController: _searchController,
+        showSearchField: true,
+        currentPage: paginationState.page,
+        totalEntries: paginationState.total,
+        rowsPerPage: paginationState.pageSize,
+        load: asyncState.isLoading,
+        onRowTap: _onViewUser,
+        onFilterChanged: (filter) {
+          controller.getPaginatedRecords(
+            forceRefresh: true,
+            search: _searchController.text,
+          );
+        },
+        onSearch: (query) {
+          controller.getPaginatedRecords(
+            forceRefresh: true,
+            search: query?.toString(),
+          );
+        },
+        onRefresh: () async {
+          await controller.getPaginatedRecords(forceRefresh: true);
+        },
+        onPrevious: () async {
+          await controller.getPaginatedRecords(page: paginationState.page - 1);
+        },
+        onLoadMore: () async {
+          await controller.getPaginatedRecords(page: paginationState.page + 1);
+        },
+        onPageSelected: (page) async {
+          await controller.getPaginatedRecords(page: page);
+        },
+        onLimitChange: (limit) {
+          controller.getPaginatedRecords(forceRefresh: true, pageSize: limit);
+        },
       ),
     );
   }

@@ -13,6 +13,7 @@ import '/features/document-type/data/models/document_type.model.dart';
 import '/features/document-type/di/document_type.providers.dart';
 import '/features/users/data/enums/user_role.enum.dart';
 import '/shared/states/pagination.state.dart';
+import '/shared/widgets/admin_layout/admin_page_body.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/feedbacks/widgets/app_popup.dart';
 import '/shared/widgets/misc/app_chip.dart';
@@ -22,6 +23,9 @@ import '../controllers/document_type.controller.dart';
 import 'document_type.form.dart';
 
 class DocumentTypeManagementScreen extends ConsumerStatefulWidget {
+  /// Route path of this screen.
+  static const route = '/document-types';
+
   const DocumentTypeManagementScreen({super.key});
 
   @override
@@ -262,97 +266,85 @@ class _DocumentTypeManagementScreenState
       ),
     ];
 
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: AdminTableBuilder<DocumentTypeModel>(
-            title: 'Document Types',
-            subtitle: 'Manage verification documents required from customers, bodyguards and companies',
-            columns: columns,
-            tableData: paginationState.items,
-            searchController: _searchController,
-            showSearchField: true,
-            currentPage: paginationState.page,
-            totalEntries: paginationState.total,
-            rowsPerPage: paginationState.pageSize,
-            showCheckbox: true,
-            selectedItemsNotifier: _selectedItemsNotifier,
-            selectionActions: [
-              AppButton(
-                text: 'Delete',
-                leading: Icon(
-                  Icons.delete_outline_rounded,
-                  size: AppSpacing.md + 2,
-                ),
-                size: ButtonSize.small,
-                type: ButtonType.danger,
-                fullWidth: false,
-                onPressed: _onDeleteDocumentTypes,
-              ),
-            ],
-            onReorder: (oldIndex, newIndex) async {
-              controller.reorderRecords(
-                paginationState.items[oldIndex].id,
-                oldIndex,
-                newIndex,
-              );
-            },
-            load: asyncState.isLoading,
-            activeFilter: controller.filters.targetRole,
-            filterChips: [
-              (label: 'All', value: null),
-              ...UserRoleType.platformRoles.map(
-                (role) => (label: role.label(), value: role),
-              ),
-            ],
-            onFilterChanged: (filter) => controller.getPaginatedRecords(
-              forceRefresh: true,
-              filters: controller.filters.copyWith(targetRole: filter),
+    return AdminPageBody(
+      child: AdminTableBuilder<DocumentTypeModel>(
+        title: 'Document Types',
+        subtitle: 'Manage verification documents required from customers, bodyguards and companies',
+        columns: columns,
+        tableData: paginationState.items,
+        searchController: _searchController,
+        showSearchField: true,
+        currentPage: paginationState.page,
+        totalEntries: paginationState.total,
+        rowsPerPage: paginationState.pageSize,
+        showCheckbox: true,
+        selectedItemsNotifier: _selectedItemsNotifier,
+        selectionActions: [
+          AppButton(
+            text: 'Delete',
+            leading: Icon(
+              Icons.delete_outline_rounded,
+              size: AppSpacing.md + 2,
             ),
-            onSearch: (query) {
-              controller.getPaginatedRecords(
-                forceRefresh: true,
-                search: query?.toString(),
-              );
-            },
-            onRefresh: () async {
-              await controller.getPaginatedRecords(forceRefresh: true);
-            },
-            onPrevious: () async {
-              await controller.getPaginatedRecords(
-                page: paginationState.page - 1,
-              );
-            },
-            onLoadMore: () async {
-              await controller.getPaginatedRecords(
-                page: paginationState.page + 1,
-              );
-            },
-            onPageSelected: (page) async {
-              await controller.getPaginatedRecords(page: page);
-            },
-            onLimitChange: (limit) {
-              controller.getPaginatedRecords(
-                forceRefresh: true,
-                pageSize: limit,
-              );
-            },
-            actions: [
-              AppButton(
-                text: 'Add',
-                leading: Icon(
-                  Icons.add_rounded,
-                  size: AppSpacing.lg,
-                  color: colors.onPrimary,
-                ),
-                size: ButtonSize.normal,
-                fullWidth: false,
-                onPressed: () => _openDocumentTypeForm(),
-              ),
-            ],
+            size: ButtonSize.small,
+            type: ButtonType.danger,
+            fullWidth: false,
+            onPressed: _onDeleteDocumentTypes,
           ),
+        ],
+        onReorder: (oldIndex, newIndex) async {
+          controller.reorderRecords(
+            paginationState.items[oldIndex].id,
+            oldIndex,
+            newIndex,
+          );
+        },
+        load: asyncState.isLoading,
+        activeFilter: controller.filters.targetRole,
+        filterChips: [
+          (label: 'All', value: null),
+          ...UserRoleType.platformRoles.map(
+            (role) => (label: role.label(), value: role),
+          ),
+        ],
+        onFilterChanged: (filter) => controller.getPaginatedRecords(
+          forceRefresh: true,
+          filters: controller.filters.copyWith(targetRole: filter),
         ),
+        onSearch: (query) {
+          controller.getPaginatedRecords(
+            forceRefresh: true,
+            search: query?.toString(),
+          );
+        },
+        onRefresh: () async {
+          await controller.getPaginatedRecords(forceRefresh: true);
+        },
+        onPrevious: () async {
+          await controller.getPaginatedRecords(page: paginationState.page - 1);
+        },
+        onLoadMore: () async {
+          await controller.getPaginatedRecords(page: paginationState.page + 1);
+        },
+        onPageSelected: (page) async {
+          await controller.getPaginatedRecords(page: page);
+        },
+        onLimitChange: (limit) {
+          controller.getPaginatedRecords(forceRefresh: true, pageSize: limit);
+        },
+        actions: [
+          AppButton(
+            text: 'Add',
+            leading: Icon(
+              Icons.add_rounded,
+              size: AppSpacing.lg,
+              color: colors.onPrimary,
+            ),
+            size: ButtonSize.normal,
+            fullWidth: false,
+            onPressed: () => _openDocumentTypeForm(),
+          ),
+        ],
       ),
     );
   }

@@ -1,4 +1,3 @@
-import 'package:guardup_admin/app/routes/app_routes.dart';
 import 'package:guardup_admin/core/constants/app_radius.dart';
 import 'package:guardup_admin/core/constants/app_spacing.dart';
 import 'package:guardup_admin/core/extensions/context.extension.dart';
@@ -8,13 +7,14 @@ import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '../../di/notification.providers.dart';
+import '/features/notifications/presentation/screens/notification_management.screen.dart';
 
 /// A standard notification icon action widget (e.g. for app bars, navigation headers).
 /// Automatically observes the live unread count and renders an indicator badge.
-/// Tapping defaults to opening [AppRoutes.notifications] unless an explicit [onTap] is provided.
+/// Tapping defaults to opening [NotificationManagementScreen.route] unless an explicit [onTap] is provided.
 class NotificationIconWidget extends ConsumerWidget {
   /// Callback executed when the icon is pressed.
-  /// Defaults to navigating to [AppRoutes.notifications].
+  /// Defaults to navigating to [NotificationManagementScreen.route].
   final VoidCallback? onTap;
 
   /// Icon to display (defaults to [Icons.notifications_outlined]).
@@ -69,7 +69,8 @@ class NotificationIconWidget extends ConsumerWidget {
           size: iconSize,
         ),
       ),
-      onPressed: onTap ?? () => context.push(AppRoutes.notifications),
+      onPressed:
+          onTap ?? () => context.push(NotificationManagementScreen.route),
       tooltip: tooltip,
     );
 

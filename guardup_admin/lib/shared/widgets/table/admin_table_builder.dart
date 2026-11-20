@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:quick_container/quick_container.dart';
 
+import '/core/constants/app_layout.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '../../../core/extensions/context.extension.dart';
@@ -15,7 +17,7 @@ import 'table_mobile_view.dart';
 import 'table_skeleton_view.dart';
 import 'table_top_bar.dart';
 
-/// A 10/10 enterprise-grade generic admin data table with:
+/// Generic admin data table (rules.md §23) with:
 /// - Responsive desktop (two-dimensional virtualized spreadsheet) and mobile (card) layouts
 /// - Type-safe [TableColumn] definitions with custom widths and alignment
 /// - Column header sorting with animated indicators
@@ -48,7 +50,6 @@ class AdminTableBuilder<T> extends StatefulWidget {
   final int totalEntries;
   final bool load;
   final int currentPage;
-  final double actionColumnWidth;
   final List<TableFilterChip> filterChips;
   final dynamic activeFilter;
 
@@ -94,7 +95,7 @@ class AdminTableBuilder<T> extends StatefulWidget {
   final void Function()? onPrevious;
   final void Function(int)? onLimitChange;
 
-  /// Custom row height for table rows. Defaults to 52.0 ([AppSpacing.xxxl + AppSpacing.xl]).
+  /// Custom row height for table rows. Defaults to [AppLayout.tableRowHeight].
   final double? rowHeight;
 
   // Drag & drop reorder
@@ -127,7 +128,6 @@ class AdminTableBuilder<T> extends StatefulWidget {
     this.selectionActionsBuilder,
     this.selectedItemsNotifier,
     this.rowsPerPage = 10,
-    this.actionColumnWidth = 140,
     required this.currentPage,
     required this.totalEntries,
     this.load = false,
@@ -371,21 +371,21 @@ class _AdminTableBuilderState<T> extends State<AdminTableBuilder<T>> {
                     widget.selectionTogglePosition ==
                         SelectionTogglePosition.topBar);
 
-            return Container(
-              decoration: BoxDecoration(
-                color: context.colors.surface,
-                borderRadius: AppRadius.lgRadius,
-                border: Border.all(
-                  color: context.colors.borderLight.withValues(alpha: 0.6),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: context.colors.black.withValues(alpha: 0.03),
-                    blurRadius: AppSpacing.lg + 2,
-                    offset: const Offset(0, AppSpacing.xs),
+            final colors = context.colors;
+
+            return QuickContainer(
+              color: colors.surface,
+              radius: AppRadius.lg,
+              border: Border.all(color: colors.borderLight),
+              shadows: [
+                BoxShadow(
+                  color: colors.black.withValues(
+                    alpha: colors.isDark ? 0.2 : 0.04,
                   ),
-                ],
-              ),
+                  blurRadius: AppSpacing.lg,
+                  offset: const Offset(0, AppSpacing.xs),
+                ),
+              ],
               child: Column(
                 children: [
                   TableTopBar(
@@ -477,9 +477,7 @@ class _AdminTableBuilderState<T> extends State<AdminTableBuilder<T>> {
     List<TableColumn<T>> cols, {
     required bool showCheckbox,
   }) {
-    const double checkWidth = AppSpacing.xxl + AppSpacing.xl + 2;
-
-    double fixedWidths = showCheckbox ? checkWidth : 0;
+    double fixedWidths = showCheckbox ? AppLayout.tableCheckboxColumnWidth : 0;
     int totalFlex = 0;
     for (final col in cols) {
       if (col.width != null) {
@@ -489,9 +487,9 @@ class _AdminTableBuilderState<T> extends State<AdminTableBuilder<T>> {
       }
     }
 
-    final double available = constraints.maxWidth - fixedWidths;
-    final double flexUnit = totalFlex > 0 ? (available / totalFlex) : 160.0;
-    return flexUnit < 140 ? 140.0 : flexUnit;
+    if (totalFlex == 0) return AppLayout.tableMinFlexColumnWidth;
+    final double flexUnit = (constraints.maxWidth - fixedWidths) / totalFlex;
+    return max(flexUnit, AppLayout.tableMinFlexColumnWidth);
   }
 
   Widget _buildLoadingState(
@@ -518,8 +516,7 @@ class _AdminTableBuilderState<T> extends State<AdminTableBuilder<T>> {
             columns: resolvedCols,
             showCheckbox: showCheckbox,
             colWidth: colWidth,
-            actionColumnWidth: widget.actionColumnWidth,
-            rowHeight: widget.rowHeight ?? (AppSpacing.xxxl + AppSpacing.xl),
+            rowHeight: widget.rowHeight ?? AppLayout.tableRowHeight,
             rowCount: widget.rowsPerPage.clamp(5, 8),
             striped: widget.striped,
             hCtrl: _hCtrl,
@@ -531,16 +528,19 @@ class _AdminTableBuilderState<T> extends State<AdminTableBuilder<T>> {
 
     return Stack(
       children: [
-        Opacity(
-          opacity: 0.55,
-          child: _buildResponsiveTable(
-            start,
-            end,
-            isServerSide,
-            showCheckbox: showCheckbox,
-            selectedItems: selectedItems,
-            onSelectRow: onSelectRow,
-            onSelectAll: onSelectAll,
+        // Keep the stale rows visible but inert while fresh data loads.
+        IgnorePointer(
+          child: Opacity(
+            opacity: 0.5,
+            child: _buildResponsiveTable(
+              start,
+              end,
+              isServerSide,
+              showCheckbox: showCheckbox,
+              selectedItems: selectedItems,
+              onSelectRow: onSelectRow,
+              onSelectAll: onSelectAll,
+            ),
           ),
         ),
         Positioned(
@@ -548,9 +548,9 @@ class _AdminTableBuilderState<T> extends State<AdminTableBuilder<T>> {
           left: 0,
           right: 0,
           child: LinearProgressIndicator(
-            minHeight: 2.5,
+            minHeight: 2,
             backgroundColor: context.colors.transparent,
-            valueColor: AlwaysStoppedAnimation(context.colors.secondary),
+            color: context.colors.primary,
           ),
         ),
       ],
@@ -573,7 +573,10 @@ class _AdminTableBuilderState<T> extends State<AdminTableBuilder<T>> {
       );
     }
 
-    return const AppStateView.empty();
+    final onRefresh = widget.onRefresh;
+    return AppStateView.empty(
+      onAction: onRefresh == null ? null : () => onRefresh(),
+    );
   }
 
   Widget _buildResponsiveTable(
@@ -597,7 +600,7 @@ class _AdminTableBuilderState<T> extends State<AdminTableBuilder<T>> {
     return SelectionArea(
       child: LayoutBuilder(
         builder: (ctx, constraints) {
-          if (constraints.maxWidth < 640) {
+          if (constraints.maxWidth < AppLayout.tableCardBreakpoint) {
             return TableMobileView<T>(
               columns: resolvedCols,
               tableData: displayData,
@@ -625,7 +628,6 @@ class _AdminTableBuilderState<T> extends State<AdminTableBuilder<T>> {
             rows: _resolvedRows,
             hCtrl: _hCtrl,
             vCtrl: _vCtrl,
-            actionColumnWidth: widget.actionColumnWidth,
             colWidth: colWidth,
             showCheckbox: showCheckbox,
             selectedItems: selectedItems,
@@ -639,7 +641,7 @@ class _AdminTableBuilderState<T> extends State<AdminTableBuilder<T>> {
             isSaving: widget.isSaving,
             striped: widget.striped,
             enableHover: widget.enableHover,
-            rowHeight: widget.rowHeight ?? (AppSpacing.xxxl + AppSpacing.xl),
+            rowHeight: widget.rowHeight ?? AppLayout.tableRowHeight,
           );
         },
       ),

@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
@@ -35,9 +34,18 @@ import '/shared/widgets/sections/app_detail_section.dart';
 import '/shared/widgets/sections/app_detail_tile.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/state/app_state_view.dart';
+import '/features/dashboard/presentation/screens/dashboard.screen.dart';
+import '/features/users/presentation/screens/users_management.screen.dart';
 
 /// Screen displaying complete profile, KYC documents, and management options for a user.
 class UserDetailsScreen extends ConsumerStatefulWidget {
+  /// Route segment under [UsersManagementScreen.route].
+  static const path = 'detail/:id';
+
+  /// Location of the details page for user [id].
+  static String location(String id) =>
+      '${UsersManagementScreen.route}/detail/$id';
+
   const UserDetailsScreen({
     super.key,
     required this.userId,
@@ -769,7 +777,7 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
           if (Navigator.of(context).canPop()) {
             Navigator.of(context).pop();
           } else {
-            context.go(AppRoutes.home);
+            context.go(DashboardScreen.route);
           }
         }
       } catch (e) {

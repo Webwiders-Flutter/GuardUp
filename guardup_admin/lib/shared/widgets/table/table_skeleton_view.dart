@@ -1,487 +1,298 @@
 import 'dart:math';
 
-import 'package:guardup_admin/shared/widgets/table/table_models.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
+import '/core/constants/app_layout.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '../../../core/extensions/context.extension.dart';
 import '../../../core/extensions/spacing.extension.dart';
-import '../../../core/extensions/textstyle_extension.dart';
+import 'table_models.dart';
+import 'table_parts.dart';
 
-/// Enterprise skeleton table loading view designed for [AdminTableBuilder].
+/// Structural loading state for [AdminTableBuilder].
 ///
-/// Replaces generic spinners with a polished, structural shimmer interface:
-/// - Preserves readable table headers and exact column widths
-/// - Animated indeterminate linear accent bar under the header
-/// - High-performance shimmer rows with natural text length variations,
-///   status badge capsules, and action button skeletons
-/// - Adaptive responsive design supporting desktop tables and mobile cards
+/// Mirrors the real table: the actual column headers and widths, an
+/// indeterminate progress line under the header, and per-column shimmer
+/// placeholders chosen by [TableColumn.skeleton]. Narrow widths render
+/// skeleton cards instead.
 class TableSkeletonView<T> extends StatelessWidget {
-  final List<TableColumn<T>> columns;
-  final bool showCheckbox;
-  final double colWidth;
-  final double actionColumnWidth;
-  final int rowCount;
-  final bool striped;
-  final ScrollController? hCtrl;
-  final ScrollController? vCtrl;
-
   const TableSkeletonView({
     super.key,
     required this.columns,
     this.showCheckbox = false,
-    this.colWidth = 160.0,
-    this.actionColumnWidth = 100.0,
+    this.colWidth = AppLayout.tableMinFlexColumnWidth,
     this.rowCount = 7,
     this.striped = true,
+    this.rowHeight = AppLayout.tableRowHeight,
     this.hCtrl,
     this.vCtrl,
-    this.rowHeight = AppSpacing.xxxl + AppSpacing.xl,
   });
 
-  static const double _checkWidth = AppSpacing.xxl + AppSpacing.xl + 2;
-  static const double _headerHeight = AppSpacing.xxxl + AppSpacing.md; // 44.0
+  final List<TableColumn<T>> columns;
+  final bool showCheckbox;
+
+  /// Width of one flex unit.
+  final double colWidth;
+  final int rowCount;
+  final bool striped;
   final double rowHeight;
+  final ScrollController? hCtrl;
+  final ScrollController? vCtrl;
 
-  double _resolveColWidth(TableColumn<T> col) {
-    if (col.width != null) return col.width!;
-    return colWidth * col.flex;
-  }
+  static const double _textBoneHeight = AppSpacing.md;
+  static const double _badgeBoneHeight = AppSpacing.xl;
+  static const double _badgeBoneWidth = AppSpacing.xxxl * 2;
+  static const double _actionBoneSize =
+      AppLayout.controlHeightSm - AppSpacing.xs;
 
-  bool _isActionColumn(TableColumn<T> col, int index) {
-    final title = col.title.trim().toLowerCase();
-    return title == 'action' ||
-        title == 'actions' ||
-        (index == columns.length - 1 &&
-            (col.width != null && col.width! <= 140));
-  }
-
-  bool _isBadgeColumn(TableColumn<T> col) {
-    final title = col.title.trim().toLowerCase();
-    return title.contains('status') ||
-        title.contains('applies') ||
-        title.contains('type') ||
-        title.contains('role');
-  }
+  /// Text-bar widths as a fraction of the cell, varied per row/column so the
+  /// placeholder reads like real content instead of a grid of equal bars.
+  static const List<double> _textFactors = [
+    0.68, 0.46, 0.82, 0.54, 0.72, 0.38, 0.88, 0.60, //
+  ];
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < 640) {
-          return _buildMobileSkeleton(context);
+        if (constraints.maxWidth < AppLayout.tableCardBreakpoint) {
+          return _buildCards(context);
         }
-        return _buildDesktopSkeleton(context, constraints);
+        return _buildTable(context, constraints);
       },
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // DESKTOP SKELETON (Column-aligned Shimmer Table)
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  Widget _buildDesktopSkeleton(
-    BuildContext context,
-    BoxConstraints constraints,
-  ) {
+  Widget _shimmer(BuildContext context, {required Widget child}) {
     final colors = context.colors;
+    return Shimmer.fromColors(
+      baseColor: colors.borderLight.withValues(alpha: 0.55),
+      highlightColor: colors.isDark
+          ? colors.onSurface.withValues(alpha: 0.12)
+          : colors.surface,
+      child: child,
+    );
+  }
 
-    // Calculate total required table width
-    double totalColsWidth = showCheckbox ? _checkWidth : 0.0;
-    for (final col in columns) {
-      totalColsWidth += _resolveColWidth(col);
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Table skeleton
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Widget _buildTable(BuildContext context, BoxConstraints constraints) {
+    final colors = context.colors;
+    var contentWidth = showCheckbox ? AppLayout.tableCheckboxColumnWidth : 0.0;
+    for (final column in columns) {
+      contentWidth += column.resolveWidth(colWidth);
     }
+    final tableWidth = max(constraints.maxWidth, contentWidth);
 
-    final double tableWidth = max(constraints.maxWidth, totalColsWidth);
-
-    return Scrollbar(
-      controller: vCtrl,
-      thumbVisibility: true,
-      trackVisibility: true,
-      thickness: AppSpacing.sm,
-      radius: const Radius.circular(AppRadius.sm),
-      child: Scrollbar(
-        controller: hCtrl,
-        thumbVisibility: true,
-        trackVisibility: true,
-        notificationPredicate: (n) => n.metrics.axis == Axis.horizontal,
-        thickness: AppSpacing.sm,
-        radius: const Radius.circular(AppRadius.sm),
-        child: SingleChildScrollView(
-          controller: hCtrl,
-          scrollDirection: Axis.horizontal,
-          child: SizedBox(
-            width: tableWidth,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // 1. Structural Header
-                _buildHeader(context, colors),
-
-                // 2. Linear Live Sync Indicator Line
-                LinearProgressIndicator(
-                  minHeight: 2.0,
-                  backgroundColor: colors.transparent,
-                  valueColor: AlwaysStoppedAnimation<Color>(colors.secondary),
-                ),
-
-                // 3. Shimmering Skeleton Data Rows
-                Expanded(
-                  child: ListView.builder(
-                    controller: vCtrl,
-                    padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-                    itemCount: rowCount,
-                    itemBuilder: (context, index) {
-                      return _buildDesktopRow(context, colors, index);
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context, dynamic colors) {
-    return Container(
-      height: _headerHeight,
-      decoration: BoxDecoration(
-        color: context.colors.backgroundLight.withValues(alpha: 0.85),
-        border: Border(
-          bottom: BorderSide(
-            color: context.colors.borderLight.withValues(alpha: 0.6),
-            width: 1.0,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          if (showCheckbox)
+    return SingleChildScrollView(
+      controller: hCtrl,
+      scrollDirection: Axis.horizontal,
+      physics: const NeverScrollableScrollPhysics(),
+      child: SizedBox(
+        width: tableWidth,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
             Container(
-              width: _checkWidth,
-              alignment: Alignment.center,
-              child: Container(
-                width: 16.0,
-                height: 16.0,
-                decoration: BoxDecoration(
-                  borderRadius: AppRadius.xsRadius,
-                  border: Border.all(
-                    color: context.colors.borderLight.withValues(alpha: 0.8),
-                    width: 1.5,
-                  ),
-                ),
+              height: AppLayout.tableHeaderHeight,
+              color: colors.surfaceMuted,
+              child: Row(
+                children: [
+                  if (showCheckbox)
+                    const SizedBox(
+                      width: AppLayout.tableCheckboxColumnWidth,
+                      child: Center(child: TableCheckbox(value: false)),
+                    ),
+                  for (final column in columns)
+                    Container(
+                      width: column.resolveWidth(colWidth),
+                      alignment: column.alignment,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                      ),
+                      child: TableHeaderLabel<T>(column: column),
+                    ),
+                ],
               ),
             ),
-          for (int i = 0; i < columns.length; i++) ...[
-            _buildHeaderCell(context, columns[i]),
+            LinearProgressIndicator(
+              minHeight: 2,
+              backgroundColor: colors.borderLight,
+              color: colors.primary,
+            ),
+            Expanded(
+              child: ListView.builder(
+                controller: vCtrl,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: rowCount,
+                itemBuilder: (context, index) => _buildRow(context, index),
+              ),
+            ),
           ],
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildHeaderCell(BuildContext context, TableColumn<T> col) {
-    final colors = context.colors;
-    final width = _resolveColWidth(col);
-
-    return Container(
-      width: width,
-      height: _headerHeight,
-      alignment: col.alignment,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Flexible(
-            child: Text(
-              col.title,
-              style: context.textTheme.labelMedium?.bold().colour(
-                colors.onSurfaceSecondary,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          if (col.sortable) ...[
-            AppSpacing.xs.w,
-            Icon(
-              Icons.unfold_more_rounded,
-              size: AppSpacing.md + 2,
-              color: colors.onSurfaceSecondary.withValues(alpha: 0.4),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDesktopRow(BuildContext context, dynamic colors, int rowIndex) {
-    final isStripe = striped && rowIndex.isOdd;
-    final rowBackground = isStripe
-        ? context.colors.backgroundLight.withValues(alpha: 0.35)
-        : context.colors.surface;
-
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final baseColor = isDark
-        ? colors.borderDark.withValues(alpha: 0.5)
-        : context.colors.borderLight.withValues(alpha: 0.45);
-    final highlightColor = isDark
-        ? colors.borderLight.withValues(alpha: 0.3)
-        : context.colors.surface.withValues(alpha: 0.85);
-
+  Widget _buildRow(BuildContext context, int rowIndex) {
     return Container(
       height: rowHeight,
       decoration: BoxDecoration(
-        color: rowBackground,
-        border: Border(
-          bottom: BorderSide(
-            color: context.colors.borderLight.withValues(alpha: 0.35),
-            width: 1.0,
-          ),
-        ),
+        color: tableRowColor(context, rowIndex: rowIndex, striped: striped),
+        border: Border(bottom: tableRowDivider(context)),
       ),
-      child: Shimmer.fromColors(
-        baseColor: baseColor,
-        highlightColor: highlightColor,
+      child: _shimmer(
+        context,
         child: Row(
           children: [
             if (showCheckbox)
-              Container(
-                width: _checkWidth,
-                alignment: Alignment.center,
-                child: Container(
-                  width: 16.0,
-                  height: 16.0,
-                  decoration: BoxDecoration(
-                    color: context.colors.surface,
-                    borderRadius: AppRadius.xsRadius,
+              const SizedBox(
+                width: AppLayout.tableCheckboxColumnWidth,
+                child: Center(
+                  child: _Bone(
+                    width: AppLayout.iconSm,
+                    height: AppLayout.iconSm,
                   ),
                 ),
               ),
-            for (int colIdx = 0; colIdx < columns.length; colIdx++) ...[
-              _buildCellSkeleton(context, columns[colIdx], rowIndex, colIdx),
-            ],
+            for (final (columnIndex, column) in columns.indexed)
+              Container(
+                width: column.resolveWidth(colWidth),
+                alignment: column.alignment,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                child: _placeholder(column, rowIndex, columnIndex),
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCellSkeleton(
-    BuildContext context,
-    TableColumn<T> col,
-    int rowIndex,
-    int colIndex,
-  ) {
-    final width = _resolveColWidth(col);
-    final isAction = _isActionColumn(col, colIndex);
-    final isBadge = _isBadgeColumn(col);
-
-    Widget placeholder;
-
-    if (isAction) {
-      placeholder = Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 28.0,
-            height: 28.0,
-            decoration: BoxDecoration(
-              color: context.colors.surface,
-              borderRadius: AppRadius.smRadius,
-            ),
-          ),
-          AppSpacing.sm.w,
-          Container(
-            width: 28.0,
-            height: 28.0,
-            decoration: BoxDecoration(
-              color: context.colors.surface,
-              borderRadius: AppRadius.smRadius,
-            ),
-          ),
-        ],
-      );
-    } else if (isBadge) {
-      placeholder = Container(
-        height: 22.0,
-        width: 68.0,
-        decoration: BoxDecoration(
-          color: context.colors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.round),
-        ),
-      );
-    } else {
-      // Natural variation factors so text bars feel organic across rows
-      const factors = [0.68, 0.46, 0.82, 0.54, 0.72, 0.38, 0.88, 0.60];
-      final factor = factors[(rowIndex * 3 + colIndex * 5) % factors.length];
-      final maxAvailable = max(40.0, width - (AppSpacing.md * 2));
-      final barWidth = (maxAvailable * factor).clamp(32.0, maxAvailable);
-
-      placeholder = Container(
-        height: 13.0,
-        width: barWidth,
-        decoration: BoxDecoration(
-          color: context.colors.surface,
-          borderRadius: AppRadius.xsRadius,
-        ),
-      );
-    }
-
-    return Container(
-      width: width,
-      height: rowHeight,
-      alignment: col.alignment,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-      child: placeholder,
+  Widget _placeholder(TableColumn<T> column, int rowIndex, int columnIndex) {
+    final kind = column.resolveSkeleton(
+      isLast: columnIndex == columns.length - 1,
     );
+
+    switch (kind) {
+      case TableCellSkeleton.none:
+        return const _Bone(width: AppSpacing.lg, height: _textBoneHeight);
+      case TableCellSkeleton.badge:
+        return _Bone(
+          width: _badgeBoneWidth,
+          height: _badgeBoneHeight,
+          borderRadius: AppRadius.fullRadius,
+        );
+      case TableCellSkeleton.actions:
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _Bone(
+              width: _actionBoneSize,
+              height: _actionBoneSize,
+              borderRadius: AppRadius.smRadius,
+            ),
+            AppSpacing.sm.w,
+            _Bone(
+              width: _actionBoneSize,
+              height: _actionBoneSize,
+              borderRadius: AppRadius.smRadius,
+            ),
+          ],
+        );
+      case TableCellSkeleton.text:
+        final cellWidth = column.resolveWidth(colWidth) - AppSpacing.md * 2;
+        final factor =
+            _textFactors[(rowIndex * 3 + columnIndex * 5) %
+                _textFactors.length];
+        final width = (cellWidth * factor)
+            .clamp(AppSpacing.xxxl, max(AppSpacing.xxxl, cellWidth))
+            .toDouble();
+        return _Bone(width: width, height: _textBoneHeight);
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // MOBILE SKELETON (Card-based Shimmer List)
+  // Card skeleton
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildMobileSkeleton(BuildContext context) {
+  Widget _buildCards(BuildContext context) {
     final colors = context.colors;
+
+    Widget line(double labelWidth, double valueWidth) => Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        _Bone(width: labelWidth, height: AppSpacing.sm + 2),
+        _Bone(width: valueWidth, height: _textBoneHeight),
+      ],
+    );
 
     return ListView.separated(
       controller: vCtrl,
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: min(rowCount, 5),
+      padding: AppSpacing.md.allPadding,
       separatorBuilder: (_, _) => AppSpacing.md.h,
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      itemBuilder: (ctx, index) {
-        return Container(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          decoration: BoxDecoration(
-            color: colors.surface,
-            borderRadius: AppRadius.lgRadius,
-            border: Border.all(
-              color: colors.borderLight.withValues(alpha: 0.6),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: colors.black.withValues(alpha: 0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
+      itemBuilder: (context, index) => Container(
+        padding: AppSpacing.lg.allPadding,
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: AppRadius.lgRadius,
+          border: Border.all(color: colors.borderLight),
+        ),
+        child: _shimmer(
+          context,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const _Bone(
+                    width: AppSpacing.xxxl * 4,
+                    height: AppSpacing.lg,
+                  ),
+                  _Bone(
+                    width: _badgeBoneWidth,
+                    height: _badgeBoneHeight,
+                    borderRadius: AppRadius.fullRadius,
+                  ),
+                ],
               ),
+              AppSpacing.md.h,
+              Divider(height: 1, color: colors.borderExtraLight),
+              AppSpacing.md.h,
+              line(AppSpacing.xxxl * 2, AppSpacing.xxxl * 4),
+              AppSpacing.sm.h,
+              line(AppSpacing.xxxl * 2 + AppSpacing.lg, AppSpacing.xxxl * 3),
             ],
           ),
-          child: Shimmer.fromColors(
-            baseColor: Theme.of(context).brightness == Brightness.dark
-                ? colors.borderDark.withValues(alpha: 0.5)
-                : colors.borderLight.withValues(alpha: 0.5),
-            highlightColor: Theme.of(context).brightness == Brightness.dark
-                ? colors.borderLight.withValues(alpha: 0.3)
-                : colors.surface.withValues(alpha: 0.9),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Header line: Title + Badge
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      height: 16.0,
-                      width: 140.0,
-                      decoration: BoxDecoration(
-                        color: colors.surface,
-                        borderRadius: AppRadius.xsRadius,
-                      ),
-                    ),
-                    Container(
-                      height: 22.0,
-                      width: 64.0,
-                      decoration: BoxDecoration(
-                        color: colors.surface,
-                        borderRadius: BorderRadius.circular(AppRadius.round),
-                      ),
-                    ),
-                  ],
-                ),
-                AppSpacing.md.h,
-                Divider(
-                  height: 1,
-                  color: colors.borderLight.withValues(alpha: 0.4),
-                ),
-                AppSpacing.md.h,
+        ),
+      ),
+    );
+  }
+}
 
-                // Content fields
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      height: 11.0,
-                      width: 55.0,
-                      decoration: BoxDecoration(
-                        color: colors.surface,
-                        borderRadius: AppRadius.xsRadius,
-                      ),
-                    ),
-                    Container(
-                      height: 13.0,
-                      width: 120.0,
-                      decoration: BoxDecoration(
-                        color: colors.surface,
-                        borderRadius: AppRadius.xsRadius,
-                      ),
-                    ),
-                  ],
-                ),
-                AppSpacing.sm.h,
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      height: 11.0,
-                      width: 70.0,
-                      decoration: BoxDecoration(
-                        color: colors.surface,
-                        borderRadius: AppRadius.xsRadius,
-                      ),
-                    ),
-                    Container(
-                      height: 13.0,
-                      width: 90.0,
-                      decoration: BoxDecoration(
-                        color: colors.surface,
-                        borderRadius: AppRadius.xsRadius,
-                      ),
-                    ),
-                  ],
-                ),
-                AppSpacing.md.h,
+/// A placeholder block painted by [Shimmer].
+class _Bone extends StatelessWidget {
+  const _Bone({required this.width, required this.height, this.borderRadius});
 
-                // Actions row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Container(
-                      width: 28.0,
-                      height: 28.0,
-                      decoration: BoxDecoration(
-                        color: colors.surface,
-                        borderRadius: AppRadius.smRadius,
-                      ),
-                    ),
-                    AppSpacing.sm.w,
-                    Container(
-                      width: 28.0,
-                      height: 28.0,
-                      decoration: BoxDecoration(
-                        color: colors.surface,
-                        borderRadius: AppRadius.smRadius,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+  final double width;
+  final double height;
+  final BorderRadius? borderRadius;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: borderRadius ?? AppRadius.xsRadius,
+      ),
     );
   }
 }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '/app/routes/app_routes.dart';
 import '/app/theme/colors/color_accessor.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
@@ -10,6 +9,7 @@ import '../../core/extensions/context.extension.dart';
 import '../../core/extensions/spacing.extension.dart';
 import '../../core/extensions/textstyle_extension.dart';
 import '/shared/widgets/buttons/app_button.dart';
+import '/features/dashboard/presentation/screens/dashboard.screen.dart';
 
 /// 404 Not Found screen displayed when a requested route doesn't exist.
 class NotFoundScreen extends StatefulWidget {
@@ -158,7 +158,7 @@ class _NotFoundScreenState extends State<NotFoundScreen>
                           if (context.canPop()) {
                             context.pop();
                           } else {
-                            context.go(AppRoutes.home);
+                            context.go(DashboardScreen.route);
                           }
                         },
                       ),
@@ -169,7 +169,7 @@ class _NotFoundScreenState extends State<NotFoundScreen>
                         type: ButtonType.primary,
                         size: ButtonSize.large,
                         fullWidth: false,
-                        onPressed: () => context.go(AppRoutes.home),
+                        onPressed: () => context.go(DashboardScreen.route),
                       ),
                     ],
                   ),

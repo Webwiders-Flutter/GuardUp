@@ -1,32 +1,31 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '/core/constants/app_durations.dart';
+import '/core/constants/app_layout.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '../../../core/extensions/context.extension.dart';
 import '../../../core/extensions/spacing.extension.dart';
 import '../../../core/extensions/textstyle_extension.dart';
+import '../buttons/app_icon_button.dart';
 
-/// Top-bar of [AdminTableBuilder] containing the table title, record count,
-/// search field, refresh button, and custom actions.
-///
-/// Switches seamlessly to a selection-mode bar when [selectedCount] > 0.
-/// The display-limit (rows-per-page) selector has been relocated to [TableFooter].
+/// Header of [AdminTableBuilder]: title, record count, search, refresh and
+/// custom [actions]. Switches to a tinted selection bar with
+/// [selectionActions] while rows are selected.
 class TableTopBar extends StatelessWidget {
   final String title;
   final String subtitle;
   final bool showSearchField;
   final TextEditingController searchController;
 
-  // Keep the notifier param so the API stays backward-compatible,
-  // but the pill itself is now rendered in the footer.
+  /// Kept for API compatibility; the page-size selector lives in the footer.
   final ValueNotifier<int> limitNotifier;
   final void Function(dynamic)? onSearch;
   final ValueChanged<int>? onLimitChange;
   final Future<void> Function()? onRefresh;
   final List<Widget> actions;
 
-  // Selection props
+  // Selection
   final int selectedCount;
   final List<Widget> selectionActions;
   final VoidCallback onClearSelection;
@@ -55,372 +54,232 @@ class TableTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isSelectionMode = selectedCount > 0;
-    final accentDimColor = context.colors.secondary.withValues(alpha: 0.08);
-    final surfaceColor = context.colors.surface;
-    final borderColor = context.colors.borderLight.withValues(alpha: 0.6);
+    final colors = context.colors;
+    final isSelecting = selectedCount > 0;
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+      duration: AppDurations.fast,
       curve: Curves.easeInOut,
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.xl,
         vertical: AppSpacing.md + 2,
       ),
       decoration: BoxDecoration(
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(AppRadius.lg),
-        ),
-        color: isSelectionMode ? accentDimColor : surfaceColor,
-        border: Border(bottom: BorderSide(color: borderColor, width: 1)),
+        color: isSelecting
+            ? colors.primary.withValues(alpha: 0.06)
+            : colors.surface,
+        border: Border(bottom: BorderSide(color: colors.borderLight)),
       ),
       child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 200),
-        child: isSelectionMode
-            ? _buildSelectionMode(context)
-            : _buildNormalMode(context),
+        duration: AppDurations.fast,
+        child: isSelecting
+            ? _buildSelectionBar(context)
+            : LayoutBuilder(
+                key: const ValueKey('default'),
+                builder: (context, constraints) => _buildDefaultBar(
+                  context,
+                  isNarrow:
+                      constraints.maxWidth < AppLayout.tableCardBreakpoint,
+                ),
+              ),
       ),
     );
   }
 
-  Widget _buildNormalMode(BuildContext context) {
-    final textColor = context.colors.onSurface;
-    final mutedColor = context.colors.onSurfaceSecondary;
+  List<Widget> _buildTools() {
+    return [
+      if (showSelectionToggle)
+        AppIconButton(
+          icon: Icons.checklist_rounded,
+          tooltip: isSelectionModeActive ? 'Exit selection' : 'Select rows',
+          isActive: isSelectionModeActive,
+          onPressed: onToggleSelectionMode,
+        ),
+      if (onRefresh != null)
+        AppIconButton(
+          icon: Icons.refresh_rounded,
+          tooltip: 'Refresh',
+          onPressed: onRefresh,
+        ),
+      ...actions,
+    ];
+  }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isMobile = constraints.maxWidth < 640;
+  Widget _buildDefaultBar(BuildContext context, {required bool isNarrow}) {
+    final heading = _Heading(title: title, subtitle: subtitle);
+    final tools = _buildTools();
 
-        if (isMobile) {
-          return Column(
-            key: const ValueKey('normal_mobile'),
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
+    if (isNarrow) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
             children: [
-              // Title + subtitle row
-              if (title.isNotEmpty)
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            style: context.textTheme.titleMedium?.bold().colour(
-                              textColor,
-                            ),
-                          ),
-                          if (subtitle.isNotEmpty) ...[
-                            (AppSpacing.xs / 2).h,
-                            Text(
-                              subtitle,
-                              style: context.textTheme.bodySmall
-                                  ?.size(AppSpacing.md)
-                                  .colour(mutedColor),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    if (showSelectionToggle) ...[
-                      GhostIconButton(
-                        icon: Icons.checklist_rounded,
-                        tooltip: isSelectionModeActive
-                            ? 'Exit selection'
-                            : 'Select items',
-                        isActive: isSelectionModeActive,
-                        onTap: onToggleSelectionMode ?? () {},
-                      ),
-                      (AppSpacing.xs + 2).w,
-                    ],
-                    if (onRefresh != null)
-                      GhostIconButton(
-                        icon: Icons.refresh_rounded,
-                        tooltip: 'Refresh',
-                        onTap: onRefresh!,
-                      ),
-                    ...actions.map(
-                      (a) => Padding(
-                        padding: const EdgeInsets.only(left: AppSpacing.xs + 2),
-                        child: a,
-                      ),
-                    ),
-                  ],
-                ),
-              if (showSearchField) ...[
-                AppSpacing.md.h,
-                _SearchField(
-                  controller: searchController,
-                  onChanged: onSearch,
-                  fullWidth: true,
-                ),
-              ],
+              Expanded(child: heading),
+              for (final tool in tools) ...[AppSpacing.sm.w, tool],
             ],
-          );
-        }
-
-        // Desktop / tablet layout
-        return Row(
-          key: const ValueKey('normal_desktop'),
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Left: title + subtitle
-            if (title.isNotEmpty)
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      title,
-                      style: context.textTheme.titleMedium
-                          ?.bold()
-                          .colour(textColor)
-                          .copyWith(letterSpacing: -0.2),
-                    ),
-                    if (subtitle.isNotEmpty) ...[
-                      (AppSpacing.xs / 2).h,
-                      Text(
-                        subtitle,
-                        style: context.textTheme.bodySmall
-                            ?.size(AppSpacing.md)
-                            .colour(mutedColor),
-                      ),
-                    ],
-                  ],
-                ),
-              )
-            else
-              const Spacer(),
-
-            // Right: search, refresh, actions
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (showSelectionToggle) ...[
-                  GhostIconButton(
-                    icon: Icons.checklist_rounded,
-                    tooltip: isSelectionModeActive
-                        ? 'Exit selection mode'
-                        : 'Select items',
-                    isActive: isSelectionModeActive,
-                    onTap: onToggleSelectionMode ?? () {},
-                  ),
-                  AppSpacing.sm.w,
-                ],
-                if (showSearchField)
-                  _SearchField(
-                    controller: searchController,
-                    onChanged: onSearch,
-                    fullWidth: false,
-                  ),
-                if (showSearchField) AppSpacing.sm.w,
-                if (onRefresh != null) ...[
-                  GhostIconButton(
-                    icon: Icons.refresh_rounded,
-                    tooltip: 'Refresh data',
-                    onTap: onRefresh!,
-                  ),
-                  AppSpacing.sm.w,
-                ],
-                ...actions.map(
-                  (a) => Padding(
-                    padding: const EdgeInsets.only(left: AppSpacing.xs + 2),
-                    child: a,
-                  ),
-                ),
-              ],
-            ),
+          ),
+          if (showSearchField) ...[
+            AppSpacing.md.h,
+            _SearchField(controller: searchController, onChanged: onSearch),
           ],
-        );
-      },
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(child: heading),
+        if (showSearchField) ...[
+          AppSpacing.lg.w,
+          SizedBox(
+            width: AppLayout.tableSearchWidth,
+            child: _SearchField(
+              controller: searchController,
+              onChanged: onSearch,
+            ),
+          ),
+        ],
+        for (final tool in tools) ...[AppSpacing.sm.w, tool],
+      ],
     );
   }
 
-  Widget _buildSelectionMode(BuildContext context) {
-    final accentColor = context.colors.secondary;
+  Widget _buildSelectionBar(BuildContext context) {
+    final colors = context.colors;
 
     return Row(
-      key: const ValueKey('selection_mode'),
+      key: const ValueKey('selection'),
       children: [
-        InkWell(
-          onTap: onClearSelection,
-          borderRadius: AppRadius.roundRadius,
-          child: Container(
-            padding: const EdgeInsets.all(AppSpacing.xs + 2),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: accentColor.withValues(alpha: 0.12),
-            ),
-            child: Icon(
-              Icons.close_rounded,
-              color: accentColor,
-              size: AppSpacing.lg,
-            ),
-          ),
+        AppIconButton(
+          icon: Icons.close_rounded,
+          tooltip: 'Clear selection',
+          variant: AppIconButtonVariant.ghost,
+          onPressed: onClearSelection,
         ),
-        AppSpacing.md.w,
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm + 2,
-            vertical: AppSpacing.xs,
-          ),
-          decoration: BoxDecoration(
-            color: accentColor,
-            borderRadius: AppRadius.roundRadius,
-          ),
-          child: Text(
-            '$selectedCount selected',
-            style: context.textTheme.labelSmall?.bold().colour(
-              context.colors.onPrimary,
-            ),
+        AppSpacing.sm.w,
+        Text(
+          '$selectedCount selected',
+          style: context.textTheme.titleSmall?.semiBold().colour(
+            colors.onSurface,
           ),
         ),
         const Spacer(),
-        ...selectionActions.map(
-          (a) => Padding(
-            padding: const EdgeInsets.only(left: AppSpacing.sm),
-            child: a,
-          ),
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: selectionActions,
         ),
       ],
     );
   }
 }
 
-// ─── Search Field With Clear Button ───────────────────────────────────────────
+class _Heading extends StatelessWidget {
+  const _Heading({required this.title, required this.subtitle});
 
-class _SearchField extends StatelessWidget {
-  final TextEditingController controller;
-  final void Function(dynamic)? onChanged;
-  final bool fullWidth;
-
-  const _SearchField({
-    required this.controller,
-    this.onChanged,
-    required this.fullWidth,
-  });
+  final String title;
+  final String subtitle;
 
   @override
   Widget build(BuildContext context) {
-    final textColor = context.colors.onSurface;
-    final mutedColor = context.colors.onSurfaceSecondary;
-    final accentColor = context.colors.secondary;
-    final borderColor = context.colors.borderLight.withValues(alpha: 0.6);
-    final fieldHeight = AppSpacing.md * 3;
+    final colors = context.colors;
+    if (title.isEmpty && subtitle.isEmpty) return const SizedBox.shrink();
 
-    final field = SizedBox(
-      height: fieldHeight,
-      child: ValueListenableBuilder<TextEditingValue>(
-        valueListenable: controller,
-        builder: (context, value, _) {
-          return TextField(
-            controller: controller,
-            onChanged: onChanged,
-            style: context.textTheme.bodySmall
-                ?.size(AppSpacing.md + 1)
-                .colour(textColor),
-            decoration: InputDecoration(
-              hintText: 'Search...',
-              hintStyle: context.textTheme.bodySmall
-                  ?.size(AppSpacing.md + 1)
-                  .colour(mutedColor),
-              prefixIcon: Icon(
-                CupertinoIcons.search,
-                color: mutedColor,
-                size: AppSpacing.lg,
-              ),
-              suffixIcon: value.text.isNotEmpty
-                  ? IconButton(
-                      icon: Icon(
-                        Icons.clear_rounded,
-                        size: AppSpacing.lg,
-                        color: mutedColor,
-                      ),
-                      onPressed: () {
-                        controller.clear();
-                        onChanged?.call('');
-                      },
-                      tooltip: 'Clear search',
-                    )
-                  : null,
-              filled: true,
-              fillColor: context.colors.backgroundLight,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: AppRadius.mdRadius,
-                borderSide: BorderSide(color: borderColor),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: AppRadius.mdRadius,
-                borderSide: BorderSide(color: accentColor, width: 1.5),
-              ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (title.isNotEmpty)
+          Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: context.textTheme.titleMedium
+                ?.bold()
+                .textSpacing(-0.2)
+                .colour(colors.onSurface),
+          ),
+        if (subtitle.isNotEmpty) ...[
+          (AppSpacing.xs / 2).h,
+          Text(
+            subtitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: context.textTheme.bodySmall?.colour(
+              colors.onSurfaceSecondary,
             ),
-          );
-        },
-      ),
+          ),
+        ],
+      ],
     );
-
-    if (fullWidth) return field;
-    return SizedBox(width: (AppSpacing.xxxl * 7) + AppSpacing.lg, child: field);
   }
 }
 
-// ─── Ghost Icon Button ────────────────────────────────────────────────────────
+// ─── Search field ────────────────────────────────────────────────────────────
 
-/// Bordered icon-only button with hover feedback.
-class GhostIconButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-  final String? tooltip;
-  final bool isActive;
-  final Color? activeColor;
+/// Compact search input with an inline clear button. The clear button
+/// listens to the controller, so typing never rebuilds the top bar.
+class _SearchField extends StatelessWidget {
+  const _SearchField({required this.controller, this.onChanged});
 
-  const GhostIconButton({
-    super.key,
-    required this.icon,
-    required this.onTap,
-    this.tooltip,
-    this.isActive = false,
-    this.activeColor,
-  });
+  final TextEditingController controller;
+  final void Function(dynamic)? onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final color = activeColor ?? context.colors.secondary;
-    final borderColor = isActive
-        ? color.withValues(alpha: 0.45)
-        : context.colors.borderLight.withValues(alpha: 0.6);
-    final bgColor = isActive
-        ? color.withValues(alpha: 0.12)
-        : context.colors.backgroundLight;
-    final iconColor = isActive ? color : context.colors.onSurface;
+    final colors = context.colors;
+    final textStyle = context.textTheme.bodySmall?.size(AppSpacing.md + 1);
 
-    final btn = Material(
-      color: bgColor,
-      borderRadius: AppRadius.mdRadius,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: AppRadius.mdRadius,
-        child: Container(
-          width: AppSpacing.md * 3,
-          height: AppSpacing.md * 3,
-          decoration: BoxDecoration(
-            borderRadius: AppRadius.mdRadius,
-            border: Border.all(color: borderColor),
+    OutlineInputBorder border(Color color, [double width = 1]) =>
+        OutlineInputBorder(
+          borderRadius: AppRadius.mdRadius,
+          borderSide: BorderSide(color: color, width: width),
+        );
+
+    return SizedBox(
+      height: AppLayout.controlHeight,
+      child: TextField(
+        controller: controller,
+        onChanged: onChanged,
+        textInputAction: TextInputAction.search,
+        style: textStyle?.colour(colors.onSurface),
+        decoration: InputDecoration(
+          hintText: 'Search…',
+          hintStyle: textStyle?.colour(colors.onSurfaceSecondary),
+          isDense: true,
+          filled: true,
+          fillColor: colors.surfaceMuted,
+          contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          prefixIcon: Icon(
+            Icons.search_rounded,
+            size: AppLayout.iconSm,
+            color: colors.onSurfaceSecondary,
           ),
-          child: Icon(icon, size: AppSpacing.lg + 2, color: iconColor),
+          suffixIcon: ValueListenableBuilder<TextEditingValue>(
+            valueListenable: controller,
+            builder: (context, value, _) {
+              if (value.text.isEmpty) return const SizedBox.shrink();
+              return IconButton(
+                tooltip: 'Clear search',
+                visualDensity: VisualDensity.compact,
+                icon: Icon(
+                  Icons.close_rounded,
+                  size: AppLayout.iconSm,
+                  color: colors.onSurfaceSecondary,
+                ),
+                onPressed: () {
+                  controller.clear();
+                  onChanged?.call('');
+                },
+              );
+            },
+          ),
+          enabledBorder: border(colors.borderLight),
+          focusedBorder: border(colors.primary, 1.5),
         ),
       ),
     );
-
-    if (tooltip != null) {
-      return Tooltip(message: tooltip!, child: btn);
-    }
-    return btn;
   }
 }

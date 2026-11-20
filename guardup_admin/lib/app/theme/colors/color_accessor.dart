@@ -38,6 +38,13 @@ class AppThemeAccessor {
   Color get backgroundLight => _extra.backgroundLight;
   Color get backgroundDark => _extra.backgroundDark;
 
+  /// Subtle raised surface for table headers, zebra rows, hover fills and
+  /// inset controls (search fields, segmented pills).
+  Color get surfaceMuted => _scheme.surfaceContainer;
+
+  /// Whether the active theme is dark (e.g. inside the always-dark sidebar).
+  bool get isDark => _scheme.brightness == Brightness.dark;
+
   /// Typography tokens
   Color get onSurfaceSecondary => _extra.onSurfaceSecondary;
 

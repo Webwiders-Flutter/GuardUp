@@ -283,8 +283,8 @@ class MobileAppsSettingsCard extends StatelessWidget {
                           fieldName: 'Minimum iOS Version',
                         );
                         if (err != null) return err;
-                        final latestText =
-                            latestIosVersionController.text.trim();
+                        final latestText = latestIosVersionController.text
+                            .trim();
                         if (latestText.isNotEmpty &&
                             AppRegex.semver.hasMatch(latestText) &&
                             Validators.compareSemver(
@@ -455,8 +455,8 @@ class MobileAppsSettingsCard extends StatelessWidget {
                           fieldName: 'Latest Android Version',
                         );
                         if (err != null) return err;
-                        final minText =
-                            minimumAndroidVersionController.text.trim();
+                        final minText = minimumAndroidVersionController.text
+                            .trim();
                         if (minText.isNotEmpty &&
                             AppRegex.semver.hasMatch(minText) &&
                             Validators.compareSemver(minText, value!.trim()) >
@@ -499,8 +499,8 @@ class MobileAppsSettingsCard extends StatelessWidget {
                           fieldName: 'Minimum Android Version',
                         );
                         if (err != null) return err;
-                        final latestText =
-                            latestAndroidVersionController.text.trim();
+                        final latestText = latestAndroidVersionController.text
+                            .trim();
                         if (latestText.isNotEmpty &&
                             AppRegex.semver.hasMatch(latestText) &&
                             Validators.compareSemver(

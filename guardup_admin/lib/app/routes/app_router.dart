@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '/app/routes/app_routes.dart';
 import '/app/routes/auth_refresh_listenable.dart';
 import '/app/screens/admin_shell.dart';
 import '/app/screens/not_found_screen.dart';
@@ -25,7 +24,6 @@ import '/features/notifications/presentation/screens/notification_management.scr
 import '/features/services/presentation/screens/services_management.screen.dart';
 import '/features/settings/presentation/screens/admin_settings.screen.dart';
 import '/features/users/data/enums/user_role.enum.dart';
-import '/features/users/data/enums/user_status.enum.dart';
 import '/features/users/presentation/screens/user_details.screen.dart';
 import '/features/users/presentation/screens/users_management.screen.dart';
 
@@ -37,7 +35,7 @@ final class AppRouter {
     final authRefresh = ref.read(authRefreshProvider);
 
     final router = GoRouter(
-      initialLocation: AppRoutes.login,
+      initialLocation: LoginScreen.route,
       refreshListenable: authRefresh,
       errorPageBuilder: (context, state) =>
           const NoTransitionPage(child: NotFoundScreen()),
@@ -45,17 +43,19 @@ final class AppRouter {
       redirect: (context, state) {
         final isAuthenticated = authRepository.isAuthenticated;
 
-        final isLoginRoute = state.matchedLocation == AppRoutes.login;
-        final isPublicRoute = state.matchedLocation.startsWith('/public');
+        final isLoginRoute = state.matchedLocation == LoginScreen.route;
+        final isPublicRoute = state.matchedLocation.startsWith(
+          PublicLegalScreen.pathPrefix,
+        );
 
         // Not logged in and accessing protected route
         if (!isAuthenticated && !isLoginRoute && !isPublicRoute) {
-          return AppRoutes.login;
+          return LoginScreen.route;
         }
 
         // Logged in and accessing login
         if (isAuthenticated && isLoginRoute) {
-          return AppRoutes.home;
+          return DashboardScreen.route;
         }
 
         return null;
@@ -63,12 +63,12 @@ final class AppRouter {
 
       routes: [
         GoRoute(
-          path: AppRoutes.login,
+          path: LoginScreen.route,
           builder: (context, state) => const LoginScreen(),
         ),
 
         GoRoute(
-          path: AppRoutes.publicLegal,
+          path: PublicLegalScreen.route,
           builder: (context, state) {
             final contentType =
                 ContentType.tryFromSlug(state.pathParameters['contentType']) ??
@@ -96,212 +96,89 @@ final class AppRouter {
             StatefulShellBranch(
               routes: [
                 GoRoute(
-                  path: AppRoutes.home,
+                  path: DashboardScreen.route,
                   builder: (context, state) => const DashboardScreen(),
                 ),
               ],
             ),
 
-            // 2. Users Management
+            // 2. Users: /users/<role>/<status> for every list in
+            //    UsersManagementScreen.listsByRole, plus /users/detail/:id.
             StatefulShellBranch(
               routes: [
                 GoRoute(
-                  path: AppRoutes.users,
-                  name: AppRoutes.users,
-                  redirect: (context, state) {
-                    if (state.uri.path == AppRoutes.users) {
-                      return AppRoutes.userCustomer;
-                    }
-                    return null;
-                  },
+                  path: UsersManagementScreen.route,
+                  redirect: (context, state) =>
+                      state.uri.path == UsersManagementScreen.route
+                      ? UsersManagementScreen.defaultLocation
+                      : null,
                   routes: [
-                    // Customer
+                    for (final MapEntry(key: role, value: statuses)
+                        in UsersManagementScreen.listsByRole.entries)
+                      GoRoute(
+                        path: role.slug,
+                        redirect: (context, state) =>
+                            state.uri.path ==
+                                UsersManagementScreen.roleLocation(role)
+                            ? UsersManagementScreen.location(
+                                role,
+                                UsersManagementScreen.defaultStatus,
+                              )
+                            : null,
+                        routes: [
+                          for (final status in statuses)
+                            GoRoute(
+                              path: status.slug,
+                              builder: (context, state) =>
+                                  UsersManagementScreen(
+                                    role: role,
+                                    status: status,
+                                  ),
+                            ),
+                        ],
+                      ),
                     GoRoute(
-                      path: 'customer',
-                      name: 'customer',
-                      redirect: (context, state) {
-                        if (state.uri.path == AppRoutes.userCustomer) {
-                          return AppRoutes.userCustomerVerified;
-                        }
-                        return null;
-                      },
-                      routes: [
-                        GoRoute(
-                          path: 'verified',
-                          name: 'customer-verified',
-                          builder: (context, state) =>
-                              const UsersManagementScreen(
-                                role: UserRoleType.customer,
-                                status: UserStatus.active,
-                              ),
-                        ),
-                        GoRoute(
-                          path: 'pending',
-                          name: 'customer-pending',
-                          builder: (context, state) =>
-                              const UsersManagementScreen(
-                                role: UserRoleType.customer,
-                                status: UserStatus.approvalPending,
-                              ),
-                        ),
-                        GoRoute(
-                          path: 'blocked',
-                          name: 'customer-blocked',
-                          builder: (context, state) =>
-                              const UsersManagementScreen(
-                                role: UserRoleType.customer,
-                                status: UserStatus.blocked,
-                              ),
-                        ),
-                      ],
-                    ),
-
-                    // Bodyguard
-                    GoRoute(
-                      path: 'bodyguard',
-                      name: 'bodyguard',
-                      redirect: (context, state) {
-                        if (state.uri.path == AppRoutes.userGuard) {
-                          return AppRoutes.userGuardVerified;
-                        }
-                        return null;
-                      },
-                      routes: [
-                        GoRoute(
-                          path: 'verified',
-                          name: 'bodyguard-verified',
-                          builder: (context, state) =>
-                              const UsersManagementScreen(
-                                role: UserRoleType.guard,
-                                status: UserStatus.active,
-                              ),
-                        ),
-                        GoRoute(
-                          path: 'pending',
-                          name: 'bodyguard-pending',
-                          builder: (context, state) =>
-                              const UsersManagementScreen(
-                                role: UserRoleType.guard,
-                                status: UserStatus.approvalPending,
-                              ),
-                        ),
-                        GoRoute(
-                          path: 'rejected',
-                          name: 'bodyguard-rejected',
-                          builder: (context, state) =>
-                              const UsersManagementScreen(
-                                role: UserRoleType.guard,
-                                status: UserStatus.rejected,
-                              ),
-                        ),
-                        GoRoute(
-                          path: 'blocked',
-                          name: 'bodyguard-blocked',
-                          builder: (context, state) =>
-                              const UsersManagementScreen(
-                                role: UserRoleType.guard,
-                                status: UserStatus.blocked,
-                              ),
-                        ),
-                      ],
-                    ),
-
-                    // Company
-                    GoRoute(
-                      path: 'company',
-                      name: 'company',
-                      redirect: (context, state) {
-                        if (state.uri.path == AppRoutes.userCompany) {
-                          return AppRoutes.userCompanyVerified;
-                        }
-                        return null;
-                      },
-                      routes: [
-                        GoRoute(
-                          path: 'verified',
-                          name: 'company-verified',
-                          builder: (context, state) =>
-                              const UsersManagementScreen(
-                                role: UserRoleType.company,
-                                status: UserStatus.active,
-                              ),
-                        ),
-                        GoRoute(
-                          path: 'pending',
-                          name: 'company-pending',
-                          builder: (context, state) =>
-                              const UsersManagementScreen(
-                                role: UserRoleType.company,
-                                status: UserStatus.approvalPending,
-                              ),
-                        ),
-                        GoRoute(
-                          path: 'rejected',
-                          name: 'company-rejected',
-                          builder: (context, state) =>
-                              const UsersManagementScreen(
-                                role: UserRoleType.company,
-                                status: UserStatus.rejected,
-                              ),
-                        ),
-                        GoRoute(
-                          path: 'blocked',
-                          name: 'company-blocked',
-                          builder: (context, state) =>
-                              const UsersManagementScreen(
-                                role: UserRoleType.company,
-                                status: UserStatus.blocked,
-                              ),
-                        ),
-                      ],
-                    ),
-
-                    // User Detail
-                    GoRoute(
-                      path: 'detail/:id',
-                      name: 'detail',
-                      builder: (context, state) {
-                        return UserDetailsScreen(
-                          userId: state.pathParameters['id']!,
-                        );
-                      },
+                      path: UserDetailsScreen.path,
+                      builder: (context, state) => UserDetailsScreen(
+                        userId: state.pathParameters['id']!,
+                      ),
                     ),
                   ],
                 ),
               ],
             ),
 
-            // 3. Services Management
+            // 3. Services
             StatefulShellBranch(
               routes: [
                 GoRoute(
-                  path: AppRoutes.services,
+                  path: ServicesManagementScreen.route,
                   builder: (context, state) => const ServicesManagementScreen(),
                 ),
               ],
             ),
 
-            // 3a. Document Types Management
+            // 4. Document types
             StatefulShellBranch(
               routes: [
                 GoRoute(
-                  path: AppRoutes.documentTypes,
+                  path: DocumentTypeManagementScreen.route,
                   builder: (context, state) =>
                       const DocumentTypeManagementScreen(),
                 ),
               ],
             ),
 
-            // 3b. Membership Plans
+            // 5. Membership plans
             StatefulShellBranch(
               routes: [
                 GoRoute(
-                  path: AppRoutes.membershipPlans,
+                  path: MembershipPlanManagementScreen.route,
                   builder: (context, state) =>
                       const MembershipPlanManagementScreen(),
                   routes: [
                     GoRoute(
-                      path: 'detail/:id',
+                      path: MembershipPlanDetailsScreen.path,
                       builder: (context, state) => MembershipPlanDetailsScreen(
                         planId: state.pathParameters['id']!,
                       ),
@@ -311,45 +188,45 @@ final class AppRouter {
               ],
             ),
 
-            // 4. Settings
+            // 6. Settings
             StatefulShellBranch(
               routes: [
                 GoRoute(
-                  path: AppRoutes.settings,
+                  path: AdminSettingsScreen.route,
                   builder: (context, state) => const AdminSettingsScreen(),
                 ),
               ],
             ),
 
-            // 4. Notifications
+            // 7. Notifications
             StatefulShellBranch(
               routes: [
                 GoRoute(
-                  path: AppRoutes.notifications,
+                  path: NotificationManagementScreen.route,
                   builder: (context, state) =>
                       const NotificationManagementScreen(),
                 ),
               ],
             ),
 
-            // 5. Help & Support + FAQs
+            // 8. Help & Support + FAQs
             StatefulShellBranch(
               routes: [
                 GoRoute(
-                  path: AppRoutes.helpSupport,
+                  path: HelpSupportManagementScreen.route,
                   builder: (context, state) =>
                       const HelpSupportManagementScreen(),
                 ),
                 GoRoute(
-                  path: AppRoutes.faqs,
+                  path: FaqManagementScreen.route,
                   builder: (context, state) => const FaqManagementScreen(),
                   routes: [
                     GoRoute(
-                      path: 'add',
+                      path: FaqFormScreen.addPath,
                       builder: (context, state) => const FaqFormScreen(),
                     ),
                     GoRoute(
-                      path: 'edit',
+                      path: FaqFormScreen.editPath,
                       builder: (context, state) {
                         final faq = state.extra as Faq?;
                         return FaqFormScreen(faq: faq);
@@ -360,38 +237,35 @@ final class AppRouter {
               ],
             ),
 
-            // 6. Profile Details
+            // 9. Profile
             StatefulShellBranch(
               routes: [
                 GoRoute(
-                  path: AppRoutes.profileDetails,
+                  path: ProfileScreen.route,
                   builder: (context, state) => const ProfileScreen(),
                 ),
               ],
             ),
 
-            // 7. Policies & Legal Content
+            // 10. Policies & legal content: /content/<type>
             StatefulShellBranch(
               routes: [
                 GoRoute(
-                  path: AppRoutes.content,
-                  redirect: (context, state) {
-                    if (state.uri.path == AppRoutes.content) {
-                      return AppRoutes.contentUrl(ContentType.terms);
-                    }
-                    return null;
-                  },
-                  routes: ContentType.values
-                      .map(
-                        (e) => GoRoute(
-                          path: e.slug,
-                          builder: (context, state) => ContentManagementScreen(
-                            key: ValueKey(e),
-                            initialType: e,
-                          ),
+                  path: ContentManagementScreen.route,
+                  redirect: (context, state) =>
+                      state.uri.path == ContentManagementScreen.route
+                      ? ContentManagementScreen.location(ContentType.terms)
+                      : null,
+                  routes: [
+                    for (final type in ContentType.values)
+                      GoRoute(
+                        path: type.slug,
+                        builder: (context, state) => ContentManagementScreen(
+                          key: ValueKey(type),
+                          initialType: type,
                         ),
-                      )
-                      .toList(),
+                      ),
+                  ],
                 ),
               ],
             ),

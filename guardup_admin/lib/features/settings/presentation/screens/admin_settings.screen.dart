@@ -30,6 +30,9 @@ import '../widgets/support_settings_card.dart';
 ///
 /// Compliant with `rules.md` (Rules 2, 8, 11, 18, 21, 25, 27).
 class AdminSettingsScreen extends ConsumerStatefulWidget {
+  /// Route path of this screen.
+  static const route = '/settings';
+
   const AdminSettingsScreen({super.key});
 
   @override

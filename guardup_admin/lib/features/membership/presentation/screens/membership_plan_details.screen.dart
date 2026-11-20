@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:go_router/go_router.dart';
 
-// import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
@@ -25,10 +24,18 @@ import '/shared/widgets/state/app_state_view.dart';
 import '../../data/models/membership_plan.model.dart';
 import '../../di/membership_plan.providers.dart';
 import 'membership_plan.form.dart';
+import '/features/membership/presentation/screens/membership_plan_management.screen.dart';
 
 /// Full view of a single membership plan: pricing, discount, benefits and
 /// record metadata, with edit / activate / delete actions.
 class MembershipPlanDetailsScreen extends ConsumerStatefulWidget {
+  /// Route segment under [MembershipPlanManagementScreen.route].
+  static const path = 'detail/:id';
+
+  /// Location of the details page for plan [id].
+  static String location(String id) =>
+      '${MembershipPlanManagementScreen.route}/detail/$id';
+
   const MembershipPlanDetailsScreen({
     super.key,
     required this.planId,
@@ -187,7 +194,7 @@ class _PlanHero extends ConsumerWidget {
   // if (context.canPop()) {
   // context.pop();
   // } else {
-  // context.go(AppRoutes.membershipPlans);
+  // context.go(MembershipPlanManagementScreen.route);
   // }
   // }
 

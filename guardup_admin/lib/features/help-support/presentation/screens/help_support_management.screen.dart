@@ -16,6 +16,7 @@ import '/features/help-support/data/enums/contact_us_status.enum.dart';
 import '/features/users/data/enums/user_role.enum.dart';
 import '/features/users/presentation/screens/user_details.screen.dart';
 import '/shared/states/pagination.state.dart';
+import '/shared/widgets/admin_layout/admin_page_body.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/feedbacks/widgets/app_popup.dart';
 import '/shared/widgets/misc/app_chip.dart';
@@ -27,6 +28,9 @@ import '../../di/contact_us.providers.dart';
 import '../controllers/contact_us.controller.dart';
 
 class HelpSupportManagementScreen extends ConsumerStatefulWidget {
+  /// Route path of this screen.
+  static const route = '/help-support';
+
   const HelpSupportManagementScreen({super.key});
 
   @override
@@ -256,6 +260,7 @@ class _HelpSupportManagementScreenState
           final userId = item.userId;
           return Row(
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: .end,
             children: [
               // Registered sender: open their profile.
               PopupMenuButton<ContactUsStatus>(
@@ -311,8 +316,9 @@ class _HelpSupportManagementScreenState
                     ),
                   ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
               ],
+              AppSpacing.sm.w,
+
               Tooltip(
                 message: 'Delete Request',
                 child: InkWell(
@@ -339,98 +345,90 @@ class _HelpSupportManagementScreenState
       ),
     ];
 
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: AdminTableBuilder<ContactUs>(
-            title: 'Help & Support',
-            subtitle: 'Review customer inquiries, contact requests, and resolution statuses',
-            columns: columns,
-            rowHeight: (AppSpacing.xxxl * 2),
-            tableData: paginationState.items,
-            searchController: _searchController,
-            showSearchField: true,
-            currentPage: paginationState.page,
-            totalEntries: paginationState.total,
-            rowsPerPage: paginationState.pageSize,
-            showCheckbox: true,
-            selectedItemsNotifier: _selectedItemsNotifier,
-            selectionActions: [
-              for (final status in ContactUsStatus.values)
-                AppButton(
-                  text: 'Mark ${status.label(context.l10n)}',
-                  leading: Icon(
-                    status.icon,
-                    size: AppSpacing.md + 2,
-                    color: colors.onSurface,
-                  ),
-                  size: ButtonSize.small,
-                  type: switch (status) {
-                    ContactUsStatus.pending => ButtonType.warning,
-                    ContactUsStatus.inProgress => ButtonType.info,
-                    ContactUsStatus.resolved => ButtonType.success,
-                    ContactUsStatus.closed => ButtonType.secondaryOff,
-                  },
-                  fullWidth: false,
-                  onPressed: () => _onUpdateSelectedStatus(status),
-                ),
-              AppButton(
-                text: 'Delete',
-                leading: Icon(
-                  Icons.delete_outline_rounded,
-                  size: AppSpacing.md + 2,
-                ),
-                size: ButtonSize.small,
-                type: ButtonType.danger,
-                fullWidth: false,
-                onPressed: _onDeleteSelectedContactUs,
+    return AdminPageBody(
+      child: AdminTableBuilder<ContactUs>(
+        title: 'Help & Support',
+        subtitle: 'Review customer inquiries, contact requests, and resolution statuses',
+        columns: columns,
+        rowHeight: (AppSpacing.xxxl * 2),
+        tableData: paginationState.items,
+        searchController: _searchController,
+        showSearchField: true,
+        currentPage: paginationState.page,
+        totalEntries: paginationState.total,
+        rowsPerPage: paginationState.pageSize,
+        showCheckbox: true,
+        selectedItemsNotifier: _selectedItemsNotifier,
+        selectionActions: [
+          for (final status in ContactUsStatus.values)
+            AppButton(
+              text: 'Mark ${status.label(context.l10n)}',
+              leading: Icon(
+                status.icon,
+                size: AppSpacing.md + 2,
+                color: colors.onSurface,
               ),
-            ],
-            load: asyncState.isLoading,
-            activeFilter: controller.currentFilter,
-            filterChips: [
-              (label: 'All', value: null),
-              ...ContactUsStatus.values.map(
-                (s) => (label: s.label(context.l10n), value: s),
-              ),
-              ...UserRoleType.values
-                  .where((x) => !x.isAdmin)
-                  .map((r) => (label: r.label(context.l10n), value: r)),
-            ],
-            onFilterChanged: (filter) {
-              ContactUsFilters newFilters;
-              if (filter == null) {
-                newFilters = const ContactUsFilters();
-              } else if (filter is ContactUsStatus) {
-                newFilters = ContactUsFilters(status: filter);
-              } else if (filter is UserRoleType) {
-                newFilters = ContactUsFilters(role: filter);
-              } else {
-                newFilters = const ContactUsFilters();
-              }
-              controller.getPaginatedRecords(
-                forceRefresh: true,
-                filters: newFilters,
-              );
-            },
-            onSearch: (query) => controller.getPaginatedRecords(
-              forceRefresh: true,
-              search: query?.toString(),
+              size: ButtonSize.small,
+              type: switch (status) {
+                ContactUsStatus.pending => ButtonType.warning,
+                ContactUsStatus.inProgress => ButtonType.info,
+                ContactUsStatus.resolved => ButtonType.success,
+                ContactUsStatus.closed => ButtonType.secondaryOff,
+              },
+              fullWidth: false,
+              onPressed: () => _onUpdateSelectedStatus(status),
             ),
-            onRefresh: () => controller.getPaginatedRecords(forceRefresh: true),
-            onPrevious: () =>
-                controller.getPaginatedRecords(page: paginationState.page - 1),
-            onLoadMore: () =>
-                controller.getPaginatedRecords(page: paginationState.page + 1),
-            onPageSelected: (page) =>
-                controller.getPaginatedRecords(page: page),
-            onLimitChange: (limit) => controller.getPaginatedRecords(
-              forceRefresh: true,
-              pageSize: limit,
+          AppButton(
+            text: 'Delete',
+            leading: Icon(
+              Icons.delete_outline_rounded,
+              size: AppSpacing.md + 2,
             ),
+            size: ButtonSize.small,
+            type: ButtonType.danger,
+            fullWidth: false,
+            onPressed: _onDeleteSelectedContactUs,
           ),
+        ],
+        load: asyncState.isLoading,
+        activeFilter: controller.currentFilter,
+        filterChips: [
+          (label: 'All', value: null),
+          ...ContactUsStatus.values.map(
+            (s) => (label: s.label(context.l10n), value: s),
+          ),
+          ...UserRoleType.values
+              .where((x) => !x.isAdmin)
+              .map((r) => (label: r.label(context.l10n), value: r)),
+        ],
+        onFilterChanged: (filter) {
+          ContactUsFilters newFilters;
+          if (filter == null) {
+            newFilters = const ContactUsFilters();
+          } else if (filter is ContactUsStatus) {
+            newFilters = ContactUsFilters(status: filter);
+          } else if (filter is UserRoleType) {
+            newFilters = ContactUsFilters(role: filter);
+          } else {
+            newFilters = const ContactUsFilters();
+          }
+          controller.getPaginatedRecords(
+            forceRefresh: true,
+            filters: newFilters,
+          );
+        },
+        onSearch: (query) => controller.getPaginatedRecords(
+          forceRefresh: true,
+          search: query?.toString(),
         ),
+        onRefresh: () => controller.getPaginatedRecords(forceRefresh: true),
+        onPrevious: () =>
+            controller.getPaginatedRecords(page: paginationState.page - 1),
+        onLoadMore: () =>
+            controller.getPaginatedRecords(page: paginationState.page + 1),
+        onPageSelected: (page) => controller.getPaginatedRecords(page: page),
+        onLimitChange: (limit) =>
+            controller.getPaginatedRecords(forceRefresh: true, pageSize: limit),
       ),
     );
   }

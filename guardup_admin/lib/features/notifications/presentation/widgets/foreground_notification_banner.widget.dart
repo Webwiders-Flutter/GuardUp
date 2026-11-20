@@ -6,13 +6,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/core/services/notification/push_notification_service.dart';
+import '/features/notifications/presentation/screens/notification_management.screen.dart';
 
 /// Data model representing an active in-app foreground notification banner.
 class ForegroundBannerData {
@@ -49,7 +49,7 @@ class ForegroundBannerData {
 /// - 100% compliant with the project design system (`rules.md`).
 class ForegroundNotificationBanner extends ConsumerStatefulWidget {
   /// Optional custom callback when the banner is tapped.
-  /// Defaults to navigating to [AppRoutes.notifications].
+  /// Defaults to navigating to [NotificationManagementScreen.route].
   final void Function(ForegroundBannerData bannerData)? onTap;
 
   /// Optional display duration before auto-dismissal (default 5 seconds).
@@ -175,7 +175,7 @@ class _ForegroundNotificationBannerState
     if (targetRoute != null && targetRoute.isNotEmpty) {
       context.push(targetRoute);
     } else {
-      context.push(AppRoutes.notifications);
+      context.push(NotificationManagementScreen.route);
     }
   }
 

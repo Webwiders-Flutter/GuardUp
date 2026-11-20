@@ -24,13 +24,19 @@ import '/features/legal/presentation/controllers/legal_content.controller.dart';
 
 import 'package:flutter/services.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/enums/language.enum.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/feedbacks/widgets/app_popup.dart';
 import '../../../../shared/widgets/feedbacks/widgets/app_snackbar.dart';
+import '/features/legal/presentation/screens/public_legal.screen.dart';
 
 class ContentManagementScreen extends ConsumerStatefulWidget {
+  /// Base route (redirects to the Terms page).
+  static const route = '/content';
+
+  /// `/content/<type>`, e.g. `/content/privacy-policy`.
+  static String location(ContentType type) => '$route/${type.slug}';
+
   final ContentType initialType;
 
   const ContentManagementScreen({
@@ -736,12 +742,12 @@ class _ContentManagementScreenState
                     return ValueListenableBuilder<LanguageType>(
                       valueListenable: _selectedLanguageNotifier,
                       builder: (context, lang, _) {
-                        final relativePath = AppRoutes.publicLegalUrl(
+                        final relativePath = PublicLegalScreen.location(
                           contentType: type,
                           role: role,
                           language: lang,
                         );
-                        final fullUrl = AppRoutes.fullPublicLegalUrl(
+                        final fullUrl = PublicLegalScreen.fullUrl(
                           contentType: type,
                           role: role,
                           language: lang,

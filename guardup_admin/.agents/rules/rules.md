@@ -12,7 +12,7 @@ The project follows a **Feature-First Clean Architecture** pattern:
 ```text
 lib/
 ├── app/                  # Application configuration (router, theme, global setup)
-│   ├── routes/           # AppRoutes constants & GoRouter config
+│   ├── routes/           # GoRouter config & admin navigation tree
 │   └── theme/            # Theme, color accessor, text themes
 ├── bootstrap/            # App initialization & bootstrapping logic
 ├── core/                 # Shared core utilities, extensions, network, constants
@@ -111,6 +111,9 @@ Text(
   - Spinner dimension 18: `AppSpacing.lg + 2`
 - Use `SpaceExtension` getters (`.h`, `.w`, `.hp`, `.vp`, `.ap`) and `AppSpacing` constants for margins, paddings, and sized boxes.
 - Access screen padding via `context.screenPadding`, `context.horizontalPadding`, `context.verticalPadding`.
+- **Layout tokens** (`lib/core/constants/app_layout.dart`): fixed component dimensions and breakpoints live in `AppLayout` — `topBarHeight`, `sidebarWidth`, `navItemHeight`, `controlHeight` / `controlHeightSm`, `tableRowHeight`, `tableHeaderHeight`, icon sizes (`iconXs`..`iconXl`), and the `compactBreakpoint` (768) / `expandedBreakpoint` (1200) / `tableCardBreakpoint` (640). Prefer these over re-deriving the same value with token arithmetic.
+- **Durations**: `AppDurations.instant` (hover/press), `fast`, `normal` (expand/collapse), `medium`, `slow`.
+- **Extra colors**: `context.colors.surfaceMuted` (table headers, zebra rows, hover fills, inset fields) and `context.colors.isDark`.
 - For dynamic responsiveness, use percentage shortcuts (`50.pw(context)` or `context.widthPercent(50)`).
 
 ```dart
@@ -161,6 +164,8 @@ BorderRadius.circular(12.0) // Hardcoded radius numbers prohibited
 
 ### E. Container Styling
 - Use `QuickContainer` (from `package:quick_container/quick_container.dart`) or styled `Container` for rounded cards, borders, and shadows to maintain visual consistency.
+- **Hot paths exception**: `QuickContainer` 0.0.3 starts a repeating shimmer `AnimationController` in every instance, even when `loading` is false. Use a plain `Container` / `DecoratedBox` for widgets built many times per frame (table cells, list rows, skeleton bones).
+- `QuickContainer` with a one-sided `Border` (e.g. `Border(bottom: ...)`) must not also set a radius; let a rounded, clipping parent provide the corners.
 
 ---
 
@@ -184,16 +189,25 @@ SvgPicture.asset('assets/svg/Logo Icon.svg') // String literal asset paths prohi
 
 ## 4. Navigation & Routing
 
-- All routes **MUST** be defined in `AppRoutes` (`lib/app/routes/app_routes.dart`).
+- **Every screen owns its route.** There is no central `AppRoutes` file.
+  - Top-level screens declare `static const route = '/path';` and are navigated with `context.go(ServicesManagementScreen.route)`.
+  - Nested screens declare the relative `static const path = 'detail/:id';` used by their `GoRoute`, plus a `static String location(...)` that builds the absolute URL.
+  - Parameterized lists expose builders: `UsersManagementScreen.location(role, status)`, `ContentManagementScreen.location(type)`, `PublicLegalScreen.location(...)` / `fullUrl(...)`.
+- `lib/app/routes/app_router.dart` wires those constants into `GoRouter`; `lib/app/routes/admin_navigation.dart` uses them for the sidebar (see §36).
 - Use `go_router` for navigation (`context.go(...)`, `context.push(...)`).
 
 ```dart
 // ✅ GOOD
-context.push(AppRoutes.verifyOtp);
+class ServicesManagementScreen extends ConsumerStatefulWidget {
+  static const route = '/services';
+  ...
+}
+context.go(ServicesManagementScreen.route);
+context.push(UserDetailsScreen.location(user.id));
 
 // ❌ BAD
 Navigator.push(context, MaterialPageRoute(...)); // Raw Navigator push prohibited
-context.go('/verifyOtp');                       // Hardcoded string route prohibited
+context.go('/services');                        // Hardcoded string route prohibited
 ```
 
 ---
@@ -792,10 +806,10 @@ AdminTableBuilder<TruckType>(
 ## 24. Slide-Over Drawers (`AppSidePanel`) & Document Previews (`AppFilePreview`)
 
 - **Slide-Over Side Drawers**:
-  - Use `AppSidePanel` (`lib/shared/widgets/feedbacks/app_side_panel.dart`) for detailed views, edit forms, or creation sidebars.
+  - Use `AppSidePanel` (`lib/shared/widgets/admin_layout/app_side_panel.dart`) for detailed views, edit forms, or creation sidebars.
   - Provides uniform headers, scrolling content containers, and sticky footer action buttons with loading states (`isSaving` powered by `ValueNotifier<bool>`).
 - **File & Document Previews**:
-  - Use `AppFilePreview` (`lib/shared/widgets/feedbacks/app_file_preview.dart`) for image and PDF previews, thumbnail generation, file size calculation, and download actions.
+  - Use `AppFilePreview` (`lib/shared/widgets/feedbacks/widgets/app_file_preview.dart`) for image and PDF previews, thumbnail generation, file size calculation, and download actions.
 
 ---
 
@@ -1216,7 +1230,52 @@ Strict boundaries between Presentation, Business Logic, and Data layers must be 
 
 ---
 
-## 36. AI Agent Guardrails, Zero-Assumption Policy & Escalation Protocol
+## 36. Admin Shell, Page Body & Shared Chrome Primitives
+
+The console frame lives in `lib/shared/widgets/admin_layout/` and is bound to go_router by `lib/app/screens/admin_shell.dart`.
+
+### A. Navigation is data (`lib/app/routes/admin_navigation.dart`)
+- `AdminNavigation.sections` (`List<AdminNavSection>`) and `footerItems` are the **single source** for the sidebar, breadcrumbs, top-bar title and the ⌘K / Ctrl+K command palette. Adding a page = adding one `AdminNavItem`.
+- `AdminNavItem` supports `children` (accordion / rail flyout), `badgeCount` (parents sum their children), `badgeText`, `enabled`, `onTap` (commands) and `matchPrefix` (set `false` for routes like the dashboard whose path prefixes unrelated pages).
+- Route matching, active state and breadcrumb lookup are extensions in `models.dart` (`item.matches(location)`, `item.isActiveIn(location)`, `sections.lookup(location)`); do not re-implement them in widgets.
+
+### B. Frame widgets
+- `AdminScaffold`: responsive frame — drawer below `compactBreakpoint`, icon rail below `expandedBreakpoint`, expanded + drag-to-resize above. Owns collapse/width state in `ValueNotifier`s; only the sidebar rebuilds while resizing. Registers ⌘K / Ctrl+K when `onSearch` is set.
+- `AdminSidebar` / `AdminSidebarTile`: always rendered with `AppTheme.darkTheme`, so inside them use `context.colors.onSurface` / `onSurfaceSecondary` (never `white` with alpha).
+- `AdminTopBar`: breadcrumbs + title, quick-search trigger, `actions` slot.
+- `AdminCommandPalette.show(...)`: searchable navigation (↑ ↓ ↵ Esc).
+
+### C. Page body (`AdminPageBody`)
+- **Every routed page MUST wrap its content in `AdminPageBody`** instead of `Scaffold > SafeArea > Padding`. It applies the responsive gutter (12 on phones, 16 otherwise), hosts a `Scaffold` for snackbars and side panels, and optionally takes a `header` (`AdminPageHeader`), `scrollable: true` and `maxWidth` for content pages.
+
+```dart
+// ✅ Table screen
+return AdminPageBody(child: AdminTableBuilder<ServiceModel>(...));
+
+// ✅ Content screen
+return AdminPageBody(
+  scrollable: true,
+  maxWidth: 960,
+  header: const AdminPageHeader(title: 'Settings', subtitle: 'Platform configuration'),
+  child: settingsCards,
+);
+```
+
+### D. Shared chrome primitives
+- `AppIconButton` (`buttons/`): square icon button — `ghost` / `outlined` / `tonal`, `small` / `medium`, `tooltip`, `isActive`, `isLoading`, `badge`. Use it for every toolbar / top-bar / pagination icon action.
+- `AppBadge` (`misc/`): `AppBadge(label: 'NEW')`, `AppBadge.count(12)`, `AppBadge.dot()`.
+- `AppAvatar` (`misc/`): initials avatar with optional presence dot.
+- `AppHoverBuilder` (`misc/`): hover state via `ValueNotifier` — use instead of hand-written `MouseRegion + ValueNotifier<bool>` pairs.
+- `context.showAnchoredMenu(...)` (`core/extensions/menu.extension.dart`): opens a themed popup menu anchored below (or, with `MenuPlacement.end`, beside) any trigger, so triggers keep their own hover styling instead of being wrapped in `PopupMenuButton`.
+
+### E. Tables
+- Shared table pieces live in `table/table_parts.dart` (`TableHeaderLabel`, `TableCheckbox`, `TableDragHandle`, `tableRowColor`). New table views must use them so all layouts look identical.
+- `TableColumn.skeleton` (`TableCellSkeleton.text` / `badge` / `actions` / `none`) controls the loading placeholder; when omitted it is inferred from the title.
+- Reorderable tables render every column through its own `cellBuilder` (no implicit "#" or "actions" column), so index columns must compute the page offset themselves.
+
+---
+
+## 37. AI Agent Guardrails, Zero-Assumption Policy & Escalation Protocol
 
 All AI coding assistants working in this repository **MUST** adhere to these operational directives:
 

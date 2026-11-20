@@ -11,6 +11,7 @@ import '/core/extensions/riverpod.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/shared/states/pagination.state.dart';
+import '/shared/widgets/admin_layout/admin_page_body.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/feedbacks/widgets/app_popup.dart';
 import '/shared/widgets/misc/app_chip.dart';
@@ -24,6 +25,9 @@ import '../../di/notification.providers.dart';
 import '../controllers/notification.controller.dart';
 
 class NotificationManagementScreen extends ConsumerStatefulWidget {
+  /// Route path of this screen.
+  static const route = '/notifications';
+
   const NotificationManagementScreen({super.key, this.filters});
 
   final NotificationFilters? filters;
@@ -319,104 +323,92 @@ class _NotificationManagementScreenState
       ),
     ];
 
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: AdminTableBuilder<NotificationModel>(
-            title: 'Notifications',
-            subtitle: 'Monitor system alerts, trip and order updates, and delivery status',
-            columns: columns,
-            tableData: paginationState.items,
-            searchController: _searchController,
-            showSearchField: true,
-            rowHeight: AppSpacing.xxxl * 2.5,
-            currentPage: paginationState.page,
-            totalEntries: paginationState.total,
-            rowsPerPage: paginationState.pageSize,
-            showCheckbox: true,
-            selectedItemsNotifier: _selectedItemsNotifier,
-            selectionActions: [
-              AppButton(
-                text: 'Delete',
-                leading: Icon(
-                  Icons.delete_outline_rounded,
-                  size: AppSpacing.md + 2,
-                ),
-                size: ButtonSize.small,
-                type: ButtonType.danger,
-                fullWidth: false,
-                onPressed: _onDeleteSelectedNotifications,
-              ),
-            ],
-            load: asyncState.isLoading,
-            activeFilter: controller.filters.type,
-            activeFilters: [
-              if (controller.filters.isRead != null)
-                (
-                  label: controller.filters.isRead! ? 'Read' : 'Unread',
-                  icon: controller.filters.isRead!
-                      ? Icons.mark_email_read_outlined
-                      : Icons.mark_email_unread_outlined,
-                  key: 'isRead',
-                  onRemove: () {
-                    controller.getPaginatedRecords(
-                      forceRefresh: true,
-                      filters: controller.filters.copyWith(isRead: null),
-                    );
-                  },
-                ),
-            ],
-            onClearAllFilters: () {
-              controller.getPaginatedRecords(
-                forceRefresh: true,
-                filters: controller.filters.copyWith(isRead: null),
-              );
-            },
-            filterChips: [
-              (label: 'All Types', value: null),
-              ...NotificationType.values.map(
-                (type) => (label: type.label, value: type),
-              ),
-            ],
-            onFilterChanged: (filter) {
-              controller.getPaginatedRecords(
-                forceRefresh: true,
-                filters: controller.filters.copyWith(
-                  type: filter as NotificationType?,
-                ),
-              );
-            },
-            onSearch: (query) {
-              controller.getPaginatedRecords(
-                forceRefresh: true,
-                search: query?.toString(),
-              );
-            },
-            onRefresh: () async {
-              await controller.getPaginatedRecords(forceRefresh: true);
-            },
-            onPrevious: () async {
-              await controller.getPaginatedRecords(
-                page: paginationState.page - 1,
-              );
-            },
-            onLoadMore: () async {
-              await controller.getPaginatedRecords(
-                page: paginationState.page + 1,
-              );
-            },
-            onPageSelected: (page) async {
-              await controller.getPaginatedRecords(page: page);
-            },
-            onLimitChange: (limit) {
-              controller.getPaginatedRecords(
-                forceRefresh: true,
-                pageSize: limit,
-              );
-            },
+    return AdminPageBody(
+      child: AdminTableBuilder<NotificationModel>(
+        title: 'Notifications',
+        subtitle: 'Monitor system alerts, trip and order updates, and delivery status',
+        columns: columns,
+        tableData: paginationState.items,
+        searchController: _searchController,
+        showSearchField: true,
+        rowHeight: AppSpacing.xxxl * 2.5,
+        currentPage: paginationState.page,
+        totalEntries: paginationState.total,
+        rowsPerPage: paginationState.pageSize,
+        showCheckbox: true,
+        selectedItemsNotifier: _selectedItemsNotifier,
+        selectionActions: [
+          AppButton(
+            text: 'Delete',
+            leading: Icon(
+              Icons.delete_outline_rounded,
+              size: AppSpacing.md + 2,
+            ),
+            size: ButtonSize.small,
+            type: ButtonType.danger,
+            fullWidth: false,
+            onPressed: _onDeleteSelectedNotifications,
           ),
-        ),
+        ],
+        load: asyncState.isLoading,
+        activeFilter: controller.filters.type,
+        activeFilters: [
+          if (controller.filters.isRead != null)
+            (
+              label: controller.filters.isRead! ? 'Read' : 'Unread',
+              icon: controller.filters.isRead!
+                  ? Icons.mark_email_read_outlined
+                  : Icons.mark_email_unread_outlined,
+              key: 'isRead',
+              onRemove: () {
+                controller.getPaginatedRecords(
+                  forceRefresh: true,
+                  filters: controller.filters.copyWith(isRead: null),
+                );
+              },
+            ),
+        ],
+        onClearAllFilters: () {
+          controller.getPaginatedRecords(
+            forceRefresh: true,
+            filters: controller.filters.copyWith(isRead: null),
+          );
+        },
+        filterChips: [
+          (label: 'All Types', value: null),
+          ...NotificationType.values.map(
+            (type) => (label: type.label, value: type),
+          ),
+        ],
+        onFilterChanged: (filter) {
+          controller.getPaginatedRecords(
+            forceRefresh: true,
+            filters: controller.filters.copyWith(
+              type: filter as NotificationType?,
+            ),
+          );
+        },
+        onSearch: (query) {
+          controller.getPaginatedRecords(
+            forceRefresh: true,
+            search: query?.toString(),
+          );
+        },
+        onRefresh: () async {
+          await controller.getPaginatedRecords(forceRefresh: true);
+        },
+        onPrevious: () async {
+          await controller.getPaginatedRecords(page: paginationState.page - 1);
+        },
+        onLoadMore: () async {
+          await controller.getPaginatedRecords(page: paginationState.page + 1);
+        },
+        onPageSelected: (page) async {
+          await controller.getPaginatedRecords(page: page);
+        },
+        onLimitChange: (limit) {
+          controller.getPaginatedRecords(forceRefresh: true, pageSize: limit);
+        },
       ),
     );
   }

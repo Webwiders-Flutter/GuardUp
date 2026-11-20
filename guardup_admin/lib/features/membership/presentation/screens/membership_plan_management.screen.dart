@@ -11,6 +11,7 @@ import '/core/extensions/riverpod.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/shared/states/pagination.state.dart';
+import '/shared/widgets/admin_layout/admin_page_body.dart';
 import '/shared/widgets/buttons/app_button.dart';
 // import '/shared/widgets/feedbacks/widgets/app_popup.dart';
 import '/shared/widgets/misc/app_chip.dart';
@@ -22,6 +23,9 @@ import '../controllers/membership_plan.controller.dart';
 import 'membership_plan.form.dart';
 
 class MembershipPlanManagementScreen extends ConsumerStatefulWidget {
+  /// Route path of this screen.
+  static const route = '/membership-plans';
+
   const MembershipPlanManagementScreen({super.key});
 
   @override
@@ -295,98 +299,86 @@ class _MembershipPlanManagementScreenState
       ),
     ];
 
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: AdminTableBuilder<MembershipPlan>(
-            title: 'Membership Plans',
-            subtitle: 'Customer membership tiers, pricing and booking discounts. Drag to reorder tiers.',
-            columns: columns,
-            tableData: paginationState.items,
-            searchController: _searchController,
-            showSearchField: true,
-            currentPage: paginationState.page,
-            totalEntries: paginationState.total,
-            rowsPerPage: paginationState.pageSize,
-            // Delete is disabled for now.
-            showCheckbox: true,
-            selectedItemsNotifier: _selectedItemsNotifier,
-            // onRowTap: _openDetails,
-            selectionActions: [
-              AppButton(
-                text: 'Delete',
-                leading: Icon(
-                  Icons.delete_outline_rounded,
-                  size: AppSpacing.md + 2,
-                ),
-                size: ButtonSize.small,
-                type: ButtonType.danger,
-                fullWidth: false,
-                onPressed: _onDeleteSelected,
-              ),
-            ],
-            onReorder: (oldIndex, newIndex) async {
-              await _controller.reorderRecords(
-                paginationState.items[oldIndex].id,
-                oldIndex,
-                newIndex,
-              );
-            },
-            load: asyncState.isLoading,
-            activeFilter: _controller.filters.isActive,
-            filterChips: const [
-              (label: 'All', value: null),
-              (label: 'Active', value: true),
-              (label: 'Inactive', value: false),
-            ],
-            onFilterChanged: (filter) => _controller.getPaginatedRecords(
-              forceRefresh: true,
-              filters: _controller.filters.copyWith(isActive: filter),
+    return AdminPageBody(
+      child: AdminTableBuilder<MembershipPlan>(
+        title: 'Membership Plans',
+        subtitle: 'Customer membership tiers, pricing and booking discounts. Drag to reorder tiers.',
+        columns: columns,
+        tableData: paginationState.items,
+        searchController: _searchController,
+        showSearchField: true,
+        currentPage: paginationState.page,
+        totalEntries: paginationState.total,
+        rowsPerPage: paginationState.pageSize,
+        // Delete is disabled for now.
+        showCheckbox: true,
+        selectedItemsNotifier: _selectedItemsNotifier,
+        // onRowTap: _openDetails,
+        selectionActions: [
+          AppButton(
+            text: 'Delete',
+            leading: Icon(
+              Icons.delete_outline_rounded,
+              size: AppSpacing.md + 2,
             ),
-            onSearch: (query) {
-              _controller.getPaginatedRecords(
-                forceRefresh: true,
-                search: query?.toString(),
-              );
-            },
-            onRefresh: () async {
-              await _controller.getPaginatedRecords(forceRefresh: true);
-            },
-            onPrevious: () async {
-              await _controller.getPaginatedRecords(
-                page: paginationState.page - 1,
-              );
-            },
-            onLoadMore: () async {
-              await _controller.getPaginatedRecords(
-                page: paginationState.page + 1,
-              );
-            },
-            onPageSelected: (page) async {
-              await _controller.getPaginatedRecords(page: page);
-            },
-            onLimitChange: (limit) {
-              _controller.getPaginatedRecords(
-                forceRefresh: true,
-                pageSize: limit,
-              );
-            },
-            actions: [
-              AppButton(
-                text: 'Add Plan',
-                leading: Icon(
-                  Icons.add_rounded,
-                  size: AppSpacing.lg,
-                  color: colors.onPrimary,
-                ),
-                size: ButtonSize.normal,
-                fullWidth: false,
-                onPressed: () => _openForm(),
-              ),
-            ],
+            size: ButtonSize.small,
+            type: ButtonType.danger,
+            fullWidth: false,
+            onPressed: _onDeleteSelected,
           ),
+        ],
+        onReorder: (oldIndex, newIndex) async {
+          await _controller.reorderRecords(
+            paginationState.items[oldIndex].id,
+            oldIndex,
+            newIndex,
+          );
+        },
+        load: asyncState.isLoading,
+        activeFilter: _controller.filters.isActive,
+        filterChips: const [
+          (label: 'All', value: null),
+          (label: 'Active', value: true),
+          (label: 'Inactive', value: false),
+        ],
+        onFilterChanged: (filter) => _controller.getPaginatedRecords(
+          forceRefresh: true,
+          filters: _controller.filters.copyWith(isActive: filter),
         ),
+        onSearch: (query) {
+          _controller.getPaginatedRecords(
+            forceRefresh: true,
+            search: query?.toString(),
+          );
+        },
+        onRefresh: () async {
+          await _controller.getPaginatedRecords(forceRefresh: true);
+        },
+        onPrevious: () async {
+          await _controller.getPaginatedRecords(page: paginationState.page - 1);
+        },
+        onLoadMore: () async {
+          await _controller.getPaginatedRecords(page: paginationState.page + 1);
+        },
+        onPageSelected: (page) async {
+          await _controller.getPaginatedRecords(page: page);
+        },
+        onLimitChange: (limit) {
+          _controller.getPaginatedRecords(forceRefresh: true, pageSize: limit);
+        },
+        actions: [
+          AppButton(
+            text: 'Add Plan',
+            leading: Icon(
+              Icons.add_rounded,
+              size: AppSpacing.lg,
+              color: colors.onPrimary,
+            ),
+            size: ButtonSize.normal,
+            fullWidth: false,
+            onPressed: () => _openForm(),
+          ),
+        ],
       ),
     );
   }

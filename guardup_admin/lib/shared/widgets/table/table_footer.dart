@@ -2,20 +2,20 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '/core/constants/app_durations.dart';
+import '/core/constants/app_layout.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '../../../core/extensions/context.extension.dart';
+import '../../../core/extensions/menu.extension.dart';
 import '../../../core/extensions/spacing.extension.dart';
 import '../../../core/extensions/textstyle_extension.dart';
+import '../buttons/app_icon_button.dart';
+import '../misc/app_hover_builder.dart';
 
-/// Modern pagination footer for [AdminTableBuilder].
-///
-/// Features:
-/// - "Showing X to Y of Z entries" record counter
-/// - Inline rows-per-page selector (moved from top-bar)
-/// - Direct page-number pills (1, 2, 3 … N)
-/// - Previous / Next navigation with async loading indicator
-/// - Fully responsive — collapses gracefully on narrow viewports
+/// Pagination footer for [AdminTableBuilder]: entry range, rows-per-page
+/// selector and page navigation (numbered pills on wide layouts, a compact
+/// "3 / 12" indicator on narrow ones).
 class TableFooter extends StatelessWidget {
   final int totalEntries;
   final int rowsPerPage;
@@ -25,10 +25,11 @@ class TableFooter extends StatelessWidget {
   final void Function()? onPrevious;
   final Future<void> Function() onNext;
   final void Function(int page)? onPageSelected;
-
-  /// Page-size selector props (moved from TableTopBar)
   final ValueNotifier<int>? limitNotifier;
   final ValueChanged<int>? onLimitChange;
+
+  /// Options offered by the rows-per-page selector.
+  final List<int> pageSizeOptions;
 
   const TableFooter({
     super.key,
@@ -42,19 +43,32 @@ class TableFooter extends StatelessWidget {
     this.onPageSelected,
     this.limitNotifier,
     this.onLimitChange,
+    this.pageSizeOptions = const [10, 25, 50, 100],
   });
 
-  int get _effectiveRowsPerPage => rowsPerPage <= 0 ? 10 : rowsPerPage;
+  int get _pageSize => rowsPerPage <= 0 ? 10 : rowsPerPage;
 
-  int get _totalPages =>
-      (totalEntries / _effectiveRowsPerPage).ceil().clamp(1, 999999);
+  int get _totalPages => max(1, (totalEntries / _pageSize).ceil());
 
   @override
   Widget build(BuildContext context) {
-    final int rpp = _effectiveRowsPerPage;
-    final int start = totalEntries == 0 ? 0 : (currentPage - 1) * rpp + 1;
-    final int end = min(start + rpp - 1, totalEntries);
-    final borderColor = context.colors.borderLight.withValues(alpha: 0.6);
+    final colors = context.colors;
+    final start = totalEntries == 0 ? 0 : (currentPage - 1) * _pageSize + 1;
+    final end = min(start + _pageSize - 1, totalEntries);
+    final hasNext = end < totalEntries;
+
+    final rangeLabel = Text(
+      totalEntries == 0 ? 'No entries' : 'Showing $start–$end of $totalEntries',
+      style: context.textTheme.bodySmall?.colour(colors.onSurfaceSecondary),
+    );
+
+    final pageSize = limitNotifier != null
+        ? _PageSizeSelector(
+            notifier: limitNotifier!,
+            options: pageSizeOptions,
+            onChanged: onLimitChange,
+          )
+        : null;
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -62,114 +76,59 @@ class TableFooter extends StatelessWidget {
         vertical: AppSpacing.md,
       ),
       decoration: BoxDecoration(
-        color: context.colors.surface,
-        border: Border(top: BorderSide(color: borderColor)),
-        borderRadius: const BorderRadius.vertical(
-          bottom: Radius.circular(AppRadius.lg),
-        ),
+        color: colors.surface,
+        border: Border(top: BorderSide(color: colors.borderLight)),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isNarrow = constraints.maxWidth < 620;
+          final isNarrow = constraints.maxWidth < AppLayout.tableCardBreakpoint;
+
+          final navigation = ValueListenableBuilder<bool>(
+            valueListenable: nextLoading,
+            builder: (context, isLoading, _) => Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppIconButton(
+                  icon: Icons.chevron_left_rounded,
+                  tooltip: 'Previous page',
+                  onPressed: currentPage > 1 && !isLoading ? onPrevious : null,
+                ),
+                AppSpacing.xs.w,
+                if (isNarrow)
+                  _CompactIndicator(page: currentPage, total: _totalPages)
+                else
+                  ..._buildPills(context),
+                AppSpacing.xs.w,
+                AppIconButton(
+                  icon: Icons.chevron_right_rounded,
+                  tooltip: 'Next page',
+                  isLoading: isLoading,
+                  onPressed: hasNext ? onNext : null,
+                ),
+              ],
+            ),
+          );
 
           if (isNarrow) {
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Entries counter + page size selector
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Showing $start–$end of $totalEntries',
-                      style: context.textTheme.bodySmall
-                          ?.size(AppSpacing.md)
-                          .colour(context.colors.onSurfaceSecondary),
-                    ),
-                    if (limitNotifier != null)
-                      _PageSizeSelector(
-                        notifier: limitNotifier!,
-                        onChanged: onLimitChange,
-                      ),
-                  ],
+                  children: [rangeLabel, ?pageSize],
                 ),
-                AppSpacing.md.h,
-                ValueListenableBuilder<bool>(
-                  valueListenable: nextLoading,
-                  builder: (_, loading, _) => Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _PaginationNavButton(
-                        icon: Icons.chevron_left_rounded,
-                        label: 'Prev',
-                        onTap: (currentPage > 1 && !loading)
-                            ? onPrevious
-                            : null,
-                      ),
-                      AppSpacing.sm.w,
-                      _buildCompactPageIndicator(context),
-                      AppSpacing.sm.w,
-                      _PaginationNavButton(
-                        icon: Icons.chevron_right_rounded,
-                        label: 'Next',
-                        reverse: true,
-                        loading: loading,
-                        onTap: (end < totalEntries && !loading) ? onNext : null,
-                      ),
-                    ],
-                  ),
-                ),
+                AppSpacing.sm.h,
+                navigation,
               ],
             );
           }
 
           return Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Left: record count + page size selector
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Showing $start to $end of $totalEntries entries',
-                    style: context.textTheme.bodySmall
-                        ?.size(AppSpacing.md + 1)
-                        .colour(context.colors.onSurfaceSecondary),
-                  ),
-                  if (limitNotifier != null) ...[
-                    AppSpacing.lg.w,
-                    _PageSizeSelector(
-                      notifier: limitNotifier!,
-                      onChanged: onLimitChange,
-                    ),
-                  ],
-                ],
-              ),
-
-              // Right: pagination controls
-              ValueListenableBuilder<bool>(
-                valueListenable: nextLoading,
-                builder: (_, loading, _) => Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _PaginationNavButton(
-                      icon: Icons.chevron_left_rounded,
-                      label: 'Previous',
-                      onTap: (currentPage > 1 && !loading) ? onPrevious : null,
-                    ),
-                    AppSpacing.sm.w,
-                    ..._buildPagePills(context),
-                    AppSpacing.sm.w,
-                    _PaginationNavButton(
-                      icon: Icons.chevron_right_rounded,
-                      label: 'Next',
-                      reverse: true,
-                      loading: loading,
-                      onTap: (end < totalEntries && !loading) ? onNext : null,
-                    ),
-                  ],
-                ),
-              ),
+              rangeLabel,
+              if (pageSize != null) ...[AppSpacing.lg.w, pageSize],
+              const Spacer(),
+              navigation,
             ],
           );
         },
@@ -177,275 +136,196 @@ class TableFooter extends StatelessWidget {
     );
   }
 
-  Widget _buildCompactPageIndicator(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm + 2,
-        vertical: AppSpacing.xs + 2,
-      ),
-      decoration: BoxDecoration(
-        color: context.colors.backgroundLight,
-        borderRadius: AppRadius.smRadius,
-        border: Border.all(
-          color: context.colors.borderLight.withValues(alpha: 0.6),
+  /// Page numbers with ellipses: 1 … 4 [5] 6 … 12.
+  List<Widget> _buildPills(BuildContext context) {
+    final total = _totalPages;
+    if (total <= 1) return const [];
+
+    final pages = <int?>[];
+    if (total <= 7) {
+      pages.addAll(List.generate(total, (i) => i + 1));
+    } else {
+      final from = max(2, currentPage - 1);
+      final to = min(total - 1, currentPage + 1);
+      pages.add(1);
+      if (from > 2) pages.add(null);
+      for (var page = from; page <= to; page++) {
+        pages.add(page);
+      }
+      if (to < total - 1) pages.add(null);
+      pages.add(total);
+    }
+
+    return [
+      for (final page in pages)
+        page == null
+            ? Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+                child: Text(
+                  '…',
+                  style: context.textTheme.bodySmall?.colour(
+                    context.colors.onSurfaceSecondary,
+                  ),
+                ),
+              )
+            : _PagePill(
+                page: page,
+                isSelected: page == currentPage,
+                onTap: onPageSelected == null || page == currentPage
+                    ? null
+                    : () => onPageSelected!(page),
+              ),
+    ];
+  }
+}
+
+class _PagePill extends StatelessWidget {
+  const _PagePill({
+    required this.page,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final int page;
+  final bool isSelected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs / 2),
+      child: AppHoverBuilder(
+        enabled: onTap != null,
+        cursor: SystemMouseCursors.click,
+        builder: (context, isHovered, _) => GestureDetector(
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: AppDurations.instant,
+            constraints: const BoxConstraints(
+              minWidth: AppLayout.controlHeight,
+            ),
+            height: AppLayout.controlHeight,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? colors.primary
+                  : isHovered
+                  ? colors.surfaceMuted
+                  : colors.transparent,
+              borderRadius: AppRadius.mdRadius,
+            ),
+            child: Text(
+              '$page',
+              style: context.textTheme.labelMedium
+                  ?.weight(isSelected ? FontWeight.w700 : FontWeight.w500)
+                  .colour(isSelected ? colors.onPrimary : colors.onSurface),
+            ),
+          ),
         ),
       ),
+    );
+  }
+}
+
+class _CompactIndicator extends StatelessWidget {
+  const _CompactIndicator({required this.page, required this.total});
+
+  final int page;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: AppSpacing.sm.xPadding,
       child: Text(
-        '$currentPage / $_totalPages',
-        style: context.textTheme.labelMedium?.bold().colour(
+        '$page / $total',
+        style: context.textTheme.labelMedium?.semiBold().colour(
           context.colors.onSurface,
         ),
       ),
     );
   }
-
-  List<Widget> _buildPagePills(BuildContext context) {
-    final total = _totalPages;
-    if (total <= 1) return const [];
-
-    final List<Widget> pills = [];
-    final List<int> pagesToShow = [];
-
-    if (total <= 5) {
-      for (int i = 1; i <= total; i++) {
-        pagesToShow.add(i);
-      }
-    } else {
-      pagesToShow.add(1);
-      int startPage = max(2, currentPage - 1);
-      int endPage = min(total - 1, currentPage + 1);
-
-      if (startPage > 2) pagesToShow.add(-1); // ellipsis marker
-      for (int i = startPage; i <= endPage; i++) {
-        pagesToShow.add(i);
-      }
-      if (endPage < total - 1) pagesToShow.add(-2); // ellipsis marker
-      pagesToShow.add(total);
-    }
-
-    for (final page in pagesToShow) {
-      if (page < 0) {
-        pills.add(
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-            child: Text(
-              '…',
-              style: context.textTheme.bodySmall?.colour(
-                context.colors.onSurfaceSecondary,
-              ),
-            ),
-          ),
-        );
-      } else {
-        final isSelected = page == currentPage;
-        pills.add(
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs / 2),
-            child: InkWell(
-              onTap: onPageSelected != null && !isSelected
-                  ? () => onPageSelected!(page)
-                  : null,
-              borderRadius: AppRadius.mdRadius,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                width: AppSpacing.xxxl + 2,
-                height: AppSpacing.xxxl + 2,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? context.colors.secondary
-                      : context.colors.transparent,
-                  borderRadius: AppRadius.mdRadius,
-                  border: isSelected
-                      ? null
-                      : Border.all(
-                          color: context.colors.borderLight.withValues(
-                            alpha: 0.0,
-                          ),
-                        ),
-                ),
-                child: Text(
-                  '$page',
-                  style: context.textTheme.labelMedium
-                      ?.weight(isSelected ? FontWeight.w700 : FontWeight.w500)
-                      .colour(
-                        isSelected
-                            ? context.colors.onPrimary
-                            : context.colors.onSurface,
-                      ),
-                ),
-              ),
-            ),
-          ),
-        );
-      }
-    }
-
-    return pills;
-  }
 }
 
-// ─── Inline Page-Size Selector ────────────────────────────────────────────────
-
-/// Compact dropdown for selecting displayed rows per page.
-/// Relocated from [TableTopBar] to [TableFooter] for better UX.
+/// "Rows [10 ▾]" selector that opens a menu of [options].
 class _PageSizeSelector extends StatelessWidget {
-  final ValueNotifier<int> notifier;
-  final ValueChanged<int>? onChanged;
+  const _PageSizeSelector({
+    required this.notifier,
+    required this.options,
+    this.onChanged,
+  });
 
-  const _PageSizeSelector({required this.notifier, this.onChanged});
+  final ValueNotifier<int> notifier;
+  final List<int> options;
+  final ValueChanged<int>? onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final textColor = context.colors.onSurface;
-    final mutedColor = context.colors.onSurfaceSecondary;
-    final borderColor = context.colors.borderLight.withValues(alpha: 0.6);
+    final colors = context.colors;
+    final labelStyle = context.textTheme.bodySmall;
 
     return ValueListenableBuilder<int>(
       valueListenable: notifier,
-      builder: (_, value, _) {
-        return Container(
-          height: AppSpacing.md * 3 - 2,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          decoration: BoxDecoration(
-            color: context.colors.backgroundLight,
-            borderRadius: AppRadius.mdRadius,
-            border: Border.all(color: borderColor),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Show:',
-                style: context.textTheme.bodySmall
-                    ?.size(AppSpacing.md + 1)
-                    .colour(mutedColor),
-              ),
-              AppSpacing.xs.w,
-              DropdownButtonHideUnderline(
-                child: DropdownButton<int>(
-                  value: value,
-                  icon: Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    size: AppSpacing.lg,
-                    color: mutedColor,
-                  ),
-                  borderRadius: AppRadius.mdRadius,
-                  style: context.textTheme.bodySmall
-                      ?.size(AppSpacing.md + 1)
-                      .medium()
-                      .colour(textColor),
-                  items: const [10, 25, 50, 100]
-                      .map(
-                        (n) => DropdownMenuItem(
-                          value: n,
-                          child: Text(
-                            '$n',
-                            style: context.textTheme.bodySmall
-                                ?.size(AppSpacing.md + 1)
-                                .colour(textColor),
-                          ),
+      builder: (context, value, _) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('Rows', style: labelStyle?.colour(colors.onSurfaceSecondary)),
+          AppSpacing.sm.w,
+          Builder(
+            builder: (anchor) => AppHoverBuilder(
+              cursor: SystemMouseCursors.click,
+              builder: (context, isHovered, _) => GestureDetector(
+                onTap: () async {
+                  final selected = await anchor.showAnchoredMenu<int>(
+                    items: [
+                      for (final option in options)
+                        CheckedPopupMenuItem<int>(
+                          value: option,
+                          checked: option == value,
+                          height: AppLayout.controlHeight,
+                          child: Text('$option'),
                         ),
-                      )
-                      .toList(),
-                  onChanged: (n) {
-                    if (n != null) {
-                      notifier.value = n;
-                      onChanged?.call(n);
-                    }
-                  },
+                    ],
+                  );
+                  if (selected == null || selected == value) return;
+                  notifier.value = selected;
+                  onChanged?.call(selected);
+                },
+                child: AnimatedContainer(
+                  duration: AppDurations.instant,
+                  height: AppLayout.controlHeight,
+                  padding: const EdgeInsets.only(
+                    left: AppSpacing.sm + 2,
+                    right: AppSpacing.xs + 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isHovered ? colors.surfaceMuted : colors.surface,
+                    borderRadius: AppRadius.mdRadius,
+                    border: Border.all(color: colors.borderLight),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '$value',
+                        style: labelStyle?.semiBold().colour(colors.onSurface),
+                      ),
+                      AppSpacing.xs.w,
+                      Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        size: AppLayout.iconSm,
+                        color: colors.onSurfaceSecondary,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ],
+            ),
           ),
-        );
-      },
-    );
-  }
-}
-
-// ─── Bordered Navigation Button ───────────────────────────────────────────────
-
-class _PaginationNavButton extends StatelessWidget {
-  final String label;
-  final VoidCallback? onTap;
-  final IconData icon;
-  final bool reverse;
-  final bool loading;
-
-  const _PaginationNavButton({
-    required this.label,
-    this.onTap,
-    required this.icon,
-    this.reverse = false,
-    this.loading = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final bool disabled = onTap == null;
-    final mutedColor = context.colors.onSurfaceSecondary;
-    final textColor = context.colors.onSurface;
-    final borderColor = context.colors.borderLight.withValues(alpha: 0.6);
-
-    return Material(
-      color: context.colors.surface,
-      borderRadius: AppRadius.mdRadius,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: AppRadius.mdRadius,
-        child: Container(
-          height: AppSpacing.xxxl + 2,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          decoration: BoxDecoration(
-            borderRadius: AppRadius.mdRadius,
-            border: Border.all(color: borderColor),
-          ),
-          child: loading
-              ? Center(
-                  child: SizedBox(
-                    width: AppSpacing.md + 2,
-                    height: AppSpacing.md + 2,
-                    child: CircularProgressIndicator(
-                      strokeWidth: AppSpacing.xs / 2,
-                      color: context.colors.secondary,
-                    ),
-                  ),
-                )
-              : Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (!reverse) ...[
-                      Icon(
-                        icon,
-                        size: AppSpacing.lg,
-                        color: disabled
-                            ? mutedColor.withValues(alpha: 0.4)
-                            : textColor,
-                      ),
-                      AppSpacing.xs.w,
-                    ],
-                    Text(
-                      label,
-                      style: context.textTheme.bodySmall?.semiBold().colour(
-                        disabled
-                            ? mutedColor.withValues(alpha: 0.4)
-                            : textColor,
-                      ),
-                    ),
-                    if (reverse) ...[
-                      AppSpacing.xs.w,
-                      Icon(
-                        icon,
-                        size: AppSpacing.lg,
-                        color: disabled
-                            ? mutedColor.withValues(alpha: 0.4)
-                            : textColor,
-                      ),
-                    ],
-                  ],
-                ),
-        ),
+        ],
       ),
     );
   }

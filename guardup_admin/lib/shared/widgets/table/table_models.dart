@@ -26,6 +26,21 @@ enum SelectionTogglePosition {
   topBar,
 }
 
+/// Placeholder shape drawn for a column while the table loads.
+enum TableCellSkeleton {
+  /// A text bar of varying width.
+  text,
+
+  /// A status pill.
+  badge,
+
+  /// A pair of square action buttons.
+  actions,
+
+  /// Nothing (e.g. index or icon columns).
+  none,
+}
+
 /// Rich column specification for [AdminTableBuilder].
 ///
 /// Provides fine-grained control over column width, alignment,
@@ -63,6 +78,10 @@ class TableColumn<T> {
   /// If provided, supersedes the global `rows` callback for this column.
   final Widget Function(T item, int index)? cellBuilder;
 
+  /// Loading placeholder for this column. When null it is inferred from the
+  /// title ("Status" → badge, "Actions" → actions, otherwise text).
+  final TableCellSkeleton? skeleton;
+
   const TableColumn({
     required this.title,
     this.key,
@@ -74,5 +93,44 @@ class TableColumn<T> {
     this.sortable = false,
     this.headerWidget,
     this.cellBuilder,
+    this.skeleton,
   });
+}
+
+extension TableColumnX<T> on TableColumn<T> {
+  /// Key reported to `onSort` and matched against [TableSortState].
+  String get sortKey => key ?? title;
+
+  /// Rendered width given the width of one flex unit.
+  double resolveWidth(double flexUnitWidth) => width ?? flexUnitWidth * flex;
+
+  /// Cell for [item]: the column's own [cellBuilder], else the legacy
+  /// `rows(item)` list at [columnIndex]. [rowCells] is only invoked when
+  /// needed, so typed columns never pay for building the whole row.
+  Widget buildCell(
+    T item,
+    int rowIndex,
+    int columnIndex,
+    List<Widget> Function() rowCells,
+  ) {
+    final builder = cellBuilder;
+    if (builder != null) return builder(item, rowIndex);
+    final cells = rowCells();
+    return columnIndex < cells.length
+        ? cells[columnIndex]
+        : const SizedBox.shrink();
+  }
+
+  /// Explicit [skeleton], or a guess from the column title.
+  TableCellSkeleton resolveSkeleton({required bool isLast}) {
+    if (skeleton != null) return skeleton!;
+    final normalized = title.trim().toLowerCase();
+    if (normalized.isEmpty || normalized == '#') return TableCellSkeleton.none;
+    if (normalized.startsWith('action') || (isLast && (width ?? 0) <= 160)) {
+      return TableCellSkeleton.actions;
+    }
+    const badgeHints = ['status', 'type', 'role', 'applies', 'required'];
+    if (badgeHints.any(normalized.contains)) return TableCellSkeleton.badge;
+    return TableCellSkeleton.text;
+  }
 }

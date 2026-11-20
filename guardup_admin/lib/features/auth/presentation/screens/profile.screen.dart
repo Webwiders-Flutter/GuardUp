@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '../../../../core/extensions/context.extension.dart';
@@ -19,6 +18,7 @@ import '/shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/feedbacks/widgets/app_popup.dart';
 import '/shared/widgets/inputs/app_input_label.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
+import '/features/auth/presentation/screens/login.screen.dart';
 
 /// Enterprise administrator profile screen.
 ///
@@ -29,6 +29,9 @@ import '/shared/widgets/inputs/app_text_field.dart';
 ///
 /// Responsive dashboard layout compliant with `rules.md`.
 class ProfileScreen extends ConsumerStatefulWidget {
+  /// Route path of this screen.
+  static const route = '/profile-details';
+
   const ProfileScreen({super.key});
 
   @override
@@ -172,7 +175,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         );
 
     if (ok && mounted) {
-      context.go(AppRoutes.login);
+      context.go(LoginScreen.route);
     }
   }
 

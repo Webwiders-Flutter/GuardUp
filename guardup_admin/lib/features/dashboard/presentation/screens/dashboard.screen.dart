@@ -19,6 +19,9 @@ import '/shared/widgets/dashboard/widgets/dashboard_stats_card.dart';
 /// Displays clean, modern KPI analytics cards for Users, Operatives, and Verification queues
 /// following the architecture and design patterns of the Supplr admin portal.
 class DashboardScreen extends ConsumerStatefulWidget {
+  /// Route path of this screen.
+  static const route = '/home';
+
   const DashboardScreen({super.key});
 
   @override
@@ -162,10 +165,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               prefixLabel: 'Status',
               selectedValue: roleParam.status,
               options: [
-                const DashboardDropdownOption(
-                  label: 'All Statuses',
-                  value: null,
-                ),
+                const DashboardDropdownOption(label: 'All', value: null),
                 ...[
                   UserStatus.active,
                   UserStatus.approvalPending,

@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:quick_container/quick_container.dart';
 
+import '/core/constants/app_durations.dart';
+import '/core/constants/app_layout.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '../../../core/extensions/context.extension.dart';
 import '../../../core/extensions/localization.extension.dart';
 import '../../../core/extensions/spacing.extension.dart';
+import '../../../core/extensions/textstyle_extension.dart';
 import '/shared/widgets/buttons/app_button.dart';
 
 /// Semantic state types supported by [AppStateView].
@@ -273,9 +277,9 @@ class AppStateView extends StatelessWidget {
   static final Map<AppViewType, _ViewStateConfig> _configs = {
     AppViewType.empty: (
       defaultIcon: Icons.inventory_2_outlined,
-      defaultColor: (ctx) => ctx.colors.secondary,
+      defaultColor: (ctx) => ctx.colors.primary,
       defaultBackgroundColor: (ctx) =>
-          ctx.colors.secondary.withValues(alpha: 0.15),
+          ctx.colors.primary.withValues(alpha: 0.1),
       defaultMessage: (ctx) => ctx.l10n.noDataFound,
       defaultSubtitle: (ctx) => ctx.l10n.tryRefreshingOrCheckBackLater,
       defaultActionText: (ctx) => ctx.l10n.refresh,
@@ -294,10 +298,10 @@ class AppStateView extends StatelessWidget {
     ),
     AppViewType.loading: (
       defaultIcon: Icons.hourglass_empty_rounded,
-      defaultColor: (ctx) => ctx.colors.secondary,
+      defaultColor: (ctx) => ctx.colors.primary,
       defaultBackgroundColor: (ctx) =>
-          ctx.colors.secondary.withValues(alpha: 0.12),
-      defaultMessage: (ctx) => 'Loading...',
+          ctx.colors.primary.withValues(alpha: 0.08),
+      defaultMessage: (ctx) => 'Loading…',
       defaultSubtitle: (ctx) => null,
       defaultActionText: (ctx) => null,
       defaultActionIcon: null,
@@ -337,11 +341,22 @@ class AppStateView extends StatelessWidget {
     ),
   };
 
+  /// Reading width of the message block.
+  static const double _maxWidth = 440;
+  static const double _compactMaxWidth = 360;
+
+  /// Side of the square icon tile.
+  static const double _tileSize = 64;
+  static const double _compactTileSize = 48;
+
+  /// Default Lottie widths.
+  static const double _lottieWidth = 200;
+  static const double _compactLottieWidth = 140;
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final colors = context.colors;
-    final config = _configs[type] ?? _configs[AppViewType.empty]!;
+    final config = _configs[type]!;
 
     final resolvedMessage = message ?? config.defaultMessage(context);
     final resolvedSubtitle = subtitle ?? config.defaultSubtitle(context);
@@ -353,69 +368,62 @@ class AppStateView extends StatelessWidget {
     final resolvedPadding =
         padding ??
         (isCompact
-            ? EdgeInsets.symmetric(
+            ? const EdgeInsets.symmetric(
                 horizontal: AppSpacing.lg,
                 vertical: AppSpacing.xl,
               )
-            : EdgeInsets.symmetric(
+            : const EdgeInsets.symmetric(
                 horizontal: AppSpacing.xxl,
                 vertical: AppSpacing.xxxl,
               ));
 
     return Center(
-      child: TweenAnimationBuilder<double>(
-        duration: const Duration(milliseconds: 260),
-        curve: Curves.easeOutCubic,
-        tween: Tween<double>(begin: 0.0, end: 1.0),
-        builder: (context, animValue, child) {
-          return Opacity(
-            opacity: animValue,
+      child: SingleChildScrollView(
+        padding: resolvedPadding,
+        child: TweenAnimationBuilder<double>(
+          duration: AppDurations.medium,
+          curve: Curves.easeOutCubic,
+          tween: Tween<double>(begin: 0, end: 1),
+          builder: (context, progress, child) => Opacity(
+            opacity: progress,
             child: Transform.translate(
-              offset: Offset(0, (1.0 - animValue) * 10),
+              offset: Offset(0, (1 - progress) * AppSpacing.sm),
               child: child,
             ),
-          );
-        },
-        child: Padding(
-          padding: resolvedPadding,
+          ),
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              maxWidth: maxWidth ?? (isCompact ? 360.0 : 440.0),
+              maxWidth: maxWidth ?? (isCompact ? _compactMaxWidth : _maxWidth),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 _buildVisualElement(context, config),
-                (isCompact ? 14 : 20).h,
+                (isCompact ? AppSpacing.md : AppSpacing.lg).h,
                 if (resolvedMessage.isNotEmpty)
                   Text(
                     resolvedMessage,
+                    textAlign: TextAlign.center,
                     style:
                         (isCompact
-                                ? theme.textTheme.titleSmall
-                                : theme.textTheme.titleMedium)
-                            ?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: colors.onSurface,
-                              letterSpacing: -0.2,
-                            ),
-                    textAlign: TextAlign.center,
+                                ? context.textTheme.titleSmall
+                                : context.textTheme.titleMedium)
+                            ?.semiBold()
+                            .textSpacing(-0.2)
+                            .colour(colors.onSurface),
                   ),
                 if (resolvedSubtitle != null &&
                     resolvedSubtitle.isNotEmpty) ...[
-                  (isCompact ? 4 : 8).h,
+                  (isCompact ? AppSpacing.xs : AppSpacing.sm - 2).h,
                   Text(
                     resolvedSubtitle,
+                    textAlign: TextAlign.center,
                     style:
                         (isCompact
-                                ? theme.textTheme.bodySmall
-                                : theme.textTheme.bodyMedium)
-                            ?.copyWith(
-                              color: colors.onSurfaceSecondary,
-                              height: 1.45,
-                            ),
-                    textAlign: TextAlign.center,
+                                ? context.textTheme.bodySmall
+                                : context.textTheme.bodyMedium)
+                            ?.lineHeight(1.5)
+                            .colour(colors.onSurfaceSecondary),
                   ),
                 ],
                 _buildActionButtons(
@@ -433,93 +441,44 @@ class AppStateView extends StatelessWidget {
   }
 
   Widget _buildVisualElement(BuildContext context, _ViewStateConfig config) {
-    if (customIllustration != null) {
-      return customIllustration!;
-    }
+    if (customIllustration != null) return customIllustration!;
 
     if (lottieAsset != null) {
       return SizedBox(
-        width: lottieWidth ?? (isCompact ? 140.0 : 200.0),
+        width: lottieWidth ?? (isCompact ? _compactLottieWidth : _lottieWidth),
         child: Lottie.asset(lottieAsset!, repeat: repeat),
       );
     }
 
-    return _buildIconBadge(context, config);
+    return _buildIconTile(context, config);
   }
 
-  Widget _buildIconBadge(BuildContext context, _ViewStateConfig config) {
-    final iconSize = isCompact ? 24.0 : 36.0;
-    final innerSize = isCompact ? 52.0 : 76.0;
-    final outerHaloPadding = isCompact ? 6.0 : 10.0;
+  /// Rounded-square tile tinted with the state's semantic color.
+  Widget _buildIconTile(BuildContext context, _ViewStateConfig config) {
+    final accent = iconColor ?? config.defaultColor(context);
+    final fill = iconBackgroundColor ?? config.defaultBackgroundColor(context);
+    final tileSize = isCompact ? _compactTileSize : _tileSize;
+    final iconSize = isCompact
+        ? AppLayout.iconXl
+        : AppLayout.iconXl + AppSpacing.sm;
 
-    final primaryColor = iconColor ?? config.defaultColor(context);
-    final bgColor =
-        iconBackgroundColor ?? config.defaultBackgroundColor(context);
-
-    if (type == AppViewType.loading) {
-      return Container(
-        width: innerSize + (outerHaloPadding * 2),
-        height: innerSize + (outerHaloPadding * 2),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: bgColor.withValues(alpha: 0.35),
-          border: Border.all(
-            color: primaryColor.withValues(alpha: 0.15),
-            width: 1.5,
-          ),
-        ),
-        padding: EdgeInsets.all(outerHaloPadding),
-        child: Center(
-          child: SizedBox(
-            width: iconSize + 6,
-            height: iconSize + 6,
-            child: CircularProgressIndicator(
-              strokeWidth: isCompact ? 2.5 : 3.2,
-              strokeCap: StrokeCap.round,
-              valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
-            ),
-          ),
-        ),
-      );
-    }
-
-    return Container(
-      padding: EdgeInsets.all(outerHaloPadding),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: primaryColor.withValues(alpha: 0.05),
-        border: Border.all(
-          color: primaryColor.withValues(alpha: 0.1),
-          width: 1,
-        ),
-      ),
-      child: Container(
-        width: innerSize,
-        height: innerSize,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: bgColor,
-          border: Border.all(
-            color: primaryColor.withValues(alpha: 0.22),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: primaryColor.withValues(alpha: 0.12),
-              blurRadius: 18,
-              spreadRadius: -2,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Center(
-          child: Icon(
-            icon ?? config.defaultIcon,
-            size: iconSize,
-            color: primaryColor,
-          ),
-        ),
-      ),
+    return QuickContainer(
+      w: tileSize,
+      h: tileSize,
+      alignment: Alignment.center,
+      radius: isCompact ? AppRadius.md : AppRadius.lg,
+      color: fill,
+      border: Border.all(color: accent.withValues(alpha: 0.2)),
+      child: type == AppViewType.loading
+          ? SizedBox.square(
+              dimension: iconSize - AppSpacing.xs,
+              child: CircularProgressIndicator(
+                strokeWidth: isCompact ? 2.5 : 3,
+                strokeCap: StrokeCap.round,
+                color: accent,
+              ),
+            )
+          : Icon(icon ?? config.defaultIcon, size: iconSize, color: accent),
     );
   }
 
@@ -535,22 +494,23 @@ class AppStateView extends StatelessWidget {
 
     if (!hasPrimary && !hasSecondary) return const SizedBox.shrink();
 
-    final buttonSize = isCompact ? ButtonSize.small : ButtonSize.medium;
+    final buttonSize = isCompact ? ButtonSize.small : ButtonSize.normal;
+    final buttonIconSize = isCompact ? AppLayout.iconSm : AppLayout.iconMd;
 
     return Padding(
-      padding: (isCompact ? 16 : 24).tPadding,
+      padding: (isCompact ? AppSpacing.lg : AppSpacing.xl).tPadding,
       child: Wrap(
         alignment: WrapAlignment.center,
         crossAxisAlignment: WrapCrossAlignment.center,
-        spacing: 12,
-        runSpacing: 10,
+        spacing: AppSpacing.md,
+        runSpacing: AppSpacing.sm,
         children: [
           if (hasSecondary)
             AppButton(
               onPressed: onSecondaryAction,
               text: secondaryActionText,
               leading: secondaryActionIcon != null
-                  ? Icon(secondaryActionIcon, size: isCompact ? 16 : 18)
+                  ? Icon(secondaryActionIcon, size: buttonIconSize)
                   : null,
               type: ButtonType.secondaryPrimary,
               size: buttonSize,
@@ -562,7 +522,7 @@ class AppStateView extends StatelessWidget {
               onPressed: onAction,
               text: primaryText,
               leading: primaryIcon != null
-                  ? Icon(primaryIcon, size: isCompact ? 16 : 18)
+                  ? Icon(primaryIcon, size: buttonIconSize)
                   : null,
               type: config.actionButtonType,
               size: buttonSize,

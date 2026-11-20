@@ -128,10 +128,16 @@ final class Validators {
   ///   0   if a == b
   ///   > 0 if a > b
   static int compareSemver(String a, String b) {
-    final aParts =
-        a.trim().split('.').map((p) => int.tryParse(p) ?? 0).toList();
-    final bParts =
-        b.trim().split('.').map((p) => int.tryParse(p) ?? 0).toList();
+    final aParts = a
+        .trim()
+        .split('.')
+        .map((p) => int.tryParse(p) ?? 0)
+        .toList();
+    final bParts = b
+        .trim()
+        .split('.')
+        .map((p) => int.tryParse(p) ?? 0)
+        .toList();
 
     for (var i = 0; i < 3; i++) {
       final aVal = i < aParts.length ? aParts[i] : 0;

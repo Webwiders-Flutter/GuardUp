@@ -1,24 +1,34 @@
-import 'package:guardup_admin/shared/widgets/table/table_models.dart';
-import 'package:flutter/cupertino.dart';
+import 'dart:math' as math;
+
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:two_dimensional_scrollables/two_dimensional_scrollables.dart';
 
+import '/core/constants/app_layout.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '../../../core/extensions/context.extension.dart';
-import '../../../core/extensions/spacing.extension.dart';
-import '../../../core/extensions/textstyle_extension.dart';
+import 'table_models.dart';
+import 'table_parts.dart';
 
-/// Enterprise desktop table view with 2D virtualized spreadsheet scrolling,
-/// interactive sorting, row hover effects, row click callbacks, selection highlights,
-/// and optional drag-and-drop reordering.
+/// Desktop table for [AdminTableBuilder].
+///
+/// - Standard mode: a 2D-virtualized [TableView] with a pinned header row and
+///   pinned leading column, so wide tables scroll in both axes and only
+///   visible cells are built.
+/// - Reorder mode (when [onReorder] is set): a [ReorderableListView] with a
+///   drag handle column, scrolling horizontally when the columns don't fit.
+///
+/// Row hover is tracked in a single [ValueNotifier]; only the cells of the
+/// rows entering/leaving hover repaint.
 class TableDesktopView<T> extends StatefulWidget {
   final List<TableColumn<T>> columns;
   final List<T> tableData;
   final List<Widget> Function(T) rows;
   final ScrollController hCtrl;
   final ScrollController vCtrl;
-  final double actionColumnWidth;
+
+  /// Width of one flex unit.
   final double colWidth;
   final bool showCheckbox;
   final Set<Object> selectedItems;
@@ -41,7 +51,6 @@ class TableDesktopView<T> extends StatefulWidget {
     required this.rows,
     required this.hCtrl,
     required this.vCtrl,
-    required this.actionColumnWidth,
     required this.colWidth,
     required this.showCheckbox,
     required this.selectedItems,
@@ -55,7 +64,7 @@ class TableDesktopView<T> extends StatefulWidget {
     this.isSaving = false,
     this.striped = true,
     this.enableHover = true,
-    this.rowHeight = AppSpacing.xxxl + AppSpacing.xl,
+    this.rowHeight = AppLayout.tableRowHeight,
   });
 
   @override
@@ -71,667 +80,458 @@ class _TableDesktopViewState<T> extends State<TableDesktopView<T>> {
     super.dispose();
   }
 
-  bool get _isReorderable => widget.onReorder != null;
+  Object _keyOf(T item) => widget.itemKey?.call(item) ?? item as Object;
 
-  static const double _handleWidth = AppSpacing.xxl + AppSpacing.xl;
-  static const double _numberWidth = AppSpacing.xxxl + AppSpacing.xxl;
-  static const double _checkWidth = AppSpacing.xxl + AppSpacing.xl + 2;
-  static const double _spacing = AppSpacing.sm;
+  bool _isSelected(T item) => widget.selectedItems.contains(_keyOf(item));
+
+  void _onRowEnter(int rowIndex) {
+    if (widget.enableHover) _hoveredRowNotifier.value = rowIndex;
+  }
+
+  void _onRowExit(int rowIndex) {
+    // Only clear if no other row has claimed hover in the meantime.
+    if (_hoveredRowNotifier.value == rowIndex) _hoveredRowNotifier.value = null;
+  }
+
+  Widget _headerCheckbox() => TableCheckbox(
+    value: tableSelectAllValue(widget.tableData, widget.selectedItems, _keyOf),
+    onChanged: (value) => widget.onSelectAll?.call(value, widget.tableData),
+  );
 
   @override
   Widget build(BuildContext context) {
-    if (_isReorderable) {
-      return _buildReorderableTable(context);
-    }
-    return _build2DTableView(context);
+    return widget.onReorder != null
+        ? _buildReorderable(context)
+        : _buildVirtualized(context);
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // 2D TABLE VIEW (Standard Virtualized Mode)
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  Widget _build2DTableView(BuildContext context) {
-    final int totalColumns =
-        widget.columns.length + (widget.showCheckbox ? 1 : 0);
-    final borderColor = context.colors.borderLight.withValues(alpha: 0.5);
-    final bool hasBottomSpacer = widget.tableData.isNotEmpty;
-    final int totalRows =
-        widget.tableData.length + 1 + (hasBottomSpacer ? 1 : 0);
-
+  Widget _scrollbars({required Widget child}) {
     return Scrollbar(
       controller: widget.vCtrl,
       thumbVisibility: true,
-      trackVisibility: true,
-      thickness: AppSpacing.sm,
-      radius: const Radius.circular(AppRadius.sm),
       notificationPredicate: (n) => n.metrics.axis == Axis.vertical,
       child: Scrollbar(
         controller: widget.hCtrl,
         thumbVisibility: true,
-        trackVisibility: true,
-        thickness: AppSpacing.sm,
-        radius: const Radius.circular(AppRadius.sm),
         notificationPredicate: (n) => n.metrics.axis == Axis.horizontal,
-        child: TableView.builder(
-          columnCount: totalColumns,
-          rowCount: totalRows,
-          pinnedRowCount: 1,
-          pinnedColumnCount: widget.showCheckbox ? 2 : 1,
-          horizontalDetails: ScrollableDetails.horizontal(
-            controller: widget.hCtrl,
-          ),
-          verticalDetails: ScrollableDetails.vertical(controller: widget.vCtrl),
-          columnBuilder: (i) => _buildColumnSpan(i),
-          rowBuilder: (i) {
-            if (i == 0) {
-              return TableSpan(
-                extent: FixedTableSpanExtent(AppSpacing.xxxl + AppSpacing.md),
-                backgroundDecoration: TableSpanDecoration(
-                  border: TableSpanBorder(
-                    trailing: BorderSide(color: borderColor),
-                  ),
-                ),
-              );
-            }
-            if (hasBottomSpacer && i == totalRows - 1) {
-              return const TableSpan(
-                extent: FixedTableSpanExtent(AppSpacing.lg),
-              );
-            }
-            return TableSpan(
-              extent: FixedTableSpanExtent(widget.rowHeight),
-              backgroundDecoration: TableSpanDecoration(
-                border: TableSpanBorder(
-                  trailing: BorderSide(color: borderColor),
-                ),
-              ),
-            );
-          },
-          cellBuilder: (ctx, vicinity) => _buildCell(ctx, vicinity),
-        ),
-      ),
-    );
-  }
-
-  TableSpan _buildColumnSpan(int i) {
-    if (widget.showCheckbox && i == 0) {
-      return const TableSpan(extent: FixedTableSpanExtent(_checkWidth));
-    }
-    final int adjIdx = widget.showCheckbox ? i - 1 : i;
-
-    // If the column definition has an explicit width, always respect it.
-    if (adjIdx >= 0 && adjIdx < widget.columns.length) {
-      final col = widget.columns[adjIdx];
-      if (col.width != null) {
-        return TableSpan(extent: FixedTableSpanExtent(col.width!));
-      }
-      // Flex columns scale with their flex factor relative to 1 flex unit.
-      return TableSpan(
-        extent: FixedTableSpanExtent(widget.colWidth * col.flex),
-      );
-    }
-
-    return TableSpan(extent: FixedTableSpanExtent(widget.colWidth));
-  }
-
-  TableViewCell _buildCell(BuildContext context, TableVicinity vicinity) {
-    final bool isHeader = vicinity.yIndex == 0;
-    final bool isSpacerRow =
-        widget.tableData.isNotEmpty &&
-        vicinity.yIndex > widget.tableData.length;
-
-    if (isSpacerRow) {
-      return const TableViewCell(child: SizedBox.shrink());
-    }
-
-    // Checkbox column
-    if (widget.showCheckbox && vicinity.xIndex == 0) {
-      if (isHeader) {
-        return _headerCellWidget(
-          context: context,
-          child: CupertinoCheckbox(
-            value:
-                widget.tableData.isNotEmpty &&
-                widget.tableData.every(
-                  (item) => widget.selectedItems.contains(
-                    widget.itemKey?.call(item) ?? item,
-                  ),
-                ),
-            activeColor: context.colors.secondary,
-            onChanged: (val) => widget.onSelectAll?.call(val, widget.tableData),
-          ),
-        );
-      }
-
-      final rowIndex = vicinity.yIndex - 1;
-      final item = widget.tableData[rowIndex];
-      final isSelected = widget.selectedItems.contains(
-        widget.itemKey?.call(item) ?? item,
-      );
-
-      return TableViewCell(
-        child: MouseRegion(
-          onEnter: (_) {
-            if (widget.enableHover) _hoveredRowNotifier.value = rowIndex;
-          },
-          onExit: (_) {
-            if (widget.enableHover) _hoveredRowNotifier.value = null;
-          },
-          child: ValueListenableBuilder<int?>(
-            valueListenable: _hoveredRowNotifier,
-            builder: (context, hoveredRowIndex, _) {
-              final isHovered =
-                  widget.enableHover && hoveredRowIndex == rowIndex;
-              final Color rowColor = _resolveRowColor(
-                context,
-                rowIndex,
-                isSelected,
-                isHovered,
-              );
-              return Container(
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: rowColor,
-                  border: Border(
-                    bottom: BorderSide(
-                      color: context.colors.borderLight.withValues(alpha: 0.5),
-                      width: 1,
-                    ),
-                  ),
-                ),
-                child: CupertinoCheckbox(
-                  value: isSelected,
-                  activeColor: context.colors.secondary,
-                  onChanged: (val) => widget.onSelectRow?.call(item, val),
-                ),
-              );
-            },
-          ),
-        ),
-      );
-    }
-
-    final int adjX = widget.showCheckbox
-        ? vicinity.xIndex - 1
-        : vicinity.xIndex;
-    final col = widget.columns[adjX];
-
-    // Header cells
-    if (isHeader) {
-      return _buildHeaderCell(context, col);
-    }
-
-    // Data cells
-    final rowIndex = vicinity.yIndex - 1;
-    final item = widget.tableData[rowIndex];
-    final cells = widget.rows(item);
-    final isSelected = widget.selectedItems.contains(
-      widget.itemKey?.call(item) ?? item,
-    );
-
-    final Widget cellContent = col.cellBuilder != null
-        ? col.cellBuilder!(item, rowIndex)
-        : (adjX < cells.length ? cells[adjX] : const SizedBox.shrink());
-
-    return TableViewCell(
-      child: MouseRegion(
-        onEnter: (_) {
-          if (widget.enableHover) _hoveredRowNotifier.value = rowIndex;
-        },
-        onExit: (_) {
-          if (widget.enableHover) _hoveredRowNotifier.value = null;
-        },
-        child: GestureDetector(
-          onTap: widget.onRowTap != null ? () => widget.onRowTap!(item) : null,
-          child: ValueListenableBuilder<int?>(
-            valueListenable: _hoveredRowNotifier,
-            builder: (context, hoveredRowIndex, _) {
-              final isHovered =
-                  widget.enableHover && hoveredRowIndex == rowIndex;
-              final Color rowColor = _resolveRowColor(
-                context,
-                rowIndex,
-                isSelected,
-                isHovered,
-              );
-              return Container(
-                decoration: BoxDecoration(
-                  color: rowColor,
-                  border: Border(
-                    bottom: BorderSide(
-                      color: context.colors.borderLight.withValues(alpha: 0.5),
-                      width: 1,
-                    ),
-                  ),
-                ),
-                alignment: col.alignment,
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                child: cellContent,
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
-
-  TableViewCell _buildHeaderCell(BuildContext context, TableColumn<T> col) {
-    final sortKey = col.key ?? col.title;
-    final isSorted = widget.sortState?.columnKey == sortKey;
-    final isAscending = widget.sortState?.ascending ?? true;
-
-    Widget headerContent =
-        col.headerWidget ??
-        Text(
-          col.title.toUpperCase(),
-          style: context.textTheme.labelMedium
-              ?.colour(
-                isSorted
-                    ? context.colors.secondary
-                    : context.colors.onSurfaceSecondary,
-              )
-              .size(AppSpacing.md - 0.5)
-              .bold()
-              .textSpacing(0.6),
-        );
-
-    if (col.sortable && widget.onSort != null) {
-      headerContent = InkWell(
-        onTap: () => widget.onSort!(sortKey, isSorted ? !isAscending : true),
-        borderRadius: AppRadius.smRadius,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.xs,
-            vertical: AppSpacing.xs / 2,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(child: headerContent),
-              AppSpacing.xs.w,
-              Icon(
-                isSorted
-                    ? (isAscending
-                          ? Icons.arrow_upward_rounded
-                          : Icons.arrow_downward_rounded)
-                    : Icons.unfold_more_rounded,
-                size: AppSpacing.md + 2,
-                color: isSorted
-                    ? context.colors.secondary
-                    : context.colors.onSurfaceSecondary.withValues(alpha: 0.6),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return _headerCellWidget(
-      context: context,
-      alignment: col.alignment,
-      child: headerContent,
-    );
-  }
-
-  TableViewCell _headerCellWidget({
-    required BuildContext context,
-    required Widget child,
-    Alignment alignment = Alignment.center,
-  }) {
-    return TableViewCell(
-      child: Container(
-        decoration: BoxDecoration(
-          color: context.colors.backgroundLight,
-          border: Border(
-            bottom: BorderSide(
-              color: context.colors.borderLight.withValues(alpha: 0.7),
-              width: 1,
-            ),
-          ),
-        ),
-        alignment: alignment,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm + 2),
         child: child,
       ),
     );
   }
 
-  Color _resolveRowColor(
-    BuildContext context,
-    int index,
-    bool isSelected,
-    bool isHovered,
-  ) {
-    if (isSelected) {
-      return context.colors.secondary.withValues(alpha: 0.08);
-    }
-    if (isHovered) {
-      return context.colors.secondary.withValues(alpha: 0.04);
-    }
-    if (widget.striped) {
-      return index % 2 == 0
-          ? context.colors.surface
-          : context.colors.backgroundLight.withValues(alpha: 0.5);
-    }
-    return context.colors.surface;
-  }
-
   // ═══════════════════════════════════════════════════════════════════════════
-  // REORDERABLE TABLE VIEW (Drag & Drop Mode)
+  // Virtualized mode
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildReorderableTable(BuildContext context) {
-    return Column(
-      children: [
-        _buildReorderableHeader(context),
-        Divider(
-          height: 1,
-          color: context.colors.borderLight.withValues(alpha: 0.7),
-        ),
-        Expanded(
-          child: ReorderableListView.builder(
-            scrollController: widget.vCtrl,
-            buildDefaultDragHandles: false,
-            padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-            itemCount: widget.tableData.length,
-            onReorderItem: (oldIndex, newIndex) =>
-                widget.onReorder!(oldIndex, newIndex),
-            itemBuilder: (_, index) {
-              final item = widget.tableData[index];
-              final cells = widget.rows(item);
-              final keyVal = widget.itemKey?.call(item) ?? index;
-              return _buildReorderableRow(
-                context: context,
-                key: ValueKey(keyVal),
-                index: index,
-                item: item,
-                cells: cells,
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
+  int get _leadingColumns => widget.showCheckbox ? 1 : 0;
 
-  Widget _buildReorderableHeader(BuildContext context) {
-    final int dataColCount = widget.columns.length - 2;
+  Widget _buildVirtualized(BuildContext context) {
+    final dataRows = widget.tableData.length;
+    // Header + data + bottom breathing room.
+    final rowCount = dataRows + 2;
 
-    return Container(
-      color: context.colors.backgroundLight,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.md,
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: _handleWidth,
-            child: Center(
-              child: Tooltip(
-                message: 'Drag to reorder',
-                child: MouseRegion(
-                  cursor: SystemMouseCursors.grab,
-                  child: Icon(
-                    Icons.swap_vert_rounded,
-                    size: AppSpacing.lg + 2,
-                    color: context.colors.onSurfaceSecondary,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          if (widget.showCheckbox) ...[
-            _spacing.w,
-            SizedBox(
-              width: _checkWidth,
-              child: Center(
-                child: CupertinoCheckbox(
-                  value:
-                      widget.tableData.isNotEmpty &&
-                      widget.tableData.every(
-                        (item) => widget.selectedItems.contains(
-                          widget.itemKey?.call(item) ?? item,
-                        ),
-                      ),
-                  activeColor: context.colors.secondary,
-                  onChanged: (val) =>
-                      widget.onSelectAll?.call(val, widget.tableData),
-                ),
-              ),
-            ),
-          ],
-          _spacing.w,
-          SizedBox(
-            width: _numberWidth,
-            child: Center(
-              child: Text(
-                'NO.',
-                style: context.textTheme.labelMedium
-                    ?.colour(context.colors.onSurfaceSecondary)
-                    .size(AppSpacing.md)
-                    .bold()
-                    .textSpacing(0.5),
-              ),
-            ),
-          ),
-          _spacing.w,
-          for (int i = 1; i <= dataColCount; i++)
-            if (widget.columns[i].width != null)
-              SizedBox(
-                width: widget.columns[i].width!,
-                child: Align(
-                  alignment: widget.columns[i].alignment,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                    ),
-                    child: Text(
-                      widget.columns[i].title.toUpperCase(),
-                      style: context.textTheme.labelMedium
-                          ?.colour(context.colors.onSurfaceSecondary)
-                          .size(AppSpacing.md)
-                          .bold()
-                          .textSpacing(0.5),
-                    ),
-                  ),
-                ),
-              )
-            else
-              Expanded(
-                flex: widget.columns[i].flex,
-                child: Align(
-                  alignment: widget.columns[i].alignment,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                    ),
-                    child: Text(
-                      widget.columns[i].title.toUpperCase(),
-                      style: context.textTheme.labelMedium
-                          ?.colour(context.colors.onSurfaceSecondary)
-                          .size(AppSpacing.md)
-                          .bold()
-                          .textSpacing(0.5),
-                    ),
-                  ),
-                ),
-              ),
-          SizedBox(
-            width: widget.actionColumnWidth,
-            child: Center(
-              child: Text(
-                widget.columns.last.title.toUpperCase(),
-                style: context.textTheme.labelMedium
-                    ?.colour(context.colors.onSurfaceSecondary)
-                    .size(AppSpacing.md)
-                    .bold()
-                    .textSpacing(0.5),
-              ),
-            ),
-          ),
-        ],
+    return _scrollbars(
+      child: TableView.builder(
+        columnCount: widget.columns.length + _leadingColumns,
+        rowCount: rowCount,
+        pinnedRowCount: 1,
+        pinnedColumnCount: _leadingColumns + (widget.columns.isEmpty ? 0 : 1),
+        horizontalDetails: ScrollableDetails.horizontal(
+          controller: widget.hCtrl,
+        ),
+        verticalDetails: ScrollableDetails.vertical(controller: widget.vCtrl),
+        columnBuilder: _columnSpan,
+        rowBuilder: (index) => _rowSpan(index, rowCount),
+        cellBuilder: _buildCell,
       ),
     );
   }
 
-  Widget _buildReorderableRow({
-    required BuildContext context,
-    required Key key,
-    required int index,
-    required T item,
-    required List<Widget> cells,
-  }) {
-    final int dataColCount = widget.columns.length - 2;
-    final isSelected = widget.selectedItems.contains(
-      widget.itemKey?.call(item) ?? item,
-    );
-    return MouseRegion(
-      key: key,
-      onEnter: (_) {
-        if (widget.enableHover) _hoveredRowNotifier.value = index;
-      },
-      onExit: (_) {
-        if (widget.enableHover) _hoveredRowNotifier.value = null;
-      },
-      child: GestureDetector(
-        onTap: widget.onRowTap != null ? () => widget.onRowTap!(item) : null,
-        child: ValueListenableBuilder<int?>(
-          valueListenable: _hoveredRowNotifier,
-          builder: (context, hoveredRowIndex, _) {
-            final isHovered = widget.enableHover && hoveredRowIndex == index;
-            final Color rowColor = _resolveRowColor(
-              context,
-              index,
-              isSelected,
-              isHovered,
-            );
-            return Container(
-              color: rowColor,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: (AppSpacing.xs / 2),
-                    ),
-                    child: Row(
-                      children: [
-                        ReorderableDragStartListener(
-                          index: index,
-                          child: SizedBox(
-                            width: _handleWidth,
-                            height: widget.rowHeight,
-                            child: Center(child: _buildDragHandle(context)),
-                          ),
-                        ),
-                        if (widget.showCheckbox) ...[
-                          _spacing.w,
-                          SizedBox(
-                            width: _checkWidth,
-                            child: Center(
-                              child: CupertinoCheckbox(
-                                value: isSelected,
-                                activeColor: context.colors.secondary,
-                                onChanged: (val) =>
-                                    widget.onSelectRow?.call(item, val),
-                              ),
-                            ),
-                          ),
-                        ],
-                        _spacing.w,
-                        SizedBox(
-                          width: _numberWidth,
-                          child: Center(
-                            child: Text(
-                              '${index + 1}',
-                              style: context.textTheme.bodySmall
-                                  ?.size(AppSpacing.md + 0.5)
-                                  .medium()
-                                  .colour(context.colors.onSurfaceSecondary),
-                            ),
-                          ),
-                        ),
-                        _spacing.w,
-                        for (int i = 1; i <= dataColCount; i++)
-                          if (widget.columns[i].width != null)
-                            SizedBox(
-                              width: widget.columns[i].width!,
-                              child: Container(
-                                height: widget.rowHeight,
-                                alignment: widget.columns[i].alignment,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppSpacing.sm,
-                                ),
-                                child: widget.columns[i].cellBuilder != null
-                                    ? widget.columns[i].cellBuilder!(
-                                        item,
-                                        index,
-                                      )
-                                    : (i < cells.length
-                                          ? cells[i]
-                                          : const SizedBox.shrink()),
-                              ),
-                            )
-                          else
-                            Expanded(
-                              flex: widget.columns[i].flex,
-                              child: Container(
-                                height: widget.rowHeight,
-                                alignment: widget.columns[i].alignment,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppSpacing.sm,
-                                ),
-                                child: widget.columns[i].cellBuilder != null
-                                    ? widget.columns[i].cellBuilder!(
-                                        item,
-                                        index,
-                                      )
-                                    : (i < cells.length
-                                          ? cells[i]
-                                          : const SizedBox.shrink()),
-                              ),
-                            ),
-                        SizedBox(
-                          width: widget.actionColumnWidth,
-                          height: widget.rowHeight,
-                          child: Center(child: cells.last),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Divider(
-                    height: 1,
-                    color: context.colors.borderLight.withValues(alpha: 0.5),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDragHandle(BuildContext context) {
-    if (widget.isSaving) {
-      return SizedBox(
-        width: AppSpacing.lg,
-        height: AppSpacing.lg,
-        child: CircularProgressIndicator(strokeWidth: AppSpacing.xs / 2),
+  TableSpan _columnSpan(int index) {
+    if (index < _leadingColumns) {
+      return const TableSpan(
+        extent: FixedTableSpanExtent(AppLayout.tableCheckboxColumnWidth),
       );
     }
-    return Tooltip(
-      message: 'Drag to reorder',
-      child: MouseRegion(
-        cursor: SystemMouseCursors.grab,
-        child: Icon(
-          Icons.drag_indicator_rounded,
-          size: AppSpacing.xl,
-          color: context.colors.onSurfaceSecondary,
+    final column = widget.columns[index - _leadingColumns];
+    return TableSpan(
+      extent: FixedTableSpanExtent(column.resolveWidth(widget.colWidth)),
+    );
+  }
+
+  TableSpan _rowSpan(int index, int rowCount) {
+    if (index == 0) {
+      return const TableSpan(
+        extent: FixedTableSpanExtent(AppLayout.tableHeaderHeight),
+      );
+    }
+    if (index == rowCount - 1) {
+      return const TableSpan(extent: FixedTableSpanExtent(AppSpacing.lg));
+    }
+
+    final rowIndex = index - 1;
+    final onRowTap = widget.onRowTap;
+
+    return TableSpan(
+      extent: FixedTableSpanExtent(widget.rowHeight),
+      onEnter: (_) => _onRowEnter(rowIndex),
+      onExit: (_) => _onRowExit(rowIndex),
+      cursor: onRowTap != null ? SystemMouseCursors.click : MouseCursor.defer,
+      // Cell-level buttons are hit-tested first, so they keep winning the
+      // tap arena over this row-level recognizer.
+      recognizerFactories: onRowTap == null
+          ? const <Type, GestureRecognizerFactory>{}
+          : <Type, GestureRecognizerFactory>{
+              TapGestureRecognizer:
+                  GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(
+                    TapGestureRecognizer.new,
+                    (recognizer) =>
+                        recognizer.onTap = () =>
+                            onRowTap(widget.tableData[rowIndex]),
+                  ),
+            },
+    );
+  }
+
+  TableViewCell _buildCell(BuildContext context, TableVicinity vicinity) {
+    final rowIndex = vicinity.row - 1;
+    final isCheckboxColumn = vicinity.column < _leadingColumns;
+
+    if (vicinity.row == 0) {
+      if (isCheckboxColumn) {
+        return TableViewCell(
+          child: _HeaderCell(
+            alignment: Alignment.center,
+            child: _headerCheckbox(),
+          ),
+        );
+      }
+      final column = widget.columns[vicinity.column - _leadingColumns];
+      return TableViewCell(
+        child: _HeaderCell(
+          alignment: column.alignment,
+          child: TableHeaderLabel<T>(
+            column: column,
+            sortState: widget.sortState,
+            onSort: widget.onSort,
+          ),
+        ),
+      );
+    }
+
+    if (rowIndex >= widget.tableData.length) {
+      return const TableViewCell(child: SizedBox.shrink());
+    }
+
+    final item = widget.tableData[rowIndex];
+    final isSelected = _isSelected(item);
+
+    if (isCheckboxColumn) {
+      return TableViewCell(
+        child: _RowCell(
+          rowIndex: rowIndex,
+          hoveredRowNotifier: widget.enableHover ? _hoveredRowNotifier : null,
+          isSelected: isSelected,
+          striped: widget.striped,
+          alignment: Alignment.center,
+          child: TableCheckbox(
+            value: isSelected,
+            onChanged: (value) => widget.onSelectRow?.call(item, value),
+          ),
+        ),
+      );
+    }
+
+    final columnIndex = vicinity.column - _leadingColumns;
+    final column = widget.columns[columnIndex];
+
+    return TableViewCell(
+      child: _RowCell(
+        rowIndex: rowIndex,
+        hoveredRowNotifier: widget.enableHover ? _hoveredRowNotifier : null,
+        isSelected: isSelected,
+        striped: widget.striped,
+        alignment: column.alignment,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+        child: column.buildCell(
+          item,
+          rowIndex,
+          columnIndex,
+          () => widget.rows(item),
         ),
       ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Reorder mode
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  double get _reorderMinWidth {
+    var width = AppLayout.tableDragHandleWidth;
+    if (widget.showCheckbox) width += AppLayout.tableCheckboxColumnWidth;
+    for (final column in widget.columns) {
+      width += column.width ?? AppLayout.tableMinFlexColumnWidth * column.flex;
+    }
+    return width;
+  }
+
+  /// Leading fixed slots + every column (fixed width or flex share).
+  List<Widget> _reorderCells({
+    required Widget handle,
+    required Widget? checkbox,
+    required Widget Function(TableColumn<T> column, int index) cell,
+  }) {
+    return [
+      SizedBox(
+        width: AppLayout.tableDragHandleWidth,
+        child: Center(child: handle),
+      ),
+      if (checkbox != null)
+        SizedBox(
+          width: AppLayout.tableCheckboxColumnWidth,
+          child: Center(child: checkbox),
+        ),
+      for (final (index, column) in widget.columns.indexed)
+        if (column.width != null)
+          SizedBox(width: column.width, child: cell(column, index))
+        else
+          Expanded(flex: column.flex, child: cell(column, index)),
+    ];
+  }
+
+  Widget _buildReorderable(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final tableWidth = math.max(constraints.maxWidth, _reorderMinWidth);
+
+        final table = SizedBox(
+          width: tableWidth,
+          child: Column(
+            children: [
+              _buildReorderHeader(context),
+              Expanded(
+                child: ReorderableListView.builder(
+                  scrollController: widget.vCtrl,
+                  buildDefaultDragHandles: false,
+                  padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                  itemCount: widget.tableData.length,
+                  proxyDecorator: (child, _, animation) =>
+                      _DragProxy(animation: animation, child: child),
+                  onReorderItem: (oldIndex, newIndex) =>
+                      widget.onReorder!(oldIndex, newIndex),
+                  itemBuilder: (context, index) =>
+                      _buildReorderRow(context, index),
+                ),
+              ),
+            ],
+          ),
+        );
+
+        if (tableWidth <= constraints.maxWidth) {
+          return Scrollbar(
+            controller: widget.vCtrl,
+            thumbVisibility: true,
+            child: table,
+          );
+        }
+
+        return _scrollbars(
+          child: SingleChildScrollView(
+            controller: widget.hCtrl,
+            scrollDirection: Axis.horizontal,
+            child: table,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildReorderHeader(BuildContext context) {
+    return Container(
+      height: AppLayout.tableHeaderHeight,
+      decoration: BoxDecoration(
+        color: context.colors.surfaceMuted,
+        border: Border(bottom: tableHeaderDivider(context)),
+      ),
+      child: Row(
+        children: _reorderCells(
+          handle: Icon(
+            Icons.swap_vert_rounded,
+            size: AppLayout.iconMd,
+            color: context.colors.onSurfaceSecondary,
+          ),
+          checkbox: widget.showCheckbox ? _headerCheckbox() : null,
+          cell: (column, _) => Container(
+            alignment: column.alignment,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: TableHeaderLabel<T>(
+              column: column,
+              sortState: widget.sortState,
+              onSort: widget.onSort,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReorderRow(BuildContext context, int index) {
+    final item = widget.tableData[index];
+    final isSelected = _isSelected(item);
+    final onRowTap = widget.onRowTap;
+
+    final cells = Row(
+      children: _reorderCells(
+        handle: ReorderableDragStartListener(
+          index: index,
+          enabled: !widget.isSaving,
+          child: SizedBox(
+            width: AppLayout.tableDragHandleWidth,
+            height: widget.rowHeight,
+            child: Center(child: TableDragHandle(isSaving: widget.isSaving)),
+          ),
+        ),
+        checkbox: widget.showCheckbox
+            ? TableCheckbox(
+                value: isSelected,
+                onChanged: (value) => widget.onSelectRow?.call(item, value),
+              )
+            : null,
+        cell: (column, columnIndex) => Container(
+          alignment: column.alignment,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          child: column.buildCell(
+            item,
+            index,
+            columnIndex,
+            () => widget.rows(item),
+          ),
+        ),
+      ),
+    );
+
+    return MouseRegion(
+      key: ValueKey(_keyOf(item)),
+      cursor: onRowTap != null ? SystemMouseCursors.click : MouseCursor.defer,
+      onEnter: (_) => _onRowEnter(index),
+      onExit: (_) => _onRowExit(index),
+      child: GestureDetector(
+        onTap: onRowTap != null ? () => onRowTap(item) : null,
+        child: _RowCell(
+          rowIndex: index,
+          hoveredRowNotifier: widget.enableHover ? _hoveredRowNotifier : null,
+          isSelected: isSelected,
+          striped: widget.striped,
+          height: widget.rowHeight,
+          child: cells,
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Cells ───────────────────────────────────────────────────────────────────
+
+class _HeaderCell extends StatelessWidget {
+  const _HeaderCell({required this.alignment, required this.child});
+
+  final Alignment alignment;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      alignment: alignment,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      decoration: BoxDecoration(
+        color: context.colors.surfaceMuted,
+        border: Border(bottom: tableHeaderDivider(context)),
+      ),
+      child: child,
+    );
+  }
+}
+
+/// A data cell (or whole reorderable row) painted with the row's state
+/// color. Rebuilds only its decoration when hover changes; [child] is kept.
+class _RowCell extends StatelessWidget {
+  const _RowCell({
+    required this.rowIndex,
+    required this.hoveredRowNotifier,
+    required this.isSelected,
+    required this.striped,
+    required this.child,
+    this.alignment,
+    this.padding,
+    this.height,
+  });
+
+  final int rowIndex;
+
+  /// Null when hover highlighting is disabled.
+  final ValueNotifier<int?>? hoveredRowNotifier;
+  final bool isSelected;
+  final bool striped;
+  final Alignment? alignment;
+  final EdgeInsetsGeometry? padding;
+  final double? height;
+  final Widget child;
+
+  Widget _paint(BuildContext context, {required bool isHovered}) {
+    return Container(
+      height: height,
+      alignment: alignment,
+      padding: padding,
+      decoration: BoxDecoration(
+        color: tableRowColor(
+          context,
+          rowIndex: rowIndex,
+          isSelected: isSelected,
+          isHovered: isHovered,
+          striped: striped,
+        ),
+        border: Border(bottom: tableRowDivider(context)),
+      ),
+      child: child,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final notifier = hoveredRowNotifier;
+    if (notifier == null) return _paint(context, isHovered: false);
+
+    return ValueListenableBuilder<int?>(
+      valueListenable: notifier,
+      builder: (context, hoveredRow, _) =>
+          _paint(context, isHovered: hoveredRow == rowIndex),
+    );
+  }
+}
+
+/// Lifted appearance of a row while it is being dragged.
+class _DragProxy extends StatelessWidget {
+  const _DragProxy({required this.animation, required this.child});
+
+  final Animation<double> animation;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        final t = Curves.easeOut.transform(animation.value);
+        return Material(
+          elevation: t * AppSpacing.sm,
+          color: context.colors.surface,
+          shadowColor: context.colors.black.withValues(alpha: 0.25),
+          borderRadius: AppRadius.smRadius,
+          child: child,
+        );
+      },
+      child: child,
     );
   }
 }

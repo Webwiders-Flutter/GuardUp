@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:quick_container/quick_container.dart';
 
+import '/core/constants/app_layout.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '../../../core/extensions/context.extension.dart';
@@ -113,8 +114,8 @@ class TableFilterChipBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final accentDimColor = colors.secondary.withValues(alpha: 0.12);
-    final accentColor = colors.secondary;
+    final accentDimColor = colors.primary.withValues(alpha: 0.12);
+    final accentColor = colors.primary;
     final borderColor = colors.borderLight;
     final mutedColor = colors.onSurfaceSecondary;
 
@@ -138,7 +139,7 @@ class TableFilterChipBar extends StatelessWidget {
     Widget buildSeparator() {
       return Container(
         width: 1,
-        height: 20,
+        height: AppSpacing.xl,
         margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
         color: borderColor,
       );
@@ -218,7 +219,7 @@ class TableFilterChipBar extends StatelessWidget {
         vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: colors.backgroundLight,
+        color: colors.surface,
         border: Border(bottom: BorderSide(color: borderColor)),
       ),
       child: Column(
@@ -251,7 +252,7 @@ class TableFilterChipBar extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.filter_alt_outlined,
-                      size: 15,
+                      size: AppLayout.iconXs,
                       color: mutedColor,
                     ),
                     (AppSpacing.xs + 1).w,
@@ -314,10 +315,10 @@ class _RemovableFilterBadge extends StatelessWidget {
           bottom: AppSpacing.xs,
         ),
         decoration: BoxDecoration(
-          color: colors.secondary.withValues(alpha: 0.08),
+          color: colors.primary.withValues(alpha: 0.08),
           borderRadius: AppRadius.xlRadius,
           border: Border.all(
-            color: colors.secondary.withValues(alpha: 0.35),
+            color: colors.primary.withValues(alpha: 0.35),
             width: 1,
           ),
         ),
@@ -325,11 +326,7 @@ class _RemovableFilterBadge extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (filter.icon != null) ...[
-              Icon(
-                filter.icon,
-                size: AppSpacing.md - 1,
-                color: colors.secondary,
-              ),
+              Icon(filter.icon, size: AppSpacing.md - 1, color: colors.primary),
               (AppSpacing.xs + 1).w,
             ],
             Text(
@@ -337,7 +334,7 @@ class _RemovableFilterBadge extends StatelessWidget {
               style: context.textTheme.labelSmall
                   ?.size(AppSpacing.md - 1)
                   .semiBold()
-                  .colour(colors.secondary),
+                  .colour(colors.primary),
             ),
             (AppSpacing.xs + 2).w,
             Tooltip(
@@ -349,12 +346,12 @@ class _RemovableFilterBadge extends StatelessWidget {
                   padding: const EdgeInsets.all(2.5),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: colors.secondary.withValues(alpha: 0.14),
+                    color: colors.primary.withValues(alpha: 0.14),
                   ),
                   child: Icon(
                     Icons.close_rounded,
-                    size: 13,
-                    color: colors.secondary,
+                    size: AppLayout.iconXs - 1,
+                    color: colors.primary,
                   ),
                 ),
               ),
@@ -402,7 +399,7 @@ class _ClearAllFiltersButton extends StatelessWidget {
               children: [
                 Icon(
                   Icons.filter_alt_off_outlined,
-                  size: 13,
+                  size: AppLayout.iconXs - 1,
                   color: colors.error,
                 ),
                 AppSpacing.xs.w,
@@ -435,8 +432,8 @@ class _SelectionToggleChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accentDimColor = context.colors.secondary.withValues(alpha: 0.12);
-    final accentColor = context.colors.secondary;
+    final accentDimColor = context.colors.primary.withValues(alpha: 0.12);
+    final accentColor = context.colors.primary;
     final borderColor = context.colors.borderLight;
     final mutedColor = context.colors.onSurfaceSecondary;
 
@@ -461,7 +458,7 @@ class _SelectionToggleChip extends StatelessWidget {
               children: [
                 Icon(
                   Icons.checklist_rounded,
-                  size: 15,
+                  size: AppLayout.iconXs,
                   color: isActive ? accentColor : mutedColor,
                 ),
               ],
@@ -492,8 +489,8 @@ class _OverflowFilterChipsButton extends StatelessWidget {
     final colors = context.colors;
     final borderColor = colors.borderLight;
     final mutedColor = colors.onSurfaceSecondary;
-    final accentColor = colors.secondary;
-    final accentDimColor = colors.secondary.withValues(alpha: 0.12);
+    final accentColor = colors.primary;
+    final accentDimColor = colors.primary.withValues(alpha: 0.12);
 
     return PopupMenuButton<int>(
       tooltip: 'More filters ($overflowCount)',
@@ -513,12 +510,12 @@ class _OverflowFilterChipsButton extends StatelessWidget {
         return [
           PopupMenuItem<int>(
             enabled: false,
-            height: 28,
+            height: AppLayout.controlHeightSm - AppSpacing.xs,
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: Text(
               'ALL FILTERS (${allChips.length})',
               style: context.textTheme.labelSmall
-                  ?.size(10)
+                  ?.size(AppSpacing.sm + 2)
                   .bold()
                   .colour(mutedColor),
             ),
@@ -560,7 +557,11 @@ class _OverflowFilterChipsButton extends StatelessWidget {
                     ),
                     if (isSelected) ...[
                       AppSpacing.sm.w,
-                      Icon(Icons.check_rounded, size: 16, color: accentColor),
+                      Icon(
+                        Icons.check_rounded,
+                        size: AppLayout.iconSm,
+                        color: accentColor,
+                      ),
                     ],
                   ],
                 ),
@@ -590,7 +591,7 @@ class _OverflowFilterChipsButton extends StatelessWidget {
               (2).w,
               Icon(
                 Icons.keyboard_arrow_down_rounded,
-                size: 16,
+                size: AppLayout.iconSm,
                 color: mutedColor,
               ),
             ],
@@ -618,8 +619,8 @@ class _OverflowRemovableFiltersButton extends StatelessWidget {
     final colors = context.colors;
     final borderColor = colors.borderLight;
     final mutedColor = colors.onSurfaceSecondary;
-    final accentColor = colors.secondary;
-    final accentDimColor = colors.secondary.withValues(alpha: 0.08);
+    final accentColor = colors.primary;
+    final accentDimColor = colors.primary.withValues(alpha: 0.08);
 
     return PopupMenuButton<int>(
       tooltip: 'More active filters ($overflowCount)',
@@ -641,12 +642,12 @@ class _OverflowRemovableFiltersButton extends StatelessWidget {
         return [
           PopupMenuItem<int>(
             enabled: false,
-            height: 28,
+            height: AppLayout.controlHeightSm - AppSpacing.xs,
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: Text(
               'ACTIVE FILTERS (${allFilters.length})',
               style: context.textTheme.labelSmall
-                  ?.size(10)
+                  ?.size(AppSpacing.sm + 2)
                   .bold()
                   .colour(mutedColor),
             ),
@@ -669,7 +670,11 @@ class _OverflowRemovableFiltersButton extends StatelessWidget {
                 child: Row(
                   children: [
                     if (filter.icon != null) ...[
-                      Icon(filter.icon, size: 15, color: accentColor),
+                      Icon(
+                        filter.icon,
+                        size: AppLayout.iconXs,
+                        color: accentColor,
+                      ),
                       AppSpacing.xs.w,
                     ],
                     Expanded(
@@ -691,7 +696,7 @@ class _OverflowRemovableFiltersButton extends StatelessWidget {
                       ),
                       child: Icon(
                         Icons.close_rounded,
-                        size: 13,
+                        size: AppLayout.iconXs - 1,
                         color: accentColor,
                       ),
                     ),
@@ -710,7 +715,7 @@ class _OverflowRemovableFiltersButton extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.filter_alt_off_outlined,
-                    size: 15,
+                    size: AppLayout.iconXs,
                     color: colors.error,
                   ),
                   AppSpacing.xs.w,
@@ -736,10 +741,10 @@ class _OverflowRemovableFiltersButton extends StatelessWidget {
             vertical: AppSpacing.xs,
           ),
           decoration: BoxDecoration(
-            color: colors.secondary.withValues(alpha: 0.08),
+            color: colors.primary.withValues(alpha: 0.08),
             borderRadius: AppRadius.xlRadius,
             border: Border.all(
-              color: colors.secondary.withValues(alpha: 0.35),
+              color: colors.primary.withValues(alpha: 0.35),
               width: 1,
             ),
           ),
@@ -748,8 +753,8 @@ class _OverflowRemovableFiltersButton extends StatelessWidget {
             children: [
               Icon(
                 Icons.filter_alt_outlined,
-                size: 13,
-                color: colors.secondary,
+                size: AppLayout.iconXs - 1,
+                color: colors.primary,
               ),
               (AppSpacing.xs).w,
               Text(
@@ -757,13 +762,13 @@ class _OverflowRemovableFiltersButton extends StatelessWidget {
                 style: context.textTheme.labelSmall
                     ?.size(AppSpacing.md - 1)
                     .semiBold()
-                    .colour(colors.secondary),
+                    .colour(colors.primary),
               ),
               2.w,
               Icon(
                 Icons.keyboard_arrow_down_rounded,
-                size: 15,
-                color: colors.secondary,
+                size: AppLayout.iconXs,
+                color: colors.primary,
               ),
             ],
           ),

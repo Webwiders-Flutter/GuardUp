@@ -16,6 +16,7 @@ import '../../data/models/faq.model.dart';
 import '../../di/faq.providers.dart';
 import '../controllers/faq.controller.dart';
 import '/shared/states/pagination.state.dart';
+import '/shared/widgets/admin_layout/admin_page_body.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/feedbacks/widgets/app_popup.dart';
 import '/shared/widgets/misc/app_chip.dart';
@@ -23,6 +24,9 @@ import '/shared/widgets/table/admin_table_builder.dart';
 import 'faq.form.dart';
 
 class FaqManagementScreen extends ConsumerStatefulWidget {
+  /// Route path of this screen.
+  static const route = '/faqs';
+
   const FaqManagementScreen({super.key});
 
   @override
@@ -287,87 +291,77 @@ class _FaqManagementScreenState extends ConsumerState<FaqManagementScreen> {
       ),
     ];
 
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: AdminTableBuilder<Faq>(
-            title: 'Frequently Asked Questions',
-            subtitle: 'Manage help knowledge base questions, localized Hindi content, and role-based guides',
-            columns: columns,
-            rowHeight: AppSpacing.xxxl * 2.5,
-            tableData: paginationState.items,
-            searchController: _searchController,
-            showSearchField: true,
-            currentPage: paginationState.page,
-            totalEntries: paginationState.total,
-            rowsPerPage: paginationState.pageSize,
-            showCheckbox: true,
-            selectedItemsNotifier: _selectedItemsNotifier,
-            selectionActions: [
-              AppButton(
-                text: 'Delete',
-                leading: Icon(
-                  Icons.delete_outline_rounded,
-                  size: AppSpacing.md + 2,
-                ),
-                size: ButtonSize.small,
-                type: ButtonType.danger,
-                fullWidth: false,
-                onPressed: _onDeleteFaqs,
-              ),
-            ],
-            onReorder: (oldIndex, newIndex) async {
-              controller.reorderRecords(
-                paginationState.items[oldIndex].id,
-                oldIndex,
-                newIndex,
-              );
-            },
-            load: asyncState.isLoading,
-            activeFilter: controller.filters.role,
-            filterChips: [
-              (label: 'All', value: null),
-              ...UserRoleType.values
-                  .where((r) => !r.isAdmin)
-                  .map((r) => (label: r.label(context.l10n), value: r)),
-            ],
-            onFilterChanged: (filter) => controller.getPaginatedRecords(
-              forceRefresh: true,
-              filters: controller.filters.copyWith(
-                role: filter as UserRoleType?,
-              ),
+    return AdminPageBody(
+      child: AdminTableBuilder<Faq>(
+        title: 'Frequently Asked Questions',
+        subtitle: 'Manage help knowledge base questions, localized Hindi content, and role-based guides',
+        columns: columns,
+        rowHeight: AppSpacing.xxxl * 2.5,
+        tableData: paginationState.items,
+        searchController: _searchController,
+        showSearchField: true,
+        currentPage: paginationState.page,
+        totalEntries: paginationState.total,
+        rowsPerPage: paginationState.pageSize,
+        showCheckbox: true,
+        selectedItemsNotifier: _selectedItemsNotifier,
+        selectionActions: [
+          AppButton(
+            text: 'Delete',
+            leading: Icon(
+              Icons.delete_outline_rounded,
+              size: AppSpacing.md + 2,
             ),
-            onSearch: (query) => controller.getPaginatedRecords(
-              forceRefresh: true,
-              search: query?.toString(),
-            ),
-            onRefresh: () => controller.getPaginatedRecords(forceRefresh: true),
-            onPrevious: () =>
-                controller.getPaginatedRecords(page: paginationState.page - 1),
-            onLoadMore: () =>
-                controller.getPaginatedRecords(page: paginationState.page + 1),
-            onPageSelected: (page) =>
-                controller.getPaginatedRecords(page: page),
-            onLimitChange: (limit) => controller.getPaginatedRecords(
-              forceRefresh: true,
-              pageSize: limit,
-            ),
-            actions: [
-              AppButton(
-                text: 'Add',
-                leading: Icon(
-                  Icons.add_rounded,
-                  size: AppSpacing.lg,
-                  color: colors.onPrimary,
-                ),
-                size: ButtonSize.normal,
-                fullWidth: false,
-                onPressed: () => _openFaqForm(),
-              ),
-            ],
+            size: ButtonSize.small,
+            type: ButtonType.danger,
+            fullWidth: false,
+            onPressed: _onDeleteFaqs,
           ),
+        ],
+        onReorder: (oldIndex, newIndex) async {
+          controller.reorderRecords(
+            paginationState.items[oldIndex].id,
+            oldIndex,
+            newIndex,
+          );
+        },
+        load: asyncState.isLoading,
+        activeFilter: controller.filters.role,
+        filterChips: [
+          (label: 'All', value: null),
+          ...UserRoleType.values
+              .where((r) => !r.isAdmin)
+              .map((r) => (label: r.label(context.l10n), value: r)),
+        ],
+        onFilterChanged: (filter) => controller.getPaginatedRecords(
+          forceRefresh: true,
+          filters: controller.filters.copyWith(role: filter as UserRoleType?),
         ),
+        onSearch: (query) => controller.getPaginatedRecords(
+          forceRefresh: true,
+          search: query?.toString(),
+        ),
+        onRefresh: () => controller.getPaginatedRecords(forceRefresh: true),
+        onPrevious: () =>
+            controller.getPaginatedRecords(page: paginationState.page - 1),
+        onLoadMore: () =>
+            controller.getPaginatedRecords(page: paginationState.page + 1),
+        onPageSelected: (page) => controller.getPaginatedRecords(page: page),
+        onLimitChange: (limit) =>
+            controller.getPaginatedRecords(forceRefresh: true, pageSize: limit),
+        actions: [
+          AppButton(
+            text: 'Add',
+            leading: Icon(
+              Icons.add_rounded,
+              size: AppSpacing.lg,
+              color: colors.onPrimary,
+            ),
+            size: ButtonSize.normal,
+            fullWidth: false,
+            onPressed: () => _openFaqForm(),
+          ),
+        ],
       ),
     );
   }

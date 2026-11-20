@@ -20,8 +20,16 @@ import '/shared/widgets/inputs/app_input_label.dart';
 import '/shared/widgets/inputs/app_radio.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/states/pagination.state.dart';
+import '/features/legal/presentation/screens/faq_management.screen.dart';
 
 class FaqFormScreen extends ConsumerStatefulWidget {
+  /// Route segments under [FaqManagementScreen.route].
+  static const addPath = 'add';
+  static const editPath = 'edit';
+
+  static const addRoute = '${FaqManagementScreen.route}/$addPath';
+  static const editRoute = '${FaqManagementScreen.route}/$editPath';
+
   final Faq? faq;
 
   const FaqFormScreen({super.key, this.faq});
