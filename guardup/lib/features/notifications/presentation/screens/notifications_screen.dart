@@ -194,19 +194,19 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                       return Skeletonizer(
                         effect: SkeletonEffect.adaptiveShimmer(context),
                         enabled: true,
-                        child: ListView.separated(
-                          physics: const NeverScrollableScrollPhysics(),
-                          padding:
-                              context.horizontalEdgeInsets +
-                              AppSpacing.md.bPadding,
-                          itemCount: 4,
-                          separatorBuilder: (context, index) => AppSpacing.md.h,
-                          itemBuilder: (context, index) {
-                            return NotificationCard(
-                              notification:
-                                  sampleList[index % sampleList.length],
-                            );
-                          },
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          mainAxisSize: MainAxisSize.min,
+                          children: List.generate(
+                            4,
+                            (index) => Padding(
+                              padding: AppSpacing.md.bPadding,
+                              child: NotificationCard(
+                                notification:
+                                    sampleList[index % sampleList.length],
+                              ),
+                            ),
+                          ),
                         ),
                       );
                     },

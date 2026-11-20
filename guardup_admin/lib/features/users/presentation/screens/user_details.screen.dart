@@ -184,13 +184,13 @@ class _PersonalInfoSection extends StatelessWidget {
           value: user.gender?.label(context.l10n) ?? 'Not specified',
           icon: user.gender?.icon ?? Icons.wc_outlined,
         ),
-        (
-          label: 'Push Notifications',
-          value: user.isPushNotificationEnabled ? 'Enabled' : 'Disabled',
-          icon: user.isPushNotificationEnabled
-              ? Icons.notifications_active_outlined
-              : Icons.notifications_off_outlined,
-        ),
+        // (
+        //   label: 'Push Notifications',
+        //   value: user.isPushNotificationEnabled ? 'Enabled' : 'Disabled',
+        //   icon: user.isPushNotificationEnabled
+        //       ? Icons.notifications_active_outlined
+        //       : Icons.notifications_off_outlined,
+        // ),
         (
           label: 'Last Updated',
           value: user.updatedAt?.readableDate,

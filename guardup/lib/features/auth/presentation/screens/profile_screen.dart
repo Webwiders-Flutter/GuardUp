@@ -69,22 +69,23 @@ class ProfileScreen extends StatelessWidget {
                 AppSpacing.xl.h,
 
                 // 2. Edit Profile Menu Card
-                if (role != UserRole.guard)
-                  _ProfileMenuCard(
-                    title: context.l10n.editProfile,
-                    icon: Icons.person_outline_rounded,
-                    onTap: () {
-                      switch (role) {
-                        case UserRole.customer:
-                          context.push(EditProfileScreen.route);
-                          break;
-                        case UserRole.company:
-                          context.push(EditProfileScreen.route);
-                          break;
-                        default:
-                      }
-                    },
-                  ),
+                // if (role != UserRole.guard)
+                _ProfileMenuCard(
+                  title: context.l10n.editProfile,
+                  icon: Icons.person_outline_rounded,
+                  onTap: () {
+                    context.push(EditProfileScreen.route);
+                    // switch (role) {
+                    //   case UserRole.customer:
+                    //     context.push(EditProfileScreen.route);
+                    //     break;
+                    //   case UserRole.company:
+                    //     context.push(EditProfileScreen.route);
+                    //     break;
+                    //   default:
+                    // }
+                  },
+                ),
                 // 4. Common Settings Menu Cards
                 _ProfileMenuCard(
                   title: context.l10n.changePassword,
@@ -180,7 +181,10 @@ class ProfileScreen extends StatelessWidget {
                   title: context.l10n.privacyPolicy,
                   icon: Icons.privacy_tip_outlined,
                   onTap: () {
-                    context.push(LegalContentScreen.privacyPolicyRoute, extra: role);
+                    context.push(
+                      LegalContentScreen.privacyPolicyRoute,
+                      extra: role,
+                    );
                   },
                 ),
                 _ProfileMenuCard(
@@ -254,6 +258,7 @@ class ProfileScreen extends StatelessWidget {
       experienceYears: state.experienceYearsFormatted,
       isVerified: true,
       isOnline: true,
+      activeGuards: 0,
       bookingsCount: '0',
     );
 
@@ -302,10 +307,10 @@ class ProfileScreen extends StatelessWidget {
         : Assets.images.dummyAvatar.path;
 
     return _ProfileCard(
-      name: customerName.isNotEmpty ? customerName : 'Client Member',
-      specialization: email.isNotEmpty ? email : 'Elite Member',
+      name: customerName.isNotEmpty ? customerName : '',
+      specialization: email.isNotEmpty ? email : '',
       rating: 0.0,
-      location: 'Member',
+      location: '',
       hourlyRate: 0,
       avatarAssetPath: avatar,
       isVerified: true,

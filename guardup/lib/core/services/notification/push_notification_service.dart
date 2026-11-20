@@ -65,6 +65,8 @@ final class PushNotificationService {
   static final StreamController<String> _tokenRefreshController =
       StreamController<String>.broadcast();
 
+  static String? _cachedToken;
+
   /// Stream of incoming foreground FCM messages.
   static Stream<RemoteMessage> get onForegroundMessage =>
       _foregroundMessageController.stream;
@@ -73,8 +75,14 @@ final class PushNotificationService {
   static Stream<Map<String, dynamic>> get onNotificationTap =>
       _notificationTapController.stream;
 
-  /// Stream emitting new FCM device tokens upon rotation.
+  /// Stream emitting new FCM device tokens upon registration or rotation.
+  static Stream<String> get onRegistered => _tokenRefreshController.stream;
+
+  /// Backwards compatibility stream for [onRegistered].
   static Stream<String> get onTokenRefresh => _tokenRefreshController.stream;
+
+  /// Returns current cached device token if already obtained.
+  static String? get currentToken => _cachedToken;
 
   static bool _isInitialized = false;
 
@@ -150,12 +158,13 @@ final class PushNotificationService {
         _handleNotificationTap(initialMessage.data, onNotificationTapped);
       }
 
-      // 9. Listen for FCM token refresh events
-      _messaging.onTokenRefresh.listen((String newToken) {
+      // 9. Listen for FCM token registration & refresh events
+      _messaging.onRegistered.listen((String newToken) {
         AppLogger.i(
-          'FCM token refreshed: $newToken',
+          'FCM token registered / refreshed: $newToken',
           tag: 'PushNotificationService',
         );
+        _cachedToken = newToken;
         _tokenRefreshController.add(newToken);
       });
 
@@ -340,9 +349,47 @@ final class PushNotificationService {
         }
       }
 
-      final token = await _messaging.getToken(vapidKey: vapidKey);
-      AppLogger.d("Token $token");
-      return token;
+      // If a cached token is already available from onRegistered, return it
+      if (_cachedToken != null && _cachedToken!.isNotEmpty) {
+        return _cachedToken;
+      }
+
+      // Register device instance with FCM (replaces deprecated getToken)
+      final completer = Completer<String?>();
+      final sub = _messaging.onRegistered.listen((t) {
+        if (!completer.isCompleted) completer.complete(t);
+      });
+
+      try {
+        try {
+          await _messaging.register(vapidKey: vapidKey);
+          final token = await completer.future.timeout(
+            const Duration(seconds: 4),
+            onTimeout: () => null,
+          );
+          if (token != null && token.isNotEmpty) {
+            _cachedToken = token;
+            AppLogger.d("FCM Token: $token");
+            return token;
+          }
+        } catch (regError) {
+          AppLogger.w(
+            'FCM register() skipped or failed: $regError, falling back to direct token fetch',
+            tag: 'PushNotificationService',
+          );
+        }
+      } finally {
+        await sub.cancel();
+      }
+
+      // Fallback for platform edge cases if onRegistered did not emit within timeout
+      // ignore: deprecated_member_use
+      final fallbackToken = await _messaging.getToken(vapidKey: vapidKey);
+      if (fallbackToken != null) {
+        _cachedToken = fallbackToken;
+      }
+      AppLogger.d("FCM Token: $_cachedToken");
+      return _cachedToken;
     } catch (e, st) {
       AppLogger.e(
         'Error retrieving FCM token: $e',
@@ -354,23 +401,27 @@ final class PushNotificationService {
     }
   }
 
-  /// Deletes the current device registration token from FCM.
+  /// Unregisters the current device from FCM (replaces deprecated deleteToken).
   static Future<void> deleteToken() async {
     try {
-      await _messaging.deleteToken();
+      await _messaging.unregister();
+      _cachedToken = null;
       AppLogger.i(
-        'FCM token deleted successfully.',
+        'FCM token unregistered successfully.',
         tag: 'PushNotificationService',
       );
     } catch (e, st) {
       AppLogger.e(
-        'Failed to delete FCM token: $e',
+        'Failed to unregister FCM token: $e',
         error: e,
         stackTrace: st,
         tag: 'PushNotificationService',
       );
     }
   }
+
+  /// Modern alias for [deleteToken].
+  static Future<void> unregister() => deleteToken();
 
   /// Subscribes current device to a specific topic (e.g. 'all_transporters').
   static Future<void> subscribeToTopic(String topic) async {

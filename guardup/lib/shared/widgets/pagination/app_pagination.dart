@@ -315,7 +315,6 @@ class _AppPaginationState<T> extends State<AppPagination<T>> {
 
     /// Footer - Loading More Progress
     return widget.loadMoreBuilder?.call(context) ??
-        widget.initialLoaderBuilder?.call(context) ??
         Padding(
           padding: AppSpacing.lg.allPadding,
           child: Center(

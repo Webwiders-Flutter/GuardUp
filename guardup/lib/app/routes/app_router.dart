@@ -113,6 +113,18 @@ final class AppRouter {
           return isAllowedBlocked ? null : AccountStatusScreen.blockedRoute;
         }
 
+        // Redirect away from blocked screen when unblocked
+        if (location == AccountStatusScreen.blockedRoute) {
+          if (authState.isPendingApproval || authState.isRejected) {
+            return AdminApprovalScreen.route;
+          }
+          if (authState.requiresOnboarding) {
+            if (authState.isGuard) return BodyGuardCompleteProfileScreen.route;
+            if (authState.isCompany) return CompanyCompleteProfileScreen.route;
+          }
+          return CustomerHomeScreen.route;
+        }
+
         // B. Account is deleted by Admin or User
         if (authState.isDeleted) {
           final isAllowedDeleted =
@@ -122,6 +134,10 @@ final class AppRouter {
               location == LegalContentScreen.termsRoute;
 
           return isAllowedDeleted ? null : AccountStatusScreen.deletedRoute;
+        }
+
+        if (location == AccountStatusScreen.deletedRoute) {
+          return LoginScreen.route;
         }
 
         // C. Application submitted (waiting for Admin review) or Rejected by Admin
@@ -499,32 +515,54 @@ final class AppRouter {
 
           if (extra is MembershipPlanMode) {
             mode ??= extra;
+          } else if (extra is String) {
+            mode ??= MembershipPlanMode.tryFromApiValue(extra);
           } else if (extra is MembershipPlanArgs) {
             mode ??= extra.mode;
             bookingAmount = extra.bookingAmount;
             operativeName = extra.operativeName;
             activePlanId = extra.activePlanId;
           } else if (extra is Map) {
-            if (extra['mode'] is MembershipPlanMode) {
-              mode ??= extra['mode'] as MembershipPlanMode;
-            } else if (extra['mode'] is String) {
-              mode ??=
-                  MembershipPlanMode.tryFromApiValue(extra['mode'] as String);
+            final rawMode = extra['mode'];
+            if (rawMode is MembershipPlanMode) {
+              mode ??= rawMode;
+            } else if (rawMode is String) {
+              mode ??= MembershipPlanMode.tryFromApiValue(rawMode);
             }
             bookingAmount = (extra['bookingAmount'] as num?)?.toDouble();
             operativeName = extra['operativeName'] as String?;
             activePlanId = extra['activePlanId'] as String?;
+          } else if (extra is Record) {
+            try {
+              final dynamic r = extra;
+              if (r.mode is MembershipPlanMode) {
+                mode ??= r.mode as MembershipPlanMode;
+              } else if (r.mode is String) {
+                mode ??= MembershipPlanMode.tryFromApiValue(r.mode as String);
+              }
+              if (r.bookingAmount is num) {
+                bookingAmount = (r.bookingAmount as num).toDouble();
+              }
+              if (r.operativeName is String) {
+                operativeName = r.operativeName as String;
+              }
+              if (r.activePlanId is String) {
+                activePlanId = r.activePlanId as String;
+              }
+            } catch (_) {}
           }
 
           final authState = sl.isRegistered<AuthBloc>()
               ? sl<AuthBloc>().state
               : null;
 
-          // If not specified, default to onboarding for customer without plan, else profile
-          mode ??= (authState?.isCustomer == true &&
-                  authState?.membershipPlanId == null)
-              ? MembershipPlanMode.onboarding
-              : MembershipPlanMode.profile;
+          // If not specified, default to onboarding if no plan is active, else profile
+          final hasActivePlan = authState?.membershipPlanId != null &&
+              authState!.membershipPlanId!.trim().isNotEmpty;
+
+          mode ??= hasActivePlan
+              ? MembershipPlanMode.profile
+              : MembershipPlanMode.onboarding;
 
           activePlanId ??= authState?.membershipPlanId;
 

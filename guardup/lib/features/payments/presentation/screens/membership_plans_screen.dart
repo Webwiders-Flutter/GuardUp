@@ -459,9 +459,30 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
                       child: AppButton(
                         text: 'Apply ${selectedPlan?.title ?? 'Plan'}',
                         isLoading: isSubmitting,
+                        gradient: const LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            Color(0xFFE2B755),
+                            Color(0xFFC48E28),
+                          ],
+                        ),
+                        foregroundColor: const Color(0xFF191B23),
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        height: 52,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFC48E28).withValues(
+                              alpha: 0.25,
+                            ),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                         trailing: const Icon(
                           Icons.arrow_forward_rounded,
                           size: AppSizes.iconSmd,
+                          color: Color(0xFF191B23),
                         ),
                         onPressed: selectedPlan != null ? _handleAction : null,
                       ),
@@ -471,7 +492,10 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
                       flex: 4,
                       child: AppButton(
                         text: 'Skip',
-                        type: ButtonType.secondaryOff,
+                        backgroundColor: const Color(0xFF262A34),
+                        foregroundColor: Colors.white,
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        height: 52,
                         onPressed: isSubmitting
                             ? null
                             : () => context.go(CustomerHomeScreen.route),
@@ -484,6 +508,32 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
               return AppButton(
                 text: isCurrent ? 'Current Plan' : 'Upgrade your plan',
                 isLoading: isSubmitting,
+                gradient: isCurrent
+                    ? null
+                    : const LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: [
+                          Color(0xFFE2B755),
+                          Color(0xFFC48E28),
+                        ],
+                      ),
+                foregroundColor: isCurrent ? null : const Color(0xFF191B23),
+                backgroundColor:
+                    isCurrent ? context.colors.surfaceContainerHigh : null,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                height: 52,
+                boxShadow: isCurrent
+                    ? null
+                    : [
+                        BoxShadow(
+                          color: const Color(0xFFC48E28).withValues(
+                            alpha: 0.25,
+                          ),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                 trailing: isCurrent
                     ? const Icon(
                         Icons.check_circle_outline_rounded,
@@ -492,6 +542,7 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
                     : const Icon(
                         Icons.arrow_forward_rounded,
                         size: AppSizes.iconSmd,
+                        color: Color(0xFF191B23),
                       ),
                 onPressed: (selectedPlan != null && !isCurrent)
                     ? _handleAction

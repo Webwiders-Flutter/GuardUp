@@ -334,7 +334,7 @@ class _BodyGuardHomeScreenState extends State<BodyGuardHomeScreen> {
                   ),
                   AppSpacing.xs.h,
                   Text(
-                    2480.0.toUsd,
+                    0.toUsd,
                     style: context.textTheme.titleMedium?.bold().colour(
                       context.colors.primary,
                     ),
@@ -361,7 +361,7 @@ class _BodyGuardHomeScreenState extends State<BodyGuardHomeScreen> {
                     ),
                   ),
                   AppSpacing.xs.h,
-                  Text('12', style: context.textTheme.titleMedium?.bold()),
+                  Text('0', style: context.textTheme.titleMedium?.bold()),
                 ],
               ),
             ),
@@ -387,7 +387,7 @@ class _BodyGuardHomeScreenState extends State<BodyGuardHomeScreen> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text('4.8', style: context.textTheme.titleMedium?.bold()),
+                      Text('0', style: context.textTheme.titleMedium?.bold()),
                       AppSpacing.xxs.w,
                       Icon(
                         Icons.star_rounded,

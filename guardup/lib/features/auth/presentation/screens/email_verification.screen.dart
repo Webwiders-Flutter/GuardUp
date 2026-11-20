@@ -141,12 +141,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       case UserRole.customer:
         context.go(
           '${MembershipPlansScreen.route}?mode=onboarding',
-          extra: (
-            mode: MembershipPlanMode.onboarding,
-            bookingAmount: null,
-            operativeName: null,
-            activePlanId: null,
-          ),
+          extra: {'mode': MembershipPlanMode.onboarding},
         );
       case UserRole.guard:
         context.go(BodyGuardCompleteProfileScreen.route);

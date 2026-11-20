@@ -12,6 +12,7 @@ import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/core/services/notification/push_notification_service.dart';
+import '/app/routes/app_router.dart';
 import '/features/notifications/presentation/screens/notifications_screen.dart';
 
 /// Data model representing an active in-app foreground notification banner.
@@ -156,10 +157,15 @@ class _ForegroundNotificationBannerState
     }
 
     final targetRoute = data.data['route']?.toString();
-    if (targetRoute != null && targetRoute.isNotEmpty) {
-      context.push(targetRoute);
+    final route = (targetRoute != null && targetRoute.isNotEmpty)
+        ? targetRoute
+        : NotificationsScreen.route;
+
+    final navContext = AppRouter.rootNavigatorKey.currentContext;
+    if (navContext != null) {
+      navContext.push(route);
     } else {
-      context.push(NotificationsScreen.route);
+      AppRouter.router.push(route);
     }
   }
 

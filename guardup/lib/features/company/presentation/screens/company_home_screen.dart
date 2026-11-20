@@ -115,6 +115,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
         alignTitle: .left,
         titleWidget: _buildAppBarTitle(context),
         showNotificationIcon: true,
+        showBackIcon: false,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -230,7 +231,8 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
                       text: 'View All >',
                       type: ButtonType.text,
                       size: ButtonSize.small,
-                      onPressed: () => context.push(CompanyBodyguardsScreen.route),
+                      onPressed: () =>
+                          context.push(CompanyBodyguardsScreen.route),
                     ),
                   ],
                 ),
@@ -285,8 +287,9 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
       builder: (context, state) {
         final companyName = state.companyName;
         final logoUrl = state.avatarUrl;
-        final initials =
-            companyName.isNotEmpty ? companyName.getInitials() : 'CO';
+        final initials = companyName.isNotEmpty
+            ? companyName.getInitials()
+            : 'CO';
         final rating = state.rating.toString();
         final companyType = state.companyType.isNotEmpty
             ? state.companyType
@@ -305,7 +308,10 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
                     w: 48,
                     h: 48,
                     color: context.colors.surfaceContainerHigh,
-                    border: Border.all(color: context.colors.primary, width: 1.5),
+                    border: Border.all(
+                      color: context.colors.primary,
+                      width: 1.5,
+                    ),
                     alignment: Alignment.center,
                     clipBehavior: Clip.antiAlias,
                     child: logoUrl.isNotEmpty
@@ -388,9 +394,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
                             companyType,
                             style: context.textTheme.labelSmall
                                 ?.regular()
-                                .colour(
-                                  context.colors.onSurfaceVariant,
-                                ),
+                                .colour(context.colors.onSurfaceVariant),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
