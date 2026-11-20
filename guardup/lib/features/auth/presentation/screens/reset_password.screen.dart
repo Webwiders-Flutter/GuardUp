@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
@@ -20,6 +19,7 @@ import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/misc/app_input_label.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/app_image.dart';
+import '/features/auth/presentation/screens/login.screen.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   static const route = '/resetPassword';
@@ -48,7 +48,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   void _handleCancel() {
     sl<AuthBloc>().add(const AuthSignOutRequested());
-    context.go(AppRoutes.login);
+    context.go(LoginScreen.route);
   }
 
   void _handleSubmit() {
@@ -74,7 +74,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     } else if (state.operationState.isSuccess) {
       _isLoadingNotifier.value = false;
       AppSnackbar.success(context.l10n.passwordResetSuccessfully);
-      context.go(AppRoutes.login);
+      context.go(LoginScreen.route);
     }
   }
 

@@ -7,11 +7,11 @@ import 'package:guardup/core/extensions/spacing.extension.dart';
 import 'package:guardup/core/extensions/textstyle_extension.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '/app/routes/app_routes.dart';
 import '/app/theme/colors/color_accessor.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/shared/widgets/buttons/app_button.dart';
+import '/features/customer/presentation/screens/customer_home_screen.dart';
 
 /// 404 Not Found screen displayed when a requested route doesn't exist.
 class NotFoundScreen extends StatefulWidget {
@@ -116,7 +116,7 @@ class _NotFoundScreenState extends State<NotFoundScreen>
     if (context.canPop()) {
       context.pop();
     } else {
-      context.go(AppRoutes.home);
+      context.go(CustomerHomeScreen.route);
     }
   }
 
@@ -239,7 +239,7 @@ class _NotFoundScreenState extends State<NotFoundScreen>
                           text: 'Go to Dashboard',
                           type: ButtonType.primary,
                           isFlexible: true,
-                          onPressed: () => context.go(AppRoutes.home),
+                          onPressed: () => context.go(CustomerHomeScreen.route),
                         ),
                       ],
                     ),

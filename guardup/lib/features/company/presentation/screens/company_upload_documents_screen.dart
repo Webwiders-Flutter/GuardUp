@@ -8,7 +8,6 @@ import 'package:guardup/features/auth/auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
@@ -22,6 +21,7 @@ import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_media_picker_sheet.dart';
 import '/shared/widgets/inputs/document_upload_card.dart';
 import '/shared/widgets/sections/app_appbar.dart';
+import '/features/payments/presentation/screens/registration_fee_screen.dart';
 
 class UploadDocumentsScreen extends StatefulWidget {
   static const route = '/upload-documents';
@@ -176,9 +176,9 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
                 ? 'Documents resubmitted successfully. Your application is under review.'
                 : 'Application resubmitted successfully. Your profile is under review.',
           );
-          context.go(AppRoutes.adminApproval);
+          context.go(AdminApprovalScreen.route);
         } else {
-          context.go(AppRoutes.registrationFee);
+          context.go(RegistrationFeeScreen.route);
         }
       }
     } catch (e) {
@@ -209,7 +209,7 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
               final result = await AppPopup.showLogoutConfirmation(context);
               if (result?.action == PopupAction.confirm && context.mounted) {
                 sl<AuthBloc>().add(const AuthSignOutRequested());
-                context.go(AppRoutes.login);
+                context.go(LoginScreen.route);
               }
             },
           ),

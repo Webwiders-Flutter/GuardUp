@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
@@ -14,6 +13,8 @@ import '/gen/assets.gen.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/app_image.dart';
+import '/features/guard_detail/presentation/customer_booking_confirmed.screen.dart';
+import '/features/payments/presentation/screens/payment_success_screen.dart';
 
 /// Screen 4: Final Booking Details & Payment Summary review screen before payment authorization.
 class CustomerBookingDetailsScreen extends StatelessWidget {
@@ -479,12 +480,12 @@ class CustomerBookingDetailsScreen extends StatelessWidget {
                 ),
                 onPressed: () {
                   context.push(
-                    AppRoutes.paymentSuccess,
+                    PaymentSuccessScreen.route,
                     extra: {
                       'buttonText': 'Next',
                       'onTap': () {
                         context.push(
-                          AppRoutes.bookingConfirmed,
+                          CustomerBookingConfirmedScreen.route,
                           extra: {
                             'bodyguard': bodyguard,
                             'guardName': guardName,

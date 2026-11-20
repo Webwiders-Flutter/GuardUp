@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:guardup/core/extensions/number.extension.dart';
 import 'package:guardup/shared/widgets/sections/app_appbar.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
@@ -21,6 +20,7 @@ import '/shared/widgets/pagination/pagination.controller.dart';
 import '/shared/widgets/pagination/pagination.state.dart';
 import '../../data/model/booking.model.dart';
 import '../widgets/booking_card.widget.dart';
+import '/features/chat/presentation/screens/chat_screen.dart';
 
 /// Screen presenting the operative or customer booking assignments.
 ///
@@ -115,7 +115,7 @@ class _BookingsScreenState extends State<BookingsScreen>
   }
 
   void _handleOpenChat(BookingModel booking) {
-    context.push(AppRoutes.chatDetail);
+    context.push(ChatScreen.route);
   }
 
   @override

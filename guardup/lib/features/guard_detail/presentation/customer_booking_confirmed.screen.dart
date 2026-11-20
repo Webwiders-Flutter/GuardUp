@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
@@ -17,6 +16,8 @@ import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/app_image.dart';
+import '/features/booking/presentation/screens/bookings_screen.dart';
+import '/features/customer/presentation/screens/customer_home_screen.dart';
 
 /// Screen 6: Booking Confirmed Screen displaying verified badge, bodyguard summary,
 /// booking ID reference, and quick navigation to chat or live operative tracking.
@@ -88,7 +89,7 @@ class CustomerBookingConfirmedScreen extends StatelessWidget {
           if (context.canPop()) {
             context.pop();
           } else {
-            context.go(AppRoutes.home);
+            context.go(CustomerHomeScreen.route);
           }
         },
       ),
@@ -333,7 +334,7 @@ class CustomerBookingConfirmedScreen extends StatelessWidget {
                   // if (onChatTap != null) {
                   //   onChatTap!();
                   // } else {
-                  //   context.push(AppRoutes.chat);
+                  //   context.push(ConversationsScreen.route);
                   // }
                 },
                 child: Text(
@@ -359,7 +360,7 @@ class CustomerBookingConfirmedScreen extends StatelessWidget {
                   if (onTrackLiveTap != null) {
                     onTrackLiveTap!();
                   } else {
-                    context.go(AppRoutes.bookings);
+                    context.go(BookingsScreen.route);
                   }
                 },
               ),

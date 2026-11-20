@@ -5,7 +5,6 @@ import 'package:guardup/core/di/injection_container.dart';
 import 'package:quick_container/quick_container.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/api/database_tables.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
@@ -22,6 +21,7 @@ import '/shared/widgets/misc/app_rich_text.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '../../data/model/plan.model.dart';
 import '../widgets/plan_selection_card.dart';
+import '/features/customer/presentation/screens/customer_home_screen.dart';
 
 /// The invocation mode defining header text, badges, and bottom action buttons.
 enum MembershipPlanMode {
@@ -200,12 +200,12 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
     //     }
     //     if (mounted) {
     //       AppSnackbar.success('Welcome to ${selectedPlan.name}!');
-    //       context.go(AppRoutes.home);
+    //       context.go(CustomerHomeScreen.route);
     //     }
     //   } catch (e) {
     //     debugPrint('Failed to save membership plan on onboarding: $e');
     //     if (mounted) {
-    //       context.go(AppRoutes.home);
+    //       context.go(CustomerHomeScreen.route);
     //     }
     //   } finally {
     //     if (mounted) {
@@ -474,7 +474,7 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
                         type: ButtonType.secondaryOff,
                         onPressed: isSubmitting
                             ? null
-                            : () => context.go(AppRoutes.home),
+                            : () => context.go(CustomerHomeScreen.route),
                       ),
                     ),
                   ],

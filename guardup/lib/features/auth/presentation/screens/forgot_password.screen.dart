@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/enum/otp_type.enum.dart';
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
@@ -21,6 +20,7 @@ import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/app_image.dart';
+import '/features/auth/presentation/screens/email_verification.screen.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   static const route = '/forgotPassword';
@@ -82,7 +82,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       final email = _emailController.text.trim().toLowerCase();
       AppSnackbar.info('A verification code has been sent to $email');
       context.push(
-        '${AppRoutes.emailVerification}?email=${Uri.encodeComponent(email)}&type=RECOVERY',
+        '${EmailVerificationScreen.route}?email=${Uri.encodeComponent(email)}&type=RECOVERY',
         extra: <String, dynamic>{
           'email': email,
           'otpType': OtpType.recovery,

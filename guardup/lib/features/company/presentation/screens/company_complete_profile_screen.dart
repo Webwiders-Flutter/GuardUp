@@ -6,7 +6,6 @@ import 'package:guardup/core/services/document_submission/document_submission_se
 
 import '../../../../core/di/injection_container.dart';
 import '../../../auth/auth.dart';
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
@@ -23,6 +22,7 @@ import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/selection/selection.controller.dart';
 import '../../data/enum/business_type.enum.dart';
+import '/features/company/presentation/screens/company_upload_documents_screen.dart';
 
 /// Screen for company registration / entering company details.
 class CompanyCompleteProfileScreen extends StatefulWidget {
@@ -156,10 +156,10 @@ class _CompanyCompleteProfileScreenState
           AppSnackbar.success(
             'Company details updated successfully! Your application has been resubmitted for review.',
           );
-          context.go(AppRoutes.adminApproval);
+          context.go(AdminApprovalScreen.route);
         }
       } else {
-        context.go(AppRoutes.uploadDocuments);
+        context.go(UploadDocumentsScreen.route);
       }
     }
   }
@@ -181,7 +181,7 @@ class _CompanyCompleteProfileScreenState
               final result = await AppPopup.showLogoutConfirmation(context);
               if (result?.action == PopupAction.confirm && context.mounted) {
                 sl<AuthBloc>().add(const AuthSignOutRequested());
-                context.go(AppRoutes.login);
+                context.go(LoginScreen.route);
               }
             },
           ),

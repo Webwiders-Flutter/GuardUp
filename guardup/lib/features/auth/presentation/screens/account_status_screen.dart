@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
@@ -18,6 +17,8 @@ import '/gen/assets.gen.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
+import '/features/legal/presentation/screens/contact_us_screen.dart';
+import '/features/auth/presentation/screens/login.screen.dart';
 
 /// Screen displayed when a user account has been blocked or soft-deleted by an administrator.
 class AccountStatusScreen extends StatelessWidget {
@@ -198,7 +199,7 @@ class AccountStatusScreen extends StatelessWidget {
                           size: AppSizes.iconSmd,
                         ),
                         onPressed: () {
-                          context.push(AppRoutes.contactUs);
+                          context.push(ContactUsScreen.route);
                         },
                       ),
                       AppSpacing.md.h,
@@ -211,7 +212,7 @@ class AccountStatusScreen extends StatelessWidget {
                         ),
                         onPressed: () {
                           sl<AuthBloc>().add(const AuthSignOutRequested());
-                          context.go(AppRoutes.login);
+                          context.go(LoginScreen.route);
                         },
                       ),
                       AppSpacing.huge.h,

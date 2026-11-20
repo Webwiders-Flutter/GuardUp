@@ -6,7 +6,6 @@ import 'package:quick_container/quick_container.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/services/document_submission/document_submission_service.dart';
 import '../../../auth/auth.dart';
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
@@ -24,6 +23,7 @@ import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 import '../../data/enum/document_status.enum.dart';
 import '../../data/model/document_type.model.dart';
+import '/features/payments/presentation/screens/registration_fee_screen.dart';
 
 /// Screen for bodyguard verification credentials and document upload.
 ///
@@ -196,9 +196,9 @@ class _BodyGuardUploadDocumentsScreenState
                 ? 'Documents resubmitted successfully. Your application is under review.'
                 : 'Application resubmitted successfully. Your profile is under review.',
           );
-          context.go(AppRoutes.adminApproval);
+          context.go(AdminApprovalScreen.route);
         } else {
-          context.go(AppRoutes.registrationFee);
+          context.go(RegistrationFeeScreen.route);
         }
       }
     } catch (e) {
@@ -230,7 +230,7 @@ class _BodyGuardUploadDocumentsScreenState
               final result = await AppPopup.showLogoutConfirmation(context);
               if (result?.action == PopupAction.confirm && context.mounted) {
                 sl<AuthBloc>().add(const AuthSignOutRequested());
-                context.go(AppRoutes.login);
+                context.go(LoginScreen.route);
               }
             },
           ),

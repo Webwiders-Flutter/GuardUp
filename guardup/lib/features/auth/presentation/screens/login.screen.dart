@@ -5,7 +5,6 @@ import 'package:guardup/core/di/injection_container.dart';
 import 'package:guardup/features/auth/auth.dart';
 import 'package:guardup/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
@@ -17,6 +16,9 @@ import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/misc/app_rich_text.dart';
 import '/shared/widgets/sections/app_image.dart';
+import '/features/body_guard/presentation/screens/body_guard_complete_profile_screen.dart';
+import '/features/company/presentation/screens/company_complete_profile_screen.dart';
+import '/features/customer/presentation/screens/customer_home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   static const route = '/login';
@@ -61,18 +63,18 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoadingNotifier.value = false;
       if (state.isBlocked) {
         AppSnackbar.error('Your account is blocked. Please contact support.');
-        context.go(AppRoutes.accountBlocked);
+        context.go(AccountStatusScreen.blockedRoute);
         return;
       }
       AppSnackbar.success('Logged in successfully');
       if (state.requiresOnboarding) {
         if (state.isGuard) {
-          context.go(AppRoutes.bodyguardProfile);
+          context.go(BodyGuardCompleteProfileScreen.route);
         } else if (state.isCompany) {
-          context.go(AppRoutes.companyProfile);
+          context.go(CompanyCompleteProfileScreen.route);
         }
       } else {
-        context.go(AppRoutes.home);
+        context.go(CustomerHomeScreen.route);
       }
     } else if (state.hasError) {
       _isLoadingNotifier.value = false;
@@ -88,7 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
           'Please verify your email address. A 6-digit verification code has been sent.',
         );
         context.push(
-          '${AppRoutes.emailVerification}?email=${Uri.encodeComponent(email)}&type=EMAIL',
+          '${EmailVerificationScreen.route}?email=${Uri.encodeComponent(email)}&type=EMAIL',
           extra: <String, dynamic>{
             'email': email,
             'otpType': OtpType.email,
@@ -183,7 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             text: context.l10n.forgotPassword,
                             padding: EdgeInsets.zero,
                             onPressed: () {
-                              context.push(AppRoutes.forgotPassword);
+                              context.push(ForgotPasswordScreen.route);
                             },
                           ),
                         ),
@@ -213,7 +215,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               AppTextSpan(
                                 text: context.l10n.signUp,
                                 onTap: () {
-                                  context.push(AppRoutes.selectRole);
+                                  context.push(SelectRoleScreen.route);
                                 },
                               ),
                             ],

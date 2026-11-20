@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/features/body_guard/presentation/screens/guard_detail.screen.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
@@ -19,6 +18,7 @@ import '/shared/widgets/pagination/pagination.state.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '../../data/model/body_guard.model.dart';
 import '../widgets/body_guard_card.dart';
+import '/features/body_guard/presentation/screens/body_guard_complete_profile_screen.dart';
 
 /// Screen presenting all company or platform bodyguards with search,
 /// pagination, and management actions (Add, Edit, Delete).
@@ -58,11 +58,11 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen> {
   // ── Clickflow Action Handlers ──────────────────────────────────────────────
 
   void _handleAddBodyguard() {
-    context.push(AppRoutes.bodyguardProfile);
+    context.push(BodyGuardCompleteProfileScreen.route);
   }
 
   void _handleEditBodyguard(BodyGuardModel bodyguard) {
-    context.push(AppRoutes.bodyguardProfile);
+    context.push(BodyGuardCompleteProfileScreen.route);
   }
 
   @override

@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
@@ -21,11 +20,16 @@ import '/shared/widgets/sections/app_appbar.dart';
 import '../widgets/customer_header.widget.dart';
 import '../widgets/customer_promo_banner.widget.dart';
 import '../widgets/customer_services_row.widget.dart';
+import '/features/customer/presentation/screens/booking_screen.dart';
+import '/features/guard_detail/presentation/customer_bodygaurd_profile.screen.dart';
+import '/features/customer/presentation/screens/search_bodyguards_screen.dart';
 
 /// Screen 1: Primary Customer Home Screen displaying greeting, search bar,
 /// quick filters, elite promo banner, services, top security companies,
 /// and top bodyguards.
 class CustomerHomeScreen extends StatefulWidget {
+  /// Shared `/home` route: one shell tab whose builder in `app_router.dart`
+  /// shows the customer, company or bodyguard home based on the session role.
   static const route = '/home';
 
   const CustomerHomeScreen({super.key});
@@ -60,11 +64,11 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
   }
 
   void _navigateToSearch() {
-    context.push(AppRoutes.searchBodyguards);
+    context.push(SearchBodyguardsScreen.route);
   }
 
   void _navigateToAllBodyguards() {
-    context.push(AppRoutes.allBodyguards);
+    context.push(CompanyBodyguardsScreen.route);
   }
 
   @override
@@ -175,7 +179,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
                   ),
                   GestureDetector(
                     onTap: () {
-                      context.push(AppRoutes.companyInformation);
+                      context.push(CompanyInformationScreen.route);
                     },
                     behavior: HitTestBehavior.opaque,
                     child: Text(
@@ -196,10 +200,10 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
                   child: CompanyCard(
                     company: company,
                     onTap: () {
-                      context.push(AppRoutes.companyDetails, extra: company);
+                      context.push(CompanyDetailsScreen.route, extra: company);
                     },
                     onBookNow: () {
-                      context.push(AppRoutes.customerBooking, extra: company);
+                      context.push(BookingScreen.route, extra: company);
                     },
                   ),
                 );
@@ -237,13 +241,13 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
                 role: UserRole.customer,
                 onTap: () {
                   context.push(
-                    AppRoutes.customerBodyguardProfile,
+                    CustomerBodygaurdProfileScreen.route,
                     extra: topBodyguard,
                   );
                 },
                 onBookNow: () {
                   context.push(
-                    AppRoutes.customerBodyguardProfile,
+                    CustomerBodygaurdProfileScreen.route,
                     extra: topBodyguard,
                   );
                 },

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
@@ -11,6 +10,7 @@ import '/core/extensions/textstyle_extension.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '../widgets/customer_promo_banner.widget.dart';
+import '/features/customer/presentation/screens/bodyguards_list_screen.dart';
 
 /// Screen 2: Search & Filter Bodyguards screen allowing customers to filter
 /// by location, category, hourly rate, rating, service type, and company.
@@ -55,7 +55,7 @@ class _SearchBodyguardsScreenState extends State<SearchBodyguardsScreen> {
   }
 
   void _onSearchPressed() {
-    context.push(AppRoutes.customerBodyGuard);
+    context.push(BodyguardsListScreen.route);
   }
 
   @override

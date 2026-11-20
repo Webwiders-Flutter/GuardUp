@@ -6,13 +6,13 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/core/extensions/number.extension.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/core/services/notification/push_notification_service.dart';
+import '/features/notifications/presentation/screens/notifications_screen.dart';
 
 /// Data model representing an active in-app foreground notification banner.
 class ForegroundBannerData {
@@ -159,7 +159,7 @@ class _ForegroundNotificationBannerState
     if (targetRoute != null && targetRoute.isNotEmpty) {
       context.push(targetRoute);
     } else {
-      context.push(AppRoutes.notifications);
+      context.push(NotificationsScreen.route);
     }
   }
 

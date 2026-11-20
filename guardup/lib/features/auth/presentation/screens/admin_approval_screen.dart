@@ -7,7 +7,6 @@ import 'package:guardup/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import 'package:guardup/shared/widgets/sections/wrapper_card.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
@@ -18,6 +17,12 @@ import '/core/extensions/textstyle_extension.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/sections/app_appbar.dart';
+import '/features/body_guard/presentation/screens/body_guard_complete_profile_screen.dart';
+import '/features/body_guard/presentation/screens/body_guard_upload_documents_screen.dart';
+import '/features/company/presentation/screens/company_complete_profile_screen.dart';
+import '/features/legal/presentation/screens/contact_us_screen.dart';
+import '/features/customer/presentation/screens/customer_home_screen.dart';
+import '/features/company/presentation/screens/company_upload_documents_screen.dart';
 
 /// Screen displaying the application status / review stage for onboarding operatives & companies.
 class AdminApprovalScreen extends StatefulWidget {
@@ -82,7 +87,7 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
             'Your profile has been approved! Welcome to GuardUp.',
           );
           if (mounted) {
-            context.go(AppRoutes.home);
+            context.go(CustomerHomeScreen.route);
           }
           return;
         } else if (rawStatus == 'REJECTED') {
@@ -270,7 +275,7 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                             size: AppSizes.iconSmd,
                           ),
                           onPressed: () {
-                            context.go(AppRoutes.home);
+                            context.go(CustomerHomeScreen.route);
                           },
                         ),
                       ] else if (isRejected) ...[
@@ -284,10 +289,10 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                             onPressed: () {
                               if (authState.isGuard) {
                                 context.push(
-                                  AppRoutes.bodyguardUploadDocuments,
+                                  BodyGuardUploadDocumentsScreen.route,
                                 );
                               } else {
-                                context.push(AppRoutes.uploadDocuments);
+                                context.push(UploadDocumentsScreen.route);
                               }
                             },
                           ),
@@ -304,9 +309,9 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                           ),
                           onPressed: () {
                             if (authState.isGuard) {
-                              context.push(AppRoutes.bodyguardProfile);
+                              context.push(BodyGuardCompleteProfileScreen.route);
                             } else {
-                              context.push(AppRoutes.companyProfile);
+                              context.push(CompanyCompleteProfileScreen.route);
                             }
                           },
                         ),
@@ -340,7 +345,7 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                             size: AppSizes.iconSmd,
                             color: context.colors.primary,
                           ),
-                          onPressed: () => context.push(AppRoutes.contactUs),
+                          onPressed: () => context.push(ContactUsScreen.route),
                         ),
                         AppSpacing.md.h,
                         AppButton(
@@ -353,7 +358,7 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                           ),
                           onPressed: () {
                             sl<AuthBloc>().add(const AuthSignOutRequested());
-                            context.go(AppRoutes.login);
+                            context.go(LoginScreen.route);
                           },
                         ),
                         AppSpacing.sm.h,
@@ -389,7 +394,7 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                           ),
                           onPressed: () {
                             sl<AuthBloc>().add(const AuthSignOutRequested());
-                            context.go(AppRoutes.login);
+                            context.go(LoginScreen.route);
                           },
                         ),
                         AppSpacing.sm.h,

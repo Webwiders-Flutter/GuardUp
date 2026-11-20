@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
@@ -19,6 +18,8 @@ import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/misc/app_rich_text.dart';
+import '/features/auth/presentation/screens/email_verification.screen.dart';
+import '/features/auth/presentation/screens/login.screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   static const route = '/signup';
@@ -115,7 +116,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       final email = _emailController.text.trim().toLowerCase();
       final role = sl<AuthBloc>().state.sessionRole;
       context.push(
-        AppRoutes.emailVerification,
+        EmailVerificationScreen.route,
         extra: {'email': email, 'role': role},
       );
     }
@@ -254,7 +255,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               AppTextSpan(
                                 text: context.l10n.login,
                                 onTap: () {
-                                  context.push(AppRoutes.login);
+                                  context.push(LoginScreen.route);
                                 },
                               ),
                             ],

@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
@@ -17,6 +16,8 @@ import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
+import '/features/customer/presentation/screens/customer_home_screen.dart';
+import '/features/payments/presentation/screens/payment_success_screen.dart';
 
 /// Customer booking customization and confirmation screen.
 ///
@@ -157,10 +158,10 @@ class _BookingScreenState extends State<BookingScreen> {
 
   void _handleNext() {
     context.push(
-      AppRoutes.paymentSuccess,
+      PaymentSuccessScreen.route,
       extra: {
         'onTap': () {
-          context.go(AppRoutes.home);
+          context.go(CustomerHomeScreen.route);
         },
       },
     );

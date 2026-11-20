@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
@@ -14,6 +13,7 @@ import '/features/auth/bloc/auth_state.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
+import '/features/company/presentation/screens/company_edit_profile_screen.dart';
 
 /// Screen presenting read-only company details.
 class CompanyInformationScreen extends StatelessWidget {
@@ -114,7 +114,7 @@ class CompanyInformationScreen extends StatelessWidget {
                         AppButton(
                           text: context.l10n.update,
                           onPressed: () {
-                            context.push(AppRoutes.companyEditProfile);
+                            context.push(CompanyEditProfileScreen.route);
                           },
                         ),
                         AppSpacing.huge.h,

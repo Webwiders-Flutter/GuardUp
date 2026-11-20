@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:guardup/core/constants/app_sizes.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/di/injection_container.dart';
@@ -25,6 +24,7 @@ import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 import '../../data/enum/transaction_type.enum.dart';
 import '../../data/model/transaction.model.dart';
+import '/features/payments/presentation/screens/payment_success_screen.dart';
 
 /// Screen presenting the one-time registration fee for verification and priority onboarding.
 class RegistrationFeeScreen extends StatefulWidget {
@@ -122,7 +122,7 @@ class _RegistrationFeeScreenState extends State<RegistrationFeeScreen> {
 
         // 4. Navigate to luxury PaymentSuccessScreen
         context.go(
-          AppRoutes.paymentSuccess,
+          PaymentSuccessScreen.route,
           extra: {
             'transaction': TransactionModel(
               id: dummyPaymentId,
@@ -139,7 +139,7 @@ class _RegistrationFeeScreenState extends State<RegistrationFeeScreen> {
             ),
             'user': effectiveUser,
             'buttonText': context.l10n.next,
-            'onTap': () => context.go(AppRoutes.adminApproval),
+            'onTap': () => context.go(AdminApprovalScreen.route),
           },
         );
       }
@@ -169,7 +169,7 @@ class _RegistrationFeeScreenState extends State<RegistrationFeeScreen> {
               final result = await AppPopup.showLogoutConfirmation(context);
               if (result?.action == PopupAction.confirm && context.mounted) {
                 sl<AuthBloc>().add(const AuthSignOutRequested());
-                context.go(AppRoutes.login);
+                context.go(LoginScreen.route);
               }
             },
           ),

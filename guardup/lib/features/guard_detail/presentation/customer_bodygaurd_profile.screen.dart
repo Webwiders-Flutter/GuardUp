@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:guardup/app/routes/app_routes.dart';
 import 'package:guardup/features/company/company.dart';
 
 import '/core/constants/app_spacing.dart';
@@ -17,6 +16,7 @@ import 'widgets/guard_experience_tab.widget.dart';
 import 'widgets/guard_metrics_row.widget.dart';
 import 'widgets/guard_profile_header.widget.dart';
 import 'widgets/guard_reviews_tab.widget.dart';
+import '/features/customer/presentation/screens/booking_screen.dart';
 
 /// Customer View: Comprehensive operative profile screen with bio, booking duration
 /// calculator, credentials, client reviews, and sticky booking action bar.
@@ -159,7 +159,7 @@ class _CustomerBodygaurdProfileScreenState
 
   void _onBookNowPressed() {
     context.push(
-      AppRoutes.customerBookingDetails,
+      CustomerBookingDetailsScreen.route,
       extra: CustomerBookingDetailsScreen(
         bodyguard: widget.bodyguard,
         startDate: _startDateNotifier.value,
@@ -339,13 +339,13 @@ class _CustomerBodygaurdProfileScreenState
                       company: CompanyModel.fakeData.first,
                       onTap: () {
                         context.push(
-                          AppRoutes.companyDetails,
+                          CompanyDetailsScreen.route,
                           extra: CompanyModel.fakeData.first,
                         );
                       },
                       onBookNow: () {
                         context.push(
-                          AppRoutes.customerBooking,
+                          BookingScreen.route,
                           extra: CompanyModel.fakeData.first,
                         );
                       },

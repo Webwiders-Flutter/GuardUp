@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:guardup/features/company/company.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
@@ -26,6 +25,15 @@ import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 import '/features/payments/presentation/screens/membership_plans_screen.dart';
 import '../../data/enum/user_role.enum.dart';
+import '/features/auth/presentation/screens/account_status_screen.dart';
+import '/features/body_guard/presentation/screens/body_guard_profile_screen.dart';
+import '/features/auth/presentation/screens/change_password_screen.dart';
+import '/features/legal/presentation/screens/contact_us_screen.dart';
+import '/features/auth/presentation/screens/edit_profile_screen.dart';
+import '/features/legal/presentation/screens/legal_content_screen.dart';
+import '/features/auth/presentation/screens/login.screen.dart';
+import '/features/payments/presentation/screens/my_bank_details_screen.dart';
+import '/features/payments/presentation/screens/my_wallet_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   static const route = '/profile';
@@ -68,10 +76,10 @@ class ProfileScreen extends StatelessWidget {
                     onTap: () {
                       switch (role) {
                         case UserRole.customer:
-                          context.push(AppRoutes.editProfile);
+                          context.push(EditProfileScreen.route);
                           break;
                         case UserRole.company:
-                          context.push(AppRoutes.editProfile);
+                          context.push(EditProfileScreen.route);
                           break;
                         default:
                       }
@@ -82,7 +90,7 @@ class ProfileScreen extends StatelessWidget {
                   title: context.l10n.changePassword,
                   icon: Icons.lock_outline_rounded,
                   onTap: () {
-                    context.push(AppRoutes.changePassword);
+                    context.push(ChangePasswordScreen.route);
                   },
                 ),
                 // 3. Role-Specific Menu Cards
@@ -91,28 +99,28 @@ class ProfileScreen extends StatelessWidget {
                     title: context.l10n.personalInformation.toUpperCase(),
                     icon: Icons.person,
                     onTap: () {
-                      context.push(AppRoutes.bodyguardInformation);
+                      context.push(BodyGuardProfileScreen.route);
                     },
                   ),
                   _ProfileMenuCard(
                     title: context.l10n.myWallet,
                     icon: Icons.account_balance_wallet_outlined,
                     onTap: () {
-                      context.push(AppRoutes.myWallet);
+                      context.push(MyWalletScreen.route);
                     },
                   ),
                   _ProfileMenuCard(
                     title: context.l10n.myBankDetails,
                     icon: Icons.account_balance_outlined,
                     onTap: () {
-                      context.push(AppRoutes.myBankDetails);
+                      context.push(MyBankDetailsScreen.route);
                     },
                   ),
                   _ProfileMenuCard(
                     title: context.l10n.reviewAndRatings,
                     icon: Icons.star_outline_rounded,
                     onTap: () {
-                      context.push(AppRoutes.bodyguardInformation);
+                      context.push(BodyGuardProfileScreen.route);
                     },
                   ),
                 ] else if (role == UserRole.company) ...[
@@ -120,28 +128,28 @@ class ProfileScreen extends StatelessWidget {
                     title: context.l10n.companyInformation.toUpperCase(),
                     icon: Icons.person_outline_rounded,
                     onTap: () {
-                      context.push(AppRoutes.companyInformation);
+                      context.push(CompanyInformationScreen.route);
                     },
                   ),
                   _ProfileMenuCard(
                     title: context.l10n.myWallet,
                     icon: Icons.account_balance_wallet_outlined,
                     onTap: () {
-                      context.push(AppRoutes.myWallet);
+                      context.push(MyWalletScreen.route);
                     },
                   ),
                   _ProfileMenuCard(
                     title: context.l10n.myBank,
                     icon: Icons.account_balance_outlined,
                     onTap: () {
-                      context.push(AppRoutes.myBankDetails);
+                      context.push(MyBankDetailsScreen.route);
                     },
                   ),
                   _ProfileMenuCard(
                     title: context.l10n.businessDocuments,
                     icon: Icons.folder_shared_outlined,
                     onTap: () {
-                      context.push(AppRoutes.businessDocuments);
+                      context.push(CompanyDocumentsScreen.route);
                     },
                   ),
                 ] else
@@ -150,7 +158,7 @@ class ProfileScreen extends StatelessWidget {
                     icon: Icons.card_membership_outlined,
                     onTap: () {
                       context.push(
-                        AppRoutes.membershipPlans,
+                        MembershipPlansScreen.route,
                         extra: (
                           mode: MembershipPlanMode.profile,
                           bookingAmount: null,
@@ -165,28 +173,28 @@ class ProfileScreen extends StatelessWidget {
                 //   title: context.l10n.notifications.toUpperCase(),
                 //   icon: Icons.notifications_none_rounded,
                 //   onTap: () {
-                //     context.push(AppRoutes.notifications);
+                //     context.push(NotificationsScreen.route);
                 //   },
                 // ),
                 _ProfileMenuCard(
                   title: context.l10n.privacyPolicy,
                   icon: Icons.privacy_tip_outlined,
                   onTap: () {
-                    context.push(AppRoutes.privacyPolicy, extra: role);
+                    context.push(LegalContentScreen.privacyPolicyRoute, extra: role);
                   },
                 ),
                 _ProfileMenuCard(
                   title: context.l10n.termsAndConditions,
                   icon: Icons.gavel_outlined,
                   onTap: () {
-                    context.push(AppRoutes.termsAndConditions, extra: role);
+                    context.push(LegalContentScreen.termsRoute, extra: role);
                   },
                 ),
                 _ProfileMenuCard(
                   title: context.l10n.contactUs.toUpperCase(),
                   icon: Icons.support_agent_outlined,
                   onTap: () {
-                    context.push(AppRoutes.contactUs);
+                    context.push(ContactUsScreen.route);
                   },
                 ),
                 _ProfileMenuCard(
@@ -200,7 +208,7 @@ class ProfileScreen extends StatelessWidget {
                     if (result?.action == PopupAction.confirm &&
                         context.mounted) {
                       sl<AuthBloc>().add(const AuthSignOutRequested());
-                      context.go(AppRoutes.login);
+                      context.go(LoginScreen.route);
                     }
                   },
                 ),
@@ -215,7 +223,7 @@ class ProfileScreen extends StatelessWidget {
                     if (result?.action == PopupAction.confirm &&
                         context.mounted) {
                       sl<AuthBloc>().add(const AuthDeleteAccountRequested());
-                      context.go(AppRoutes.accountDeleted);
+                      context.go(AccountStatusScreen.deletedRoute);
                     }
                   },
                 ),
@@ -251,7 +259,7 @@ class ProfileScreen extends StatelessWidget {
 
     return CompanyCard(
       company: dynamicCompany,
-      onTap: () => context.push(AppRoutes.companyInformation),
+      onTap: () => context.push(CompanyInformationScreen.route),
       onAvatarTap: () {
         final imagePath = logoUrl ?? Assets.images.appLogo.path;
         AppFilePreviewSheet.openInViewer(
@@ -282,7 +290,7 @@ class ProfileScreen extends StatelessWidget {
       hourlyRate: hourlyRate,
       avatarAssetPath: avatar,
       isVerified: true,
-      onTap: () => context.push(AppRoutes.bodyguardInformation),
+      onTap: () => context.push(BodyGuardProfileScreen.route),
     );
   }
 
@@ -301,7 +309,7 @@ class ProfileScreen extends StatelessWidget {
       hourlyRate: 0,
       avatarAssetPath: avatar,
       isVerified: true,
-      onTap: () => context.push(AppRoutes.editProfile),
+      onTap: () => context.push(EditProfileScreen.route),
     );
   }
 }

@@ -14,7 +14,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/api/database_tables.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../auth/auth.dart';
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/services/document_submission/document_submission_service.dart';
@@ -34,6 +33,7 @@ import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/selection/selection.dart';
 import '../../data/model/service_item.model.dart';
+import '/features/body_guard/presentation/screens/body_guard_upload_documents_screen.dart';
 
 /// Screen for bodyguard profile setup / entering professional details.
 ///
@@ -340,10 +340,10 @@ class _BodyGuardCompleteProfileScreenState
             AppSnackbar.success(
               'Profile updated successfully! Your application has been resubmitted for review.',
             );
-            context.go(AppRoutes.adminApproval);
+            context.go(AdminApprovalScreen.route);
           }
         } else {
-          context.go(AppRoutes.bodyguardUploadDocuments);
+          context.go(BodyGuardUploadDocumentsScreen.route);
         }
       }
     } catch (e, stack) {
@@ -377,7 +377,7 @@ class _BodyGuardCompleteProfileScreenState
               final result = await AppPopup.showLogoutConfirmation(context);
               if (result?.action == PopupAction.confirm && context.mounted) {
                 sl<AuthBloc>().add(const AuthSignOutRequested());
-                context.go(AppRoutes.login);
+                context.go(LoginScreen.route);
               }
             },
           ),

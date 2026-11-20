@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
@@ -24,6 +23,7 @@ import '/shared/widgets/pagination/pagination.state.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
+import '/features/chat/presentation/screens/chat_screen.dart';
 
 /// Operative dashboard / home screen presenting:
 /// - Header profile in [AppAppBar] with online status badge and notifications
@@ -31,7 +31,9 @@ import '/shared/widgets/sections/wrapper_card.dart';
 /// - Latest bookings feed powered by [AppPagination] and [BookingCard] (guard perspective)
 /// - Transaction history feed powered by [AppPagination] and [TransactionCard.card]
 class BodyGuardHomeScreen extends StatefulWidget {
-  static const route = '/bodyguard-home';
+  /// Shared `/home` route: one shell tab whose builder in `app_router.dart`
+  /// shows the customer, company or bodyguard home based on the session role.
+  static const route = '/home';
 
   const BodyGuardHomeScreen({super.key});
 
@@ -79,7 +81,7 @@ class _BodyGuardHomeScreenState extends State<BodyGuardHomeScreen> {
   void _handleRejectBooking(BookingModel booking) {}
 
   void _handleChatBooking(BookingModel booking) {
-    context.push(AppRoutes.chatDetail);
+    context.push(ChatScreen.route);
   }
 
   void _handleShareLocation(BookingModel booking) {}
@@ -189,7 +191,7 @@ class _BodyGuardHomeScreenState extends State<BodyGuardHomeScreen> {
                       text: 'View All >',
                       type: ButtonType.text,
                       size: ButtonSize.small,
-                      onPressed: () => context.push(AppRoutes.myWallet),
+                      onPressed: () => context.push(MyWalletScreen.route),
                     ),
                   ],
                 ),
@@ -219,7 +221,7 @@ class _BodyGuardHomeScreenState extends State<BodyGuardHomeScreen> {
                 itemBuilder: (context, transaction, index) {
                   return TransactionCard.card(
                     transaction: transaction,
-                    onTap: () => context.push(AppRoutes.myWallet),
+                    onTap: () => context.push(MyWalletScreen.route),
                   );
                 },
               ),
@@ -245,7 +247,7 @@ class _BodyGuardHomeScreenState extends State<BodyGuardHomeScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             GestureDetector(
-              onTap: () => context.go(AppRoutes.profile),
+              onTap: () => context.go(ProfileScreen.route),
               child: Container(
                 padding: const EdgeInsets.all(2),
                 decoration: BoxDecoration(
@@ -318,7 +320,7 @@ class _BodyGuardHomeScreenState extends State<BodyGuardHomeScreen> {
           // Earnings Card ($2,480)
           Expanded(
             child: WrapperCard(
-              onTap: () => context.push(AppRoutes.myWallet),
+              onTap: () => context.push(MyWalletScreen.route),
               padding: AppSpacing.lg.allPadding,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -346,7 +348,7 @@ class _BodyGuardHomeScreenState extends State<BodyGuardHomeScreen> {
           // Bookings Card (12)
           Expanded(
             child: WrapperCard(
-              onTap: () => context.go(AppRoutes.bookings),
+              onTap: () => context.go(BookingsScreen.route),
               padding: AppSpacing.lg.allPadding,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:guardup/app/routes/app_routes.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '/core/constants/app_radius.dart';
@@ -15,6 +14,8 @@ import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 import '../../data/model/company.model.dart';
+import '/features/customer/presentation/screens/booking_screen.dart';
+import '/features/company/presentation/screens/company_details_screen.dart';
 
 /// A luxury security company presentation card rendered across feeds and customer directories.
 ///
@@ -49,7 +50,7 @@ class CompanyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return WrapperCard(
-      onTap: onTap ?? () => context.push(AppRoutes.companyDetails),
+      onTap: onTap ?? () => context.push(CompanyDetailsScreen.route),
       borderRadius: AppRadius.xxl,
       padding: AppSpacing.mlg.allPadding,
       child: Row(
@@ -213,7 +214,7 @@ class CompanyCard extends StatelessWidget {
             borderRadius: AppRadius.sm.toBorderRadius,
             onPressed:
                 onBookNow ??
-                () => context.push(AppRoutes.customerBooking, extra: company),
+                () => context.push(BookingScreen.route, extra: company),
           ),
       ],
     );

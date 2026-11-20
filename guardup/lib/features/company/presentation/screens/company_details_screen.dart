@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:guardup/core/di/injection_container.dart';
 import 'package:guardup/features/auth/auth.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/shared/widgets/navigation/app_tab_bar.dart';
@@ -13,6 +12,7 @@ import '../widgets/company_card.dart';
 import '../widgets/tabs/company_about_tab.dart';
 import '../widgets/tabs/company_bodyguards_tab.dart';
 import '../widgets/tabs/company_reviews_tab.dart';
+import '/features/customer/presentation/screens/booking_screen.dart';
 
 /// Company operational profile and details screen.
 ///
@@ -58,7 +58,7 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen>
   }
 
   void _handleBookNow(CompanyModel company) {
-    context.push(AppRoutes.customerBooking, extra: company);
+    context.push(BookingScreen.route, extra: company);
   }
 
   @override

@@ -8,7 +8,6 @@ import 'package:pinput/pinput.dart';
 
 import '../../data/enum/otp_type.enum.dart';
 import '../../data/enum/user_role.enum.dart';
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_constants.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
@@ -26,6 +25,10 @@ import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/app_image.dart';
+import '/features/body_guard/presentation/screens/body_guard_complete_profile_screen.dart';
+import '/features/company/presentation/screens/company_complete_profile_screen.dart';
+import '/features/auth/presentation/screens/login.screen.dart';
+import '/features/auth/presentation/screens/reset_password.screen.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
   static const route = '/emailVerification';
@@ -137,7 +140,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     switch (_effectiveRole) {
       case UserRole.customer:
         context.go(
-          '${AppRoutes.membershipPlans}?mode=onboarding',
+          '${MembershipPlansScreen.route}?mode=onboarding',
           extra: (
             mode: MembershipPlanMode.onboarding,
             bookingAmount: null,
@@ -146,9 +149,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
           ),
         );
       case UserRole.guard:
-        context.go(AppRoutes.bodyguardProfile);
+        context.go(BodyGuardCompleteProfileScreen.route);
       case UserRole.company:
-        context.go(AppRoutes.companyProfile);
+        context.go(CompanyCompleteProfileScreen.route);
     }
   }
 
@@ -167,7 +170,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
   void _handleLogout() {
     sl<AuthBloc>().add(const AuthSignOutRequested());
-    context.go(AppRoutes.login);
+    context.go(LoginScreen.route);
   }
 
   void _onAuthStateChanged(BuildContext context, AuthState state) {
@@ -186,7 +189,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       if (widget.otpType == OtpType.recovery) {
         AppSnackbar.success('Verification code verified successfully');
         context.go(
-          '${AppRoutes.resetPassword}?email=${Uri.encodeComponent(_targetEmail)}',
+          '${ResetPasswordScreen.route}?email=${Uri.encodeComponent(_targetEmail)}',
           extra: _targetEmail,
         );
         return;

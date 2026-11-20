@@ -152,6 +152,7 @@ For screens displaying lists, paginated feeds (`AppPagination`), or variable dyn
 - **Feature-First Architecture**: Group related components, models, blocs, and screens within `lib/features/<feature_name>/` (e.g. `auth`, `legal`, `payments`).
 - **Clean Barrels**: Export public models, screens, and widgets in `<feature_name>.dart`.
 - **Localization**: Never hardcode user-facing strings; add keys to `app_en.arb` and `app_ar.arb` and access via `context.l10n.*`.
+- **Screen-Owned Routes**: Every screen declares its own path (`static const route = '/my-wallet';`, or several named constants such as `LegalContentScreen.termsRoute`). Navigate with `context.push(MyWalletScreen.route)` and register the same constant in `app_router.dart`. There is no central `AppRoutes` file; never hardcode path strings.
 - **Null-Safety & Immutability**: Prefer `final` and `const` constructors wherever possible.
 - **Dumb Presentation vs Business Logic**: Keep presentation widgets modular and composable. Delegate state transitions to controllers (`SelectionController`) or BLoCs.
 
@@ -173,7 +174,7 @@ typedef MembershipPlanArgs = ({
 
 // Usage in routing / navigation:
 context.push(
-  AppRoutes.membershipPlans,
+  MembershipPlansScreen.route,
   extra: (
     mode: MembershipPlanMode.booking,
     bookingAmount: 240.0,

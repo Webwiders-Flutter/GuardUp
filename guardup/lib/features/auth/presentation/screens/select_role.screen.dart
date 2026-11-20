@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
@@ -17,6 +16,8 @@ import '/shared/widgets/misc/app_rich_text.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/selection/app_selectable_card.dart';
 import '/shared/widgets/selection/selection.controller.dart';
+import '/features/auth/presentation/screens/login.screen.dart';
+import '/features/auth/presentation/screens/signup.screen.dart';
 
 class SelectRoleScreen extends StatefulWidget {
   static const route = '/select-role';
@@ -40,7 +41,7 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
   void _handleContinue() {
     final selectedRole = _roleController.selectedItem ?? UserRole.customer;
     sl<AuthBloc>().add(AuthSetSessionRoleRequested(selectedRole));
-    context.push(AppRoutes.signup, extra: selectedRole);
+    context.push(SignUpScreen.route, extra: selectedRole);
   }
 
   @override
@@ -131,7 +132,7 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
                                 if (context.canPop()) {
                                   context.pop();
                                 } else {
-                                  context.go(AppRoutes.login);
+                                  context.go(LoginScreen.route);
                                 }
                               },
                             ),

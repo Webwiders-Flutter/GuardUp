@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
@@ -25,6 +24,7 @@ import '/shared/widgets/pagination/pagination.state.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
+import '/features/chat/presentation/screens/chat_screen.dart';
 
 /// Company operational dashboard / home screen presenting:
 /// - Company header profile in [AppAppBar]
@@ -32,7 +32,9 @@ import '/shared/widgets/sections/wrapper_card.dart';
 /// - Latest bookings section with live search and paginated feed using [AppPagination] and [BookingCard]
 /// - My bodyguards roster section with paginated feed using [AppPagination] and [BodyGuardCard]
 class CompanyHomeScreen extends StatefulWidget {
-  static const route = '/company-home';
+  /// Shared `/home` route: one shell tab whose builder in `app_router.dart`
+  /// shows the customer, company or bodyguard home based on the session role.
+  static const route = '/home';
 
   const CompanyHomeScreen({super.key});
 
@@ -83,13 +85,13 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
   void _handleRejectBooking(BookingModel booking) {}
 
   void _handleChatBooking(BookingModel booking) {
-    context.push(AppRoutes.chatDetail);
+    context.push(ChatScreen.route);
   }
 
   void _handleShareLocation(BookingModel booking) {}
 
   void _handleEditBodyguard(BodyGuardModel bodyguard) {
-    context.push(AppRoutes.bodyguardProfile);
+    context.push(BodyGuardCompleteProfileScreen.route);
   }
 
   void _handleDeleteBodyguard(BodyGuardModel bodyguard) {
@@ -228,7 +230,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
                       text: 'View All >',
                       type: ButtonType.text,
                       size: ButtonSize.small,
-                      onPressed: () => context.push(AppRoutes.allBodyguards),
+                      onPressed: () => context.push(CompanyBodyguardsScreen.route),
                     ),
                   ],
                 ),
@@ -291,7 +293,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
             : 'Agency';
 
         return GestureDetector(
-          onTap: () => context.go(AppRoutes.profile),
+          onTap: () => context.go(ProfileScreen.route),
           behavior: HitTestBehavior.opaque,
           child: Row(
             children: [
@@ -412,7 +414,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
         children: [
           Expanded(
             child: WrapperCard(
-              onTap: () => context.push(AppRoutes.allBodyguards),
+              onTap: () => context.push(CompanyBodyguardsScreen.route),
               padding: AppSpacing.xlg.allPadding,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -436,7 +438,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
           AppSpacing.md.w,
           Expanded(
             child: WrapperCard(
-              onTap: () => context.go(AppRoutes.bookings),
+              onTap: () => context.go(BookingsScreen.route),
               padding: AppSpacing.xlg.allPadding,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

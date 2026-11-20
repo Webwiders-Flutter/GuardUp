@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:guardup/app/routes/app_routes.dart';
 import 'package:guardup/core/extensions/spacing.extension.dart';
 import 'package:guardup/gen/assets.gen.dart';
 import 'package:quick_container/quick_container.dart';
@@ -8,6 +7,7 @@ import 'package:quick_container/quick_container.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/shared/widgets/buttons/back_button.dart';
+import '/features/notifications/presentation/screens/notifications_screen.dart';
 
 /// Alignment options for the app bar title text.
 enum AlignTitle { left, right, center }
@@ -185,7 +185,7 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
           IconButton(
             onPressed:
                 onNotificationTap ??
-                () => context.push(AppRoutes.notifications),
+                () => context.push(NotificationsScreen.route),
             icon: QuickContainer(
               w: 40,
               h: 40,

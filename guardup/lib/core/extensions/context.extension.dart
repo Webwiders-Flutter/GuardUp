@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '/app/routes/app_routes.dart';
 import '/app/theme/colors/color_accessor.dart';
+import '/features/booking/presentation/screens/bookings_screen.dart';
+import '/features/chat/presentation/screens/conversations_screen.dart';
+import '/features/customer/presentation/screens/customer_home_screen.dart';
+import '/features/notifications/presentation/screens/notifications_screen.dart';
+import '/features/auth/presentation/screens/profile_screen.dart';
 
 extension ContextExtension on BuildContext {
   double get height => MediaQuery.of(this).size.height;
@@ -25,15 +29,15 @@ extension ContextExtension on BuildContext {
   void jumpToNavTab(int index) {
     switch (index) {
       case 0:
-        go(AppRoutes.home);
+        go(CustomerHomeScreen.route);
       case 1:
-        go(AppRoutes.bookings);
+        go(BookingsScreen.route);
       case 2:
-        go(AppRoutes.chat);
+        go(ConversationsScreen.route);
       case 3:
-        go(AppRoutes.notifications);
+        go(NotificationsScreen.route);
       case 4:
-        go(AppRoutes.profile);
+        go(ProfileScreen.route);
     }
   }
 }

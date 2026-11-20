@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '../../../../core/extensions/number.extension.dart';
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
@@ -22,6 +21,7 @@ import '/gen/assets.gen.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 import '../../data/model/transaction.model.dart';
+import '/features/auth/presentation/screens/admin_approval_screen.dart';
 
 /// Screen displaying a luxury payment confirmation receipt matching GuardUp design standards.
 class PaymentSuccessScreen extends StatelessWidget {
@@ -393,7 +393,7 @@ class PaymentSuccessScreen extends StatelessWidget {
                           if (onTap != null) {
                             onTap!();
                           } else {
-                            context.go(AppRoutes.adminApproval);
+                            context.go(AdminApprovalScreen.route);
                           }
                         },
                       ),

@@ -1,6 +1,5 @@
 // import 'package:flutter/material.dart';
 // import 'package:go_router/go_router.dart';
-// import 'package:guardup/app/routes/app_routes.dart';
 // import 'package:guardup/features/company/company.dart';
 
 // import '../guard_detail.dart';
@@ -306,13 +305,13 @@
 //                       company: CompanyModel.fakeData.first,
 //                       onTap: () {
 //                         context.push(
-//                           AppRoutes.companyDetails,
+//                           CompanyDetailsScreen.route,
 //                           extra: CompanyModel.fakeData.first,
 //                         );
 //                       },
 //                       onBookNow: () {
 //                         context.push(
-//                           AppRoutes.customerBooking,
+//                           BookingScreen.route,
 //                           extra: CompanyModel.fakeData.first,
 //                         );
 //                       },

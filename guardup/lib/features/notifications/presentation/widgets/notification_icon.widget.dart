@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:guardup/app/routes/app_routes.dart';
 import 'package:guardup/core/constants/app_spacing.dart';
 import 'package:guardup/core/di/injection_container.dart';
 import 'package:guardup/core/extensions/context.extension.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '../../bloc/unread_count/unread_notification_count_cubit.dart';
+import '/features/notifications/presentation/screens/notifications_screen.dart';
 
 /// A standard notification icon action widget (e.g. for app bars, navigation headers).
 /// Automatically observes the live unread count and renders an indicator badge.
-/// Tapping defaults to opening [AppRoutes.notifications] unless an explicit [onTap] is provided.
+/// Tapping defaults to opening [NotificationsScreen.route] unless an explicit [onTap] is provided.
 class NotificationIconWidget extends StatelessWidget {
   /// Callback executed when the icon is pressed.
-  /// Defaults to navigating to [AppRoutes.notifications].
+  /// Defaults to navigating to [NotificationsScreen.route].
   final VoidCallback? onTap;
 
   /// Icon to display (defaults to [Icons.notifications_outlined]).
@@ -78,7 +78,7 @@ class NotificationIconWidget extends StatelessWidget {
           size: iconSize,
         ),
       ),
-      onPressed: onTap ?? () => context.push(AppRoutes.notifications),
+      onPressed: onTap ?? () => context.push(NotificationsScreen.route),
       tooltip: tooltip,
     );
 

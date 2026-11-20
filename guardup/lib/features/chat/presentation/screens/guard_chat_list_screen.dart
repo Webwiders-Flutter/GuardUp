@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
@@ -13,6 +12,7 @@ import '/shared/widgets/inputs/app_text_field.dart';
 import '../../data/enums/message_status.enum.dart';
 import '../../data/models/conversation.model.dart';
 import '../../data/models/message.model.dart';
+import '/features/chat/presentation/screens/chat_screen.dart';
 
 /// Data representation for a bodyguard operative conversation item.
 class GuardChatListItem {
@@ -158,7 +158,7 @@ class _GuardChatListScreenState extends State<GuardChatListScreen> {
 
   void _handleOpenConversation(GuardChatListItem item) {
     context.push(
-      AppRoutes.chatDetail,
+      ChatScreen.route,
       extra: ConversationModel(
         id: item.id,
         title: item.name,

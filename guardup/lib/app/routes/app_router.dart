@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:guardup/app/routes/app_routes.dart';
 
 import '/app/routes/auth_refresh_listenable.dart';
 import '/app/screens/main_navigation.screen.dart';
@@ -65,7 +64,7 @@ final class AppRouter {
           if (authState.isGuard) return BodyGuardCompleteProfileScreen.route;
           if (authState.isCompany) return CompanyCompleteProfileScreen.route;
         }
-        return AppRoutes.home;
+        return CustomerHomeScreen.route;
       }
 
       // ------------------------------------------------------------
@@ -180,7 +179,7 @@ final class AppRouter {
                 location == AdminApprovalScreen.route ||
                 location == CompanyCompleteProfileScreen.route ||
                 location == BodyGuardCompleteProfileScreen.route)) {
-          return AppRoutes.home;
+          return CustomerHomeScreen.route;
         }
       }
 
@@ -327,7 +326,8 @@ final class AppRouter {
           return MainNavigationScreen(navigationShell: navigationShell);
         },
         branches: [
-          // Branch 0: Home (Role-based dashboard)
+          // Branch 0: Home — every role shares `/home`; the screen is chosen
+          // by session role below.
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -369,7 +369,7 @@ final class AppRouter {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: AppRoutes.chat,
+                path: ConversationsScreen.route,
                 builder: (context, state) => BlocBuilder<AuthBloc, AuthState>(
                   bloc: sl.isRegistered<AuthBloc>() ? sl<AuthBloc>() : null,
                   builder: (context, authState) {
@@ -407,14 +407,6 @@ final class AppRouter {
             ],
           ),
         ],
-      ),
-      GoRoute(
-        path: CompanyHomeScreen.route,
-        builder: (context, state) => const CompanyHomeScreen(),
-      ),
-      GoRoute(
-        path: BodyGuardHomeScreen.route,
-        builder: (context, state) => const BodyGuardHomeScreen(),
       ),
       GoRoute(
         path: EditProfileScreen.route,

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/sections/app_image.dart';
+import '/features/auth/presentation/screens/profile_screen.dart';
 
 /// Top header widget displaying customer greeting, avatar, verified badge, and notification bell.
 class CustomerHeaderWidget extends StatelessWidget {
@@ -32,7 +32,7 @@ class CustomerHeaderWidget extends StatelessWidget {
       children: [
         // User Profile Avatar
         GestureDetector(
-          onTap: onProfileTap ?? () => context.go(AppRoutes.profile),
+          onTap: onProfileTap ?? () => context.go(ProfileScreen.route),
           behavior: HitTestBehavior.opaque,
           child: Container(
             width: 48,

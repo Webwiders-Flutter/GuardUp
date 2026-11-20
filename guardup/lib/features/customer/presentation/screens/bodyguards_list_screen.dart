@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
@@ -20,6 +19,9 @@ import '/shared/widgets/pagination/app_pagination.dart';
 import '/shared/widgets/pagination/pagination.controller.dart';
 import '/shared/widgets/pagination/pagination.state.dart';
 import '/shared/widgets/sections/app_appbar.dart';
+import '/features/customer/presentation/screens/booking_screen.dart';
+import '/features/guard_detail/presentation/customer_bodygaurd_profile.screen.dart';
+import '/features/guard_detail/presentation/customer_booking_details.screen.dart';
 
 /// All Bodyguards & Security Roster listing screen featuring live search,
 /// Solo vs Company mode toggling with [AppTabBar.pill], and paginated feeds using [AppPagination].
@@ -244,10 +246,10 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
           isCompact: false,
           role: UserRole.customer,
           onTap: () {
-            context.push(AppRoutes.customerBodyguardProfile, extra: guard);
+            context.push(CustomerBodygaurdProfileScreen.route, extra: guard);
           },
           onBookNow: () {
-            context.push(AppRoutes.customerBookingDetails, extra: guard);
+            context.push(CustomerBookingDetailsScreen.route, extra: guard);
           },
         );
       },
@@ -278,10 +280,10 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
         return CompanyCard(
           company: comp,
           onTap: () {
-            context.push(AppRoutes.companyDetails, extra: comp);
+            context.push(CompanyDetailsScreen.route, extra: comp);
           },
           onBookNow: () {
-            context.push(AppRoutes.customerBooking, extra: comp);
+            context.push(BookingScreen.route, extra: comp);
           },
         );
       },

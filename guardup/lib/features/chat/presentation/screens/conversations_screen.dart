@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/core/extensions/number.extension.dart';
 
-import '/app/routes/app_routes.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
@@ -19,6 +18,7 @@ import '/features/auth/auth.dart';
 import 'guard_chat_list_screen.dart';
 import '../../data/models/conversation.model.dart';
 import '../widgets/conversation_card.dart';
+import '/features/chat/presentation/screens/chat_screen.dart';
 
 /// Screen displaying active chat conversations with real-time search and infinite pagination.
 class ConversationsScreen extends StatefulWidget {
@@ -48,7 +48,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
   }
 
   void _handleOpenConversation(ConversationModel conversation) {
-    context.push(AppRoutes.chatDetail, extra: conversation);
+    context.push(ChatScreen.route, extra: conversation);
   }
 
   @override
