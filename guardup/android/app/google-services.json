@@ -7,47 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:263066511816:android:b60235e7386fb224a3f8fd",
+        "mobilesdk_app_id": "1:263066511816:android:764c9e21ab3145e8a3f8fd",
         "android_client_info": {
-          "package_name": "com.example.guardup"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyBNtZLeDuOizGdcoTwkMXjnc7aIHEoIJ2s"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:263066511816:android:b60235e7386fb224a3f8fd",
-        "android_client_info": {
-          "package_name": "com.example.guardup.dev"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyBNtZLeDuOizGdcoTwkMXjnc7aIHEoIJ2s"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:263066511816:android:b60235e7386fb224a3f8fd",
-        "android_client_info": {
-          "package_name": "com.example.guardup.staging"
+          "package_name": "com.guardup.app"
         }
       },
       "oauth_client": [],

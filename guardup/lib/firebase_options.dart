@@ -51,12 +51,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBNtZLeDuOizGdcoTwkMXjnc7aIHEoIJ2s',
-    appId: '1:263066511816:android:b60235e7386fb224a3f8fd',
+    appId: '1:263066511816:android:764c9e21ab3145e8a3f8fd',
     messagingSenderId: '263066511816',
     projectId: 'guardup-991fd',
     storageBucket: 'guardup-991fd.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDXqw_z1CkPme-0ze0TwZKXezR-TNwAbT4',
     appId: '1:263066511816:ios:5d233cd04c815112a3f8fd',

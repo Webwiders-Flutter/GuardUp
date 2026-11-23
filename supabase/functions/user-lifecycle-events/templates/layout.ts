@@ -54,6 +54,11 @@ export function renderLayout(params: {
   const whatsappDigits = support.supportWhatsapp.replace(/[^0-9]/g, "");
   const linkStyle = `color:${theme.goldLight};text-decoration:none;`;
 
+  // Hosted app logo; the emoji badge is only a fallback when no host is set.
+  const logo = support.logoUrl
+    ? `<img src="${escapeHtml(support.logoUrl)}" width="72" height="72" alt="GuardUp" style="display:block;margin:0 auto 12px auto;width:72px;height:72px;border:0;outline:none;text-decoration:none;" />`
+    : `<div style="display:inline-block;width:52px;height:52px;line-height:52px;border-radius:14px;background-color:${theme.goldLight};background-image:linear-gradient(135deg, ${theme.goldLight} 0%, ${theme.goldDark} 100%);font-size:26px;text-align:center;margin-bottom:12px;">&#128737;&#65039;</div>`;
+
   const supportLines = [
     `Email: <a href="mailto:${supportEmail}" style="${linkStyle}">${supportEmail}</a>`,
     supportPhone
@@ -82,7 +87,7 @@ export function renderLayout(params: {
           <!-- Header -->
           <tr>
             <td align="center" style="padding:32px 24px 20px 24px;background-color:${theme.headerFrom};background-image:linear-gradient(180deg, ${theme.headerFrom} 0%, ${theme.card} 100%);border-bottom:1px solid ${theme.divider};">
-              <div style="display:inline-block;width:52px;height:52px;line-height:52px;border-radius:14px;background-color:${theme.goldLight};background-image:linear-gradient(135deg, ${theme.goldLight} 0%, ${theme.goldDark} 100%);font-size:26px;text-align:center;margin-bottom:12px;">&#128737;&#65039;</div>
+              ${logo}
               <h1 style="margin:0;font-size:22px;font-weight:700;color:${theme.heading};">GuardUp Security</h1>
               <div style="margin-top:4px;font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:${theme.gold};">Elite Protection Platform</div>
             </td>

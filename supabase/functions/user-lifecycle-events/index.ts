@@ -18,14 +18,9 @@ function roleLabel(role?: string): string {
   }
 }
 
-/**
- * `<deeplink_base_url>/download` opens the installed app via App Links /
- * Universal Links. Falls back to the Play Store URL when no base URL is set.
- */
-function buildOpenAppUrl(deeplinkBaseUrl?: string | null, fallbackUrl?: string | null): string {
-  const base = deeplinkBaseUrl?.trim().replace(/\/+$/, "");
-  if (base) return `${base}/download`;
-  return fallbackUrl || "";
+/** Deployed web host (admin Firebase Hosting), without a trailing slash. */
+function normalizeBaseUrl(deeplinkBaseUrl?: string | null): string {
+  return deeplinkBaseUrl?.trim().replace(/\/+$/, "") || "";
 }
 
 /** Reads support contacts and app links from admin_settings, with defaults. */
@@ -39,6 +34,7 @@ async function loadSupportSettings(
     androidAppUrl: "",
     iosAppUrl: "",
     openAppUrl: "",
+    logoUrl: "",
   };
 
   const { data, error } = await supabaseAdmin
@@ -54,13 +50,19 @@ async function loadSupportSettings(
     return settings;
   }
 
+  // `/download` opens the installed app via App Links / Universal Links;
+  // falls back to the Play Store URL when no base URL is set.
+  // The logo is the web app icon hosted on the same domain.
+  const baseUrl = normalizeBaseUrl(data?.deeplink_base_url);
+
   return {
     supportEmail: data?.support_email || settings.supportEmail,
     supportPhone: data?.support_call_phone_number || "",
     supportWhatsapp: data?.support_whatsapp_phone_number || "",
     androidAppUrl: data?.android_app_url || "",
     iosAppUrl: data?.ios_app_url || "",
-    openAppUrl: buildOpenAppUrl(data?.deeplink_base_url, data?.android_app_url),
+    openAppUrl: baseUrl ? `${baseUrl}/download` : data?.android_app_url || "",
+    logoUrl: baseUrl ? `${baseUrl}/icons/icon-192.png` : "",
   };
 }
 

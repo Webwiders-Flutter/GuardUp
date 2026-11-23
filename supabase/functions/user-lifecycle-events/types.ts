@@ -19,4 +19,6 @@ export interface SupportSettings {
   iosAppUrl: string;
   /** `<deeplink_base_url>/download` – opens the installed app (App/Universal Link). */
   openAppUrl: string;
+  /** `<deeplink_base_url>/icons/icon-192.png` – app logo for the email header. */
+  logoUrl: string;
 }

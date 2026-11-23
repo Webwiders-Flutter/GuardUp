@@ -11,6 +11,7 @@ import '/features/auth/presentation/screens/login.screen.dart';
 import '/features/auth/presentation/screens/profile.screen.dart';
 import '/features/dashboard/presentation/screens/dashboard.screen.dart';
 import '/features/document-type/presentation/screens/document_type_management.screen.dart';
+import '/features/download/presentation/screens/public_download.screen.dart';
 import '/features/help-support/presentation/screens/help_support_management.screen.dart';
 import '/features/legal/data/enums/content_type.enum.dart';
 import '/features/legal/data/models/faq.model.dart';
@@ -44,9 +45,11 @@ final class AppRouter {
         final isAuthenticated = authRepository.isAuthenticated;
 
         final isLoginRoute = state.matchedLocation == LoginScreen.route;
-        final isPublicRoute = state.matchedLocation.startsWith(
-          PublicLegalScreen.pathPrefix,
-        );
+        final isDownloadRoute =
+            state.matchedLocation == PublicDownloadScreen.route;
+        final isPublicRoute =
+            isDownloadRoute ||
+            state.matchedLocation.startsWith(PublicLegalScreen.pathPrefix);
 
         // Not logged in and accessing protected route
         if (!isAuthenticated && !isLoginRoute && !isPublicRoute) {
@@ -62,6 +65,11 @@ final class AppRouter {
       },
 
       routes: [
+        GoRoute(
+          path: PublicDownloadScreen.route,
+          builder: (context, state) => const PublicDownloadScreen(),
+        ),
+
         GoRoute(
           path: LoginScreen.route,
           builder: (context, state) => const LoginScreen(),
