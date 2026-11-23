@@ -34,6 +34,12 @@ class NotificationIconWidget extends ConsumerWidget {
   /// Custom text color for the badge count (defaults to [context.colors.white]).
   final Color? badgeTextColor;
 
+  /// Background color of the icon button (defaults to theme's surface color, matching the theme switcher).
+  final Color? backgroundColor;
+
+  /// Whether the button is highlighted in an active state. Defaults to false to match the theme switcher.
+  final bool isActive;
+
   /// Visual treatment of the button.
   final AppIconButtonVariant variant;
 
@@ -49,6 +55,8 @@ class NotificationIconWidget extends ConsumerWidget {
     this.count,
     this.badgeColor,
     this.badgeTextColor,
+    this.backgroundColor,
+    this.isActive = false,
     this.variant = AppIconButtonVariant.outlined,
     this.size = AppIconButtonSize.medium,
   });
@@ -68,7 +76,8 @@ class NotificationIconWidget extends ConsumerWidget {
       variant: variant,
       size: size,
       foregroundColor: iconColor ?? context.colors.onSurfaceSecondary,
-      isActive: isCurrentRoute,
+      backgroundColor: backgroundColor,
+      isActive: isActive,
       badge: unreadCount > 0
           ? AppBadge.count(
               unreadCount,
