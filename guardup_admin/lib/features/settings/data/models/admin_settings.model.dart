@@ -24,6 +24,7 @@ sealed class AdminSettingsModel with _$AdminSettingsModel {
     @Default('https://apps.apple.com/app/guardup') String? iosAppUrl,
     @Default('https://play.google.com/store/apps/details?id=com.guardup.app')
     String? androidAppUrl,
+    @Default('https://guardup-991fd.web.app') String? deeplinkBaseUrl,
     @Default('support@guardup.com') String supportEmail,
     @Default('+919876543210') String supportCallPhoneNumber,
     @Default('+919876543210') String supportWhatsappPhoneNumber,
@@ -56,6 +57,7 @@ sealed class AdminSettingsModel with _$AdminSettingsModel {
     iosAppUrl: 'https://apps.apple.com/app/guardup',
     androidAppUrl:
         'https://play.google.com/store/apps/details?id=com.guardup.app',
+    deeplinkBaseUrl: 'https://guardup-991fd.web.app',
     supportEmail: 'support@guardup.com',
     supportCallPhoneNumber: '+919876543210',
     supportWhatsappPhoneNumber: '+919876543210',

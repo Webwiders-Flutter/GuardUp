@@ -86,6 +86,7 @@ final class JsonKeys {
   static const String updateMessageAndroid = 'update_message_android';
   static const String iosAppUrl = 'ios_app_url';
   static const String androidAppUrl = 'android_app_url';
+  static const String deeplinkBaseUrl = 'deeplink_base_url';
   static const String supportEmail = 'support_email';
   static const String supportCallPhoneNumber = 'support_call_phone_number';
   static const String supportWhatsappPhoneNumber =

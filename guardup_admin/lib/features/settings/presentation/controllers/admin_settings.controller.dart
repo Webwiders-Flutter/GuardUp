@@ -83,7 +83,7 @@ class AdminSettingsController extends AsyncNotifier<AdminSettingsModel> {
     });
   }
 
-  /// Updates mobile app version requirements and store URLs.
+  /// Updates mobile app version requirements, store URLs and deep link host.
   Future<void> saveMobileAppSettings({
     required String latestIosVersion,
     required String minimumIosVersion,
@@ -93,6 +93,7 @@ class AdminSettingsController extends AsyncNotifier<AdminSettingsModel> {
     required String minimumAndroidVersion,
     required String updateMessageAndroid,
     required String androidAppUrl,
+    required String deeplinkBaseUrl,
   }) async {
     return updateSettings({
       JsonKeys.latestIosVersion: latestIosVersion.trim(),
@@ -103,6 +104,7 @@ class AdminSettingsController extends AsyncNotifier<AdminSettingsModel> {
       JsonKeys.minimumAndroidVersion: minimumAndroidVersion.trim(),
       JsonKeys.updateMessageAndroid: updateMessageAndroid.trim(),
       JsonKeys.androidAppUrl: androidAppUrl.trim(),
+      JsonKeys.deeplinkBaseUrl: deeplinkBaseUrl.trim(),
     });
   }
 

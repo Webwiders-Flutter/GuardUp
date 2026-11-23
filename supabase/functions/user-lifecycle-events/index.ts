@@ -18,6 +18,16 @@ function roleLabel(role?: string): string {
   }
 }
 
+/**
+ * `<deeplink_base_url>/download` opens the installed app via App Links /
+ * Universal Links. Falls back to the Play Store URL when no base URL is set.
+ */
+function buildOpenAppUrl(deeplinkBaseUrl?: string | null, fallbackUrl?: string | null): string {
+  const base = deeplinkBaseUrl?.trim().replace(/\/+$/, "");
+  if (base) return `${base}/download`;
+  return fallbackUrl || "";
+}
+
 /** Reads support contacts and app links from admin_settings, with defaults. */
 async function loadSupportSettings(
   supabaseAdmin: ReturnType<typeof createClient>,
@@ -28,12 +38,13 @@ async function loadSupportSettings(
     supportWhatsapp: "",
     androidAppUrl: "",
     iosAppUrl: "",
+    openAppUrl: "",
   };
 
   const { data, error } = await supabaseAdmin
     .from("admin_settings")
     .select(
-      "support_email, support_call_phone_number, support_whatsapp_phone_number, android_app_url, ios_app_url",
+      "support_email, support_call_phone_number, support_whatsapp_phone_number, android_app_url, ios_app_url, deeplink_base_url",
     )
     .limit(1)
     .maybeSingle();
@@ -49,6 +60,7 @@ async function loadSupportSettings(
     supportWhatsapp: data?.support_whatsapp_phone_number || "",
     androidAppUrl: data?.android_app_url || "",
     iosAppUrl: data?.ios_app_url || "",
+    openAppUrl: buildOpenAppUrl(data?.deeplink_base_url, data?.android_app_url),
   };
 }
 

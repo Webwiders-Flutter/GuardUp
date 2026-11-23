@@ -17,4 +17,6 @@ export interface SupportSettings {
   supportWhatsapp: string;
   androidAppUrl: string;
   iosAppUrl: string;
+  /** `<deeplink_base_url>/download` – opens the installed app (App/Universal Link). */
+  openAppUrl: string;
 }

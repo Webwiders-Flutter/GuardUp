@@ -31,6 +31,9 @@ class MobileAppsSettingsCard extends StatelessWidget {
   final TextEditingController androidUpdateMessageController;
   final TextEditingController androidAppUrlController;
 
+  // Deep Linking
+  final TextEditingController deeplinkBaseUrlController;
+
   final VoidCallback onChanged;
 
   const MobileAppsSettingsCard({
@@ -44,6 +47,7 @@ class MobileAppsSettingsCard extends StatelessWidget {
     required this.minimumAndroidVersionController,
     required this.androidUpdateMessageController,
     required this.androidAppUrlController,
+    required this.deeplinkBaseUrlController,
     required this.onChanged,
   });
 
@@ -79,6 +83,10 @@ class MobileAppsSettingsCard extends StatelessWidget {
 
               AppSpacing.xl.h,
 
+              _buildDeepLinkCard(context),
+
+              AppSpacing.xl.h,
+
               // Informational Architecture Guide Box
               InfoBanner(
                 heading: 'Version Enforcement Mechanics',
@@ -101,6 +109,11 @@ class MobileAppsSettingsCard extends StatelessWidget {
                       context,
                       title: 'Update Message',
                       description: 'Custom announcement shown to users on the update screen explaining why an update is recommended or required.',
+                    ),
+                    _buildBulletItem(
+                      context,
+                      title: 'Deep Link Base URL',
+                      description: '"Open GuardUp" buttons in emails link to <base URL>/download, which opens the installed app directly. The host must serve the App Links / Universal Links files.',
                     ),
                     _buildBulletItem(
                       context,
@@ -582,6 +595,112 @@ class MobileAppsSettingsCard extends StatelessWidget {
                 final url = androidAppUrlController.text.trim();
                 if (url.isNotEmpty) {
                   AppLauncher.openWebsite(url);
+                }
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeepLinkCard(BuildContext context) {
+    final colors = context.colors;
+
+    return QuickContainer(
+      p: AppSpacing.xl,
+      radius: AppRadius.lg,
+      color: colors.surface,
+      border: Border.all(color: colors.borderLight.withValues(alpha: 0.8)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: colors.primary.withValues(alpha: 0.12),
+                  borderRadius: AppRadius.mdRadius,
+                ),
+                child: Icon(
+                  Icons.link_rounded,
+                  size: AppSpacing.xxl,
+                  color: colors.primary,
+                ),
+              ),
+              AppSpacing.md.w,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Deep Linking',
+                      style: context.textTheme.titleMedium?.semiBold().colour(
+                        colors.onSurface,
+                      ),
+                    ),
+                    AppSpacing.xs.h,
+                    Text(
+                      'Deployed host used by email links to open the app',
+                      style: context.textTheme.bodySmall?.colour(
+                        colors.onSurfaceSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          AppSpacing.xl.h,
+
+          const AppFieldLabel(
+            text: 'Deployed Deep Link Base URL',
+            isRequired: false,
+          ),
+          AppSpacing.xs.h,
+          AppTextField(
+            controller: deeplinkBaseUrlController,
+            validator: (value) => Validators.url(
+              context,
+              value,
+              isOptional: true,
+              fieldName: 'Deep Link Base URL',
+            ),
+            decoration: const InputDecoration(
+              hintText: 'https://guardup-991fd.web.app',
+              prefixIcon: Icon(Icons.public_rounded),
+            ),
+            onChanged: (_) => onChanged(),
+          ),
+          AppSpacing.xs.h,
+          Text(
+            'Emails open <base URL>/download. If left empty, emails fall back to the Play Store URL.',
+            style: context.textTheme.bodySmall?.colour(
+              colors.onSurfaceSecondary,
+            ),
+          ),
+          AppSpacing.sm.h,
+          Align(
+            alignment: Alignment.centerRight,
+            child: AppButton(
+              text: 'Test Deep Link',
+              type: ButtonType.text,
+              fullWidth: false,
+              size: ButtonSize.small,
+              leading: const Icon(
+                Icons.open_in_new_rounded,
+                size: AppSpacing.md,
+              ),
+              onPressed: () {
+                final base = deeplinkBaseUrlController.text.trim().replaceAll(
+                  RegExp(r'/+$'),
+                  '',
+                );
+                if (base.isNotEmpty) {
+                  AppLauncher.openWebsite('$base/download');
                 }
               },
             ),
