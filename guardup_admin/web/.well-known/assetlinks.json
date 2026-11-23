@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.guardup.app",
+      "sha256_cert_fingerprints": [
+        "F1:A2:43:FE:F0:86:6F:53:C8:AC:64:0A:C7:94:D3:97:ED:CF:57:3A:FC:EA:BB:37:D9:C8:72:4B:1B:EE:DA:3F"
+      ]
+    }
+  }
+]

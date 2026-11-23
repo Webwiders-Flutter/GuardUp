@@ -1,0 +1,19 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["AQTCP9Z9S7.com.webwiders.guardup"],
+        "components": [
+          {
+            "/": "/download",
+            "comment": "Open GuardUp app after account approval"
+          }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["AQTCP9Z9S7.com.webwiders.guardup"]
+  }
+}

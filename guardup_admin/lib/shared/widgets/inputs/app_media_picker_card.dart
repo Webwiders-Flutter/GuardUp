@@ -13,7 +13,7 @@ import '../../../core/extensions/textstyle_extension.dart';
 import '../../../core/logger/app_logger.dart';
 import '/core/services/media/media_picker.service.dart';
 import '../buttons/app_button.dart';
-import '../feedbacks/widgets/app_file_preview.dart';
+import '../feedbacks/widgets/app_file_viewer.dart';
 import '../feedbacks/widgets/app_snackbar.dart';
 import '../sections/app_image.dart';
 
@@ -325,7 +325,7 @@ class _AppMediaPickerCardState extends State<AppMediaPickerCard> {
     final remoteUrl = _remoteUrlNotifier.value;
     if (file == null && (remoteUrl == null || remoteUrl.isEmpty)) return;
 
-    AppFilePreviewSheet.showDialog(
+    AppFileViewer.show(
       context: context,
       title: widget.title.isNotEmpty ? widget.title : 'Document Preview',
       file: file,

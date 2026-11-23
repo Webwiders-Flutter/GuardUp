@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '/core/extensions/localization.extension.dart';
 import '/features/users/data/enums/user_role.enum.dart';
@@ -151,6 +152,7 @@ class DashboardUserStats {
             color: role.color(context),
             icon: role.icon,
             subtitle: role.description(l10n),
+            onTap: () => context.push(role.redirectionRoute(statusFilter)),
           );
         }).toList();
 

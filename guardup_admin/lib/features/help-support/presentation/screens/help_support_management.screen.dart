@@ -3,9 +3,7 @@ import 'package:guardup_admin/shared/widgets/table/table_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
-import 'package:quick_container/quick_container.dart';
 
-import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/datetime.extension.dart';
@@ -293,51 +291,24 @@ class _HelpSupportManagementScreenState
               ),
               if (userId != null) ...[
                 AppSpacing.sm.w,
-                Tooltip(
-                  message: 'View User',
-                  child: InkWell(
-                    onTap: () => UserDetailsScreen.showAsSidebar(
-                      context: context,
-                      userId: userId,
-                    ),
-                    borderRadius: AppRadius.smRadius,
-                    child: QuickContainer(
-                      p: AppSpacing.xs + 2,
-                      radius: AppRadius.sm,
-                      color: colors.primary.withValues(alpha: 0.08),
-                      border: Border.all(
-                        color: colors.primary.withValues(alpha: 0.25),
-                      ),
-                      child: Icon(
-                        Icons.person_search_outlined,
-                        size: AppSpacing.lg,
-                        color: colors.primary,
-                      ),
-                    ),
+                AppButton.outline(
+                  size: .small,
+                  type: .primary,
+                  tooltip: 'View User',
+                  icon: Icons.person_search_outlined,
+                  onPressed: () => UserDetailsScreen.showAsSidebar(
+                    context: context,
+                    userId: userId,
                   ),
                 ),
               ],
               AppSpacing.sm.w,
-
-              Tooltip(
-                message: 'Delete Request',
-                child: InkWell(
-                  onTap: () => _onDeleteContactUs(item),
-                  borderRadius: AppRadius.smRadius,
-                  child: QuickContainer(
-                    p: AppSpacing.xs + 2,
-                    radius: AppRadius.sm,
-                    color: colors.error.withValues(alpha: 0.08),
-                    border: Border.all(
-                      color: colors.error.withValues(alpha: 0.25),
-                    ),
-                    child: Icon(
-                      Icons.delete_outline_rounded,
-                      size: AppSpacing.lg,
-                      color: colors.error,
-                    ),
-                  ),
-                ),
+              AppButton.outline(
+                size: .small,
+                type: .danger,
+                tooltip: 'Delete Request',
+                icon: Icons.delete_outline_rounded,
+                onPressed: () => _onDeleteContactUs(item),
               ),
             ],
           );

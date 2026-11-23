@@ -188,6 +188,7 @@ Migrations (in `supabase/migrations/`):
 | `20261118000011_add_language_code_to_user_devices.sql` | `user_devices.language_code`, `register_user_device` with language, `update_user_device_language` |
 | `20261118000014_allow_rejected_user_to_resubmit_profile.sql` | Allows rejected users to update bio/services/documents to resubmit profile |
 | `20261119000015_send_email_on_profile_rejection.sql` | Sends notification email on application rejection with reason/documents |
+| `20261123000018_add_deeplink_base_url_to_admin_settings.sql` | Adds `admin_settings.deeplink_base_url` used by the "Open GuardUp" email buttons |
 
 ---
 
@@ -205,6 +206,14 @@ Located in `supabase/functions/`.
 Email templates live in `supabase/functions/user-lifecycle-events/templates/`.
 Support email, phone, WhatsApp and app link in the emails come from the
 `admin_settings` table, so the admin can change them without a deploy.
+
+**"Open GuardUp" button:** links to `<deeplink_base_url>/download`
+(Admin → Settings → Mobile Apps → Deep Linking). That host serves
+`/.well-known/assetlinks.json` (Android App Links) and
+`/.well-known/apple-app-site-association` (iOS Universal Links) for the
+`/download` path, so the link opens the installed app directly; without the app
+it shows the web `/download` page. If `deeplink_base_url` is empty the button
+falls back to `android_app_url` (Play Store).
 
 **Simulation mode:** if Firebase or email credentials are missing, the functions do not
 fail. They just write what they *would* have sent to the logs. Handy for testing.

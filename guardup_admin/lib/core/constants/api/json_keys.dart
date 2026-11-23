@@ -32,6 +32,7 @@ final class JsonKeys {
   // Media & Assets
   static const String imageUrl = 'image_url';
   static const String iconName = 'icon_name';
+  static const String iconUrl = 'icon_url';
   static const String profileImageUrl = 'profile_image_url';
 
   // Legal & Help Support Keys
@@ -52,6 +53,8 @@ final class JsonKeys {
   static const String email = 'email';
   static const String mobileNumber = 'phone_number';
   static const String phoneCode = 'phone_code';
+  static const String companyPhoneCode = 'company_phone_code';
+  static const String companyPhoneNumber = 'company_phone_number';
   static const String registrationStatus = 'status';
   static const String userId = 'user_id';
 
@@ -83,6 +86,7 @@ final class JsonKeys {
   static const String updateMessageAndroid = 'update_message_android';
   static const String iosAppUrl = 'ios_app_url';
   static const String androidAppUrl = 'android_app_url';
+  static const String deeplinkBaseUrl = 'deeplink_base_url';
   static const String supportEmail = 'support_email';
   static const String supportCallPhoneNumber = 'support_call_phone_number';
   static const String supportWhatsappPhoneNumber =

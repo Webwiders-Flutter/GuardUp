@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
+import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:quick_container/quick_container.dart';
 
 import '/core/constants/api/json_keys.dart';
@@ -15,7 +16,9 @@ import '/features/services/di/services.providers.dart';
 import '/shared/controllers/selection.controller.dart';
 import '/shared/states/pagination.state.dart';
 import '/shared/widgets/admin_layout/app_side_panel.dart';
+import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_input_label.dart';
+import '/shared/widgets/inputs/app_media_picker_card.dart';
 import '/shared/widgets/inputs/app_radio.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '../controllers/services.controller.dart';
@@ -64,6 +67,12 @@ class ServiceFormScreenState extends ConsumerState<ServiceFormScreen> {
   late final TextEditingController _descriptionController;
   late final SelectionController<String> _statusController;
 
+  /// Newly picked icon file (not yet uploaded).
+  XFile? _pickedIcon;
+
+  /// Whether the user removed the existing icon without picking a new one.
+  bool _iconRemoved = false;
+
   bool get _isEditing => widget.service != null;
 
   @override
@@ -91,19 +100,29 @@ class ServiceFormScreenState extends ConsumerState<ServiceFormScreen> {
   /// Submits the form. Returns `true` if successful, `false` otherwise.
   Future<bool> submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return false;
+    if (!_isEditing && _pickedIcon == null) {
+      AppSnackbar.error('Please select an icon for the service');
+      return false;
+    }
 
     final request = ServiceRequest(
       name: _nameController.text.trim(),
       description: _descriptionController.text.trim(),
       iconName: widget.service?.iconName,
+      iconUrl: _iconRemoved ? null : widget.service?.iconUrl,
       displayOrder: widget.service?.displayOrder,
       isActive: _statusController.isSelected(JsonKeys.isActive),
     );
 
     if (_isEditing) {
-      await controller.updateRecord(request, widget.service!.id);
+      await controller.updateRecord(
+        request,
+        widget.service!.id,
+        iconFile: _pickedIcon,
+        oldIconUrl: widget.service!.iconUrl,
+      );
     } else {
-      await controller.createRecord(request);
+      await controller.createRecord(request, iconFile: _pickedIcon);
     }
 
     if (!mounted) return false;
@@ -129,6 +148,25 @@ class ServiceFormScreenState extends ConsumerState<ServiceFormScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // ── Service Icon ───────────────────────────────────────────
+          AppMediaPickerCard(
+            title: 'Service Icon',
+            description: 'Shown next to the service in the app',
+            initialUrl: widget.service?.iconUrl,
+            allowedExtensions: const ['png', 'jpg', 'jpeg', 'webp', 'svg'],
+            maxSize: '5 MB',
+            isRequired: !_isEditing,
+            onPicked: (file) {
+              _pickedIcon = file;
+              _iconRemoved = false;
+            },
+            onFileRemoved: () {
+              _pickedIcon = null;
+              _iconRemoved = true;
+            },
+          ),
+          AppSpacing.lg.h,
+
           // ── Service Name ───────────────────────────────────────────
           const AppFieldLabel(text: 'Service Title / Name', isRequired: true),
           AppSpacing.xs.h,

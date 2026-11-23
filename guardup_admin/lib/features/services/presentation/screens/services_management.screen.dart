@@ -14,8 +14,10 @@ import '/features/services/di/services.providers.dart';
 import '/shared/states/pagination.state.dart';
 import '/shared/widgets/admin_layout/admin_page_body.dart';
 import '/shared/widgets/buttons/app_button.dart';
+import '/shared/widgets/feedbacks/widgets/app_file_viewer.dart';
 import '/shared/widgets/feedbacks/widgets/app_popup.dart';
 import '/shared/widgets/misc/app_chip.dart';
+import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/table/admin_table_builder.dart';
 import '/shared/widgets/table/table_models.dart';
 import '../controllers/services.controller.dart';
@@ -91,7 +93,7 @@ class _ServicesManagementScreenState
     );
 
     if (result?.action == PopupAction.confirm && mounted) {
-      await controller.deleteRecord(item.id);
+      await controller.deleteRecord(item);
 
       if (mounted) {
         ref
@@ -129,6 +131,41 @@ class _ServicesManagementScreenState
                 .medium()
                 .colour(colors.onSurfaceSecondary),
             textAlign: TextAlign.center,
+          );
+        },
+      ),
+      TableColumn<ServiceModel>(
+        title: 'Icon',
+        width: AppSpacing.xxxl * 2,
+        alignment: Alignment.center,
+        cellBuilder: (item, index) {
+          final iconUrl = item.iconUrl ?? '';
+          return AppImage.network(
+            key: ValueKey('${item.id}_${iconUrl}_${item.updatedAt}'),
+            imageUrl: iconUrl,
+            width: 40,
+            height: 40,
+            borderRadius: AppRadius.smRadius,
+            fit: BoxFit.contain,
+            onTap: iconUrl.isEmpty
+                ? null
+                : () => AppFileViewer.show(
+                    context: context,
+                    title: 'Icon Preview',
+                    fileUrl: iconUrl,
+                  ),
+            errorWidget: QuickContainer(
+              w: 40,
+              h: 40,
+              radius: AppRadius.sm,
+              color: colors.primary.withValues(alpha: 0.08),
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.shield_outlined,
+                size: 20,
+                color: colors.primary,
+              ),
+            ),
           );
         },
       ),
@@ -193,46 +230,20 @@ class _ServicesManagementScreenState
                 ),
               ),
               AppSpacing.sm.w,
-              Tooltip(
-                message: 'Edit Service',
-                child: InkWell(
-                  onTap: () => _openServiceForm(item: item),
-                  borderRadius: AppRadius.smRadius,
-                  child: QuickContainer(
-                    p: AppSpacing.xs + 2,
-                    radius: AppRadius.sm,
-                    color: colors.backgroundLight,
-                    border: Border.all(
-                      color: colors.borderLight.withValues(alpha: 0.6),
-                    ),
-                    child: Icon(
-                      Icons.edit_outlined,
-                      size: AppSpacing.lg,
-                      color: colors.primary,
-                    ),
-                  ),
-                ),
+              AppButton.outline(
+                icon: Icons.edit_outlined,
+                tooltip: 'Edit Service',
+                type: .primary,
+                size: .small,
+                onPressed: () => _openServiceForm(item: item),
               ),
               AppSpacing.sm.w,
-              Tooltip(
-                message: 'Delete Service',
-                child: InkWell(
-                  onTap: () => _onDeleteService(item),
-                  borderRadius: AppRadius.smRadius,
-                  child: QuickContainer(
-                    p: AppSpacing.xs + 2,
-                    radius: AppRadius.sm,
-                    color: colors.error.withValues(alpha: 0.08),
-                    border: Border.all(
-                      color: colors.error.withValues(alpha: 0.25),
-                    ),
-                    child: Icon(
-                      Icons.delete_outline_rounded,
-                      size: AppSpacing.lg,
-                      color: colors.error,
-                    ),
-                  ),
-                ),
+              AppButton.outline(
+                icon: Icons.delete_outline_rounded,
+                tooltip: 'Delete Service',
+                type: .danger,
+                size: .small,
+                onPressed: () => _onDeleteService(item),
               ),
             ],
           );

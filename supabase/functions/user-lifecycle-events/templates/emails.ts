@@ -35,7 +35,7 @@ export function buildLifecycleEmail(params: {
             paragraph(
               `Great news! Your ${roleLabel} profile has been verified and approved by our team. You can now start receiving bookings on GuardUp.`,
             ),
-            support.androidAppUrl ? button("Open GuardUp", support.androidAppUrl) : "",
+            support.openAppUrl ? button("Open GuardUp", support.openAppUrl) : "",
           ].join(""),
         }),
       };
@@ -66,7 +66,7 @@ export function buildLifecycleEmail(params: {
               : paragraph(
                   "This is usually due to missing, unclear or expired documents. Please open the GuardUp app to review your submission and re-upload any required documents.",
                 ),
-            support.androidAppUrl ? button("Open GuardUp App", support.androidAppUrl) : "",
+            support.openAppUrl ? button("Open GuardUp App", support.openAppUrl) : "",
           ].join(""),
         }),
       };

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:go_router/go_router.dart';
 
+import '/core/constants/api/json_keys.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/error/api_exception.dart';
 import '/core/extensions/context.extension.dart';
@@ -88,6 +89,8 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
       TextEditingController();
   final TextEditingController _androidAppUrlController =
       TextEditingController();
+  final TextEditingController _deeplinkBaseUrlController =
+      TextEditingController();
 
   // ── Support Controllers ─────────────────────────────────────────────────────
   final TextEditingController _supportEmailController = TextEditingController();
@@ -125,6 +128,7 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
     _minimumAndroidVersionController.dispose();
     _androidUpdateMessageController.dispose();
     _androidAppUrlController.dispose();
+    _deeplinkBaseUrlController.dispose();
 
     _supportEmailController.dispose();
     _supportCallPhoneController.dispose();
@@ -154,6 +158,7 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
     _minimumAndroidVersionController.text = model.minimumAndroidVersion;
     _androidUpdateMessageController.text = model.updateMessageAndroid ?? '';
     _androidAppUrlController.text = model.androidAppUrl ?? '';
+    _deeplinkBaseUrlController.text = model.deeplinkBaseUrl ?? '';
 
     _supportEmailController.text = model.supportEmail;
     final (callCode, callPhone) = _parsePhoneNumber(
@@ -333,6 +338,9 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
         'minimum_android_version': _minimumAndroidVersionController.text.trim(),
         'update_message_android': _androidUpdateMessageController.text.trim(),
         'android_app_url': _androidAppUrlController.text.trim(),
+        JsonKeys.deeplinkBaseUrl: _deeplinkBaseUrlController.text
+            .trim()
+            .replaceAll(RegExp(r'/+$'), ''),
         'support_email': _supportEmailController.text.trim(),
         'support_call_phone_number':
             _supportCallPhoneController.text.trim().isNotEmpty
@@ -512,6 +520,8 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
                                       _androidUpdateMessageController,
                                   androidAppUrlController:
                                       _androidAppUrlController,
+                                  deeplinkBaseUrlController:
+                                      _deeplinkBaseUrlController,
                                   onChanged: _markDirty,
                                 );
 
