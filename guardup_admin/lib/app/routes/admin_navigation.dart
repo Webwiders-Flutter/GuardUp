@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-
 import '/features/auth/presentation/screens/profile.screen.dart';
 import '/features/dashboard/presentation/screens/dashboard.screen.dart';
 import '/features/document-type/presentation/screens/document_type_management.screen.dart';
@@ -154,38 +153,6 @@ final class AdminNavigation {
       ],
     ),
     (
-      title: 'Support',
-      items: const [
-        AdminNavItem(
-          icon: Icons.support_agent_rounded,
-          label: 'Help & Support',
-          route: HelpSupportManagementScreen.route,
-          description: 'Contact requests from the app and their resolution',
-        ),
-      ],
-    ),
-    (
-      title: 'Legal',
-      items: [
-        AdminNavItem(
-          icon: Icons.article_outlined,
-          label: 'Policies & Content',
-          route: ContentManagementScreen.route,
-          description:
-              'Terms & Conditions, Privacy Policy, About Us and other pages',
-          children: [
-            for (final type in ContentType.values)
-              AdminNavItem(
-                icon: type.icon,
-                label: type.label,
-                route: ContentManagementScreen.location(type),
-                description: type.description,
-              ),
-          ],
-        ),
-      ],
-    ),
-    (
       title: 'Platform',
       items: const [
         AdminNavItem(
@@ -211,20 +178,38 @@ final class AdminNavigation {
     (
       title: 'System',
       items: [
+        AdminNavItem(
+          icon: Icons.article_outlined,
+          label: 'Policies & Content',
+          route: ContentManagementScreen.route,
+          description:
+              'Terms & Conditions, Privacy Policy, About Us and other pages',
+          children: [
+            for (final type in ContentType.values)
+              AdminNavItem(
+                icon: type.icon,
+                label: type.label,
+                route: ContentManagementScreen.location(type),
+                description: type.description,
+              ),
+          ],
+        ),
         const AdminNavItem(
           icon: Icons.tune_rounded,
           label: 'Settings',
           route: AdminSettingsScreen.route,
           description: 'Platform preferences and configuration',
         ),
+        const AdminNavItem(
+          icon: Icons.support_agent_rounded,
+          label: 'Help & Support',
+          route: HelpSupportManagementScreen.route,
+          description: 'Contact requests from the app and their resolution',
+        ),
         // Not production-ready yet: visible in debug builds only.
-        if (kDebugMode)
-          const AdminNavItem(
-            icon: Icons.notifications_outlined,
-            label: 'Notifications',
-            route: NotificationManagementScreen.route,
-            description: 'Broadcasts, push notifications and delivery logs',
-          ),
+        if (kDebugMode) notifications,
+        // Not production-ready yet: visible in debug builds only.
+        if (kDebugMode) notifications,
       ],
     ),
   ];
@@ -238,10 +223,18 @@ final class AdminNavigation {
     ),
   ];
 
+  static const AdminNavItem notifications = AdminNavItem(
+    icon: Icons.notifications_outlined,
+    label: 'Notifications',
+    route: NotificationManagementScreen.route,
+    description: 'Platform push notifications and delivery logs',
+  );
+
   /// Sections plus footer items, for lookups and the command palette.
   static List<AdminNavSection> get searchable => [
     ...sections,
     (title: 'Account', items: footerItems),
+    (title: 'System', items: const [notifications]),
   ];
 
   static const BreadcrumbItem _home = (

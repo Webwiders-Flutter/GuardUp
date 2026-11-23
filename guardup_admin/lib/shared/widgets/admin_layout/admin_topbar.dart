@@ -14,7 +14,7 @@ import '../misc/app_hover_builder.dart';
 import 'models.dart';
 
 /// Shell top bar: breadcrumb trail for the current page, quick-search trigger and
-/// trailing [actions] (theme switcher, account menu, ...).
+/// trailing [actions] (notifications, theme switcher, account menu, ...).
 ///
 /// In [isCompact] mode (phones) the trail keeps its last two crumbs, the
 /// search pill becomes an icon, and [leading] typically holds the drawer

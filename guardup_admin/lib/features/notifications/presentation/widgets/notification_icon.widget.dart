@@ -1,13 +1,12 @@
-import 'package:guardup_admin/core/constants/app_radius.dart';
-import 'package:guardup_admin/core/constants/app_spacing.dart';
-import 'package:guardup_admin/core/extensions/context.extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:quick_container/quick_container.dart';
 
-import '../../di/notification.providers.dart';
+import '/core/extensions/context.extension.dart';
+import '/features/notifications/di/notification.providers.dart';
 import '/features/notifications/presentation/screens/notification_management.screen.dart';
+import '/shared/widgets/buttons/app_icon_button.dart';
+import '/shared/widgets/misc/app_badge.dart';
 
 /// A standard notification icon action widget (e.g. for app bars, navigation headers).
 /// Automatically observes the live unread count and renders an indicator badge.
@@ -20,11 +19,8 @@ class NotificationIconWidget extends ConsumerWidget {
   /// Icon to display (defaults to [Icons.notifications_outlined]).
   final IconData icon;
 
-  /// Custom icon color (defaults to [context.colors.onSurface] or app bar theme).
+  /// Custom icon color (defaults to [context.colors.onSurfaceSecondary]).
   final Color? iconColor;
-
-  /// Size of the icon (defaults to 24).
-  final double iconSize;
 
   /// Optional tooltip message.
   final String tooltip;
@@ -38,16 +34,23 @@ class NotificationIconWidget extends ConsumerWidget {
   /// Custom text color for the badge count (defaults to [context.colors.white]).
   final Color? badgeTextColor;
 
+  /// Visual treatment of the button.
+  final AppIconButtonVariant variant;
+
+  /// Size of the button.
+  final AppIconButtonSize size;
+
   const NotificationIconWidget({
     super.key,
     this.onTap,
-    this.icon = Icons.notifications_active_outlined,
+    this.icon = Icons.notifications_outlined,
     this.iconColor,
-    this.iconSize = 22,
     this.tooltip = 'Notifications',
     this.count,
     this.badgeColor,
     this.badgeTextColor,
+    this.variant = AppIconButtonVariant.outlined,
+    this.size = AppIconButtonSize.medium,
   });
 
   @override
@@ -56,36 +59,29 @@ class NotificationIconWidget extends ConsumerWidget {
         count ??
         (ref.watch(unreadNotificationCountControllerProvider).value ?? 0);
 
-    final button = IconButton(
-      padding: EdgeInsets.zero,
-      visualDensity: .compact,
-      icon: QuickContainer(
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        borderColor: context.colors.borderLight.withValues(alpha: 0.8),
-        p: AppSpacing.xs + 1.5,
-        child: Icon(
-          icon,
-          color: iconColor ?? context.colors.onSurface.withValues(alpha: 0.7),
-          size: iconSize,
-        ),
-      ),
-      onPressed:
-          onTap ?? () => context.push(NotificationManagementScreen.route),
-      tooltip: tooltip,
+    final location = GoRouterState.of(context).uri.path;
+    final isCurrentRoute = location == NotificationManagementScreen.route;
+
+    return AppIconButton(
+      icon: icon,
+      tooltip: unreadCount > 0 ? '$tooltip ($unreadCount unread)' : tooltip,
+      variant: variant,
+      size: size,
+      foregroundColor: iconColor ?? context.colors.onSurfaceSecondary,
+      isActive: isCurrentRoute,
+      badge: unreadCount > 0
+          ? AppBadge.count(
+              unreadCount,
+              color: badgeColor,
+              foregroundColor: badgeTextColor,
+            )
+          : null,
+      onPressed: onTap ??
+          () {
+            if (!isCurrentRoute) {
+              context.go(NotificationManagementScreen.route);
+            }
+          },
     );
-
-    if (unreadCount > 0) {
-      return Badge.count(
-        count: unreadCount,
-        backgroundColor: badgeColor ?? context.colors.error,
-        textColor: badgeTextColor ?? context.colors.white,
-        maxCount: 99,
-        alignment: .topRight,
-        padding: const EdgeInsets.symmetric(horizontal: 3),
-        child: button,
-      );
-    }
-
-    return button;
   }
 }

@@ -9,6 +9,7 @@ import '/core/extensions/textstyle_extension.dart';
 import '/shared/widgets/admin_layout/admin_command_palette.dart';
 import '/shared/widgets/admin_layout/admin_scaffold.dart';
 import 'widgets/shell_account_menu.dart';
+import 'widgets/shell_notification_button.dart';
 import 'widgets/shell_theme_menu.dart';
 
 /// Authenticated shell around every admin page.
@@ -43,6 +44,7 @@ class AdminShell extends StatelessWidget {
         },
       ),
       topBarActions: const [
+        ShellNotificationButton(),
         ShellThemeMenu(),
         _ActionDivider(),
         ShellAccountMenu(),
