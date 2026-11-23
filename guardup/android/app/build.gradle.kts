@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.guardup"
+    namespace = "com.guardup.app"
     compileSdk = 37
     ndkVersion = flutter.ndkVersion
 

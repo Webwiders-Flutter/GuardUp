@@ -1,4 +1,4 @@
-package com.example.guardup
+package com.guardup.app
 
 import io.flutter.embedding.android.FlutterActivity
 

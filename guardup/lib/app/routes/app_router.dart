@@ -48,9 +48,9 @@ final class AppRouter {
       }
 
       // ------------------------------------------------------------
-      // 2. Once bootstrap is complete, route away from splash
+      // 2. Once bootstrap is complete, route away from splash / deep link
       // ------------------------------------------------------------
-      if (isSplash) {
+      if (isSplash || location == '/download') {
         if (!authState.isAuthenticated) {
           return LoginScreen.route;
         }

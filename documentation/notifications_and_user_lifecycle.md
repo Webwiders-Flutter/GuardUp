@@ -215,6 +215,10 @@ Support email, phone, WhatsApp and app link in the emails come from the
 it shows the web `/download` page. If `deeplink_base_url` is empty the button
 falls back to `android_app_url` (Play Store).
 
+**Email logo:** the header shows the app logo from
+`<deeplink_base_url>/icons/icon-192.png` (served from `guardup_admin/web/icons/`).
+If `deeplink_base_url` is empty, a shield emoji badge is shown instead.
+
 **Simulation mode:** if Firebase or email credentials are missing, the functions do not
 fail. They just write what they *would* have sent to the logs. Handy for testing.
 
