@@ -37,7 +37,7 @@ class UnreadNotificationCountCubit extends Cubit<int> {
   /// Loads the initial unread notification count for [userId].
   Future<void> loadCount(String userId) async {
     if (userId.isEmpty) {
-      emit(0);
+      clearAll();
       return;
     }
     _currentUserId = userId;
@@ -71,7 +71,7 @@ class UnreadNotificationCountCubit extends Cubit<int> {
   Future<void> refreshCount([String? userId]) async {
     final uid = userId ?? _currentUserId;
     if (uid == null || uid.isEmpty) {
-      emit(0);
+      clearAll();
       return;
     }
     try {

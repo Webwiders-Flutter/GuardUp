@@ -233,8 +233,8 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
                 icon: Assets.svg.dollar,
                 label: 'Hourly Rate',
                 value: widget.hourlyRate != null && widget.hourlyRate! > 0
-                    ? '${widget.hourlyRate!.toUsd} / hour'
-                    : '\$0.00 / hour',
+                    ? '${widget.hourlyRate!.toUsd} / hr'
+                    : '\$0.00 / hr',
               ),
               AppSpacing.md.h,
               _buildDetailRow(
@@ -288,7 +288,7 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
             children: selectedServices.map((service) {
               return QuickContainer(
                 radius: AppRadius.sm,
-                color: context.colors.primary.withValues(alpha: 0.1),
+                gradient: context.colors.primaryGradient,
                 border: Border.all(
                   color: context.colors.primary.withValues(alpha: 0.35),
                   width: 1,
@@ -298,16 +298,16 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      service.icon,
-                      size: AppSizes.iconXs,
-                      color: context.colors.primary,
-                    ),
-                    AppSpacing.xs.w,
+                    // Icon(
+                    //   service.icon,
+                    //   size: AppSizes.iconXs,
+                    //   color: context.colors.primary,
+                    // ),
+                    // AppSpacing.xs.w,
                     Text(
                       service.name,
                       style: context.textTheme.labelMedium?.semiBold().colour(
-                        context.colors.primary,
+                        Colors.black,
                       ),
                     ),
                   ],

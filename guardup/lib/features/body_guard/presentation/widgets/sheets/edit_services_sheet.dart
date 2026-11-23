@@ -15,7 +15,6 @@ import '/features/auth/domain/repositories/user_repository.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_dropdown.dart';
-import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/selection/app_removable_chip.dart';
 import '/shared/widgets/selection/selection.controller.dart';
 import '../../../data/model/service_item.model.dart';
@@ -57,13 +56,23 @@ class EditServicesSheet extends StatefulWidget {
 class _EditServicesSheetState extends State<EditServicesSheet> {
   late final List<ServiceItemModel> _selectedServices;
   List<ServiceItemModel> _activeServices = [];
-  final _dropdownController = SelectionController<ServiceItemModel>.single();
+  late final SelectionController<ServiceItemModel> _dropdownController;
   bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
     _selectedServices = List.from(widget.currentServices);
+    _dropdownController = SelectionController<ServiceItemModel>.multi(
+      initial: _selectedServices,
+      onChanged: (selected) {
+        setState(() {
+          _selectedServices
+            ..clear()
+            ..addAll(selected);
+        });
+      },
+    );
     _loadActiveServices();
   }
 
@@ -80,6 +89,17 @@ class _EditServicesSheetState extends State<EditServicesSheet> {
           _activeServices = (rows as List<dynamic>)
               .map((r) => ServiceItemModel.fromJson(r as Map<String, dynamic>))
               .toList();
+
+          // Sync initial selected items with fetched instances so IDs and objects match
+          final matchedSelected = _activeServices
+              .where((active) => _selectedServices.any((s) => s.id == active.id))
+              .toList();
+          if (matchedSelected.isNotEmpty) {
+            _selectedServices
+              ..clear()
+              ..addAll(matchedSelected);
+            _dropdownController.setSelection(matchedSelected);
+          }
         });
       }
     } catch (_) {}
@@ -159,10 +179,6 @@ class _EditServicesSheetState extends State<EditServicesSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final availableServices = _activeServices
-        .where((s) => !_selectedServices.any((sel) => sel.id == s.id))
-        .toList();
-
     return Padding(
       padding: EdgeInsets.only(
         left: AppSpacing.lg,
@@ -211,6 +227,7 @@ class _EditServicesSheetState extends State<EditServicesSheet> {
                   onRemove: () {
                     setState(() {
                       _selectedServices.removeWhere((s) => s.id == service.id);
+                      _dropdownController.deselect(service);
                     });
                   },
                 );
@@ -219,52 +236,32 @@ class _EditServicesSheetState extends State<EditServicesSheet> {
             AppSpacing.md.h,
           ],
 
-          // Dropdown to pick unselected services
-          if (availableServices.isNotEmpty)
+          // Multi-select dropdown for services
+          if (_activeServices.isNotEmpty)
             AppDropdown<ServiceItemModel>(
               controller: _dropdownController,
-              hintText: 'Select service to add...',
-              target: (fieldKey) {
-                return AppTextField(
-                  key: fieldKey,
-                  readOnly: true,
-                  decoration: InputDecoration(
-                    hintText: 'Select service to add...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.lg),
-                      borderSide: BorderSide(
-                        color: context.colors.outlineVariant,
-                      ),
-                    ),
-                    suffixIcon: Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      color: context.colors.onSurfaceVariant,
-                    ),
-                  ),
-                  style: TextStyle(color: context.colors.onSurface),
-                );
-              },
-              items: availableServices
+              hintText: 'Select services...',
+              okButtonText: 'OK',
+              items: _activeServices
                   .map(
                     (s) => SelectableItem<ServiceItemModel, String>(
                       id: s,
                       data: s.name,
-                      icon: Icon(
-                        s.icon,
-                        size: AppSizes.iconSm,
-                        color: context.colors.primary,
-                      ),
+                      // icon: Icon(
+                      //   s.icon,
+                      //   size: AppSizes.iconSm,
+                      //   color: context.colors.primary,
+                      // ),
                     ),
                   )
                   .toList(),
-              onSelected: (service) {
-                if (!_selectedServices.any((x) => x.id == service.id)) {
-                  setState(() {
-                    _selectedServices.add(service);
-                  });
-                }
-                _dropdownController.clear();
-              },
+            )
+          else
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+                child: CircularProgressIndicator.adaptive(),
+              ),
             ),
           AppSpacing.xl.h,
 

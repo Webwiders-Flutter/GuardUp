@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:guardup/core/di/injection_container.dart';
+import 'package:guardup/features/auth/bloc/auth_bloc.dart';
+import 'package:guardup/features/notifications/bloc/unread_count/unread_notification_count_cubit.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '/core/constants/app_spacing.dart';
@@ -34,6 +38,19 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int get _currentIndex => widget.navigationShell.currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    final userId = sl.isRegistered<AuthBloc>()
+        ? sl<AuthBloc>().state.user?.id
+        : null;
+    if (userId != null &&
+        userId.isNotEmpty &&
+        sl.isRegistered<UnreadNotificationCountCubit>()) {
+      sl<UnreadNotificationCountCubit>().loadCount(userId);
+    }
+  }
 
   List<_NavItemData> _getNavItems(BuildContext context) {
     final l10n = context.l10n;
@@ -118,13 +135,31 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                         mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          item.svg.svg(
-                            width: item.size ?? 23,
-                            height: item.size ?? 23,
-                            colorFilter: ColorFilter.mode(
-                              activeColor,
-                              BlendMode.srcIn,
-                            ),
+                          BlocBuilder<UnreadNotificationCountCubit, int>(
+                            bloc: sl.isRegistered<UnreadNotificationCountCubit>()
+                                ? sl<UnreadNotificationCountCubit>()
+                                : null,
+                            builder: (context, unreadCount) {
+                              final iconSvg = item.svg.svg(
+                                width: item.size ?? 23,
+                                height: item.size ?? 23,
+                                colorFilter: ColorFilter.mode(
+                                  activeColor,
+                                  BlendMode.srcIn,
+                                ),
+                              );
+
+                              if (item.branchIndex == 3 && unreadCount > 0) {
+                                return Badge.count(
+                                  count: unreadCount,
+                                  maxCount: 99,
+                                  backgroundColor: context.colors.error,
+                                  textColor: Colors.white,
+                                  child: iconSvg,
+                                );
+                              }
+                              return iconSvg;
+                            },
                           ),
                           AppSpacing.xs.h,
                           Text(

@@ -43,10 +43,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
     text: kDebugMode ? 'mizan.webwiders@gmail.com' : '',
   );
   final _passwordController = TextEditingController(
-    text: kDebugMode ? 'mizan@123' : '',
+    text: kDebugMode ? '123456' : '',
   );
   final _confirmPasswordController = TextEditingController(
-    text: kDebugMode ? 'mizan@123' : '',
+    text: kDebugMode ? '123456' : '',
   );
   final _isLoadingNotifier = ValueNotifier<bool>(false);
 
@@ -75,12 +75,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
     // Single repository check for active account conflicts (email & phone together in one API call)
     // If account with this email/phone was DELETED, it is freed to use!
     if (sl.isRegistered<UserRepository>()) {
-      final conflictError =
-          await sl<UserRepository>().checkRegistrationConflict(
-        email: email,
-        phone: phone,
-        phoneCode: _phoneCountryCode,
-      );
+      final conflictError = await sl<UserRepository>()
+          .checkRegistrationConflict(
+            email: email,
+            phone: phone,
+            phoneCode: _phoneCountryCode,
+          );
 
       if (conflictError != null) {
         _isLoadingNotifier.value = false;
@@ -130,148 +130,149 @@ class _SignUpScreenState extends State<SignUpScreen> {
         body: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
-            return SingleChildScrollView(
-              padding: context.horizontalEdgeInsets,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Spacer(),
+              return SingleChildScrollView(
+                padding: context.horizontalEdgeInsets,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Spacer(),
 
-                        // 1. Heading
-                        Text(
-                          context.l10n.signUpTitle,
-                          style: context.textTheme.headlineLarge?.bold(),
-                        ),
-                        AppSpacing.xs.h,
-
-                        // 2. Subtitle
-                        Text(
-                          context.l10n.signUpSubtitle,
-                          style: context.textTheme.bodyMedium?.colour(
-                            context.colors.onSurfaceVariant,
+                          // 1. Heading
+                          Text(
+                            context.l10n.signUpTitle,
+                            style: context.textTheme.headlineLarge?.bold(),
                           ),
-                        ),
-                        AppSpacing.xxl.h,
+                          AppSpacing.xs.h,
 
-                        // 3. Name Field
-                        AppTextField(
-                          controller: _nameController,
-                          decoration: InputDecoration(
-                            hintText: context.l10n.name,
+                          // 2. Subtitle
+                          Text(
+                            context.l10n.signUpSubtitle,
+                            style: context.textTheme.bodyMedium?.colour(
+                              context.colors.onSurfaceVariant,
+                            ),
                           ),
-                          keyboardType: TextInputType.name,
-                          textCapitalization: TextCapitalization.words,
-                          textInputAction: TextInputAction.next,
-                          validator: (value) => Validators.name(context, value),
-                        ),
-                        AppSpacing.xl.h,
+                          AppSpacing.xxl.h,
 
-                        // 4. Phone Number Field
-                        AppTextField.phone(
-                          controller: _phoneController,
-                          phoneCountryCode: _phoneCountryCode,
-                          onCountryCodeChanged: (code) {
-                            setState(() {
-                              _phoneCountryCode = code;
-                            });
-                          },
-                          decoration: InputDecoration(
-                            hintText: context.l10n.phoneNumber,
+                          // 3. Name Field
+                          AppTextField(
+                            controller: _nameController,
+                            decoration: InputDecoration(
+                              hintText: context.l10n.name,
+                            ),
+                            keyboardType: TextInputType.name,
+                            textCapitalization: TextCapitalization.words,
+                            textInputAction: TextInputAction.next,
+                            validator: (value) =>
+                                Validators.name(context, value),
                           ),
-                          textInputAction: TextInputAction.next,
-                          validator: (value) =>
-                              Validators.phone(context, value),
-                        ),
-                        AppSpacing.xl.h,
+                          AppSpacing.xl.h,
 
-                        // 5. Email Address Field
-                        AppTextField.email(
-                          controller: _emailController,
-                          decoration: InputDecoration(
-                            hintText: context.l10n.emailAddress,
+                          // 4. Phone Number Field
+                          AppTextField.phone(
+                            controller: _phoneController,
+                            phoneCountryCode: _phoneCountryCode,
+                            onCountryCodeChanged: (code) {
+                              setState(() {
+                                _phoneCountryCode = code;
+                              });
+                            },
+                            decoration: InputDecoration(
+                              hintText: context.l10n.phoneNumber,
+                            ),
+                            textInputAction: TextInputAction.next,
+                            validator: (value) =>
+                                Validators.phone(context, value),
                           ),
-                          textInputAction: TextInputAction.next,
-                          validator: (value) =>
-                              Validators.email(context, value),
-                        ),
-                        AppSpacing.xl.h,
+                          AppSpacing.xl.h,
 
-                        // 6. Password Field
-                        AppTextField.password(
-                          controller: _passwordController,
-                          decoration: const InputDecoration(
-                            hintText: '••••••••••••',
+                          // 5. Email Address Field
+                          AppTextField.email(
+                            controller: _emailController,
+                            decoration: InputDecoration(
+                              hintText: context.l10n.emailAddress,
+                            ),
+                            textInputAction: TextInputAction.next,
+                            validator: (value) =>
+                                Validators.email(context, value),
                           ),
-                          textInputAction: TextInputAction.next,
-                          validator: (value) =>
-                              Validators.password(context, value),
-                        ),
-                        AppSpacing.xl.h,
+                          AppSpacing.xl.h,
 
-                        // 7. Confirm Password Field
-                        AppTextField.password(
-                          controller: _confirmPasswordController,
-                          decoration: const InputDecoration(
-                            hintText: '••••••••••••',
+                          // 6. Password Field
+                          AppTextField.password(
+                            controller: _passwordController,
+                            decoration: const InputDecoration(
+                              hintText: '••••••••••••',
+                            ),
+                            textInputAction: TextInputAction.next,
+                            validator: (value) =>
+                                Validators.password(context, value),
                           ),
-                          textInputAction: TextInputAction.done,
-                          validator: (value) => Validators.confirmPassword(
-                            context,
-                            value,
-                            _passwordController.text,
+                          AppSpacing.xl.h,
+
+                          // 7. Confirm Password Field
+                          AppTextField.password(
+                            controller: _confirmPasswordController,
+                            decoration: const InputDecoration(
+                              hintText: '••••••••••••',
+                            ),
+                            textInputAction: TextInputAction.done,
+                            validator: (value) => Validators.confirmPassword(
+                              context,
+                              value,
+                              _passwordController.text,
+                            ),
+                            onFieldSubmitted: (_) => _handleSignUp(),
                           ),
-                          onFieldSubmitted: (_) => _handleSignUp(),
-                        ),
-                        AppSpacing.xl.h,
+                          AppSpacing.xl.h,
 
-                        // 8. Sign Up Primary Button (with loading indicator)
-                        ValueListenableBuilder<bool>(
-                          valueListenable: _isLoadingNotifier,
-                          builder: (context, isLoading, _) {
-                            return AppButton(
-                              text: context.l10n.signUp,
-                              isLoading: isLoading,
-                              onPressed: isLoading ? null : _handleSignUp,
-                            );
-                          },
-                        ),
-
-                        const Spacer(),
-                        AppSpacing.xl.h,
-
-                        // 9. Footer: "Already have an account? Log in" via AppRichText
-                        Center(
-                          child: AppRichText(
-                            textAlign: TextAlign.center,
-                            spans: [
-                              AppTextSpan(
-                                text: context.l10n.alreadyHaveAccount,
-                              ),
-                              AppTextSpan(
-                                text: context.l10n.login,
-                                onTap: () {
-                                  context.push(LoginScreen.route);
-                                },
-                              ),
-                            ],
+                          // 8. Sign Up Primary Button (with loading indicator)
+                          ValueListenableBuilder<bool>(
+                            valueListenable: _isLoadingNotifier,
+                            builder: (context, isLoading, _) {
+                              return AppButton(
+                                text: context.l10n.signUp,
+                                isLoading: isLoading,
+                                onPressed: isLoading ? null : _handleSignUp,
+                              );
+                            },
                           ),
-                        ),
-                        AppSpacing.lg.h,
-                      ],
+
+                          const Spacer(),
+                          AppSpacing.xl.h,
+
+                          // 9. Footer: "Already have an account? Log in" via AppRichText
+                          Center(
+                            child: AppRichText(
+                              textAlign: TextAlign.center,
+                              spans: [
+                                AppTextSpan(
+                                  text: context.l10n.alreadyHaveAccount,
+                                ),
+                                AppTextSpan(
+                                  text: context.l10n.login,
+                                  onTap: () {
+                                    context.push(LoginScreen.route);
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          AppSpacing.lg.h,
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
-    ),
-  );
+    );
   }
 }

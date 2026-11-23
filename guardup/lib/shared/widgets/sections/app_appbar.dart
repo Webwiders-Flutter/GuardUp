@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:guardup/core/di/injection_container.dart';
 import 'package:guardup/core/extensions/spacing.extension.dart';
+import 'package:guardup/features/notifications/bloc/unread_count/unread_notification_count_cubit.dart';
 import 'package:guardup/gen/assets.gen.dart';
 import 'package:quick_container/quick_container.dart';
 
@@ -185,7 +188,7 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
           IconButton(
             onPressed:
                 onNotificationTap ??
-                () => context.push(NotificationsScreen.route),
+                () => context.go(NotificationsScreen.route),
             icon: QuickContainer(
               w: 40,
               h: 40,
@@ -197,6 +200,7 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
               child: Stack(
                 alignment: Alignment.center,
+                clipBehavior: Clip.none,
                 children: [
                   Assets.svg.notificationBell.svg(
                     width: 20,
@@ -206,25 +210,46 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
                       BlendMode.srcIn,
                     ),
                   ),
-                  Positioned(
-                    top: 10,
-                    right: 12,
-                    child: Container(
-                      width: 7,
-                      height: 7,
-                      decoration: BoxDecoration(
-                        color: context.colors.primary,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: context.colors.primary.withValues(
-                              alpha: 0.6,
-                            ),
-                            blurRadius: 4,
+                  BlocBuilder<UnreadNotificationCountCubit, int>(
+                    bloc: sl.isRegistered<UnreadNotificationCountCubit>()
+                        ? sl<UnreadNotificationCountCubit>()
+                        : null,
+                    builder: (context, unreadCount) {
+                      if (unreadCount <= 0) return const SizedBox.shrink();
+                      return Positioned(
+                        top: 2,
+                        right: 2,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
                           ),
-                        ],
-                      ),
-                    ),
+                          constraints: const BoxConstraints(
+                            minWidth: 14,
+                            minHeight: 14,
+                          ),
+                          decoration: BoxDecoration(
+                            color: context.colors.error,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: context.colors.surface,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              unreadCount > 99 ? '99+' : '$unreadCount',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 8,
+                                fontWeight: FontWeight.bold,
+                                height: 1,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

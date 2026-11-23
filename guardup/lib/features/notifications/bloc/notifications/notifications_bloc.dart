@@ -37,6 +37,7 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
     on<NotificationMarkAsReadRequested>(_onMarkAsReadRequested);
     on<NotificationsMarkAllAsReadRequested>(_onMarkAllAsReadRequested);
     on<NotificationDeleteRequested>(_onDeleteRequested);
+    on<NotificationsDeleteManyRequested>(_onDeleteManyRequested);
   }
 
   Future<void> _onFetchRequested(
@@ -290,6 +291,62 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
       );
       if (!target.isRead) {
         _unreadCountCubit?.increment();
+      }
+    }
+  }
+
+  Future<void> _onDeleteManyRequested(
+    NotificationsDeleteManyRequested event,
+    Emitter<NotificationsState> emit,
+  ) async {
+    if (event.notificationIds.isEmpty) return;
+
+    final targetIds = event.notificationIds.toSet();
+    final previousItems = state.paginationState.items;
+
+    // Track unread count among deleted items to decrement cubit accurately
+    final unreadDeletedCount = previousItems
+        .where((item) => targetIds.contains(item.id) && !item.isRead)
+        .length;
+
+    final updatedItems = previousItems
+        .where((item) => !targetIds.contains(item.id))
+        .toList();
+    final newTotal = max(0, state.paginationState.total - targetIds.length);
+
+    // 1. Optimistic UI update
+    emit(
+      state.copyWith(
+        paginationState: state.paginationState.copyWith(
+          items: updatedItems,
+          total: newTotal,
+        ),
+      ),
+    );
+
+    if (unreadDeletedCount > 0) {
+      for (var i = 0; i < unreadDeletedCount; i++) {
+        _unreadCountCubit?.decrement();
+      }
+    }
+
+    // 2. Persist to Supabase
+    try {
+      await _repository.deleteMany(event.notificationIds);
+    } catch (e) {
+      emit(
+        state.copyWith(
+          paginationState: state.paginationState.copyWith(
+            items: previousItems,
+            total: state.paginationState.total,
+          ),
+          actionError: 'Failed to delete notifications',
+        ),
+      );
+      if (unreadDeletedCount > 0) {
+        for (var i = 0; i < unreadDeletedCount; i++) {
+          _unreadCountCubit?.increment();
+        }
       }
     }
   }

@@ -164,7 +164,7 @@ class BodyGuardHeaderCard extends StatelessWidget {
                 ),
               ),
               Text(
-                '/ hour',
+                '/ hr',
                 style: context.textTheme.labelSmall?.colour(
                   context.colors.onSurfaceVariant,
                 ),

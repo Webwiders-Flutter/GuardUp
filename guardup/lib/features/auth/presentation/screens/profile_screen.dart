@@ -285,7 +285,9 @@ class ProfileScreen extends StatelessWidget {
         : Assets.images.dummyAvatar.path;
 
     final specialization = state.specializationText;
-    final location = state.address.isNotEmpty ? state.address : '-';
+    final location = state.address.isNotEmpty
+        ? state.address
+        : 'Location not set';
 
     return _ProfileCard(
       name: guardName.isNotEmpty ? guardName : 'Operative Guard',

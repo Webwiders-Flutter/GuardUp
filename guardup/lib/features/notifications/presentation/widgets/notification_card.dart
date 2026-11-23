@@ -24,6 +24,7 @@ class NotificationCard extends StatelessWidget {
     return WrapperCard(
       onTap: onTap,
       borderWidth: 1.5,
+      borderRadius: AppRadius.lg,
       padding: AppSpacing.mlg.allPadding,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,

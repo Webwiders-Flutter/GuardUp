@@ -60,43 +60,50 @@ class _BodyGuardCompleteProfileScreenState
   final _hourlyRateController = TextEditingController();
   final _bioController = TextEditingController();
 
-  final _serviceDropdownController = SelectionController<String>.single();
+  late final SelectionController<String> _serviceDropdownController;
   final ValueNotifier<List<String>> _selectedServicesNotifier =
       ValueNotifier<List<String>>([]);
 
   /// Available active services dynamically fetched from DatabaseTables.services.
   final ValueNotifier<List<ServiceItemModel>> _availableServicesNotifier =
       ValueNotifier<List<ServiceItemModel>>([]);
-  final ValueNotifier<bool> _isServicesLoadingNotifier =
-      ValueNotifier<bool>(true);
+  final ValueNotifier<bool> _isServicesLoadingNotifier = ValueNotifier<bool>(
+    true,
+  );
 
   /// Isolated avatar profile picture notifier matching edit profile UI.
   final ValueNotifier<XFile?> _profileImageNotifier = ValueNotifier<XFile?>(
     null,
   );
-  final ValueNotifier<String?> _networkImageUrlNotifier = ValueNotifier<String?>(
-    null,
-  );
+  final ValueNotifier<String?> _networkImageUrlNotifier =
+      ValueNotifier<String?>(null);
   final ValueNotifier<bool> _isLoadingNotifier = ValueNotifier<bool>(false);
 
   @override
   void initState() {
     super.initState();
-    final authUser =
-        sl.isRegistered<AuthBloc>() ? sl<AuthBloc>().state.user : null;
+    final authUser = sl.isRegistered<AuthBloc>()
+        ? sl<AuthBloc>().state.user
+        : null;
     final metaName =
         Supabase.instance.client.auth.currentUser?.userMetadata?['name']
             as String?;
 
     final initialName =
         (authUser?.name != null &&
-                authUser!.name.isNotEmpty &&
-                authUser.name != 'User' &&
-                authUser.name != 'New User')
-            ? authUser.name
-            : (metaName ?? '');
+            authUser!.name.isNotEmpty &&
+            authUser.name != 'User' &&
+            authUser.name != 'New User')
+        ? authUser.name
+        : (metaName ?? '');
 
     _fullNameController = TextEditingController(text: initialName);
+    _serviceDropdownController = SelectionController<String>.multi(
+      initial: _selectedServicesNotifier.value,
+      onChanged: (selected) {
+        _selectedServicesNotifier.value = List<String>.from(selected);
+      },
+    );
     _initData();
   }
 
@@ -114,8 +121,9 @@ class _BodyGuardCompleteProfileScreenState
           .order('display_order', ascending: true);
 
       if (mounted) {
-        _availableServicesNotifier.value =
-            rows.map((r) => ServiceItemModel.fromJson(r)).toList();
+        _availableServicesNotifier.value = rows
+            .map((r) => ServiceItemModel.fromJson(r))
+            .toList();
       }
     } catch (e, stack) {
       debugPrint('Error loading services: $e\n$stack');
@@ -162,13 +170,15 @@ class _BodyGuardCompleteProfileScreenState
               .from(DatabaseTables.userServices)
               .select('service_id')
               .eq('user_id', currentUserId);
-          final activeIds =
-              _availableServicesNotifier.value.map((s) => s.id).toSet();
+          final activeIds = _availableServicesNotifier.value
+              .map((s) => s.id)
+              .toSet();
           final validServices = (userServicesRows as List<dynamic>)
               .map((r) => r['service_id']?.toString() ?? '')
               .where((id) => id.isNotEmpty && activeIds.contains(id))
               .toList();
           _selectedServicesNotifier.value = validServices;
+          _serviceDropdownController.setSelection(validServices);
         } catch (e, stack) {
           debugPrint('Error loading user services: $e\n$stack');
         }
@@ -218,8 +228,10 @@ class _BodyGuardCompleteProfileScreenState
   }
 
   void _handleRemoveService(String serviceCode) {
-    _selectedServicesNotifier.value =
-        List<String>.from(_selectedServicesNotifier.value)..remove(serviceCode);
+    _selectedServicesNotifier.value = List<String>.from(
+      _selectedServicesNotifier.value,
+    )..remove(serviceCode);
+    _serviceDropdownController.deselect(serviceCode);
   }
 
   Future<void> _handleNext() async {
@@ -303,10 +315,12 @@ class _BodyGuardCompleteProfileScreenState
 
           if (_selectedServicesNotifier.value.isNotEmpty) {
             final insertPayload = _selectedServicesNotifier.value
-                .map((serviceId) => {
-                      'user_id': currentUserId,
-                      'service_id': serviceId,
-                    })
+                .map(
+                  (serviceId) => {
+                    'user_id': currentUserId,
+                    'service_id': serviceId,
+                  },
+                )
                 .toList();
 
             await Supabase.instance.client
@@ -317,8 +331,9 @@ class _BodyGuardCompleteProfileScreenState
       }
 
       if (mounted) {
-        final authState =
-            sl.isRegistered<AuthBloc>() ? sl<AuthBloc>().state : null;
+        final authState = sl.isRegistered<AuthBloc>()
+            ? sl<AuthBloc>().state
+            : null;
         final isRejected = authState?.isRejected == true;
         final hasRejectedDocs = authState?.hasRejectedDocuments == true;
 
@@ -329,8 +344,9 @@ class _BodyGuardCompleteProfileScreenState
               ? sl<AuthRepository>().currentUserId
               : null;
           if (currentUserId != null) {
-            await sl<DocumentSubmissionService>()
-                .submitApplicationForReview(currentUserId);
+            await sl<DocumentSubmissionService>().submitApplicationForReview(
+              currentUserId,
+            );
             if (sl.isRegistered<AuthBloc>()) {
               sl<AuthBloc>().add(const AuthCheckStatusRequested());
               sl<AuthBloc>().add(const AuthReloadRoleDataRequested());
@@ -397,500 +413,471 @@ class _BodyGuardCompleteProfileScreenState
                 child: ConstrainedBox(
                   constraints: BoxConstraints(minHeight: constraints.maxHeight),
                   child: IntrinsicHeight(
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        AppSpacing.lg.h,
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AppSpacing.lg.h,
 
-                        // Profile Rejection Reason Banner
-                        Builder(
-                          builder: (context) {
-                            final authState = sl.isRegistered<AuthBloc>()
-                                ? sl<AuthBloc>().state
-                                : null;
-                            final profileReason =
-                                authState?.profileRejectionReason;
-                            if (authState?.isRejected != true ||
-                                profileReason == null ||
-                                profileReason.isEmpty) {
-                              return const SizedBox.shrink();
-                            }
+                          // Profile Rejection Reason Banner
+                          Builder(
+                            builder: (context) {
+                              final authState = sl.isRegistered<AuthBloc>()
+                                  ? sl<AuthBloc>().state
+                                  : null;
+                              final profileReason =
+                                  authState?.profileRejectionReason;
+                              if (authState?.isRejected != true ||
+                                  profileReason == null ||
+                                  profileReason.isEmpty) {
+                                return const SizedBox.shrink();
+                              }
 
-                            return Padding(
-                              padding: EdgeInsets.only(bottom: AppSpacing.lg),
-                              child: Container(
-                                width: double.infinity,
-                                padding: AppSpacing.md.allPadding,
-                                decoration: BoxDecoration(
-                                  color: context.colors.error
-                                      .withValues(alpha: 0.12),
-                                  borderRadius:
-                                      BorderRadius.circular(AppRadius.md),
-                                  border: Border.all(
-                                    color: context.colors.error
-                                        .withValues(alpha: 0.4),
-                                    width: 1.2,
-                                  ),
-                                ),
-                                child: Row(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                  children: [
-                                    Icon(
-                                      Icons.error_outline_rounded,
-                                      color: context.colors.error,
-                                      size: 20,
+                              return Padding(
+                                padding: EdgeInsets.only(bottom: AppSpacing.lg),
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: AppSpacing.md.allPadding,
+                                  decoration: BoxDecoration(
+                                    color: context.colors.error.withValues(
+                                      alpha: 0.12,
                                     ),
-                                    AppSpacing.sm.w,
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            'Profile Revision Requested',
-                                            style: context
-                                                .textTheme.labelMedium
-                                                ?.bold()
-                                                .colour(context.colors.error),
-                                          ),
-                                          AppSpacing.xxs.h,
-                                          Text(
-                                            profileReason,
-                                            style: context
-                                                .textTheme.bodySmall
-                                                ?.colour(
-                                                  context.colors.onSurface,
-                                                )
-                                                .copyWith(height: 1.35),
-                                          ),
-                                        ],
-                                      ),
+                                    borderRadius: BorderRadius.circular(
+                                      AppRadius.md,
                                     ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-
-                        // 1. Profile Picture (Dashed Circular Border Picker)
-                        Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Stack(
-                                clipBehavior: Clip.none,
-                                alignment: Alignment.center,
-                                children: [
-                                  GestureDetector(
-                                    onTap: _handleChangePhoto,
-                                    behavior: HitTestBehavior.opaque,
-                                    child: CustomPaint(
-                                      painter: _DashedCirclePainter(
-                                        color: context.colors.primary,
-                                        strokeWidth: 1,
-                                        dashLength: 7.5,
-                                        gapLength: 6.0,
+                                    border: Border.all(
+                                      color: context.colors.error.withValues(
+                                        alpha: 0.4,
                                       ),
-                                      child: Container(
-                                        width: 110,
-                                        height: 110,
-                                        alignment: Alignment.center,
-                                        child: Container(
-                                          width: 100,
-                                          height: 100,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: context.colors.onPrimary,
-                                          ),
-                                          child: ValueListenableBuilder<XFile?>(
-                                            valueListenable:
-                                                _profileImageNotifier,
-                                            builder: (context, profileImage, _) {
-                                              if (profileImage != null) {
-                                                return ClipOval(
-                                                  child: AppImage.xFile(
-                                                    xFile: profileImage,
-                                                    width: 108,
-                                                    height: 108,
-                                                    fit: BoxFit.cover,
-                                                  ),
-                                                );
-                                              }
-
-                                              return ValueListenableBuilder<String?>(
-                                                valueListenable:
-                                                    _networkImageUrlNotifier,
-                                                builder: (context, networkUrl, _) {
-                                                  if (networkUrl != null &&
-                                                      networkUrl.isNotEmpty) {
-                                                    return ClipOval(
-                                                      child: AppImage.network(
-                                                        imageUrl: networkUrl,
-                                                        width: 108,
-                                                        height: 108,
-                                                        fit: BoxFit.cover,
-                                                      ),
-                                                    );
-                                                  }
-
-                                                  return Column(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment.center,
-                                                    children: [
-                                                      Icon(
-                                                        Icons
-                                                            .person_outline_rounded,
-                                                        size: 38,
-                                                        color: context
-                                                            .colors.outline,
-                                                      ),
-                                                      6.h,
-                                                      Text(
-                                                        context.l10n.addPhoto,
-                                                        style: context
-                                                            .textTheme
-                                                            .labelSmall
-                                                            ?.regular()
-                                                            .copyWith(
-                                                              fontSize: 10.0,
-                                                              letterSpacing: 0.2,
-                                                            )
-                                                            .colour(
-                                                              context
-                                                                  .colors
-                                                                  .primary,
-                                                            ),
-                                                      ),
-                                                    ],
-                                                  );
-                                                },
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                      ),
+                                      width: 1.2,
                                     ),
                                   ),
-
-                                  // Plus Icon Badge at Bottom Right
-                                  Positioned(
-                                    right: 2,
-                                    bottom: 2,
-                                    child: GestureDetector(
-                                      onTap: _handleChangePhoto,
-                                      child: Container(
-                                        width: 28,
-                                        height: 28,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color:
-                                              context.colors.primaryContainer,
-                                          border: Border.all(
-                                            color: context.colors.surface,
-                                            width: 3.5,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withValues(
-                                                alpha: 0.35,
-                                              ),
-                                              blurRadius: 4,
-                                              offset: const Offset(0, 2),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Icon(
+                                        Icons.error_outline_rounded,
+                                        color: context.colors.error,
+                                        size: 20,
+                                      ),
+                                      AppSpacing.sm.w,
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              'Profile Revision Requested',
+                                              style: context
+                                                  .textTheme
+                                                  .labelMedium
+                                                  ?.bold()
+                                                  .colour(context.colors.error),
+                                            ),
+                                            AppSpacing.xxs.h,
+                                            Text(
+                                              profileReason,
+                                              style: context.textTheme.bodySmall
+                                                  ?.colour(
+                                                    context.colors.onSurface,
+                                                  )
+                                                  .copyWith(height: 1.35),
                                             ),
                                           ],
                                         ),
-                                        alignment: Alignment.center,
-                                        child: Icon(
-                                          Icons.add_rounded,
-                                          size: 22,
-                                          color: context.colors.onPrimary,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              AppSpacing.smd.h,
-                              Text(
-                                context.l10n.uploadPortraitGuidance,
-                                style: context.textTheme.labelMedium
-                                    ?.regular()
-                                    .colour(context.colors.outline),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
-                        AppSpacing.xxl.h,
-
-                        // 2. Full Name Field
-                        AppFieldLabel(text: context.l10n.fullNameLabel),
-                        AppSpacing.sm.h,
-                        AppTextField(
-                          controller: _fullNameController,
-                          decoration: InputDecoration(
-                            hintText: context.l10n.enterFullName,
-                            fillColor: context.colors.onPrimary,
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: AppRadius.md.toBorderRadius,
-                              borderSide: BorderSide(
-                                color: context.colors.outlineVariant,
-                              ),
-                            ),
-                          ),
-                          style: TextStyle(color: context.colors.onSurface),
-                          textInputAction: TextInputAction.next,
-                          validator: (value) =>
-                              Validators.required(context, value),
-                        ),
-                        AppSpacing.xxl.h,
-
-                        // 3. Hourly Rate Field
-                        AppFieldLabel(text: context.l10n.hourlyRateLabel),
-                        AppSpacing.sm.h,
-                        AppTextField(
-                          controller: _hourlyRateController,
-                          decoration: InputDecoration(
-                            hintText: context.l10n.enterHourlyRate,
-                            prefix: Padding(
-                              padding: const EdgeInsets.only(
-                                left: AppSpacing.xs,
-                                right: AppSpacing.sm,
-                              ),
-                              child: Text(
-                                r'$',
-                                style: context.textTheme.titleMedium
-                                    ?.bold()
-                                    .colour(context.colors.primary),
-                              ),
-                            ),
-                            suffix: Text(
-                              context.l10n.perHour,
-                              style: context.textTheme.bodyMedium?.colour(
-                                context.colors.outline,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: AppRadius.md.toBorderRadius,
-                              borderSide: BorderSide(
-                                color: context.colors.outlineVariant,
-                              ),
-                            ),
-                            fillColor: context.colors.onPrimary,
-                          ),
-                          style: TextStyle(color: context.colors.onSurface),
-                          keyboardType: TextInputType.number,
-                          textInputAction: TextInputAction.next,
-                          validator: (value) {
-                            final requiredError = Validators.required(
-                              context,
-                              value,
-                              fieldName: context.l10n.hourlyRateLabel,
-                            );
-                            if (requiredError != null) return requiredError;
-
-                            final rate = double.tryParse(value!.trim());
-                            if (rate == null || rate <= 0) {
-                              return context.l10n.hourlyRateGreaterThanZero;
-                            }
-                            return null;
-                          },
-                        ),
-                        AppSpacing.xxl.h,
-
-                        // 4. Services Offered Section (Dynamically loaded from DatabaseTables.services)
-                        ValueListenableBuilder<List<ServiceItemModel>>(
-                          valueListenable: _availableServicesNotifier,
-                          builder: (context, availableServices, _) {
-                            final activeServices = availableServices
-                                .where((s) => s.isActive)
-                                .toList();
-
-                            return ValueListenableBuilder<List<String>>(
-                              valueListenable: _selectedServicesNotifier,
-                              builder: (context, selectedServices, _) {
-                                final remainingServices = activeServices
-                                    .where(
-                                      (s) => !selectedServices.contains(s.id),
-                                    )
-                                    .toList();
-
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        AppFieldLabel(
-                                          text:
-                                              context.l10n.servicesOfferedLabel,
-                                        ),
-                                        Text(
-                                          context.l10n.selectedServicesCount(
-                                            selectedServices.length,
-                                          ),
-                                          style: context.textTheme.labelSmall
-                                              ?.bold()
-                                              .colour(context.colors.primary),
-                                        ),
-                                      ],
-                                    ),
-                                    if (selectedServices.isNotEmpty) ...[
-                                      AppSpacing.lg.h,
-                                      Wrap(
-                                        spacing: AppSpacing.sm,
-                                        runSpacing: AppSpacing.sm,
-                                        children: selectedServices.map((serviceId) {
-                                          final serviceModel =
-                                              activeServices.firstWhere(
-                                            (s) => s.id == serviceId,
-                                            orElse: () => ServiceItemModel(
-                                              id: serviceId,
-                                              code: '',
-                                              name: 'Service',
-                                            ),
-                                          );
-                                          return AppRemovableChip(
-                                            text: serviceModel.name,
-                                            onRemove: () =>
-                                                _handleRemoveService(serviceId),
-                                          );
-                                        }).toList(),
                                       ),
                                     ],
-                                    AppSpacing.lg.h,
-                                    AppDropdown<String>(
-                                      key: ValueKey(
-                                        'services_dropdown_${selectedServices.join('_')}',
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+
+                          // 1. Profile Picture (Dashed Circular Border Picker)
+                          Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Stack(
+                                  clipBehavior: Clip.none,
+                                  alignment: Alignment.center,
+                                  children: [
+                                    GestureDetector(
+                                      onTap: _handleChangePhoto,
+                                      behavior: HitTestBehavior.opaque,
+                                      child: CustomPaint(
+                                        painter: _DashedCirclePainter(
+                                          color: context.colors.primary,
+                                          strokeWidth: 1,
+                                          dashLength: 7.5,
+                                          gapLength: 6.0,
+                                        ),
+                                        child: Container(
+                                          width: 110,
+                                          height: 110,
+                                          alignment: Alignment.center,
+                                          child: Container(
+                                            width: 100,
+                                            height: 100,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: context.colors.onPrimary,
+                                            ),
+                                            child: ValueListenableBuilder<XFile?>(
+                                              valueListenable:
+                                                  _profileImageNotifier,
+                                              builder: (context, profileImage, _) {
+                                                if (profileImage != null) {
+                                                  return ClipOval(
+                                                    child: AppImage.xFile(
+                                                      xFile: profileImage,
+                                                      width: 108,
+                                                      height: 108,
+                                                      fit: BoxFit.cover,
+                                                    ),
+                                                  );
+                                                }
+
+                                                return ValueListenableBuilder<
+                                                  String?
+                                                >(
+                                                  valueListenable:
+                                                      _networkImageUrlNotifier,
+                                                  builder: (context, networkUrl, _) {
+                                                    if (networkUrl != null &&
+                                                        networkUrl.isNotEmpty) {
+                                                      return ClipOval(
+                                                        child: AppImage.network(
+                                                          imageUrl: networkUrl,
+                                                          width: 108,
+                                                          height: 108,
+                                                          fit: BoxFit.cover,
+                                                        ),
+                                                      );
+                                                    }
+
+                                                    return Column(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        Icon(
+                                                          Icons
+                                                              .person_outline_rounded,
+                                                          size: 38,
+                                                          color: context
+                                                              .colors
+                                                              .outline,
+                                                        ),
+                                                        6.h,
+                                                        Text(
+                                                          context.l10n.addPhoto,
+                                                          style: context
+                                                              .textTheme
+                                                              .labelSmall
+                                                              ?.regular()
+                                                              .copyWith(
+                                                                fontSize: 10.0,
+                                                                letterSpacing:
+                                                                    0.2,
+                                                              )
+                                                              .colour(
+                                                                context
+                                                                    .colors
+                                                                    .primary,
+                                                              ),
+                                                        ),
+                                                      ],
+                                                    );
+                                                  },
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ),
                                       ),
-                                      controller: _serviceDropdownController,
-                                      hintText: context.l10n.selectService,
-                                      closeOnSelect: true,
-                                      target: (fieldKey) {
-                                        return AppTextField(
-                                          key: fieldKey,
-                                          readOnly: true,
-                                          decoration: InputDecoration(
-                                            hintText:
-                                                context.l10n.selectService,
-                                            suffixIcon: Icon(
-                                              Icons.expand_more,
-                                              color: context.colors.outline,
+                                    ),
+
+                                    // Plus Icon Badge at Bottom Right
+                                    Positioned(
+                                      right: 2,
+                                      bottom: 2,
+                                      child: GestureDetector(
+                                        onTap: _handleChangePhoto,
+                                        child: Container(
+                                          width: 28,
+                                          height: 28,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color:
+                                                context.colors.primaryContainer,
+                                            border: Border.all(
+                                              color: context.colors.surface,
+                                              width: 3.5,
                                             ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  AppRadius.md.toBorderRadius,
-                                              borderSide: BorderSide(
-                                                color: context
-                                                    .colors.outlineVariant,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withValues(
+                                                  alpha: 0.35,
+                                                ),
+                                                blurRadius: 4,
+                                                offset: const Offset(0, 2),
                                               ),
-                                            ),
-                                            fillColor: context.colors.onPrimary,
+                                            ],
                                           ),
-                                          style: TextStyle(
-                                            color: context.colors.onSurface,
+                                          alignment: Alignment.center,
+                                          child: Icon(
+                                            Icons.add_rounded,
+                                            size: 22,
+                                            color: context.colors.onPrimary,
                                           ),
-                                        );
-                                      },
-                                      items: remainingServices
-                                          .map(
-                                            (e) => DropdownItem<String>(
-                                              id: e.id,
-                                              data: e.name,
-                                            ),
-                                          )
-                                          .toList(),
-                                      onSelected: (serviceId) {
-                                        if (!_selectedServicesNotifier.value
-                                            .contains(serviceId)) {
-                                          _selectedServicesNotifier.value = [
-                                            ..._selectedServicesNotifier.value,
-                                            serviceId,
-                                          ];
-                                        }
-                                        _serviceDropdownController.clear();
-                                      },
+                                        ),
+                                      ),
                                     ),
                                   ],
-                                );
-                              },
-                            );
-                          },
-                        ),
-                        AppSpacing.xxl.h,
-
-                        // 5. Bio & Background Field
-                        AppFieldLabel(text: context.l10n.bioBackgroundLabel),
-                        AppSpacing.sm.h,
-                        AppTextField(
-                          controller: _bioController,
-                          decoration: InputDecoration(
-                            hintText: context.l10n.bioBackgroundHint,
-                            fillColor: context.colors.onPrimary,
+                                ),
+                                AppSpacing.smd.h,
+                                Text(
+                                  context.l10n.uploadPortraitGuidance,
+                                  style: context.textTheme.labelMedium
+                                      ?.regular()
+                                      .colour(context.colors.outline),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
                           ),
-                          style: TextStyle(color: context.colors.onSurface),
-                          maxLines: 4,
-                          minLines: 4,
-                          textInputAction: TextInputAction.done,
-                          validator: (value) {
-                            final requiredError = Validators.required(
-                              context,
-                              value,
-                              fieldName: context.l10n.bioBackgroundLabel,
-                            );
-                            if (requiredError != null) return requiredError;
+                          AppSpacing.xxl.h,
 
-                            if (value!.trim().length < 15) {
-                              return context.l10n.bioMinCharacters;
-                            }
-                            return null;
-                          },
-                        ),
-
-                        const Spacer(),
-                        AppSpacing.xxl.h,
-
-                        // 6. Next Action Button
-                        ValueListenableBuilder<bool>(
-                          valueListenable: _isLoadingNotifier,
-                          builder: (context, isLoading, _) {
-                            final authState = sl.isRegistered<AuthBloc>()
-                                ? sl<AuthBloc>().state
-                                : null;
-                            final isResubmit = authState?.isRejected == true &&
-                                authState?.hasRejectedDocuments == false;
-
-                            return AppButton(
-                              text: isResubmit
-                                  ? 'Resubmit Profile for Review'
-                                  : context.l10n.next,
-                              isLoading: isLoading,
-                              trailing: Icon(
-                                isResubmit
-                                    ? Icons.check_circle_outline_rounded
-                                    : Icons.arrow_forward_rounded,
-                                size: AppSizes.iconMd,
-                                color: context.colors.onPrimary,
+                          // 2. Full Name Field
+                          AppFieldLabel(text: context.l10n.fullNameLabel),
+                          AppSpacing.sm.h,
+                          AppTextField(
+                            controller: _fullNameController,
+                            decoration: InputDecoration(
+                              hintText: context.l10n.enterFullName,
+                              fillColor: context.colors.onPrimary,
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: AppRadius.md.toBorderRadius,
+                                borderSide: BorderSide(
+                                  color: context.colors.outlineVariant,
+                                ),
                               ),
-                              onPressed: _handleNext,
-                            );
-                          },
-                        ),
-                        AppSpacing.xxl.h,
-                      ],
+                            ),
+                            style: TextStyle(color: context.colors.onSurface),
+                            textInputAction: TextInputAction.next,
+                            validator: (value) =>
+                                Validators.required(context, value),
+                          ),
+                          AppSpacing.xxl.h,
+
+                          // 3. Hourly Rate Field
+                          AppFieldLabel(text: context.l10n.hourlyRateLabel),
+                          AppSpacing.sm.h,
+                          AppTextField(
+                            controller: _hourlyRateController,
+                            decoration: InputDecoration(
+                              hintText: context.l10n.enterHourlyRate,
+                              prefix: Padding(
+                                padding: const EdgeInsets.only(
+                                  left: AppSpacing.xs,
+                                  right: AppSpacing.sm,
+                                ),
+                                child: Text(
+                                  r'$',
+                                  style: context.textTheme.titleMedium
+                                      ?.bold()
+                                      .colour(context.colors.primary),
+                                ),
+                              ),
+                              suffix: Text(
+                                context.l10n.perHour,
+                                style: context.textTheme.bodyMedium?.colour(
+                                  context.colors.outline,
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: AppRadius.md.toBorderRadius,
+                                borderSide: BorderSide(
+                                  color: context.colors.outlineVariant,
+                                ),
+                              ),
+                              fillColor: context.colors.onPrimary,
+                            ),
+                            style: TextStyle(color: context.colors.onSurface),
+                            keyboardType: TextInputType.number,
+                            textInputAction: TextInputAction.next,
+                            validator: (value) {
+                              final requiredError = Validators.required(
+                                context,
+                                value,
+                                fieldName: context.l10n.hourlyRateLabel,
+                              );
+                              if (requiredError != null) return requiredError;
+
+                              final rate = double.tryParse(value!.trim());
+                              if (rate == null || rate <= 0) {
+                                return context.l10n.hourlyRateGreaterThanZero;
+                              }
+                              return null;
+                            },
+                          ),
+                          AppSpacing.xxl.h,
+
+                          // 4. Services Offered Section (Dynamically loaded from DatabaseTables.services)
+                          ValueListenableBuilder<List<ServiceItemModel>>(
+                            valueListenable: _availableServicesNotifier,
+                            builder: (context, availableServices, _) {
+                              final activeServices = availableServices
+                                  .where((s) => s.isActive)
+                                  .toList();
+
+                              return ValueListenableBuilder<List<String>>(
+                                valueListenable: _selectedServicesNotifier,
+                                builder: (context, selectedServices, _) {
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          AppFieldLabel(
+                                            text: context
+                                                .l10n
+                                                .servicesOfferedLabel,
+                                          ),
+                                          Text(
+                                            context.l10n.selectedServicesCount(
+                                              selectedServices.length,
+                                            ),
+                                            style: context.textTheme.labelSmall
+                                                ?.bold()
+                                                .colour(context.colors.primary),
+                                          ),
+                                        ],
+                                      ),
+                                      if (selectedServices.isNotEmpty) ...[
+                                        AppSpacing.lg.h,
+                                        Wrap(
+                                          spacing: AppSpacing.sm,
+                                          runSpacing: AppSpacing.sm,
+                                          children: selectedServices.map((
+                                            serviceId,
+                                          ) {
+                                            final serviceModel = activeServices
+                                                .firstWhere(
+                                                  (s) => s.id == serviceId,
+                                                  orElse: () =>
+                                                      ServiceItemModel(
+                                                        id: serviceId,
+                                                        code: '',
+                                                        name: 'Service',
+                                                      ),
+                                                );
+                                            return AppRemovableChip(
+                                              text: serviceModel.name,
+                                              onRemove: () =>
+                                                  _handleRemoveService(
+                                                    serviceId,
+                                                  ),
+                                            );
+                                          }).toList(),
+                                        ),
+                                      ],
+                                      AppSpacing.lg.h,
+                                      AppDropdown<String>(
+                                        controller: _serviceDropdownController,
+                                        hintText: context.l10n.selectService,
+                                        okButtonText: 'OK',
+                                        items: activeServices
+                                            .map(
+                                              (e) => DropdownItem<String>(
+                                                id: e.id,
+                                                data: e.name,
+                                              ),
+                                            )
+                                            .toList(),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                          AppSpacing.xxl.h,
+
+                          // 5. Bio & Background Field
+                          AppFieldLabel(text: context.l10n.bioBackgroundLabel),
+                          AppSpacing.sm.h,
+                          AppTextField(
+                            controller: _bioController,
+                            decoration: InputDecoration(
+                              hintText: context.l10n.bioBackgroundHint,
+                              fillColor: context.colors.onPrimary,
+                            ),
+                            style: TextStyle(color: context.colors.onSurface),
+                            maxLines: 4,
+                            minLines: 4,
+                            textInputAction: TextInputAction.done,
+                            validator: (value) {
+                              final requiredError = Validators.required(
+                                context,
+                                value,
+                                fieldName: context.l10n.bioBackgroundLabel,
+                              );
+                              if (requiredError != null) return requiredError;
+
+                              if (value!.trim().length < 15) {
+                                return context.l10n.bioMinCharacters;
+                              }
+                              return null;
+                            },
+                          ),
+
+                          const Spacer(),
+                          AppSpacing.xxl.h,
+
+                          // 6. Next Action Button
+                          ValueListenableBuilder<bool>(
+                            valueListenable: _isLoadingNotifier,
+                            builder: (context, isLoading, _) {
+                              final authState = sl.isRegistered<AuthBloc>()
+                                  ? sl<AuthBloc>().state
+                                  : null;
+                              final isResubmit =
+                                  authState?.isRejected == true &&
+                                  authState?.hasRejectedDocuments == false;
+
+                              return AppButton(
+                                text: isResubmit
+                                    ? 'Resubmit Profile for Review'
+                                    : context.l10n.next,
+                                isLoading: isLoading,
+                                trailing: Icon(
+                                  isResubmit
+                                      ? Icons.check_circle_outline_rounded
+                                      : Icons.arrow_forward_rounded,
+                                  size: AppSizes.iconMd,
+                                  color: context.colors.onPrimary,
+                                ),
+                                onPressed: _handleNext,
+                              );
+                            },
+                          ),
+                          AppSpacing.xxl.h,
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          );
+            );
           },
         ),
       ),

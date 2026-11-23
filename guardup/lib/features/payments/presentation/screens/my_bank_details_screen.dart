@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:guardup/core/constants/api/database_tables.dart';
 import 'package:guardup/core/constants/app_radius.dart';
+import 'package:guardup/core/di/injection_container.dart';
 import 'package:guardup/core/extensions/string.extension.dart';
+import 'package:guardup/features/auth/auth.dart';
 import 'package:quick_container/quick_container.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -46,6 +48,13 @@ class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
   @override
   void initState() {
     super.initState();
+    if (sl.isRegistered<AuthBloc>()) {
+      final authState = sl<AuthBloc>().state;
+      final name = authState.displayName;
+      if (name.isNotEmpty && name != 'User') {
+        _accountHolderController.text = name;
+      }
+    }
     _loadBankAccounts();
   }
 
@@ -267,7 +276,8 @@ class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
                               if (accounts.isNotEmpty)
                                 Text(
                                   '${accounts.length} Saved',
-                                  style: context.textTheme.labelSmall?.bold()
+                                  style: context.textTheme.labelSmall
+                                      ?.bold()
                                       .colour(context.colors.primary),
                                 ),
                             ],
@@ -287,9 +297,10 @@ class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
                                   Expanded(
                                     child: Text(
                                       'No bank accounts saved yet. Add your details below for withdrawals and deposits.',
-                                      style: context.textTheme.bodySmall?.colour(
-                                        context.colors.onSurfaceVariant,
-                                      ),
+                                      style: context.textTheme.bodySmall
+                                          ?.colour(
+                                            context.colors.onSurfaceVariant,
+                                          ),
                                     ),
                                   ),
                                 ],
@@ -304,8 +315,7 @@ class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
                                 child: BankAccountCard(
                                   account: account,
                                   onEdit: () => _showEditAccountSheet(account),
-                                  onDelete: () =>
-                                      _handleDeleteAccount(account),
+                                  onDelete: () => _handleDeleteAccount(account),
                                 ),
                               ),
                             ),
@@ -521,10 +531,7 @@ class _EditBankAccountSheet extends StatefulWidget {
   final BankAccount account;
   final ValueChanged<BankAccount>? onAccountUpdated;
 
-  const _EditBankAccountSheet({
-    required this.account,
-    this.onAccountUpdated,
-  });
+  const _EditBankAccountSheet({required this.account, this.onAccountUpdated});
 
   @override
   State<_EditBankAccountSheet> createState() => _EditBankAccountSheetState();
@@ -543,10 +550,12 @@ class _EditBankAccountSheetState extends State<_EditBankAccountSheet> {
   @override
   void initState() {
     super.initState();
-    _accountNumberController =
-        TextEditingController(text: widget.account.accountNumber);
-    _accountHolderController =
-        TextEditingController(text: widget.account.accountHolder);
+    _accountNumberController = TextEditingController(
+      text: widget.account.accountNumber,
+    );
+    _accountHolderController = TextEditingController(
+      text: widget.account.accountHolder,
+    );
     _bankNameController = TextEditingController(text: widget.account.bankName);
     _branchController = TextEditingController(text: widget.account.branch);
     _ifscCodeController = TextEditingController(text: widget.account.ifscCode);

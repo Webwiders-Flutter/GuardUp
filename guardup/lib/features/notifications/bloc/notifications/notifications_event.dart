@@ -60,3 +60,13 @@ class NotificationDeleteRequested extends NotificationsEvent {
   @override
   List<Object?> get props => [notificationId];
 }
+
+/// Bulk deletes multiple notifications by their IDs.
+class NotificationsDeleteManyRequested extends NotificationsEvent {
+  final List<String> notificationIds;
+
+  const NotificationsDeleteManyRequested(this.notificationIds);
+
+  @override
+  List<Object?> get props => [notificationIds];
+}

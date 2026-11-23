@@ -27,6 +27,7 @@ import '../../bloc/notifications/notifications_state.dart';
 import '../../bloc/unread_count/unread_notification_count_cubit.dart';
 import '../../data/enums/notification_type.enum.dart';
 import '../../data/models/notification.model.dart';
+import '../widgets/app_swipeable_delete.dart';
 import '../widgets/notification_card.dart';
 import '/features/booking/presentation/screens/bookings_screen.dart';
 import '/features/payments/presentation/screens/my_wallet_screen.dart';
@@ -47,6 +48,10 @@ class _NotificationsScreenState extends State<NotificationsScreen>
   late final TabController _tabController;
   late final PaginationController<NotificationModel> _paginationController;
   late final NotificationsBloc _notificationsBloc;
+
+  // Multi-selection state
+  bool _isSelectionMode = false;
+  final Set<String> _selectedIds = {};
 
   @override
   void initState() {
@@ -123,6 +128,78 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     AppSnackbar.success(context.l10n.allMarkedAsRead);
   }
 
+  void _toggleSelection(String id) {
+    setState(() {
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+        if (_selectedIds.isEmpty) _isSelectionMode = false;
+      } else {
+        _selectedIds.add(id);
+      }
+    });
+  }
+
+  void _selectAll(List<NotificationModel> items) {
+    setState(() {
+      if (_selectedIds.length == items.length) {
+        _selectedIds.clear();
+        _isSelectionMode = false;
+      } else {
+        _selectedIds.addAll(items.map((e) => e.id));
+      }
+    });
+  }
+
+  void _exitSelectionMode() {
+    setState(() {
+      _selectedIds.clear();
+      _isSelectionMode = false;
+    });
+  }
+
+  Future<void> _handleDeleteSelected() async {
+    if (_selectedIds.isEmpty) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.colors.surfaceContainer,
+        title: Text(
+          'Delete Notifications',
+          style: context.textTheme.titleMedium?.bold(),
+        ),
+        content: Text(
+          'Are you sure you want to delete ${_selectedIds.length} selected notification(s)? This action cannot be undone.',
+          style: context.textTheme.bodyMedium,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              context.l10n.cancel,
+              style: TextStyle(color: context.colors.onSurfaceVariant),
+            ),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: context.colors.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text(
+              'Delete',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      final idsToDelete = _selectedIds.toList();
+      _exitSelectionMode();
+      _notificationsBloc.add(NotificationsDeleteManyRequested(idsToDelete));
+      AppSnackbar.success('Deleted ${idsToDelete.length} notification(s)');
+    }
+  }
+
   void _handleNotificationTap(NotificationModel notification) {
     if (!notification.isRead) {
       _notificationsBloc.add(NotificationMarkAsReadRequested(notification.id));
@@ -151,36 +228,80 @@ class _NotificationsScreenState extends State<NotificationsScreen>
           }
         },
         child: Scaffold(
-          appBar: AppAppBar.transparent(
-            alignTitle: .left,
-            titleWidget: _buildAppBarTitle(context),
-            actions: [
-              AppButton(
-                type: .text,
-                text: context.l10n.markAllAsRead,
-                foregroundColor: context.colors.onSurfaceTertiary,
-                textStyle: context.textTheme.labelMedium,
-                padding: AppSpacing.md.rPadding,
-                onPressed: _handleMarkAllAsRead,
-              ),
-            ],
-          ),
+          appBar: _isSelectionMode
+              ? AppAppBar.transparent(
+                  alignTitle: .left,
+                  leading: IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: _exitSelectionMode,
+                  ),
+                  title: '${_selectedIds.length} selected',
+                  actions: [
+                    TextButton(
+                      onPressed: () =>
+                          _selectAll(_paginationController.value.items),
+                      child: Text(
+                        _selectedIds.length ==
+                                _paginationController.value.items.length
+                            ? 'Deselect All'
+                            : 'Select All',
+                        style: TextStyle(
+                          color: context.colors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.delete_outline_rounded,
+                        color: context.colors.error,
+                      ),
+                      onPressed: _handleDeleteSelected,
+                    ),
+                  ],
+                )
+              : AppAppBar.transparent(
+                  alignTitle: .left,
+                  titleWidget: _buildAppBarTitle(context),
+                  actions: [
+                    if (_paginationController.value.items.isNotEmpty)
+                      IconButton(
+                        icon: const Icon(Icons.checklist_rounded, size: 22),
+                        tooltip: 'Select',
+                        onPressed: () {
+                          setState(() {
+                            _isSelectionMode = true;
+                          });
+                        },
+                      ),
+                    AppButton(
+                      type: .text,
+                      text: context.l10n.markAllAsRead,
+                      foregroundColor: context.colors.onSurfaceTertiary,
+                      textStyle: context.textTheme.labelMedium,
+                      padding: AppSpacing.md.rPadding,
+                      onPressed: _handleMarkAllAsRead,
+                    ),
+                  ],
+                ),
           body: SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 AppSpacing.sm.h,
 
-                // Filter Tabs via AppTabBar
-                Padding(
-                  padding: context.horizontalEdgeInsets,
-                  child: AppTabBar.pill(
-                    controller: _tabController,
-                    tabNames: _tabs(context),
-                    onTap: _onTabSelected,
+                // Filter Tabs via AppTabBar (hidden during multi-select mode)
+                if (!_isSelectionMode) ...[
+                  Padding(
+                    padding: context.horizontalEdgeInsets,
+                    child: AppTabBar.pill(
+                      controller: _tabController,
+                      tabNames: _tabs(context),
+                      onTap: _onTabSelected,
+                    ),
                   ),
-                ),
-                AppSpacing.md.h,
+                  AppSpacing.md.h,
+                ],
 
                 // Paginated Notifications List with Skeletonizer shimmer loader
                 Expanded(
@@ -210,6 +331,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                         ),
                       );
                     },
+
                     itemBuilder: (context, notification, index) {
                       final items = _paginationController.value.items;
                       final isFirstOfToday =
@@ -219,6 +341,61 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                           (index > 0 &&
                               items[index - 1].createdAt.isToday &&
                               !notification.createdAt.isToday);
+                      final isSelected = _selectedIds.contains(notification.id);
+
+                      final cardWidget = Row(
+                        children: [
+                          if (_isSelectionMode) ...[
+                            Checkbox(
+                              value: isSelected,
+                              activeColor: context.colors.primary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              onChanged: (_) =>
+                                  _toggleSelection(notification.id),
+                            ),
+                            AppSpacing.xs.w,
+                          ],
+                          Expanded(
+                            child: NotificationCard(
+                              notification: notification,
+                              onTap: () {
+                                if (_isSelectionMode) {
+                                  _toggleSelection(notification.id);
+                                } else {
+                                  _handleNotificationTap(notification);
+                                }
+                              },
+                            ),
+                          ),
+                        ],
+                      );
+
+                      final content = GestureDetector(
+                        onLongPress: () {
+                          if (!_isSelectionMode) {
+                            setState(() {
+                              _isSelectionMode = true;
+                              _selectedIds.add(notification.id);
+                            });
+                          }
+                        },
+                        child: cardWidget,
+                      );
+
+                      // Swipe left to reveal Delete button, click to delete
+                      final swipeableItem = AppSwipeableDelete(
+                        key: ValueKey(notification.id),
+                        isEnabled: !_isSelectionMode,
+                        onDelete: () {
+                          _notificationsBloc.add(
+                            NotificationDeleteRequested(notification.id),
+                          );
+                          AppSnackbar.success('Notification deleted');
+                        },
+                        child: content,
+                      );
 
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -242,10 +419,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                             ),
                             AppSpacing.sm.h,
                           ],
-                          NotificationCard(
-                            notification: notification,
-                            onTap: () => _handleNotificationTap(notification),
-                          ),
+                          swipeableItem,
                         ],
                       );
                     },
