@@ -3,7 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
 import '/core/constants/api/database_tables.dart';
 import '/core/constants/app_radius.dart';
-import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
