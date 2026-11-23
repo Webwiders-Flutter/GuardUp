@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
-import 'package:quick_container/quick_container.dart';
 
-import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/datetime.extension.dart';
@@ -255,67 +253,32 @@ class _NotificationManagementScreenState
             children: [
               // Mark as Read Button (one-way: once read, cannot toggle back)
               if (!item.isRead) ...[
-                Tooltip(
-                  message: 'Mark as Read',
-                  child: InkWell(
-                    onTap: () => controller.markAsRead(item.id),
-                    borderRadius: AppRadius.smRadius,
-                    child: QuickContainer(
-                      p: AppSpacing.xs + 2,
-                      radius: AppRadius.sm,
-                      color: colors.primary.withValues(alpha: 0.1),
-                      border: Border.all(
-                        color: colors.primary.withValues(alpha: 0.25),
-                      ),
-                      child: Icon(
-                        Icons.done_rounded,
-                        size: AppSpacing.lg,
-                        color: colors.primary,
-                      ),
-                    ),
-                  ),
+                AppButton.outline(
+                  size: .small,
+                  type: .primary,
+                  tooltip: 'Mark as Read',
+                  icon: Icons.done_rounded,
+                  onPressed: () => controller.markAsRead(item.id),
                 ),
                 AppSpacing.sm.w,
               ] else ...[
-                Tooltip(
-                  message: 'Already Read',
-                  child: QuickContainer(
-                    p: AppSpacing.xs + 2,
-                    radius: AppRadius.sm,
-                    color: colors.backgroundLight,
-                    border: Border.all(
-                      color: colors.borderLight.withValues(alpha: 0.5),
-                    ),
-                    child: Icon(
-                      Icons.done_all_rounded,
-                      size: AppSpacing.lg,
-                      color: colors.onSurfaceSecondary.withValues(alpha: 0.5),
-                    ),
-                  ),
+                AppButton.outline(
+                  size: .small,
+                  type: .secondaryOff,
+                  tooltip: 'Already Read',
+                  icon: Icons.done_all_rounded,
+                  onPressed: null,
                 ),
                 AppSpacing.sm.w,
               ],
 
               // Delete Button
-              Tooltip(
-                message: 'Delete Notification',
-                child: InkWell(
-                  onTap: () => _onDeleteNotification(item),
-                  borderRadius: AppRadius.smRadius,
-                  child: QuickContainer(
-                    p: AppSpacing.xs + 2,
-                    radius: AppRadius.sm,
-                    color: colors.error.withValues(alpha: 0.08),
-                    border: Border.all(
-                      color: colors.error.withValues(alpha: 0.25),
-                    ),
-                    child: Icon(
-                      Icons.delete_outline_rounded,
-                      size: AppSpacing.lg,
-                      color: colors.error,
-                    ),
-                  ),
-                ),
+              AppButton.outline(
+                size: .small,
+                type: .danger,
+                tooltip: 'Delete Notification',
+                icon: Icons.delete_outline_rounded,
+                onPressed: () => _onDeleteNotification(item),
               ),
             ],
           );

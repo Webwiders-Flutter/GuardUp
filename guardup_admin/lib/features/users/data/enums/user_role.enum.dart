@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:guardup_admin/features/dashboard/presentation/screens/dashboard.screen.dart';
+import 'package:guardup_admin/features/users/data/enums/user_status.enum.dart';
+import 'package:guardup_admin/features/users/presentation/screens/users_management.screen.dart';
 
 import '/core/extensions/context.extension.dart';
 import '/gen/app_localizations.dart';
@@ -97,6 +100,17 @@ enum UserRoleType {
         return 'Certified protection operative / Bodyguard';
       case UserRoleType.company:
         return 'Security firm / Agency managing bodyguard personnel';
+    }
+  }
+
+  String redirectionRoute(UserStatus? status) {
+    switch (this) {
+      case UserRoleType.admin:
+        return DashboardScreen.route;
+      case UserRoleType.customer:
+      case UserRoleType.guard:
+      case UserRoleType.company:
+        return status!=null? UsersManagementScreen.location(this, status): UsersManagementScreen.roleLocation(this);
     }
   }
 

@@ -194,12 +194,11 @@ class SettingsHeader extends StatelessWidget {
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       // Refresh button
-                      IconButton(
+                      AppButton.outline(
+                        size: .normal,
+                        type: .secondaryOff,
                         tooltip: 'Reload Settings',
-                        icon: Icon(
-                          Icons.refresh_rounded,
-                          color: colors.onSurfaceSecondary,
-                        ),
+                        icon: Icons.refresh_rounded,
                         onPressed: isSaving ? null : onRefresh,
                       ),
 

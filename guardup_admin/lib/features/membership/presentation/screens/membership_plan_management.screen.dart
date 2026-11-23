@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:quick_container/quick_container.dart';
 
 import '../../../../shared/widgets/feedbacks/widgets/app_popup.dart';
-import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/number.extension.dart';
@@ -278,20 +276,21 @@ class _MembershipPlanManagementScreenState
               //   onTap: () => _openDetails(item),
               // ),
               AppSpacing.sm.w,
-              _ActionIcon(
+              AppButton.outline(
+                size: .small,
+                type: .primary,
                 tooltip: 'Edit Plan',
                 icon: Icons.edit_outlined,
-                color: colors.primary,
-                onTap: () => _openForm(item: item),
+                onPressed: () => _openForm(item: item),
               ),
               // Delete is disabled for now.
               AppSpacing.sm.w,
-              _ActionIcon(
+              AppButton.outline(
+                size: .small,
+                type: .danger,
                 tooltip: 'Delete Plan',
                 icon: Icons.delete_outline_rounded,
-                color: colors.error,
-                isDanger: true,
-                onTap: () => _onDelete(item),
+                onPressed: () => _onDelete(item),
               ),
             ],
           );
@@ -379,50 +378,6 @@ class _MembershipPlanManagementScreenState
             onPressed: () => _openForm(),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ActionIcon extends StatelessWidget {
-  const _ActionIcon({
-    required this.tooltip,
-    required this.icon,
-    required this.color,
-    required this.onTap,
-    // Only used by the delete action, which is disabled for now.
-    // ignore: unused_element_parameter
-    this.isDanger = false,
-  });
-
-  final String tooltip;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-  final bool isDanger;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: AppRadius.smRadius,
-        child: QuickContainer(
-          p: AppSpacing.xs + 2,
-          radius: AppRadius.sm,
-          color: isDanger
-              ? colors.error.withValues(alpha: 0.08)
-              : colors.backgroundLight,
-          border: Border.all(
-            color: isDanger
-                ? colors.error.withValues(alpha: 0.25)
-                : colors.borderLight.withValues(alpha: 0.6),
-          ),
-          child: Icon(icon, size: AppSpacing.lg, color: color),
-        ),
       ),
     );
   }

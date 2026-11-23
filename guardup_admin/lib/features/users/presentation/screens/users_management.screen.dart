@@ -1,4 +1,5 @@
 import 'package:guardup_admin/features/users/presentation/controllers/users.controller.dart';
+import 'package:guardup_admin/shared/widgets/buttons/app_button.dart';
 import 'package:guardup_admin/shared/widgets/table/table_models.dart';
 import 'package:flutter_riverpod/misc.dart';
 
@@ -21,7 +22,7 @@ import '/features/users/data/enums/user_status.enum.dart';
 import '/features/users/data/models/user_model.dart';
 import '/features/users/di/users.providers.dart';
 import '/shared/states/pagination.state.dart';
-import '../../../../shared/widgets/feedbacks/widgets/app_file_preview.dart';
+import '../../../../shared/widgets/feedbacks/widgets/app_file_viewer.dart';
 import '../../../../shared/widgets/feedbacks/widgets/app_popup.dart';
 import '/shared/widgets/admin_layout/admin_page_body.dart';
 import '/shared/widgets/misc/app_chip.dart';
@@ -233,7 +234,7 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
             onTap:
                 item.profileImageUrl != null && item.profileImageUrl!.isNotEmpty
                 ? () {
-                    AppFilePreviewSheet.showDialog(
+                    AppFileViewer.show(
                       context: context,
                       title: '${item.fullName} — Profile Photo',
                       fileUrl: item.profileImageUrl,
@@ -370,157 +371,58 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
                 // ),
               ] else if (isVerified) ...[
                 // Block button
-                Tooltip(
-                  message: 'Block User',
-                  child: InkWell(
-                    onTap: () => _onToggleBlock(item, true),
-                    borderRadius: AppRadius.smRadius,
-                    child: QuickContainer(
-                      p: AppSpacing.xs + 2,
-                      radius: AppRadius.sm,
-                      color: colors.warning.withValues(alpha: 0.1),
-                      border: Border.all(
-                        color: colors.warning.withValues(alpha: 0.3),
-                      ),
-                      child: Icon(
-                        Icons.block_outlined,
-                        size: AppSpacing.lg,
-                        color: colors.warning,
-                      ),
-                    ),
-                  ),
+                AppButton.outline(
+                  icon: Icons.block_outlined,
+                  tooltip: 'Block User',
+                  type: .warning,
+                  onPressed: () => _onToggleBlock(item, true),
+                  size: .small,
                 ),
                 AppSpacing.sm.w,
                 // Delete button
-                Tooltip(
-                  message: 'Delete User',
-                  child: InkWell(
-                    onTap: () => _onDeleteUser(item),
-                    borderRadius: AppRadius.smRadius,
-                    child: QuickContainer(
-                      p: AppSpacing.xs + 2,
-                      radius: AppRadius.sm,
-                      color: colors.error.withValues(alpha: 0.08),
-                      border: Border.all(
-                        color: colors.error.withValues(alpha: 0.25),
-                      ),
-                      child: Icon(
-                        Icons.delete_outline_rounded,
-                        size: AppSpacing.lg,
-                        color: colors.error,
-                      ),
-                    ),
-                  ),
+                AppButton.outline(
+                  icon: Icons.delete_outline_rounded,
+                  tooltip: 'Delete User',
+                  type: .danger,
+                  onPressed: () => _onDeleteUser(item),
+                  size: .small,
                 ),
               ] else if (isBlocked) ...[
                 // Unblock button
-                Tooltip(
-                  message: 'Unblock User',
-                  child: InkWell(
-                    onTap: () => _onToggleBlock(item, false),
-                    borderRadius: AppRadius.smRadius,
-                    child: QuickContainer(
-                      p: AppSpacing.xs + 2,
-                      radius: AppRadius.sm,
-                      color: colors.success.withValues(alpha: 0.1),
-                      border: Border.all(
-                        color: colors.success.withValues(alpha: 0.3),
-                      ),
-                      child: Icon(
-                        Icons.lock_open_rounded,
-                        size: AppSpacing.lg,
-                        color: colors.success,
-                      ),
-                    ),
-                  ),
+                AppButton.outline(
+                  icon: Icons.lock_open_rounded,
+                  tooltip: 'Unblock User',
+                  type: .success,
+                  onPressed: () => _onToggleBlock(item, false),
+                  size: .small,
                 ),
                 AppSpacing.sm.w,
                 // Delete button
-                Tooltip(
-                  message: 'Delete User',
-                  child: InkWell(
-                    onTap: () => _onDeleteUser(item),
-                    borderRadius: AppRadius.smRadius,
-                    child: QuickContainer(
-                      p: AppSpacing.xs + 2,
-                      radius: AppRadius.sm,
-                      color: colors.error.withValues(alpha: 0.08),
-                      border: Border.all(
-                        color: colors.error.withValues(alpha: 0.25),
-                      ),
-                      child: Icon(
-                        Icons.delete_outline_rounded,
-                        size: AppSpacing.lg,
-                        color: colors.error,
-                      ),
-                    ),
-                  ),
+                AppButton.outline(
+                  icon: Icons.delete_outline_rounded,
+                  tooltip: 'Delete User',
+                  type: .danger,
+                  onPressed: () => _onDeleteUser(item),
+                  size: .small,
                 ),
               ] else ...[
                 // Other states: delete only. Approval happens on the details screen.
-                // Tooltip(
-                // message: 'Verify User',
-                // child: InkWell(
-                // onTap: () => _onVerifyUser(item),
-                // borderRadius: AppRadius.smRadius,
-                // child: QuickContainer(
-                // p: AppSpacing.xs + 2,
-                // radius: AppRadius.sm,
-                // color: colors.success.withValues(alpha: 0.1),
-                // border: Border.all(
-                // color: colors.success.withValues(alpha: 0.3),
-                // ),
-                // child: Icon(
-                // Icons.check_circle_outline_rounded,
-                // size: AppSpacing.lg,
-                // color: colors.success,
-                // ),
-                // ),
-                // ),
-                // ),
-                // AppSpacing.sm.w,
-                Tooltip(
-                  message: 'Delete User',
-                  child: InkWell(
-                    onTap: () => _onDeleteUser(item),
-                    borderRadius: AppRadius.smRadius,
-                    child: QuickContainer(
-                      p: AppSpacing.xs + 2,
-                      radius: AppRadius.sm,
-                      color: colors.error.withValues(alpha: 0.08),
-                      border: Border.all(
-                        color: colors.error.withValues(alpha: 0.25),
-                      ),
-                      child: Icon(
-                        Icons.delete_outline_rounded,
-                        size: AppSpacing.lg,
-                        color: colors.error,
-                      ),
-                    ),
-                  ),
+                AppButton.outline(
+                  icon: Icons.delete_outline_rounded,
+                  tooltip: 'Delete User',
+                  type: .danger,
+                  onPressed: () => _onDeleteUser(item),
+                  size: .small,
                 ),
               ],
 
               AppSpacing.sm.w,
-              Tooltip(
-                message: 'Details',
-                child: InkWell(
-                  onTap: () => _onViewUser(item),
-                  borderRadius: AppRadius.smRadius,
-                  child: QuickContainer(
-                    p: AppSpacing.xs + 2,
-                    radius: AppRadius.sm,
-                    color: colors.primary.withValues(alpha: 0.1),
-                    border: Border.all(
-                      color: colors.primary.withValues(alpha: 0.3),
-                    ),
-                    child: Icon(
-                      Icons.remove_red_eye,
-                      size: AppSpacing.lg,
-                      color: colors.primary,
-                    ),
-                  ),
-                ),
+              AppButton.outline(
+                icon: Icons.remove_red_eye,
+                tooltip: 'Details',
+                type: .primary,
+                onPressed: () => _onViewUser(item),
+                size: .small,
               ),
             ],
           );

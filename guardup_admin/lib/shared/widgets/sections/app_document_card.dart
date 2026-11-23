@@ -5,7 +5,7 @@ import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
-import '/shared/widgets/feedbacks/widgets/app_file_preview.dart';
+import '/shared/widgets/feedbacks/widgets/app_file_viewer.dart';
 
 class AppDocumentCard extends StatelessWidget {
   const AppDocumentCard({
@@ -28,7 +28,7 @@ class AppDocumentCard extends StatelessWidget {
     final colors = context.colors;
 
     void openPreview() {
-      AppFilePreviewSheet.showDialog(
+      AppFileViewer.show(
         context: context,
         fileUrl: fileUrl,
         title: title,

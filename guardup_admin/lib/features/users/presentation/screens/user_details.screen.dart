@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:guardup_admin/shared/widgets/buttons/app_button.dart';
 
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
@@ -25,7 +26,7 @@ import '/features/users/presentation/controllers/users.controller.dart';
 import '/features/users/presentation/widgets/user_availability.section.dart';
 import '/features/users/presentation/widgets/user_bank_accounts.section.dart';
 import '/shared/widgets/admin_layout/app_side_panel.dart';
-import '/shared/widgets/feedbacks/widgets/app_file_preview.dart';
+import '/shared/widgets/feedbacks/widgets/app_file_viewer.dart';
 import '/shared/widgets/feedbacks/widgets/app_popup.dart';
 import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/misc/app_chip.dart';
@@ -76,8 +77,10 @@ class UserDetailsScreen extends ConsumerStatefulWidget {
 class _UserDetailsScreenState extends ConsumerState<UserDetailsScreen> {
   @override
   void dispose() {
-    ref.invalidate(userDetailsProvider(widget.userId));
-    ref.invalidate(userReviewControllerProvider(widget.userId));
+    if (mounted) {
+      ref.invalidate(userReviewControllerProvider(widget.userId));
+      ref.invalidate(userDetailsProvider(widget.userId));
+    }
     super.dispose();
   }
 
@@ -325,7 +328,8 @@ class _UserProfileHero extends StatelessWidget {
                               height: 64,
                               fit: BoxFit.cover,
                               onTap: () {
-                                AppFilePreviewSheet.showDialog(
+                                
+                                AppFileViewer.show(
                                   context: context,
                                   title: '${user.fullName} — Photo',
                                   fileUrl: user.profileImageUrl,
@@ -795,7 +799,6 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
     final isApproved = widget.user.status.isApproved;
     final isBlocked = widget.user.status.isBlocked;
     final allDocumentsApproved = (widget.user.documents ?? const []).every(
@@ -817,110 +820,54 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
           children: [
             if (isApproved || isBlocked) ...[
               // 1. Block / Unblock Button
-              OutlinedButton.icon(
+              AppButton.outline(
+                text: isBlocked ? 'Unblock User' : 'Block User',
+                type: isBlocked ? .success : .warning,
+                size: .small,
+                fullWidth: false,
                 onPressed: isBusy ? null : () => _onToggleBlock(!isBlocked),
-                icon: Icon(
+                trailing: Icon(
                   isBlocked ? Icons.lock_open_rounded : Icons.block_outlined,
                   size: 16,
-                  color: isBlocked ? colors.success : colors.warning,
-                ),
-                label: Text(
-                  isBlocked ? 'Unblock User' : 'Block User',
-                  style: context.textTheme.bodySmall?.semiBold().colour(
-                    isBlocked ? colors.success : colors.warning,
-                  ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(
-                    color: isBlocked ? colors.success : colors.warning,
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.sm,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AppRadius.smRadius,
-                  ),
                 ),
               ),
 
               // 2. Delete Button
-              OutlinedButton.icon(
+              AppButton.outline(
+                text: 'Delete User',
+                type: .danger,
+                size: .small,
+                fullWidth: false,
                 onPressed: isBusy ? null : _onDelete,
-                icon: Icon(
-                  Icons.delete_outline_rounded,
-                  size: 16,
-                  color: colors.error,
-                ),
-                label: Text(
-                  'Delete User',
-                  style: context.textTheme.bodySmall?.semiBold().colour(
-                    colors.error,
-                  ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: colors.error),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.sm,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AppRadius.smRadius,
-                  ),
-                ),
+                trailing: const Icon(Icons.delete_outline_rounded, size: 16),
               ),
             ] else if (widget.user.status.isPendingApproval) ...[
               // 1. Approve Profile: only once every document is approved
-              if (allDocumentsApproved)
-                OutlinedButton.icon(
-                  onPressed: isBusy ? null : _onApproveProfile,
-                  icon: Icon(
-                    Icons.check_circle_outline_rounded,
-                    size: 16,
-                    color: colors.success,
-                  ),
-                  label: Text(
-                    'Approve Profile',
-                    style: context.textTheme.bodySmall?.semiBold().colour(
-                      colors.success,
-                    ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: colors.success),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.sm,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: AppRadius.smRadius,
-                    ),
-                  ),
+              AppButton.outline(
+                text: 'Approve Profile',
+                tooltip: !allDocumentsApproved
+                    ? 'All documents must be approved before approving the profile'
+                    : 'Approve profile',
+                type: .success,
+                size: .small,
+                fullWidth: false,
+                onPressed: isBusy || !allDocumentsApproved
+                    ? null
+                    : _onApproveProfile,
+                trailing: const Icon(
+                  Icons.check_circle_outline_rounded,
+                  size: 16,
                 ),
+              ),
 
               // 2. Reject Profile (asks for a reason)
-              OutlinedButton.icon(
+              AppButton.outline(
+                text: 'Reject Profile',
+                type: .danger,
+                size: .small,
+                fullWidth: false,
                 onPressed: isBusy ? null : _onRejectProfile,
-                icon: Icon(
-                  Icons.cancel_outlined,
-                  size: 16,
-                  color: colors.error,
-                ),
-                label: Text(
-                  'Reject Profile',
-                  style: context.textTheme.bodySmall?.semiBold().colour(
-                    colors.error,
-                  ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: colors.error),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.sm,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AppRadius.smRadius,
-                  ),
-                ),
+                trailing: const Icon(Icons.cancel_outlined, size: 16),
               ),
             ],
           ],
@@ -1253,42 +1200,38 @@ class _UserDocumentsSection extends ConsumerWidget {
                 AppSpacing.sm.w,
 
                 // Review Actions (only while the application is under review)
-                if (canReview && !isRejected && !isApproved)
-                  IconButton(
+                if (canReview && !isRejected && !isApproved) ...[
+                  AppButton.outline(
+                    size: .small,
+                    type: .success,
                     tooltip: 'Approve Document',
-                    icon: Icon(
-                      Icons.check_circle_outline_rounded,
-                      size: 18,
-                      color: colors.success,
-                    ),
+                    icon: Icons.check_circle_outline_rounded,
                     onPressed: isReviewing
                         ? null
                         : () => _onApproveDocument(context, ref, doc, title),
                   ),
-                if (canReview && !isRejected && !isApproved)
-                  IconButton(
+                  AppSpacing.xs.w,
+                  AppButton.outline(
+                    size: .small,
+                    type: .danger,
                     tooltip: 'Reject Document',
-                    icon: Icon(
-                      Icons.cancel_outlined,
-                      size: 18,
-                      color: colors.error,
-                    ),
+                    icon: Icons.cancel_outlined,
                     onPressed: isReviewing
                         ? null
                         : () => _onRejectDocument(context, ref, doc, title),
                   ),
+                  AppSpacing.xs.w,
+                ],
 
                 // Preview File Action
-                IconButton(
+                AppButton.outline(
+                  size: .small,
+                  type: .primary,
                   tooltip: 'View Document',
-                  icon: Icon(
-                    Icons.visibility_outlined,
-                    size: 18,
-                    color: colors.primary,
-                  ),
+                  icon: Icons.visibility_outlined,
                   onPressed: () {
                     if (doc.fileUrl.isNotEmpty) {
-                      AppFilePreviewSheet.showDialog(
+                      AppFileViewer.show(
                         context: context,
                         title: title,
                         fileUrl: doc.fileUrl,

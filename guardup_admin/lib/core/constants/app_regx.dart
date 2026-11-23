@@ -11,6 +11,7 @@ final class AppRegex {
   );
 
   static final numbersOnly = RegExp(r'^\d+$');
+  static final nonDigits = RegExp(r'\D');
 
   /// Input formatter pattern for amounts: digits with up to 2 decimals.
   static final amountInput = RegExp(r'^\d*\.?\d{0,2}');

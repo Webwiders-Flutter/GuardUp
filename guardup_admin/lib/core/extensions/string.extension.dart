@@ -13,7 +13,7 @@ extension StringMaskingExtension on String {
     MaskType type = MaskType.auto,
     int showFirst = 2,
     int showLast = 2,
-    String maskChar = '*',
+    String maskChar = 'X',
   }) {
     if (trim().isEmpty) return this;
 
@@ -83,7 +83,7 @@ extension StringMaskingExtension on String {
   // =========================================================
 
   String get digitsOnly {
-    return replaceAll(AppRegex.numbersOnly, '');
+    return replaceAll(AppRegex.nonDigits, '');
   }
 
   String get reversed {
@@ -191,7 +191,7 @@ extension StringMaskingExtension on String {
     required int showLast,
     required String maskChar,
   }) {
-    final digitsOnly = value.replaceAll(AppRegex.numbersOnly, '');
+    final digitsOnly = value.replaceAll(AppRegex.nonDigits, '');
 
     if (value.contains('@')) {
       return _maskEmail(value, visibleChars: showFirst, maskChar: maskChar);
@@ -255,7 +255,7 @@ extension StringMaskingExtension on String {
     required int showLast,
     required String maskChar,
   }) {
-    final digitsOnly = value.replaceAll(AppRegex.numbersOnly, '');
+    final digitsOnly = value.replaceAll(AppRegex.nonDigits, '');
 
     if (digitsOnly.length <= showLast) {
       return value;

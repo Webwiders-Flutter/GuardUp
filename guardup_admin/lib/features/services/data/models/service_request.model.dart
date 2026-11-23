@@ -5,6 +5,9 @@ class ServiceRequest {
   final String name;
   final String? description;
   final String? iconName;
+
+  /// Public URL of the icon image. `null` clears the icon.
+  final String? iconUrl;
   final int? displayOrder;
   final bool isActive;
 
@@ -12,6 +15,7 @@ class ServiceRequest {
     required this.name,
     this.description,
     this.iconName,
+    this.iconUrl,
     this.displayOrder,
     this.isActive = true,
   });
@@ -25,6 +29,7 @@ class ServiceRequest {
       JsonKeys.name: n,
       JsonKeys.description: (d != null && d.isNotEmpty) ? d : null,
       JsonKeys.iconName: (i != null && i.isNotEmpty) ? i : null,
+      JsonKeys.iconUrl: iconUrl,
       if (displayOrder != null && displayOrder! > 0)
         JsonKeys.displayOrder: displayOrder,
       JsonKeys.isActive: isActive,

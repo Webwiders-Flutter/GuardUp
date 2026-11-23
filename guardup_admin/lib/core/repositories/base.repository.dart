@@ -82,12 +82,9 @@ abstract class BaseSupabaseRepository<T> implements BaseRepository<T> {
     }
 
     if (search != null && search.trim().isNotEmpty) {
-      final queryStr = search.trim();
-      final searchFilters = searchFields
-          .map((field) => '$field.ilike.%$queryStr%')
-          .join(',');
-      if (searchFilters.isNotEmpty) {
-        query = query.or(searchFilters);
+      final searchFilter = buildSearchFilter(search.trim());
+      if (searchFilter != null && searchFilter.isNotEmpty) {
+        query = query.or(searchFilter);
       }
     }
 
@@ -124,6 +121,17 @@ abstract class BaseSupabaseRepository<T> implements BaseRepository<T> {
       data: data.map((json) => fromJson(json as Map<String, dynamic>)).toList(),
       total: count,
     );
+  }
+
+  /// Builds PostgREST filter string for [queryStr].
+  /// Subclasses can override this to implement domain-specific search logic
+  /// (e.g. combined phone code and phone number parsing).
+  String? buildSearchFilter(String queryStr) {
+    final sanitized = queryStr.replaceAll('"', '');
+    final searchFilters = searchFields
+        .map((field) => '$field.ilike."%$sanitized%"')
+        .join(',');
+    return searchFilters.isNotEmpty ? searchFilters : null;
   }
 
   @override

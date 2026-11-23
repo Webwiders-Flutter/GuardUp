@@ -4,6 +4,7 @@ import '/core/constants/api/database_functions.dart';
 import '/core/constants/api/database_tables.dart';
 import '/core/constants/api/json_keys.dart';
 import '/core/error/api_exception.dart';
+import '/core/extensions/string.extension.dart';
 import '/core/repositories/base.repository.dart';
 import '/features/users/data/enums/user_role.enum.dart';
 import '/features/users/data/enums/user_status.enum.dart';
@@ -20,11 +21,108 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
           JsonKeys.fullName,
           JsonKeys.email,
           JsonKeys.mobileNumber,
+          JsonKeys.phoneCode,
           JsonKeys.businessName,
+          JsonKeys.businessEmail,
+          JsonKeys.companyPhoneNumber,
+          JsonKeys.companyPhoneCode,
         ],
         primarySortColumn: JsonKeys.createdAt,
         primarySortAscending: false,
       );
+
+  @override
+  String? buildSearchFilter(String queryStr) {
+    final raw = queryStr.trim();
+    if (raw.isEmpty) return null;
+
+    final sanitizedRaw = raw.replaceAll('"', '');
+    final filters = <String>{};
+
+    // 1. Core Profile and Business text fields
+    filters.add('${JsonKeys.fullName}.ilike."%$sanitizedRaw%"');
+    filters.add('${JsonKeys.email}.ilike."%$sanitizedRaw%"');
+    filters.add('${JsonKeys.businessName}.ilike."%$sanitizedRaw%"');
+    filters.add('${JsonKeys.businessEmail}.ilike."%$sanitizedRaw%"');
+
+    // 2. Phone Number & Phone Code analysis
+    final cleanDigits = raw.replaceAll(RegExp(r'\D'), '');
+    final startsWithPlus = raw.startsWith('+');
+
+    void addPhoneFilter(String phoneCodeDigits, String phoneNumberDigits) {
+      if (phoneNumberDigits.isEmpty) return;
+
+      // Match user phone with code + number
+      filters.add(
+        'and(${JsonKeys.phoneCode}.ilike."%$phoneCodeDigits%",${JsonKeys.mobileNumber}.ilike."%$phoneNumberDigits%")',
+      );
+      // Also match national phone number directly
+      filters.add('${JsonKeys.mobileNumber}.ilike."%$phoneNumberDigits%"');
+    }
+
+    // A. Query is solely '+' or dial code (e.g. "+", "+91", "+1", "+44")
+    if (raw == '+') {
+      filters.add('${JsonKeys.phoneCode}.ilike."%+%"');
+    } else if (RegExp(r'^\+\d{1,4}$').hasMatch(raw)) {
+      final codeDigits = cleanDigits;
+      filters.add('${JsonKeys.phoneCode}.ilike."%+$codeDigits%"');
+      filters.add('${JsonKeys.phoneCode}.ilike."%$codeDigits%"');
+    }
+
+    // B. Query has phone code + phone number separated by space, hyphen, brackets, etc.
+    // e.g. "+91 9876543210", "+91-9876543210", "91 9876543210", "+1 (555) 123-4567"
+    final splitBySeparatorMatch =
+        RegExp(r'^\+?(\d{1,4})[\s\-./()]+(\d.*)$').firstMatch(raw);
+    if (splitBySeparatorMatch != null) {
+      final codeDigits = splitBySeparatorMatch.group(1)!;
+      final numberPart =
+          splitBySeparatorMatch.group(2)!.replaceAll(RegExp(r'\D'), '');
+      addPhoneFilter(codeDigits, numberPart);
+    }
+
+    // C. Query starts with '+' without separator (e.g. "+919876543210" or "+919876")
+    if (startsWithPlus && cleanDigits.length > 1) {
+      // 1. Try E.164 library parser
+      final parsed = raw.parseE164Phone();
+      if (parsed.phoneCode.isNotEmpty && parsed.phoneNumber.isNotEmpty) {
+        final codeDigits = parsed.phoneCode.replaceAll(RegExp(r'\D'), '');
+        addPhoneFilter(codeDigits, parsed.phoneNumber);
+      }
+
+      // 2. Default/common +91 check
+      if (cleanDigits.startsWith('91') && cleanDigits.length > 2) {
+        addPhoneFilter('91', cleanDigits.substring(2));
+      }
+
+      // 3. Fallback check for 1-4 digit country codes
+      for (final len in [1, 2, 3, 4]) {
+        if (cleanDigits.length > len) {
+          final prefix = cleanDigits.substring(0, len);
+          final rest = cleanDigits.substring(len);
+          if (rest.length >= 3) {
+            addPhoneFilter(prefix, rest);
+          }
+        }
+      }
+    }
+
+    // D. Digits without leading '+' (e.g. "9876543210", "919876543210", "98765")
+    if (cleanDigits.isNotEmpty) {
+      filters.add('${JsonKeys.mobileNumber}.ilike."%$cleanDigits%"');
+
+      // If starts with 91 and length > 10 (e.g. 12-digit Indian number without '+')
+      if (cleanDigits.length > 10 && cleanDigits.startsWith('91')) {
+        addPhoneFilter('91', cleanDigits.substring(2));
+      }
+    }
+
+    // E. General fallback for the raw sanitized string against phone fields
+    if (sanitizedRaw.isNotEmpty) {
+      filters.add('${JsonKeys.mobileNumber}.ilike."%$sanitizedRaw%"');
+    }
+
+    return filters.isNotEmpty ? filters.join(',') : null;
+  }
 
   @override
   Future<({List<UserModel> data, int total})> getPaginated({

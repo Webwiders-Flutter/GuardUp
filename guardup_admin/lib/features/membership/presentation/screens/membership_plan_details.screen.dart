@@ -311,27 +311,22 @@ class _PlanHero extends ConsumerWidget {
             spacing: AppSpacing.sm,
             runSpacing: AppSpacing.sm,
             children: [
-              AppButton(
+              AppButton.fill(
                 text: 'Edit Plan',
-                leading: Icon(
-                  Icons.edit_outlined,
-                  size: AppSpacing.md + 2,
-                  color: colors.onPrimary,
-                ),
-                size: ButtonSize.small,
+                leading: const Icon(Icons.edit_outlined),
+                size: .small,
                 fullWidth: false,
                 onPressed: () => _onEdit(context),
               ),
-              AppButton(
+              AppButton.outline(
                 text: plan.isActive ? 'Deactivate' : 'Activate',
                 leading: Icon(
                   plan.isActive
                       ? Icons.pause_circle_outline_rounded
                       : Icons.play_circle_outline_rounded,
-                  size: AppSpacing.md + 2,
                 ),
-                size: ButtonSize.small,
-                type: plan.isActive ? ButtonType.warning : ButtonType.success,
+                size: .small,
+                type: plan.isActive ? .warning : .success,
                 fullWidth: false,
                 onPressed: () => _onToggleActive(ref),
               ),

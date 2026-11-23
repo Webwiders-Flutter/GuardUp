@@ -43,3 +43,5 @@ For contact / support requests (statuses, RLS, admin Help & Support screen), see
 
 For customer membership plans (pricing, booking discount rules, admin management), see [membership_plans.md](documentation/membership_plans.md).
 
+For the protection services catalogue (table, RLS, service icons and the `admin` storage bucket), see [services.md](documentation/services.md).
+

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
@@ -8,6 +9,7 @@ import '/core/extensions/string.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/features/users/data/models/user_bank_account.model.dart';
 import '/features/users/data/models/user_model.dart';
+import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/misc/app_chip.dart';
 import '/shared/widgets/sections/app_detail_section.dart';
 import '/shared/widgets/sections/app_detail_tile.dart';
@@ -145,17 +147,49 @@ class _BankAccountCardState extends State<_BankAccountCard> {
                   ),
             icon: Icons.numbers_rounded,
             onTap: () => setState(() => _showNumber = !_showNumber),
-            isCopyable: _showNumber,
-            trailing: _showNumber
-                ? null
-                : Tooltip(
-                    message: 'Show number',
-                    child: Icon(
-                      Icons.visibility_outlined,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_showNumber) ...[
+                  IconButton(
+                    icon: Icon(
+                      Icons.copy_rounded,
                       size: AppSpacing.md + 2,
-                      color: colors.onSurfaceSecondary,
+                      color: colors.onSurfaceSecondary.withValues(alpha: 0.6),
                     ),
+                    tooltip: 'Copy Account Number',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    splashRadius: AppSpacing.md,
+                    onPressed: () {
+                      Clipboard.setData(
+                        ClipboardData(text: account.accountNumber),
+                      );
+                      AppSnackbar.show(
+                        message: 'Copied Account Number to clipboard',
+                        type: SnackbarType.success,
+                        duration: const Duration(seconds: 2),
+                      );
+                    },
                   ),
+                  AppSpacing.sm.w,
+                ],
+                IconButton(
+                  icon: Icon(
+                    _showNumber
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                    size: AppSpacing.md + 2,
+                    color: colors.onSurfaceSecondary,
+                  ),
+                  tooltip: _showNumber ? 'Hide number' : 'Show number',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  splashRadius: AppSpacing.md,
+                  onPressed: () => setState(() => _showNumber = !_showNumber),
+                ),
+              ],
+            ),
           ),
           AppDetailTile(
             label: 'IFSC Code',

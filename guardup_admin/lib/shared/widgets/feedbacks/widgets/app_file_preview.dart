@@ -88,53 +88,47 @@ class AppFilePreviewSheet extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        ClipRRect(
-          borderRadius: AppRadius.mdRadius,
-          child: QuickContainer(
-            color: context.colors.borderLight.withValues(alpha: 0.3),
-            child: InteractiveViewer(
-              minScale: 0.8,
-              maxScale: 4.0,
-              child: AppImage.auto(
-                source: fileUrl ?? file,
-                fit: BoxFit.contain,
-                height: 70.hPercent(context),
-                errorWidget: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.broken_image_outlined,
-                          size: 48,
-                          color: context.colors.error,
-                        ),
-                        AppSpacing.sm.h,
-                        Text(
-                          'Failed to load image preview',
-                          style: context.textTheme.bodySmall?.colour(
-                            context.colors.error,
-                          ),
-                        ),
-                        if (fileUrl != null && fileUrl!.isNotEmpty) ...[
-                          AppSpacing.sm.h,
-                          TextButton.icon(
-                            icon: const Icon(
-                              Icons.open_in_new_rounded,
-                              size: 16,
-                            ),
-                            label: const Text('Open link in browser'),
-                            onPressed: () =>
-                                AppLauncher.launchUrlString(fileUrl!),
-                          ),
-                        ],
-                      ],
+        _ZoomableImageViewport(
+          source: fileUrl ?? file,
+          isSvg: _fileName.isSvg,
+          errorWidget: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.broken_image_outlined,
+                    size: 48,
+                    color: context.colors.error,
+                  ),
+                  AppSpacing.sm.h,
+                  Text(
+                    'Failed to load image preview',
+                    style: context.textTheme.bodySmall?.colour(
+                      context.colors.error,
                     ),
                   ),
-                ),
+                  if (fileUrl != null && fileUrl!.isNotEmpty) ...[
+                    AppSpacing.sm.h,
+                    TextButton.icon(
+                      icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                      label: const Text('Open link in browser'),
+                      onPressed: () => AppLauncher.launchUrlString(fileUrl!),
+                    ),
+                  ],
+                ],
               ),
             ),
+          ),
+        ),
+        AppSpacing.xs.h,
+        Text(
+          kIsWeb
+              ? 'Scroll or double-click to zoom · drag to move'
+              : 'Pinch or double tap to zoom',
+          style: context.textTheme.labelSmall?.colour(
+            context.colors.onSurfaceSecondary,
           ),
         ),
         AppSpacing.md.h,
@@ -143,13 +137,6 @@ class AppFilePreviewSheet extends StatelessWidget {
             text: 'Open Full Resolution in New Tab',
             leading: const Icon(Icons.open_in_new_rounded, size: 18),
             onPressed: () => AppLauncher.launchUrlString(fileUrl!),
-          )
-        else if (!kIsWeb)
-          Text(
-            'Pinch or double tap to zoom',
-            style: context.textTheme.labelSmall?.colour(
-              context.colors.onSurfaceSecondary,
-            ),
           ),
       ],
     );
@@ -211,6 +198,166 @@ class AppFilePreviewSheet extends StatelessWidget {
           },
         ),
       ],
+    );
+  }
+}
+
+/// Fixed-size, clipped viewport that shows an image at a sensible size and
+/// lets the user zoom / pan inside it.
+///
+/// - Raster images are never upscaled beyond their natural size
+///   ([BoxFit.scaleDown]), so small images (e.g. icons) stay sharp.
+/// - SVGs are vector, so they are fitted to the viewport ([BoxFit.contain]).
+/// - The viewport size is fixed, so zooming never changes the dialog layout.
+/// - Double tap / double click toggles zoom; a reset button shows when zoomed.
+class _ZoomableImageViewport extends StatefulWidget {
+  final Object? source;
+  final bool isSvg;
+  final Widget errorWidget;
+
+  const _ZoomableImageViewport({
+    required this.source,
+    required this.isSvg,
+    required this.errorWidget,
+  });
+
+  @override
+  State<_ZoomableImageViewport> createState() => _ZoomableImageViewportState();
+}
+
+class _ZoomableImageViewportState extends State<_ZoomableImageViewport>
+    with SingleTickerProviderStateMixin {
+  static const double _minScale = 1;
+  static const double _maxScale = 5;
+  static const double _doubleTapScale = 2.5;
+  static const double _maxViewportHeight = 1080;
+
+  final TransformationController _transform = TransformationController();
+  late final AnimationController _animation;
+  Animation<Matrix4>? _matrixTween;
+  final ValueNotifier<bool> _isZoomed = ValueNotifier<bool>(false);
+  TapDownDetails? _doubleTapDetails;
+
+  @override
+  void initState() {
+    super.initState();
+    _animation =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 220),
+        )..addListener(() {
+          final tween = _matrixTween;
+          if (tween != null) _transform.value = tween.value;
+        });
+    _transform.addListener(_onTransformChanged);
+  }
+
+  @override
+  void dispose() {
+    _transform.removeListener(_onTransformChanged);
+    _transform.dispose();
+    _animation.dispose();
+    _isZoomed.dispose();
+    super.dispose();
+  }
+
+  void _onTransformChanged() {
+    _isZoomed.value = _transform.value.getMaxScaleOnAxis() > _minScale + 0.01;
+  }
+
+  void _animateTo(Matrix4 target) {
+    _matrixTween = Matrix4Tween(
+      begin: _transform.value,
+      end: target,
+    ).animate(CurveTween(curve: Curves.easeOutCubic).animate(_animation));
+    _animation.forward(from: 0);
+  }
+
+  void _resetZoom() => _animateTo(Matrix4.identity());
+
+  void _onDoubleTap() {
+    if (_isZoomed.value) {
+      _resetZoom();
+      return;
+    }
+    // Zoom in around the tapped point.
+    final position = _doubleTapDetails?.localPosition ?? Offset.zero;
+    final dx = -position.dx * (_doubleTapScale - 1);
+    final dy = -position.dy * (_doubleTapScale - 1);
+    _animateTo(
+      Matrix4.identity()
+        ..translateByDouble(dx, dy, 0, 1)
+        ..scaleByDouble(_doubleTapScale, _doubleTapScale, 1, 1),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final viewportHeight = 60
+        .hPercent(context)
+        .clamp(240.0, _maxViewportHeight);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final viewportWidth = constraints.maxWidth;
+
+        return ClipRRect(
+          borderRadius: AppRadius.mdRadius,
+          child: QuickContainer(
+            w: viewportWidth,
+            h: viewportHeight,
+            color: colors.borderLight.withValues(alpha: 0.3),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: GestureDetector(
+                    onDoubleTapDown: (details) => _doubleTapDetails = details,
+                    onDoubleTap: _onDoubleTap,
+                    child: InteractiveViewer(
+                      transformationController: _transform,
+                      minScale: _minScale,
+                      maxScale: _maxScale,
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: AppImage.auto(
+                          // Size comes from the viewport's tight constraints.
+                          source: widget.source,
+                          fit: widget.isSvg ? BoxFit.contain : BoxFit.scaleDown,
+                          errorWidget: widget.errorWidget,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: AppSpacing.sm,
+                  right: AppSpacing.sm,
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: _isZoomed,
+                    builder: (context, isZoomed, _) {
+                      if (!isZoomed) return const SizedBox.shrink();
+                      return Tooltip(
+                        message: 'Reset zoom',
+                        child: Material(
+                          color: colors.surface.withValues(alpha: 0.9),
+                          shape: const CircleBorder(),
+                          child: IconButton(
+                            icon: const Icon(Icons.zoom_out_map_rounded),
+                            iconSize: 18,
+                            color: colors.onSurface,
+                            onPressed: _resetZoom,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

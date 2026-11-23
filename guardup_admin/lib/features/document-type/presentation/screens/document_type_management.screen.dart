@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
-import 'package:quick_container/quick_container.dart';
 
-import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/riverpod.extension.dart';
@@ -219,46 +217,20 @@ class _DocumentTypeManagementScreenState
                 ),
               ),
               AppSpacing.sm.w,
-              Tooltip(
-                message: 'Edit Document Type',
-                child: InkWell(
-                  onTap: () => _openDocumentTypeForm(item: item),
-                  borderRadius: AppRadius.smRadius,
-                  child: QuickContainer(
-                    p: AppSpacing.xs + 2,
-                    radius: AppRadius.sm,
-                    color: colors.backgroundLight,
-                    border: Border.all(
-                      color: colors.borderLight.withValues(alpha: 0.6),
-                    ),
-                    child: Icon(
-                      Icons.edit_outlined,
-                      size: AppSpacing.lg,
-                      color: colors.primary,
-                    ),
-                  ),
-                ),
+              AppButton.outline(
+                icon: Icons.edit_outlined,
+                tooltip: 'Edit Document Type',
+                type: .primary,
+                size: .small,
+                onPressed: () => _openDocumentTypeForm(item: item),
               ),
               AppSpacing.sm.w,
-              Tooltip(
-                message: 'Delete Document Type',
-                child: InkWell(
-                  onTap: () => _onDeleteDocumentType(item),
-                  borderRadius: AppRadius.smRadius,
-                  child: QuickContainer(
-                    p: AppSpacing.xs + 2,
-                    radius: AppRadius.sm,
-                    color: colors.error.withValues(alpha: 0.08),
-                    border: Border.all(
-                      color: colors.error.withValues(alpha: 0.25),
-                    ),
-                    child: Icon(
-                      Icons.delete_outline_rounded,
-                      size: AppSpacing.lg,
-                      color: colors.error,
-                    ),
-                  ),
-                ),
+              AppButton.outline(
+                icon: Icons.delete_outline_rounded,
+                tooltip: 'Delete Document Type',
+                type: .danger,
+                size: .small,
+                onPressed: () => _onDeleteDocumentType(item),
               ),
             ],
           );

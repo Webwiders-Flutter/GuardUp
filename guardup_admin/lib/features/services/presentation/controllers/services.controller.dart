@@ -1,10 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart' show XFile;
 
 import '/core/constants/api/json_keys.dart';
+import '/core/constants/api/storage_buckets.dart';
 import '/core/constants/app_constants.dart';
+import '/core/extensions/file_object.extension.dart';
 import '/core/extensions/list.extension.dart';
+import '/core/services/file_storage/file_storage.dart';
+import '/core/services/file_storage/file_upload_request.model.dart';
 import '/core/utils/callback/async_callback.handler.dart';
 import '/core/utils/helpers/pagination.helper.dart';
 import '/features/services/data/models/service.model.dart';
@@ -14,6 +19,7 @@ import '/shared/states/pagination.state.dart';
 
 class ServicesController extends AsyncNotifier<PaginationState<ServiceModel>> {
   ServicesRepository get _repository => ref.read(servicesRepositoryProvider);
+  FileStorageService get _fileStorage => ref.read(fileStorageServiceProvider);
 
   ServiceFilters _filters = const ServiceFilters();
   ServiceFilters get filters => _filters;
@@ -106,7 +112,26 @@ class ServicesController extends AsyncNotifier<PaginationState<ServiceModel>> {
     }
   }
 
-  Future<void> createRecord(ServiceRequest data) async {
+  /// Builds the upload request for a service icon in the admin bucket.
+  FileUploadRequest _iconUploadRequest(XFile iconFile) {
+    return FileUploadRequest.fromXFile(
+      bucket: StorageBuckets.admin,
+      path: StorageFolders.services.timestampedPath(iconFile),
+      xFile: iconFile,
+      contentType: iconFile.resolvedMimeType,
+    );
+  }
+
+  /// Deletes a stored icon, ignoring failures (the record change already
+  /// succeeded; a leftover file must not surface as an error).
+  Future<void> _deleteIconSilently(String? iconUrl) async {
+    if (iconUrl == null || iconUrl.trim().isEmpty) return;
+    try {
+      await _fileStorage.deleteFileFromUrl(iconUrl);
+    } catch (_) {}
+  }
+
+  Future<void> createRecord(ServiceRequest data, {XFile? iconFile}) async {
     final Map<String, dynamic> payload = data.toJson();
     final current = state.value;
     state = const AsyncLoading();
@@ -118,6 +143,12 @@ class ServicesController extends AsyncNotifier<PaginationState<ServiceModel>> {
 
     final result = await AsyncValue.guard(
       () => asyncHandler(() async {
+        if (iconFile != null) {
+          payload[JsonKeys.iconUrl] = await _fileStorage.uploadSingleFile(
+            _iconUploadRequest(iconFile),
+          );
+        }
+
         final newService = await _repository.addOrUpdate(payload);
         final currentItems = current?.items ?? [];
         final updatedItems = [newService, ...currentItems];
@@ -132,9 +163,16 @@ class ServicesController extends AsyncNotifier<PaginationState<ServiceModel>> {
     state = result;
   }
 
+  /// Updates a service.
+  ///
+  /// [oldIconUrl] is the icon currently stored for the record. It is deleted
+  /// from storage when replaced by [iconFile], or when the payload clears
+  /// the icon (`icon_url: null`).
   Future<void> updateRecord(
     dynamic data,
     String id, {
+    XFile? iconFile,
+    String? oldIconUrl,
     bool loading = true,
   }) async {
     final current = state.value;
@@ -148,7 +186,22 @@ class ServicesController extends AsyncNotifier<PaginationState<ServiceModel>> {
 
     final result = await AsyncValue.guard(
       () => asyncHandler(() async {
+        if (iconFile != null) {
+          payload[JsonKeys.iconUrl] = await _fileStorage.insertAndDeleteFile(
+            newRequest: _iconUploadRequest(iconFile),
+            oldUrl: oldIconUrl,
+          );
+        }
+
         final updated = await _repository.addOrUpdate(payload, id: id);
+
+        final iconCleared =
+            iconFile == null &&
+            payload.containsKey(JsonKeys.iconUrl) &&
+            payload[JsonKeys.iconUrl] == null;
+        if (iconCleared) {
+          await _deleteIconSilently(oldIconUrl);
+        }
         final currentItems = current?.items ?? [];
         final updatedItems = currentItems.map((item) {
           return item.id == id ? updated : item;
@@ -198,13 +251,15 @@ class ServicesController extends AsyncNotifier<PaginationState<ServiceModel>> {
     return updateRecord({JsonKeys.isActive: isActive}, id, loading: false);
   }
 
-  Future<void> deleteRecord(String id) async {
+  Future<void> deleteRecord(ServiceModel item) async {
+    final id = item.id;
     final current = state.value;
     state = const AsyncLoading();
 
     final result = await AsyncValue.guard(
       () => asyncHandler(() async {
         await _repository.delete(id);
+        await _deleteIconSilently(item.iconUrl);
 
         final currentItems = current?.items ?? [];
         final updatedItems = currentItems
@@ -230,6 +285,9 @@ class ServicesController extends AsyncNotifier<PaginationState<ServiceModel>> {
       () => asyncHandler(() async {
         final ids = items.map((e) => e.id).toList();
         await _repository.deleteMany(ids);
+        for (final item in items) {
+          await _deleteIconSilently(item.iconUrl);
+        }
 
         final idSet = ids.toSet();
         final currentItems = current?.items ?? [];

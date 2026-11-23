@@ -283,13 +283,11 @@ class OverviewSectionCard extends StatelessWidget {
           ),
         ),
         if (url != null && url.isNotEmpty)
-          IconButton(
+          AppButton.outline(
+            size: .small,
+            type: .primary,
             tooltip: 'Open Store Page',
-            icon: Icon(
-              Icons.open_in_new_rounded,
-              size: AppSpacing.lg,
-              color: colors.primary,
-            ),
+            icon: Icons.open_in_new_rounded,
             onPressed: () => AppLauncher.openWebsite(url),
           ),
       ],
@@ -415,13 +413,11 @@ class OverviewSectionCard extends StatelessWidget {
             ],
           ),
         ),
-        IconButton(
+        AppButton.outline(
+          size: .small,
+          type: .primary,
           tooltip: 'Test Contact',
-          icon: Icon(
-            Icons.launch_rounded,
-            size: AppSpacing.md + 2,
-            color: colors.primary,
-          ),
+          icon: Icons.launch_rounded,
           onPressed: onTap,
         ),
       ],

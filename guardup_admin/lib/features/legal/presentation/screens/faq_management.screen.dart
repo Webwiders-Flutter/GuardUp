@@ -2,9 +2,7 @@ import 'package:guardup_admin/shared/widgets/table/table_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
-import 'package:quick_container/quick_container.dart';
 
-import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
@@ -241,49 +239,21 @@ class _FaqManagementScreenState extends ConsumerState<FaqManagementScreen> {
               ),
               AppSpacing.xs.w,
               // Edit
-              Tooltip(
-                message: 'Edit FAQ',
-                child: InkWell(
-                  onTap: () => _openFaqForm(item: item),
-                  borderRadius: AppRadius.smRadius,
-                  child: QuickContainer(
-                    p: AppSpacing.xs + 2,
-                    radius: AppRadius.sm,
-                    color: colors.backgroundLight,
-                    border: Border.all(
-                      color: colors.borderLight.withValues(alpha: 0.6),
-                    ),
-                    child: Icon(
-                      Icons.edit_outlined,
-                      size: AppSpacing.lg,
-                      color: colors.primary,
-                    ),
-                  ),
-                ),
+              AppButton.outline(
+                size: .small,
+                type: .primary,
+                tooltip: 'Edit FAQ',
+                icon: Icons.edit_outlined,
+                onPressed: () => _openFaqForm(item: item),
               ),
               AppSpacing.xs.w,
-              // Active Switch
-
               // Delete
-              Tooltip(
-                message: 'Delete FAQ',
-                child: InkWell(
-                  onTap: () => _onDeleteFaq(item),
-                  borderRadius: AppRadius.smRadius,
-                  child: QuickContainer(
-                    p: AppSpacing.xs + 2,
-                    radius: AppRadius.sm,
-                    color: colors.error.withValues(alpha: 0.08),
-                    border: Border.all(
-                      color: colors.error.withValues(alpha: 0.25),
-                    ),
-                    child: Icon(
-                      Icons.delete_outline_rounded,
-                      size: AppSpacing.lg,
-                      color: colors.error,
-                    ),
-                  ),
-                ),
+              AppButton.outline(
+                size: .small,
+                type: .danger,
+                tooltip: 'Delete FAQ',
+                icon: Icons.delete_outline_rounded,
+                onPressed: () => _onDeleteFaq(item),
               ),
             ],
           );
