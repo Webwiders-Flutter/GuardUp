@@ -10,6 +10,10 @@ export 'data/model/availability.model.dart';
 export 'data/model/body_guard.model.dart';
 export 'data/model/document.model.dart';
 export 'data/model/license_and_badge.model.dart';
+export 'data/model/service_item.model.dart';
+
+// BloC / Cubit
+export 'bloc/services/services_cubit.dart';
 
 // Widgets
 export 'presentation/widgets/body_guard_header_card.dart';

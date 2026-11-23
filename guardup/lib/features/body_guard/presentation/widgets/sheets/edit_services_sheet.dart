@@ -3,7 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
 import '/core/constants/api/database_tables.dart';
 import '/core/constants/app_radius.dart';
-import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
@@ -17,6 +16,7 @@ import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_dropdown.dart';
 import '/shared/widgets/selection/app_removable_chip.dart';
 import '/shared/widgets/selection/selection.controller.dart';
+import '../../../bloc/services/services_cubit.dart';
 import '../../../data/model/service_item.model.dart';
 
 /// Modal bottom sheet for viewing, adding, and removing bodyguard services in-place.
@@ -78,17 +78,11 @@ class _EditServicesSheetState extends State<EditServicesSheet> {
 
   Future<void> _loadActiveServices() async {
     try {
-      final rows = await Supabase.instance.client
-          .from(DatabaseTables.services)
-          .select()
-          .eq('is_active', true)
-          .order('display_order', ascending: true);
+      final services = await sl<ServicesCubit>().loadServices();
 
       if (mounted) {
         setState(() {
-          _activeServices = (rows as List<dynamic>)
-              .map((r) => ServiceItemModel.fromJson(r as Map<String, dynamic>))
-              .toList();
+          _activeServices = services;
 
           // Sync initial selected items with fetched instances so IDs and objects match
           final matchedSelected = _activeServices

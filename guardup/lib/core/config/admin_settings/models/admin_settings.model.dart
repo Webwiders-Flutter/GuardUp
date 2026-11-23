@@ -51,10 +51,8 @@ sealed class AdminSettingsModel with _$AdminSettingsModel {
     latestAndroidVersion: '1.0.0',
     minimumIosVersion: '1.0.0',
     minimumAndroidVersion: '1.0.0',
-    updateMessageIos:
-        'A new version of the app is available. Please update to continue using GuardUp.',
-    updateMessageAndroid:
-        'A new version of the app is available. Please update to continue using GuardUp.',
+    updateMessageIos: 'A new version of the app is available. Please update to continue using GuardUp.',
+    updateMessageAndroid: 'A new version of the app is available. Please update to continue using GuardUp.',
     iosAppUrl: 'https://apps.apple.com/app/guardup',
     androidAppUrl:
         'https://play.google.com/store/apps/details?id=com.guardup.app',

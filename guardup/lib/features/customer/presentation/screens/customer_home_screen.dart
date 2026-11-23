@@ -20,6 +20,7 @@ import '/shared/widgets/sections/app_appbar.dart';
 import '../widgets/customer_header.widget.dart';
 import '../widgets/customer_promo_banner.widget.dart';
 import '../widgets/customer_services_row.widget.dart';
+import 'all_services_screen.dart';
 import '/features/customer/presentation/screens/booking_screen.dart';
 import '/features/guard_detail/presentation/customer_bodygaurd_profile.screen.dart';
 import '/features/customer/presentation/screens/search_bodyguards_screen.dart';
@@ -65,6 +66,10 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
 
   void _navigateToSearch() {
     context.push(SearchBodyguardsScreen.route);
+  }
+
+  void _navigateToAllServices() {
+    context.push(AllServicesScreen.route);
   }
 
   void _navigateToAllBodyguards() {
@@ -157,10 +162,10 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
               ),
               AppSpacing.xl.h,
 
-              // 5. SERVICES Row
+              // 5. SERVICES Row (Shows up to 10 items with 'View all' opening AllServicesScreen)
               CustomerServicesRowWidget(
                 selectedCategoryIdNotifier: _serviceCategoryNotifier,
-                onViewAll: _navigateToSearch,
+                onViewAll: _navigateToAllServices,
                 onCategorySelected: (catId) {
                   _navigateToAllBodyguards();
                 },

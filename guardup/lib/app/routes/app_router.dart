@@ -481,6 +481,10 @@ final class AppRouter {
         builder: (context, state) => const MyWalletScreen(),
       ),
       GoRoute(
+        path: AllServicesScreen.route,
+        builder: (context, state) => const AllServicesScreen(),
+      ),
+      GoRoute(
         path: SearchBodyguardsScreen.route,
         builder: (context, state) => const SearchBodyguardsScreen(),
       ),

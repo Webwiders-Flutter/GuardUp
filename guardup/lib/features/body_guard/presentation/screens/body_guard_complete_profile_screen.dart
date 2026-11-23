@@ -32,6 +32,7 @@ import '/shared/widgets/misc/app_input_label.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/selection/selection.dart';
+import '../../bloc/services/services_cubit.dart';
 import '../../data/model/service_item.model.dart';
 import '/features/body_guard/presentation/screens/body_guard_upload_documents_screen.dart';
 
@@ -114,16 +115,10 @@ class _BodyGuardCompleteProfileScreenState
 
   Future<void> _loadServices() async {
     try {
-      final rows = await Supabase.instance.client
-          .from(DatabaseTables.services)
-          .select()
-          .eq('is_active', true)
-          .order('display_order', ascending: true);
+      final services = await sl<ServicesCubit>().loadServices();
 
       if (mounted) {
-        _availableServicesNotifier.value = rows
-            .map((r) => ServiceItemModel.fromJson(r))
-            .toList();
+        _availableServicesNotifier.value = services;
       }
     } catch (e, stack) {
       debugPrint('Error loading services: $e\n$stack');
@@ -794,7 +789,7 @@ class _BodyGuardCompleteProfileScreenState
                                       AppDropdown<String>(
                                         controller: _serviceDropdownController,
                                         hintText: context.l10n.selectService,
-                                        okButtonText: 'OK',
+                                        // okButtonText: 'OK',
                                         items: activeServices
                                             .map(
                                               (e) => DropdownItem<String>(

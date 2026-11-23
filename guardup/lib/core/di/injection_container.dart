@@ -10,6 +10,7 @@ import '/core/services/local_storage/local_storage.service.dart';
 import '/core/services/local_storage/storage.dart';
 import '/core/services/location/address_search_service.dart';
 import '/features/auth/auth.dart';
+import '/features/body_guard/body_guard.dart';
 import '/features/notifications/notifications.dart';
 import '/shared/functionalities/connectivity/connectivity.dart';
 import '/shared/functionalities/language/language.dart';
@@ -81,6 +82,10 @@ Future<void> initDependencies() async {
   // ------------------------------------------------------------
   // Notifications & User Devices
   // ------------------------------------------------------------
+  sl.registerLazySingleton<ServicesCubit>(
+    () => ServicesCubit(),
+  );
+
   sl.registerLazySingleton<NotificationRepository>(
     () => NotificationRepository(),
   );
@@ -124,4 +129,7 @@ Future<void> initDependencies() async {
   sl<UserDeviceCubit>().listenToTokenRefresh(
     () => sl<AuthBloc>().state.user?.id ?? '',
   );
+
+  // Preload global active services once on app start
+  sl<ServicesCubit>().loadServices();
 }

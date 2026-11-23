@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "App (Dev)",
+      "name": "GuardUp (Dev)",
       "cwd": "guardup",
       "request": "launch",
       "type": "dart",
@@ -13,7 +13,7 @@
       ]
     },
     {
-      "name": "App (Staging)",
+      "name": "GuardUp (Staging)",
       "cwd": "guardup",
       "request": "launch",
       "type": "dart",
@@ -24,7 +24,7 @@
       ]
     },
     {
-      "name": "App (Prod)",
+      "name": "GuardUp (Prod)",
       "cwd": "guardup",
       "request": "launch",
       "type": "dart",

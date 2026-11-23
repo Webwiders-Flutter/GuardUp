@@ -10,6 +10,7 @@ import '/core/extensions/spacing.extension.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/navigation/app_tab_bar.dart';
 import '/shared/widgets/sections/app_appbar.dart';
+import '../../bloc/services/services_cubit.dart';
 import '../../data/model/body_guard.model.dart';
 import '../../data/model/service_item.model.dart';
 import '../widgets/body_guard_header_card.dart';
@@ -88,16 +89,11 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
         return;
       }
 
-      // 2. Fetch active services (all available columns: id, name, description, etc.)
-      final serviceRows = await Supabase.instance.client
-          .from(DatabaseTables.services)
-          .select()
-          .order('display_order', ascending: true);
+      // 2. Fetch active services via global ServicesCubit cache
+      final services = await sl<ServicesCubit>().loadServices();
 
-      final loaded = (serviceRows as List<dynamic>)
-          .map((r) => ServiceItemModel.fromJson(r as Map<String, dynamic>))
-          .where((s) => serviceIds.contains(s.id))
-          .toList();
+      final loaded =
+          services.where((s) => serviceIds.contains(s.id)).toList();
 
       if (mounted) {
         _servicesNotifier.value = loaded;

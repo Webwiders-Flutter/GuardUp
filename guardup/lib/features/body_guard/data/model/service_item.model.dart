@@ -9,6 +9,7 @@ class ServiceItemModel {
   final String name;
   final String? description;
   final String? iconName;
+  final String? iconUrl;
   final bool isActive;
   final int displayOrder;
 
@@ -18,6 +19,7 @@ class ServiceItemModel {
     required this.name,
     this.description,
     this.iconName,
+    this.iconUrl,
     this.isActive = true,
     this.displayOrder = 0,
   });
@@ -29,6 +31,7 @@ class ServiceItemModel {
       name: (json['name'] ?? '') as String,
       description: json['description'] as String?,
       iconName: json['icon_name'] as String?,
+      iconUrl: (json['icon_url'] ?? json['iconUrl']) as String?,
       isActive: (json['is_active'] ?? true) as bool,
       displayOrder: (json['display_order'] ?? 0) as int,
     );
@@ -41,6 +44,7 @@ class ServiceItemModel {
       'name': name,
       'description': description,
       'icon_name': iconName,
+      'icon_url': iconUrl,
       'is_active': isActive,
       'display_order': displayOrder,
     };

@@ -11,6 +11,7 @@ import '/core/config/admin_settings/admin_settings.dart';
 import '/core/config/config.dart';
 import '/core/di/injection_container.dart';
 import '/features/auth/auth.dart';
+import '/features/body_guard/body_guard.dart';
 import '/features/notifications/notifications.dart';
 import '/gen/app_localizations.dart';
 import '/gen/assets.gen.dart';
@@ -39,6 +40,9 @@ class App extends StatelessWidget {
         ),
         BlocProvider<AppGateCubit>.value(
           value: sl<AppGateCubit>(),
+        ),
+        BlocProvider<ServicesCubit>.value(
+          value: sl<ServicesCubit>(),
         ),
       ],
       child: BlocBuilder<LanguageCubit, LanguageState>(

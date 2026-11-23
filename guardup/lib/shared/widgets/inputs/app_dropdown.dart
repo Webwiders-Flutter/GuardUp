@@ -10,7 +10,6 @@ import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/core/state/api_state.dart';
-import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/pagination/pagination.dart';
 import '/shared/widgets/selection/selection.controller.dart';
@@ -85,7 +84,7 @@ class AppDropdown<V> extends StatefulWidget {
     this.useBottomSheet = false,
     this.sheetTitle,
     this.okButtonText,
-    this.showOkButton,
+    this.showOkButton = false,
   });
 
   @override
@@ -366,18 +365,18 @@ class _AppDropdownState<V> extends State<AppDropdown<V>> {
                           ),
                         ),
                       ),
-                      if (widget.showOkButton ??
-                          !widget.controller.isSingleSelection) ...[
-                        AppSpacing.sm.h,
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: AppButton(
-                            text: widget.okButtonText ?? 'OK',
-                            onPressed: () => Navigator.of(sheetContext).pop(),
-                          ),
-                        ),
-                      ],
-                      AppSpacing.md.h,
+                      // if (widget.showOkButton ??
+                      //     !widget.controller.isSingleSelection) ...[
+                      //   AppSpacing.sm.h,
+                      //   Padding(
+                      //     padding: const EdgeInsets.symmetric(horizontal: 20),
+                      //     child: AppButton(
+                      //       text: widget.okButtonText ?? 'OK',
+                      //       onPressed: () => Navigator.of(sheetContext).pop(),
+                      //     ),
+                      //   ),
+                      // ],
+                      // AppSpacing.md.h,
                     ],
                   ),
                 ),
@@ -502,40 +501,6 @@ class _AppDropdownState<V> extends State<AppDropdown<V>> {
                           Flexible(
                             child: _buildDropdownList(context, isSheet: false),
                           ),
-                          if (widget.showOkButton ??
-                              !widget.controller.isSingleSelection) ...[
-                            Divider(
-                              height: 1,
-                              color: context.colors.outlineVariant,
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  TextButton(
-                                    style: TextButton.styleFrom(
-                                      visualDensity: VisualDensity.compact,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 14,
-                                        vertical: 6,
-                                      ),
-                                    ),
-                                    onPressed: _removeDropdown,
-                                    child: Text(
-                                      widget.okButtonText ?? 'OK',
-                                      style: context.textTheme.labelLarge
-                                          ?.bold()
-                                          .colour(context.colors.primary),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
                         ],
                       ),
                     ),
