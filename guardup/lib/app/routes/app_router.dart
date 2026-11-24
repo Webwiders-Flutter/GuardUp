@@ -189,12 +189,16 @@ final class AppRouter {
           }
         }
 
-        // D. Fully approved user trying to access login/signup/approval or other role onboarding screens
+        // D. Fully approved user trying to access login/signup/approval or other role onboarding screens.
+        // Note: BodyGuardCompleteProfileScreen, BodyGuardUploadDocumentsScreen, and AdminApprovalScreen
+        // are NOT blocked for companies because companies manage bodyguards and review their submissions.
         if (authState.isApproved &&
             (isAuthFlow ||
-                location == AdminApprovalScreen.route ||
-                location == CompanyCompleteProfileScreen.route ||
-                location == BodyGuardCompleteProfileScreen.route)) {
+                (!authState.isCompany &&
+                    (location == AdminApprovalScreen.route ||
+                        location == BodyGuardCompleteProfileScreen.route ||
+                        location == BodyGuardUploadDocumentsScreen.route)) ||
+                location == CompanyCompleteProfileScreen.route)) {
           return CustomerHomeScreen.route;
         }
       }
@@ -218,11 +222,25 @@ final class AppRouter {
       ),
       GoRoute(
         path: BodyGuardCompleteProfileScreen.route,
-        builder: (context, state) => const BodyGuardCompleteProfileScreen(),
+        builder: (context, state) {
+          final extra = state.extra;
+          BodyGuardModel? bodyguard;
+          if (extra is BodyGuardModel) {
+            bodyguard = extra;
+          }
+          return BodyGuardCompleteProfileScreen(bodyguard: bodyguard);
+        },
       ),
       GoRoute(
         path: BodyGuardUploadDocumentsScreen.route,
-        builder: (context, state) => const BodyGuardUploadDocumentsScreen(),
+        builder: (context, state) {
+          final extra = state.extra;
+          BodyGuardModel? bodyguard;
+          if (extra is BodyGuardModel) {
+            bodyguard = extra;
+          }
+          return BodyGuardUploadDocumentsScreen(bodyguard: bodyguard);
+        },
       ),
       GoRoute(
         path: LoginScreen.route,

@@ -33,6 +33,7 @@ import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/selection/selection.dart';
 import '../../bloc/services/services_cubit.dart';
+import '../../data/model/body_guard.model.dart';
 import '../../data/model/service_item.model.dart';
 import '/features/body_guard/presentation/screens/body_guard_upload_documents_screen.dart';
 
@@ -46,7 +47,9 @@ import '/features/body_guard/presentation/screens/body_guard_upload_documents_sc
 class BodyGuardCompleteProfileScreen extends StatefulWidget {
   static const route = '/bodyguard-profile';
 
-  const BodyGuardCompleteProfileScreen({super.key});
+  final BodyGuardModel? bodyguard;
+
+  const BodyGuardCompleteProfileScreen({super.key, this.bodyguard});
 
   @override
   State<BodyGuardCompleteProfileScreen> createState() =>
@@ -58,8 +61,8 @@ class _BodyGuardCompleteProfileScreenState
   final _formKey = GlobalKey<FormState>();
 
   late final TextEditingController _fullNameController;
-  final _hourlyRateController = TextEditingController();
-  final _bioController = TextEditingController();
+  late final TextEditingController _hourlyRateController;
+  late final TextEditingController _bioController;
 
   late final SelectionController<String> _serviceDropdownController;
   final ValueNotifier<List<String>> _selectedServicesNotifier =
@@ -83,22 +86,45 @@ class _BodyGuardCompleteProfileScreenState
   @override
   void initState() {
     super.initState();
-    final authUser = sl.isRegistered<AuthBloc>()
-        ? sl<AuthBloc>().state.user
-        : null;
-    final metaName =
-        Supabase.instance.client.auth.currentUser?.userMetadata?['name']
-            as String?;
+    final isGuard = sl.isRegistered<AuthBloc>() && sl<AuthBloc>().state.isGuard;
 
-    final initialName =
-        (authUser?.name != null &&
-            authUser!.name.isNotEmpty &&
-            authUser.name != 'User' &&
-            authUser.name != 'New User')
-        ? authUser.name
-        : (metaName ?? '');
+    String initialName = '';
+    String? initialAvatar;
+    String initialRate = '';
+    String initialBio = '';
+
+    if (isGuard) {
+      final authUser = sl.isRegistered<AuthBloc>()
+          ? sl<AuthBloc>().state.user
+          : null;
+      final metaName =
+          Supabase.instance.client.auth.currentUser?.userMetadata?['name']
+              as String?;
+
+      initialName =
+          (authUser?.name != null &&
+              authUser!.name.isNotEmpty &&
+              authUser.name != 'User' &&
+              authUser.name != 'New User')
+          ? authUser.name
+          : (metaName ?? '');
+      initialAvatar = authUser?.profileImageUrl;
+    } else if (widget.bodyguard != null) {
+      initialName = widget.bodyguard!.user.name;
+      initialAvatar = widget.bodyguard!.user.profileImageUrl;
+      if (widget.bodyguard!.hourlyRate > 0) {
+        initialRate = widget.bodyguard!.hourlyRate.toInt().toString();
+      }
+      initialBio = widget.bodyguard!.bio;
+    }
 
     _fullNameController = TextEditingController(text: initialName);
+    _hourlyRateController = TextEditingController(text: initialRate);
+    _bioController = TextEditingController(text: initialBio);
+    if (initialAvatar != null && initialAvatar.isNotEmpty) {
+      _networkImageUrlNotifier.value = initialAvatar;
+    }
+
     _serviceDropdownController = SelectionController<String>.multi(
       initial: _selectedServicesNotifier.value,
       onChanged: (selected) {
@@ -130,13 +156,23 @@ class _BodyGuardCompleteProfileScreenState
   }
 
   Future<void> _loadExistingProfile() async {
+    final isGuard = sl.isRegistered<AuthBloc>() && sl<AuthBloc>().state.isGuard;
     final currentUserId = sl.isRegistered<AuthRepository>()
         ? sl<AuthRepository>().currentUserId
         : null;
-    if (currentUserId == null || !sl.isRegistered<UserRepository>()) return;
+
+    final targetUserId = isGuard
+        ? currentUserId
+        : (widget.bodyguard?.user.id.isNotEmpty == true
+              ? widget.bodyguard!.user.id
+              : (widget.bodyguard?.id.isNotEmpty == true
+                    ? widget.bodyguard!.id
+                    : null));
+
+    if (targetUserId == null || !sl.isRegistered<UserRepository>()) return;
 
     try {
-      final data = await sl<UserRepository>().getUserData(currentUserId);
+      final data = await sl<UserRepository>().getUserData(targetUserId);
       if (data != null && mounted) {
         final dbName = data['name'] as String?;
         if (dbName != null &&
@@ -164,7 +200,7 @@ class _BodyGuardCompleteProfileScreenState
           final userServicesRows = await Supabase.instance.client
               .from(DatabaseTables.userServices)
               .select('service_id')
-              .eq('user_id', currentUserId);
+              .eq('user_id', targetUserId);
           final activeIds = _availableServicesNotifier.value
               .map((s) => s.id)
               .toSet();
@@ -181,7 +217,8 @@ class _BodyGuardCompleteProfileScreenState
         final dbAvatar = data['profile_image_url'] as String?;
         if (dbAvatar != null &&
             dbAvatar.isNotEmpty &&
-            _profileImageNotifier.value == null) {
+            _profileImageNotifier.value == null &&
+            _networkImageUrlNotifier.value == null) {
           _networkImageUrlNotifier.value = dbAvatar;
         }
       }
@@ -246,20 +283,29 @@ class _BodyGuardCompleteProfileScreenState
       return;
     }
 
+    final isGuard = sl.isRegistered<AuthBloc>() && sl<AuthBloc>().state.isGuard;
     final currentUserId = sl.isRegistered<AuthRepository>()
         ? sl<AuthRepository>().currentUserId
         : null;
 
-    if (currentUserId == null) {
+    final targetUserId = isGuard
+        ? currentUserId
+        : (widget.bodyguard?.user.id.isNotEmpty == true
+              ? widget.bodyguard!.user.id
+              : (widget.bodyguard?.id.isNotEmpty == true
+                    ? widget.bodyguard!.id
+                    : currentUserId));
+
+    if (targetUserId == null) {
       AppSnackbar.error('User session expired. Please sign in again.');
       return;
     }
 
     _isLoadingNotifier.value = true;
+    String? avatarUrl = _networkImageUrlNotifier.value;
 
     try {
       if (sl.isRegistered<UserRepository>()) {
-        String? avatarUrl = _networkImageUrlNotifier.value;
         final pickedAvatar = _profileImageNotifier.value;
         if (pickedAvatar != null && sl.isRegistered<FileStorageService>()) {
           try {
@@ -267,7 +313,7 @@ class _BodyGuardCompleteProfileScreenState
               FileUploadRequest.fromXFile(
                 bucket: StorageBuckets.avatars,
                 path:
-                    '$currentUserId/avatar_${DateTime.now().millisecondsSinceEpoch}.jpg',
+                    '$targetUserId/avatar_${DateTime.now().millisecondsSinceEpoch}.jpg',
                 xFile: pickedAvatar,
                 upsert: true,
               ),
@@ -288,7 +334,7 @@ class _BodyGuardCompleteProfileScreenState
         }
 
         await sl<UserRepository>().updateProfileFields(
-          userId: currentUserId,
+          userId: targetUserId,
           data: updatePayload,
         );
 
@@ -297,7 +343,7 @@ class _BodyGuardCompleteProfileScreenState
           await Supabase.instance.client.rpc(
             'set_user_services',
             params: {
-              'p_user_id': currentUserId,
+              'p_user_id': targetUserId,
               'p_service_ids': _selectedServicesNotifier.value,
             },
           );
@@ -306,13 +352,13 @@ class _BodyGuardCompleteProfileScreenState
           await Supabase.instance.client
               .from(DatabaseTables.userServices)
               .delete()
-              .eq('user_id', currentUserId);
+              .eq('user_id', targetUserId);
 
           if (_selectedServicesNotifier.value.isNotEmpty) {
             final insertPayload = _selectedServicesNotifier.value
                 .map(
                   (serviceId) => {
-                    'user_id': currentUserId,
+                    'user_id': targetUserId,
                     'service_id': serviceId,
                   },
                 )
@@ -332,20 +378,15 @@ class _BodyGuardCompleteProfileScreenState
         final isRejected = authState?.isRejected == true;
         final hasRejectedDocs = authState?.hasRejectedDocuments == true;
 
-        if (isRejected && !hasRejectedDocs) {
+        if (isGuard && isRejected && !hasRejectedDocs) {
           // Only profile was rejected, documents are already fine.
           // Resubmit application directly to PENDING_APPROVAL!
-          final currentUserId = sl.isRegistered<AuthRepository>()
-              ? sl<AuthRepository>().currentUserId
-              : null;
-          if (currentUserId != null) {
-            await sl<DocumentSubmissionService>().submitApplicationForReview(
-              currentUserId,
-            );
-            if (sl.isRegistered<AuthBloc>()) {
-              sl<AuthBloc>().add(const AuthCheckStatusRequested());
-              sl<AuthBloc>().add(const AuthReloadRoleDataRequested());
-            }
+          await sl<DocumentSubmissionService>().submitApplicationForReview(
+            targetUserId,
+          );
+          if (sl.isRegistered<AuthBloc>()) {
+            sl<AuthBloc>().add(const AuthCheckStatusRequested());
+            sl<AuthBloc>().add(const AuthReloadRoleDataRequested());
           }
           if (mounted) {
             AppSnackbar.success(
@@ -354,7 +395,44 @@ class _BodyGuardCompleteProfileScreenState
             context.go(AdminApprovalScreen.route);
           }
         } else {
-          context.go(BodyGuardUploadDocumentsScreen.route);
+          final effectiveBodyguard = widget.bodyguard != null
+              ? widget.bodyguard!.copyWith(
+                  user: widget.bodyguard!.user.copyWith(
+                    name: _fullNameController.text.trim(),
+                    profileImageUrl:
+                        avatarUrl ??
+                        _networkImageUrlNotifier.value ??
+                        widget.bodyguard!.user.profileImageUrl,
+                  ),
+                  hourlyRate:
+                      double.tryParse(_hourlyRateController.text.trim()) ??
+                      widget.bodyguard!.hourlyRate,
+                  bio: _bioController.text.trim(),
+                )
+              : BodyGuardModel(
+                  id: targetUserId,
+                  user: UserModel(
+                    id: targetUserId,
+                    name: _fullNameController.text.trim(),
+                    profileImageUrl:
+                        avatarUrl ?? _networkImageUrlNotifier.value,
+                    role: UserRole.guard,
+                  ),
+                  hourlyRate:
+                      double.tryParse(_hourlyRateController.text.trim()) ?? 0.0,
+                  bio: _bioController.text.trim(),
+                );
+          if (isGuard) {
+            context.go(
+              BodyGuardUploadDocumentsScreen.route,
+              extra: effectiveBodyguard,
+            );
+          } else {
+            context.push(
+              BodyGuardUploadDocumentsScreen.route,
+              extra: effectiveBodyguard,
+            );
+          }
         }
       }
     } catch (e, stack) {
@@ -371,29 +449,40 @@ class _BodyGuardCompleteProfileScreenState
 
   @override
   Widget build(BuildContext context) {
+    final isGuard = sl.isRegistered<AuthBloc>() && sl<AuthBloc>().state.isGuard;
+
     return Scaffold(
       appBar: AppAppBar.transparent(
-        title: context.l10n.profileSetupTitle,
+        title: isGuard
+            ? context.l10n.profileSetupTitle
+            : (widget.bodyguard != null
+                  ? 'Edit Bodyguard'
+                  : context.l10n.addBodyguard),
         fontSize: 14,
         alignTitle: sl<AuthBloc>().state.isAuthenticated ? .right : .center,
-        actions: [
-          IconButton(
-            tooltip: context.l10n.logOut,
-            icon: Icon(
-              Icons.logout_rounded,
-              color: context.colors.error,
-              size: AppSizes.iconSmd,
-            ),
-            onPressed: () async {
-              final result = await AppPopup.showLogoutConfirmation(context);
-              if (result?.action == PopupAction.confirm && context.mounted) {
-                sl<AuthBloc>().add(const AuthSignOutRequested());
-                context.go(LoginScreen.route);
-              }
-            },
-          ),
-          AppSpacing.xs.w,
-        ],
+        actions: isGuard
+            ? [
+                IconButton(
+                  tooltip: context.l10n.logOut,
+                  icon: Icon(
+                    Icons.logout_rounded,
+                    color: context.colors.error,
+                    size: AppSizes.iconSmd,
+                  ),
+                  onPressed: () async {
+                    final result = await AppPopup.showLogoutConfirmation(
+                      context,
+                    );
+                    if (result?.action == PopupAction.confirm &&
+                        context.mounted) {
+                      sl<AuthBloc>().add(const AuthSignOutRequested());
+                      context.go(LoginScreen.route);
+                    }
+                  },
+                ),
+                AppSpacing.xs.w,
+              ]
+            : null,
       ),
       body: SafeArea(
         child: LayoutBuilder(

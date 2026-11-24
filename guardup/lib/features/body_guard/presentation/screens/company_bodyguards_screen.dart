@@ -62,7 +62,10 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen> {
   }
 
   void _handleEditBodyguard(BodyGuardModel bodyguard) {
-    context.push(BodyGuardCompleteProfileScreen.route);
+    context.push(
+      BodyGuardCompleteProfileScreen.route,
+      extra: bodyguard,
+    );
   }
 
   @override

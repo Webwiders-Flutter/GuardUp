@@ -174,7 +174,6 @@ class _WithdrawMoneySheetState extends State<WithdrawMoneySheet> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.colors;
 
     return Form(
       key: _formKey,

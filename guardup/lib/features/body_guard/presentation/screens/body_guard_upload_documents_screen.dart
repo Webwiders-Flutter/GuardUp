@@ -22,6 +22,7 @@ import '/shared/widgets/misc/app_rich_text.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 import '../../data/enum/document_status.enum.dart';
+import '../../data/model/body_guard.model.dart';
 import '../../data/model/document_type.model.dart';
 import '/features/payments/presentation/screens/registration_fee_screen.dart';
 
@@ -34,7 +35,9 @@ import '/features/payments/presentation/screens/registration_fee_screen.dart';
 class BodyGuardUploadDocumentsScreen extends StatefulWidget {
   static const route = '/bodyguard-upload-documents';
 
-  const BodyGuardUploadDocumentsScreen({super.key});
+  final BodyGuardModel? bodyguard;
+
+  const BodyGuardUploadDocumentsScreen({super.key, this.bodyguard});
 
   @override
   State<BodyGuardUploadDocumentsScreen> createState() =>
@@ -75,11 +78,21 @@ class _BodyGuardUploadDocumentsScreenState
       final types = await docService.getDocumentTypes(UserRole.guard);
       if (mounted) _docTypesNotifier.value = types;
 
+      final isGuard =
+          sl.isRegistered<AuthBloc>() && sl<AuthBloc>().state.isGuard;
       final currentUserId = sl.isRegistered<AuthRepository>()
           ? sl<AuthRepository>().currentUserId
           : null;
-      if (currentUserId != null) {
-        final records = await docService.getUserDocuments(currentUserId);
+      final targetUserId = isGuard
+          ? currentUserId
+          : (widget.bodyguard?.user.id.isNotEmpty == true
+              ? widget.bodyguard!.user.id
+              : (widget.bodyguard?.id.isNotEmpty == true
+                  ? widget.bodyguard!.id
+                  : currentUserId));
+
+      if (targetUserId != null) {
+        final records = await docService.getUserDocuments(targetUserId);
         if (mounted) {
           _remoteDocsNotifier.value = records.urls;
           _remoteFileNamesNotifier.value = records.names;
@@ -135,7 +148,8 @@ class _BodyGuardUploadDocumentsScreenState
     // 1. Ensure any rejected documents have an updated replacement file selected
     for (final doc in docTypes) {
       final key = doc.docKey;
-      final status = remoteStatuses[key] ??
+      final status =
+          remoteStatuses[key] ??
           (doc.code.isNotEmpty ? remoteStatuses[doc.code] : null);
       if (status == DocumentStatus.rejected && !localDocs.containsKey(key)) {
         AppSnackbar.error('Please upload an updated document for ${doc.name}');
@@ -159,22 +173,32 @@ class _BodyGuardUploadDocumentsScreenState
     _isLoadingNotifier.value = true;
 
     try {
+      final isGuard =
+          sl.isRegistered<AuthBloc>() && sl<AuthBloc>().state.isGuard;
       final currentUserId = sl.isRegistered<AuthRepository>()
           ? sl<AuthRepository>().currentUserId
           : null;
+      final targetUserId = isGuard
+          ? currentUserId
+          : (widget.bodyguard?.user.id.isNotEmpty == true
+              ? widget.bodyguard!.user.id
+              : (widget.bodyguard?.id.isNotEmpty == true
+                  ? widget.bodyguard!.id
+                  : currentUserId));
 
-      if (currentUserId != null) {
+      if (targetUserId != null) {
         if (localDocs.isNotEmpty) {
           await sl<DocumentSubmissionService>().uploadDocuments(
-            userId: currentUserId,
+            userId: targetUserId,
             documents: localDocs,
             docTypes: docTypes,
-            isCompany: false,
+            isCompany: !isGuard,
           );
         } else {
           // Documents already uploaded & valid. Transition user status back to PENDING_APPROVAL
-          await sl<DocumentSubmissionService>()
-              .submitApplicationForReview(currentUserId);
+          await sl<DocumentSubmissionService>().submitApplicationForReview(
+            targetUserId,
+          );
         }
       }
 
@@ -183,22 +207,31 @@ class _BodyGuardUploadDocumentsScreenState
         await _loadDocumentTypesAndFiles();
         if (!mounted) return;
 
-        final authState = sl.isRegistered<AuthBloc>()
-            ? sl<AuthBloc>().state
-            : null;
-        final isPreviouslySubmitted =
-            authState?.isRejected == true ||
-            authState?.isPendingApproval == true;
+        if (isGuard) {
+          final authState = sl.isRegistered<AuthBloc>()
+              ? sl<AuthBloc>().state
+              : null;
+          final isPreviouslySubmitted =
+              authState?.isRejected == true ||
+              authState?.isPendingApproval == true;
 
-        if (isPreviouslySubmitted) {
+          if (isPreviouslySubmitted) {
+            AppSnackbar.success(
+              localDocs.isNotEmpty
+                  ? 'Documents resubmitted successfully. Your application is under review.'
+                  : 'Application resubmitted successfully. Your profile is under review.',
+            );
+            context.go(AdminApprovalScreen.route);
+          } else {
+            context.go(RegistrationFeeScreen.route);
+          }
+        } else {
           AppSnackbar.success(
             localDocs.isNotEmpty
-                ? 'Documents resubmitted successfully. Your application is under review.'
-                : 'Application resubmitted successfully. Your profile is under review.',
+                ? 'Documents submitted successfully. The guard profile is under review.'
+                : 'Application submitted successfully. The guard profile is under review.',
           );
           context.go(AdminApprovalScreen.route);
-        } else {
-          context.go(RegistrationFeeScreen.route);
         }
       }
     } catch (e) {
@@ -214,28 +247,36 @@ class _BodyGuardUploadDocumentsScreenState
 
   @override
   Widget build(BuildContext context) {
+    final isGuard =
+        sl.isRegistered<AuthBloc>() && sl<AuthBloc>().state.isGuard;
+
     return Scaffold(
       appBar: AppAppBar.transparent(
         title: context.l10n.uploadDocuments,
         alignTitle: sl<AuthBloc>().state.isAuthenticated ? .right : .center,
-        actions: [
-          IconButton(
-            tooltip: context.l10n.logOut,
-            icon: Icon(
-              Icons.logout_rounded,
-              color: context.colors.error,
-              size: AppSizes.iconSmd,
-            ),
-            onPressed: () async {
-              final result = await AppPopup.showLogoutConfirmation(context);
-              if (result?.action == PopupAction.confirm && context.mounted) {
-                sl<AuthBloc>().add(const AuthSignOutRequested());
-                context.go(LoginScreen.route);
-              }
-            },
-          ),
-          AppSpacing.xs.w,
-        ],
+        actions: isGuard
+            ? [
+                IconButton(
+                  tooltip: context.l10n.logOut,
+                  icon: Icon(
+                    Icons.logout_rounded,
+                    color: context.colors.error,
+                    size: AppSizes.iconSmd,
+                  ),
+                  onPressed: () async {
+                    final result = await AppPopup.showLogoutConfirmation(
+                      context,
+                    );
+                    if (result?.action == PopupAction.confirm &&
+                        context.mounted) {
+                      sl<AuthBloc>().add(const AuthSignOutRequested());
+                      context.go(LoginScreen.route);
+                    }
+                  },
+                ),
+                AppSpacing.xs.w,
+              ]
+            : null,
       ),
       body: SafeArea(
         child: LayoutBuilder(
@@ -324,7 +365,9 @@ class _BodyGuardUploadDocumentsScreenState
                                         Text(
                                           'One or more documents were rejected by the compliance team. Please review the reasons highlighted below, select updated files, and resubmit.',
                                           style: context.textTheme.bodySmall
-                                              ?.colour(context.colors.onSurface),
+                                              ?.colour(
+                                                context.colors.onSurface,
+                                              ),
                                         ),
                                       ],
                                     ),
@@ -438,8 +481,8 @@ class _BodyGuardUploadDocumentsScreenState
                                       : null,
                                   rejectionReason:
                                       (isResubmitted || localFile != null)
-                                          ? null
-                                          : rejectionReason,
+                                      ? null
+                                      : rejectionReason,
                                   onPick: () => _pickDocument(doc),
                                 ),
                                 AppSpacing.lg.h,
@@ -483,8 +526,7 @@ class _BodyGuardUploadDocumentsScreenState
                                         fontSize: 12,
                                       ),
                                       AppTextSpan(
-                                        text:
-                                            'Documents are stored in an encrypted vault and reviewed only by authorized government compliance officers.',
+                                        text: 'Documents are stored in an encrypted vault and reviewed only by authorized government compliance officers.',
                                         color: context.colors.onSurfaceVariant,
                                         fontSize: 12,
                                       ),

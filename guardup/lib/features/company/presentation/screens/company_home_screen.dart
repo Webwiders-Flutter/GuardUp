@@ -91,7 +91,10 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
   void _handleShareLocation(BookingModel booking) {}
 
   void _handleEditBodyguard(BodyGuardModel bodyguard) {
-    context.push(BodyGuardCompleteProfileScreen.route);
+    context.push(
+      BodyGuardCompleteProfileScreen.route,
+      extra: bodyguard,
+    );
   }
 
   void _handleDeleteBodyguard(BodyGuardModel bodyguard) {
