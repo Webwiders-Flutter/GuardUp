@@ -19,7 +19,7 @@ import '/features/users/data/enums/user_status.enum.dart';
 import '/features/users/data/models/company.model.dart';
 import '/features/users/data/models/user_model.dart';
 import '/features/users/presentation/widgets/bodyguard_details.section.dart';
-import '/features/users/presentation/widgets/company_bodyguards.section.dart';
+import '/features/company_bodyguards/presentation/widgets/company_bodyguards.section.dart';
 import '/features/users/di/users.providers.dart';
 import '/core/extensions/riverpod.extension.dart';
 import '/features/users/data/models/user_document.model.dart';
@@ -185,14 +185,9 @@ class _PersonalInfoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    final address = user.address ?? '';
-    final latitude = user.latitude;
-    final longitude = user.longitude;
-
     return AppDetailSection(
       title: 'Personal Information',
-      subtitle: 'Gender, address and app preferences',
+      subtitle: 'Gender and app preferences',
       icon: Icons.badge_outlined,
       items: [
         (label: 'Full Name', value: user.name, icon: Icons.person_outline),
@@ -201,42 +196,12 @@ class _PersonalInfoSection extends StatelessWidget {
           value: user.gender?.label(context.l10n) ?? 'Not specified',
           icon: user.gender?.icon ?? Icons.wc_outlined,
         ),
-        // (
-        //   label: 'Push Notifications',
-        //   value: user.isPushNotificationEnabled ? 'Enabled' : 'Disabled',
-        //   icon: user.isPushNotificationEnabled
-        //       ? Icons.notifications_active_outlined
-        //       : Icons.notifications_off_outlined,
-        // ),
         (
           label: 'Last Updated',
           value: user.updatedAt?.readableDate,
           icon: Icons.update_rounded,
         ),
       ],
-      child: AppDetailTile(
-        label: user.role.isCompany ? 'Registered Address' : 'Address',
-        value: address.isNotBlank ? address : 'Not provided',
-        icon: Icons.location_on_outlined,
-        onTap: address.isBlank
-            ? null
-            : () => latitude != null && longitude != null
-                  ? AppLauncher.openMaps(
-                      latitude: latitude,
-                      longitude: longitude,
-                    )
-                  : AppLauncher.openMapsSearch(address),
-        trailing: address.isNotBlank
-            ? Tooltip(
-                message: 'Open in Google Maps',
-                child: Icon(
-                  Icons.map_outlined,
-                  size: AppSpacing.md + 2,
-                  color: colors.primary,
-                ),
-              )
-            : null,
-      ),
     );
   }
 }

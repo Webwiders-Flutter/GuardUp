@@ -24,6 +24,7 @@ import '/features/membership/presentation/screens/membership_plan_management.scr
 import '/features/notifications/presentation/screens/notification_management.screen.dart';
 import '/features/services/presentation/screens/services_management.screen.dart';
 import '/features/settings/presentation/screens/admin_settings.screen.dart';
+import '/features/company_bodyguards/presentation/screens/company_bodyguards_management.screen.dart';
 import '/features/users/data/enums/user_role.enum.dart';
 import '/features/users/presentation/screens/user_details.screen.dart';
 import '/features/users/presentation/screens/users_management.screen.dart';
@@ -31,11 +32,17 @@ import '/features/users/presentation/screens/users_management.screen.dart';
 final class AppRouter {
   AppRouter._();
 
+  /// Root navigator, for UI opened from outside a page (e.g. a side panel
+  /// opened by tapping a foreground notification banner).
+  static final GlobalKey<NavigatorState> rootNavigatorKey =
+      GlobalKey<NavigatorState>();
+
   static final goRouterProvider = Provider<GoRouter>((ref) {
     final authRepository = ref.read(authRepositoryProvider);
     final authRefresh = ref.read(authRefreshProvider);
 
     final router = GoRouter(
+      navigatorKey: rootNavigatorKey,
       initialLocation: LoginScreen.route,
       refreshListenable: authRefresh,
       errorPageBuilder: (context, state) =>
@@ -111,7 +118,8 @@ final class AppRouter {
             ),
 
             // 2. Users: /users/<role>/<status> for every list in
-            //    UsersManagementScreen.listsByRole, plus /users/detail/:id.
+            //    UsersManagementScreen.listsByRole, plus /users/detail/:id
+            //    and /users/company-bodyguards/<status>.
             StatefulShellBranch(
               routes: [
                 GoRoute(
@@ -145,6 +153,25 @@ final class AppRouter {
                             ),
                         ],
                       ),
+                    GoRoute(
+                      path: CompanyBodyguardsManagementScreen.path,
+                      redirect: (context, state) =>
+                          state.uri.path ==
+                              CompanyBodyguardsManagementScreen.route
+                          ? CompanyBodyguardsManagementScreen.defaultLocation
+                          : null,
+                      routes: [
+                        for (final status
+                            in CompanyBodyguardsManagementScreen.statuses)
+                          GoRoute(
+                            path: status.slug,
+                            builder: (context, state) =>
+                                CompanyBodyguardsManagementScreen(
+                                  status: status,
+                                ),
+                          ),
+                      ],
+                    ),
                     GoRoute(
                       path: UserDetailsScreen.path,
                       builder: (context, state) => UserDetailsScreen(

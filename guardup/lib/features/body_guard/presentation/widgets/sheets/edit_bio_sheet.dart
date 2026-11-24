@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/core/constants/api/database_tables.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/di/injection_container.dart';
@@ -16,10 +18,22 @@ import '/shared/widgets/inputs/app_text_field.dart';
 /// Modal bottom sheet for viewing and updating the bodyguard bio.
 class EditBioSheet extends StatefulWidget {
   final String currentBio;
+  final String? bodyguardId;
+  final ValueChanged<String>? onBioUpdated;
 
-  const EditBioSheet({super.key, required this.currentBio});
+  const EditBioSheet({
+    super.key,
+    required this.currentBio,
+    this.bodyguardId,
+    this.onBioUpdated,
+  });
 
-  static Future<void> show(BuildContext context, {required String currentBio}) {
+  static Future<void> show(
+    BuildContext context, {
+    required String currentBio,
+    String? bodyguardId,
+    ValueChanged<String>? onBioUpdated,
+  }) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -27,7 +41,11 @@ class EditBioSheet extends StatefulWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
-      builder: (_) => EditBioSheet(currentBio: currentBio),
+      builder: (_) => EditBioSheet(
+        currentBio: currentBio,
+        bodyguardId: bodyguardId,
+        onBioUpdated: onBioUpdated,
+      ),
     );
   }
 
@@ -56,15 +74,24 @@ class _EditBioSheetState extends State<EditBioSheet> {
     setState(() => _isSaving = true);
 
     try {
-      final authState = sl<AuthBloc>().state;
-      final userId = authState.user?.id ?? '';
-      if (userId.isNotEmpty) {
-        await sl<UserRepository>().updateProfileFields(
-          userId: userId,
-          data: {'bio': _controller.text.trim()},
-        );
-        sl<AuthBloc>().add(const AuthCheckStatusRequested());
+      final newBio = _controller.text.trim();
+      if (widget.bodyguardId != null && widget.bodyguardId!.isNotEmpty) {
+        await Supabase.instance.client
+            .from(DatabaseTables.bodyguards)
+            .update({'bio': newBio})
+            .eq('id', widget.bodyguardId!);
+      } else {
+        final authState = sl<AuthBloc>().state;
+        final userId = authState.user?.id ?? '';
+        if (userId.isNotEmpty) {
+          await sl<UserRepository>().updateProfileFields(
+            userId: userId,
+            data: {'bio': newBio},
+          );
+          sl<AuthBloc>().add(const AuthCheckStatusRequested());
+        }
       }
+      widget.onBioUpdated?.call(newBio);
       if (mounted) {
         Navigator.pop(context);
         AppSnackbar.success('Bio updated successfully');

@@ -18,21 +18,25 @@ import '/shared/widgets/selection/app_removable_chip.dart';
 import '/shared/widgets/selection/selection.controller.dart';
 import '../../../bloc/services/services_cubit.dart';
 import '../../../data/model/service_item.model.dart';
+import '../../../data/repositories/bodyguard.repository.dart';
 
 /// Modal bottom sheet for viewing, adding, and removing bodyguard services in-place.
 class EditServicesSheet extends StatefulWidget {
   final List<ServiceItemModel> currentServices;
+  final String? bodyguardId;
   final ValueChanged<List<ServiceItemModel>>? onServicesUpdated;
 
   const EditServicesSheet({
     super.key,
     required this.currentServices,
+    this.bodyguardId,
     this.onServicesUpdated,
   });
 
   static Future<void> show(
     BuildContext context, {
     required List<ServiceItemModel> currentServices,
+    String? bodyguardId,
     ValueChanged<List<ServiceItemModel>>? onServicesUpdated,
   }) {
     return showModalBottomSheet<void>(
@@ -44,6 +48,7 @@ class EditServicesSheet extends StatefulWidget {
       ),
       builder: (_) => EditServicesSheet(
         currentServices: currentServices,
+        bodyguardId: bodyguardId,
         onServicesUpdated: onServicesUpdated,
       ),
     );
@@ -110,52 +115,59 @@ class _EditServicesSheetState extends State<EditServicesSheet> {
     setState(() => _isSaving = true);
 
     try {
-      final authState = sl<AuthBloc>().state;
-      final userId = authState.user?.id ?? '';
-      if (userId.isNotEmpty) {
-        final targetServiceIds = _selectedServices.map((s) => s.id).toList();
+      final targetServiceIds = _selectedServices.map((s) => s.id).toList();
 
-        // 1. Persist strictly to public.user_services (matching signup flow)
-        try {
-          await Supabase.instance.client.rpc(
-            'set_user_services',
-            params: {'p_user_id': userId, 'p_service_ids': targetServiceIds},
-          );
-        } catch (_) {
-          await Supabase.instance.client
-              .from(DatabaseTables.userServices)
-              .delete()
-              .eq('user_id', userId);
-
-          if (targetServiceIds.isNotEmpty) {
-            final inserts = targetServiceIds
-                .map((sId) => {'user_id': userId, 'service_id': sId})
-                .toList();
-
+      if (widget.bodyguardId != null && widget.bodyguardId!.isNotEmpty) {
+        await sl<BodyguardRepository>().setServices(
+          widget.bodyguardId!,
+          targetServiceIds,
+        );
+      } else {
+        final authState = sl<AuthBloc>().state;
+        final userId = authState.user?.id ?? '';
+        if (userId.isNotEmpty) {
+          // 1. Persist strictly to public.user_services (matching signup flow)
+          try {
+            await Supabase.instance.client.rpc(
+              'set_user_services',
+              params: {'p_user_id': userId, 'p_service_ids': targetServiceIds},
+            );
+          } catch (_) {
             await Supabase.instance.client
                 .from(DatabaseTables.userServices)
-                .insert(inserts);
+                .delete()
+                .eq('user_id', userId);
+
+            if (targetServiceIds.isNotEmpty) {
+              final inserts = targetServiceIds
+                  .map((sId) => {'user_id': userId, 'service_id': sId})
+                  .toList();
+
+              await Supabase.instance.client
+                  .from(DatabaseTables.userServices)
+                  .insert(inserts);
+            }
           }
+
+          // 2. Remove obsolete 'services' key from metadata if it was previously present
+          try {
+            final userRow = await sl<UserRepository>().getUserData(userId);
+            if (userRow?['metadata'] is Map &&
+                (userRow!['metadata'] as Map).containsKey('services')) {
+              final cleanMeta = Map<String, dynamic>.from(
+                userRow['metadata'] as Map,
+              );
+              cleanMeta.remove('services');
+              await sl<UserRepository>().updateProfileFields(
+                userId: userId,
+                data: {'metadata': cleanMeta},
+              );
+            }
+          } catch (_) {}
+
+          sl<AuthBloc>().add(AuthUpdateUserServices(_selectedServices));
+          sl<AuthBloc>().add(const AuthReloadRoleDataRequested());
         }
-
-        // 2. Remove obsolete 'services' key from metadata if it was previously present
-        try {
-          final userRow = await sl<UserRepository>().getUserData(userId);
-          if (userRow?['metadata'] is Map &&
-              (userRow!['metadata'] as Map).containsKey('services')) {
-            final cleanMeta = Map<String, dynamic>.from(
-              userRow['metadata'] as Map,
-            );
-            cleanMeta.remove('services');
-            await sl<UserRepository>().updateProfileFields(
-              userId: userId,
-              data: {'metadata': cleanMeta},
-            );
-          }
-        } catch (_) {}
-
-        sl<AuthBloc>().add(AuthUpdateUserServices(_selectedServices));
-        sl<AuthBloc>().add(const AuthReloadRoleDataRequested());
       }
 
       if (mounted) {

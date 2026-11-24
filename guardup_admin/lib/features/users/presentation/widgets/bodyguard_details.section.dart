@@ -59,6 +59,12 @@ class BodyguardDetailsSection extends StatelessWidget {
               : 'Less than a year',
           icon: Icons.workspace_premium_outlined,
         ),
+        if (bodyguard.address != null && bodyguard.address!.isNotEmpty)
+          (
+            label: 'Service Area',
+            value: bodyguard.address!,
+            icon: Icons.location_on_outlined,
+          ),
         if (bio != null && bio.isNotEmpty)
           (label: 'Bio', value: bio, icon: Icons.description_outlined),
       ],

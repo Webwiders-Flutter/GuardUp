@@ -40,6 +40,11 @@ abstract class BodyGuardModel with _$BodyGuardModel {
 
     /// Why the admin rejected this bodyguard (`bodyguards.rejection_reason`).
     String? rejectionReason,
+    String? languages,
+    String? certifications,
+    String? address,
+    double? latitude,
+    double? longitude,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) = _BodyGuardModel;

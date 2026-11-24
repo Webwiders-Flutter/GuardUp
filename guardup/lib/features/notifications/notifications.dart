@@ -13,3 +13,5 @@ export 'presentation/screens/notifications_screen.dart';
 export 'presentation/widgets/notification_card.dart';
 export 'presentation/widgets/notification_icon.widget.dart';
 export 'presentation/widgets/foreground_notification_banner.widget.dart';
+export 'presentation/notification_navigator.dart';
+export 'presentation/widgets/notification_tap_handler.widget.dart';

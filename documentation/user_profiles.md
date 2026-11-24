@@ -42,7 +42,7 @@ users (role = CUSTOMER / ADMIN)   no profile row
 | `bodyguards.user_id` | the GUARD account | `NULL` (no login) |
 | `bodyguards.company_id` | `NULL` | the company |
 | Created by | `handle_new_user()` on signup | the company (Add Bodyguard) |
-| Name, photo, gender | copied from `users` (source of truth) | stored on `bodyguards` |
+| Name, photo | copied from `users` (source of truth) | stored on `bodyguards` |
 | Verification (`bodyguards.status`) | copied from `users.status`: approved together with the account | reviewed by an admin on its own (section 2a); `is_active` lets the company switch it off |
 | Services / documents / availability rows | keyed by `user_id` | keyed by `bodyguard_id` |
 | Deleted with | the account (`delete_user`) | the company deleting it, or the company account |
@@ -59,15 +59,20 @@ company adds it ──► INCOMPLETE ──(company submits on the Documents ste
                                                                                │
                          admin approves (all documents APPROVED) ◄─────────────┤
                                      │                                         │
-                                  ACTIVE ◄──► BLOCKED (admin)        admin rejects (reason)
+                                  ACTIVE   (never blocked)           admin rejects (reason)
                                                                        or a document is rejected
                                                                                │
                          company edits / re-uploads and resubmits ◄──── REJECTED
 ```
 
-- The company can only move `INCOMPLETE` / `REJECTED` → `PENDING_APPROVAL`; approving,
-  rejecting and blocking are admin-only (`guard_profile_ownership()`), and it can never
-  set the rejection reason.
+- The company can only move `INCOMPLETE` / `REJECTED` → `PENDING_APPROVAL`; approving
+  and rejecting are admin-only (`guard_profile_ownership()`), and it can never set the
+  rejection reason.
+- A company-managed bodyguard is **never blocked** (migration `20261124000023`,
+  `prevent_company_bodyguard_block()`): an admin approves, rejects or deletes it, and the
+  company can switch it off (`is_active`). Blocking stays for login accounts, including
+  self-registered guards. A row blocked before that migration keeps `BLOCKED` until it is
+  unblocked or deleted; it cannot be blocked again.
 - `enforce_bodyguard_review_rules()` applies the account rules: approve only from
   `PENDING_APPROVAL` / `REJECTED` with every document `APPROVED` (clears the reason);
   reject only while under review, with a reason unless a document is rejected.
@@ -84,25 +89,56 @@ company adds it ──► INCOMPLETE ──(company submits on the Documents ste
   | → `PENDING_APPROVAL` | all admins | `NEW_USER_REGISTRATION` | New bodyguard to review: {name} |
   | → `ACTIVE` (approved) | the company | `ACCOUNT_APPROVED` | Bodyguard approved |
   | → `REJECTED` | the company | `ACCOUNT_REJECTED` | Bodyguard not approved (reason or rejected documents) |
-  | → `BLOCKED` / back to `ACTIVE` | the company | `ACCOUNT_BLOCKED` / `ACCOUNT_UNBLOCKED` | Bodyguard suspended / restored |
+  | deleted by an admin | the company | `ACCOUNT_DELETED` | Bodyguard removed |
 
-  `data.user_id` is the company account, so opening the notification in the admin panel
-  leads to the company, whose details list its bodyguards.
+  `data.user_id` is the company account and `data.bodyguard_id` the bodyguard. Opening
+  the notification opens the bodyguard (admin: its review panel; company app: its details,
+  or the bodyguards list once deleted). See "Opening a notification" in
+  [notifications_and_user_lifecycle.md](notifications_and_user_lifecycle.md).
 
 Bodyguards a company added before migration `20261124000021` were set to
 `PENDING_APPROVAL`, so an admin reviews them once.
 
+**Deleting** (migration `20261124000022`): an admin can delete a company-managed
+bodyguard; its services, documents and availability go with it (ON DELETE CASCADE).
+`notify_company_on_bodyguard_deleted()` (AFTER DELETE on `bodyguards`) notifies the
+company (`ACCOUNT_DELETED`, title "Bodyguard removed", `data.event = BODYGUARD_DELETED`).
+It does not notify when the company deletes its own bodyguard, or when the company
+account itself is removed.
+
+#### Admin panel
+
+Company-managed bodyguards have their own listing, separate from the Bodyguards
+(GUARD accounts) listing: sidebar **Users → Company Bodyguards**, routes
+`/users/company-bodyguards/<pending|verified|rejected>`
+(`features/company_bodyguards` in `guardup_admin`). Each row shows the bodyguard, its
+company (opens the company's details), phone, rate and status. Opening a row shows the
+review panel; it is also opened from the company's details (Company Bodyguards
+section).
+
+The review flow matches an account's review on the user details screen, without
+block / unblock (only approve, reject and delete):
+
+| Status | Profile actions | Documents |
+|---|---|---|
+| `PENDING_APPROVAL` | Approve (enabled once every document is approved), Reject (reason) | approve / reject each |
+| `REJECTED` | none; the company fixes and resubmits (the listing row can Delete) | approve / reject each |
+| `ACTIVE` | Delete | read-only |
+| `INCOMPLETE` | none (not submitted yet) | read-only |
+
+The database enforces these rules (above), so the panel only mirrors them.
+
 ### Identity sync (self-registered)
 
 `users` stays the source of truth for a self-registered bodyguard's `name`,
-`profile_image_url`, `gender` and verification (`status`, `rejection_reason`):
+`profile_image_url`, and verification (`status`, `rejection_reason`):
 
 - `trg_bodyguards_sync_identity` (BEFORE INSERT / UPDATE on `bodyguards`) copies them
   from `users` on every write, so they can never drift.
 - `trg_users_push_identity_to_bodyguard` (AFTER UPDATE on `users`) touches the bodyguard
   row when they change, which runs the copy.
 
-The guard's personal phone is **not** copied (it would become publicly readable).
+Contact and demographic details (`phone_number`, `gender`) stay private on `users` and are not stored on `bodyguards`.
 
 ---
 

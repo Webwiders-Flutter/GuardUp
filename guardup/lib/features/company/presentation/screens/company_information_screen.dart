@@ -24,7 +24,6 @@ class CompanyInformationScreen extends StatelessWidget {
   final String? companyName;
   final String? email;
   final String? phone;
-  final String? address;
   final String? companyType;
 
   const CompanyInformationScreen({
@@ -32,7 +31,6 @@ class CompanyInformationScreen extends StatelessWidget {
     this.companyName,
     this.email,
     this.phone,
-    this.address,
     this.companyType,
   });
 
@@ -48,10 +46,6 @@ class CompanyInformationScreen extends StatelessWidget {
 
         final effectiveEmail = email ?? state.businessEmail;
         final effectivePhone = phone ?? state.displayPhone;
-        final effectiveAddress = address ??
-            (state.address.isNotEmpty
-                ? state.address
-                : 'Not specified');
         final effectiveCompanyType = companyType ??
             (state.companyType.isNotEmpty
                 ? state.companyType.businessTypeLabel(context.l10n)
@@ -91,13 +85,7 @@ class CompanyInformationScreen extends StatelessWidget {
                           value: effectivePhone,
                         ),
 
-                        // 4. Address Card
-                        _InfoCard(
-                          label: context.l10n.address,
-                          value: effectiveAddress,
-                        ),
-
-                        // 5. Company Type Card
+                        // 4. Company Type Card
                         _InfoCard(
                           label: context.l10n.companyType,
                           value: effectiveCompanyType,

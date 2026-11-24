@@ -51,9 +51,6 @@ abstract class UserModel with _$UserModel {
     String? profileImageUrl,
     @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
     GenderType? gender,
-    String? address,
-    double? latitude,
-    double? longitude,
     @Default(true) bool isPushNotificationEnabled,
     Map<String, dynamic>? metadata,
     DateTime? createdAt,

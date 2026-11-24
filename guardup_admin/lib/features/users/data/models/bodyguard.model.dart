@@ -1,8 +1,8 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '/features/services/data/models/service.model.dart';
-import '/features/users/data/enums/gender_type.enum.dart';
 import '/features/users/data/enums/user_status.enum.dart';
+import 'company.model.dart';
 import 'user_availability.model.dart';
 import 'user_document.model.dart';
 
@@ -25,7 +25,8 @@ List<ServiceModel>? _servicesFromJson(dynamic json) {
 ///   [status] are copied from that account (approved with it).
 /// - Company-managed: [userId] is null, [companyId] is the company; reviewed
 ///   by an admin on its own ([status], [rejectionReason]). Its services,
-///   documents and availability are embedded by the bodyguards repository.
+///   documents, availability and [company] are embedded by the company
+///   bodyguards repository.
 @freezed
 abstract class BodyguardModel with _$BodyguardModel {
   const factory BodyguardModel({
@@ -34,10 +35,6 @@ abstract class BodyguardModel with _$BodyguardModel {
     String? companyId,
     @Default('') String name,
     String? profileImageUrl,
-    @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
-    GenderType? gender,
-    @Default('+91') String phoneCode,
-    String? phoneNumber,
     double? hourlyRate,
     double? rating,
     int? experienceYears,
@@ -48,6 +45,9 @@ abstract class BodyguardModel with _$BodyguardModel {
 
     /// Free text, comma separated (e.g. "CPR, First Aid").
     String? certifications,
+    String? address,
+    double? latitude,
+    double? longitude,
     @Default(true) bool isActive,
     @Default(UserStatus.incomplete)
     @JsonKey(unknownEnumValue: UserStatus.incomplete)
@@ -56,11 +56,15 @@ abstract class BodyguardModel with _$BodyguardModel {
     DateTime? createdAt,
     DateTime? updatedAt,
 
-    // Embedded relations (company-managed bodyguards; see BodyguardsRepository)
+    // Embedded relations (company-managed bodyguards; see
+    // CompanyBodyguardsRepository)
     @JsonKey(fromJson: _servicesFromJson, includeToJson: false)
     List<ServiceModel>? services,
     List<UserDocumentModel>? documents,
     List<UserAvailabilityModel>? availabilities,
+
+    /// The managing company (`company_id`), embedded on admin lists/details.
+    @JsonKey(includeToJson: false) CompanyModel? company,
   }) = _BodyguardModel;
 
   factory BodyguardModel.fromJson(Map<String, dynamic> json) =>

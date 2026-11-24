@@ -22,7 +22,6 @@ import '/features/auth/domain/repositories/auth_repository.dart';
 import '/features/auth/domain/repositories/user_repository.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
-import '/shared/widgets/inputs/app_address_picker_sheet.dart';
 import '/shared/widgets/inputs/app_dropdown.dart';
 import '/shared/widgets/inputs/app_media_picker_sheet.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
@@ -49,7 +48,6 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
   final _companyNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _addressController = TextEditingController();
   final _experienceController = TextEditingController();
   final _businessTypeController = SelectionController<BusinessType>.single(
     initial: BusinessType.pvtLtd,
@@ -59,8 +57,6 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
 
   String? _existingLogoUrl;
   String _phoneCode = '+91';
-  double? _latitude;
-  double? _longitude;
   bool _isLoading = false;
 
   @override
@@ -75,12 +71,9 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
     _phoneCode = state.companyPhoneCode.isNotEmpty
         ? state.companyPhoneCode
         : state.userPhoneCode;
-    _addressController.text = state.address;
     _experienceController.text = state.experienceYears > 0
         ? state.experienceYears.toString()
         : '';
-    _latitude = state.latitude;
-    _longitude = state.longitude;
     _existingLogoUrl = state.avatarUrl;
 
     if (state.companyType.isNotEmpty) {
@@ -95,7 +88,6 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
     _companyNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
-    _addressController.dispose();
     _experienceController.dispose();
     _businessTypeController.dispose();
     _logoImageNotifier.dispose();
@@ -115,17 +107,6 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
 
     if (pickedFile != null && mounted) {
       _logoImageNotifier.value = pickedFile;
-    }
-  }
-
-  Future<void> _handleSelectAddress() async {
-    final picked = await AppAddressPickerSheet.show(context);
-    if (picked != null && mounted) {
-      setState(() {
-        _addressController.text = picked.description;
-        _latitude = picked.latitude;
-        _longitude = picked.longitude;
-      });
     }
   }
 
@@ -163,17 +144,13 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
       // Always store the API value; screens format it with businessTypeLabel.
       final companyType =
           (_businessTypeController.selectedItem ?? BusinessType.pvtLtd).apiValue;
-      final addressText = _addressController.text.trim();
       final expYears = int.tryParse(_experienceController.text.trim()) ?? 0;
 
       final updateData = <String, dynamic>{
         'company_name': companyName,
         'name': companyName,
         'company_type': companyType,
-        'address': addressText,
         'experience_years': expYears,
-        'latitude': ?_latitude,
-        'longitude': ?_longitude,
         'profile_image_url': ?logoUrl,
       };
 
@@ -184,17 +161,12 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
         );
       } catch (e) {
         if (e.toString().contains('column') ||
-            e.toString().contains('address') ||
-            e.toString().contains('experience') ||
-            e.toString().contains('latitude')) {
+            e.toString().contains('experience')) {
           final userRow = await sl<UserRepository>().getUserData(currentUserId);
           final existingMeta = (userRow?['metadata'] is Map)
               ? Map<String, dynamic>.from(userRow!['metadata'] as Map)
               : <String, dynamic>{};
-          existingMeta['address'] = addressText;
           existingMeta['experience_years'] = expYears;
-          if (_latitude != null) existingMeta['latitude'] = _latitude;
-          if (_longitude != null) existingMeta['longitude'] = _longitude;
 
           await sl<UserRepository>().updateProfileFields(
             userId: currentUserId,
@@ -463,30 +435,6 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
                                 ),
                               ),
                               textInputAction: TextInputAction.next,
-                            ),
-                            AppSpacing.md.h,
-
-                            // Address Field (Google / Places Autocomplete)
-                            AppTextField(
-                              controller: _addressController,
-                              readOnly: true,
-                              onTap: _handleSelectAddress,
-                              decoration: InputDecoration(
-                                hintText: context.l10n.address,
-                                prefixIcon: Icon(
-                                  Icons.location_on_outlined,
-                                  color: context.colors.primary,
-                                ),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    Icons.search_rounded,
-                                    color: context.colors.primary,
-                                  ),
-                                  onPressed: _handleSelectAddress,
-                                ),
-                              ),
-                              validator: (value) =>
-                                  Validators.required(context, value),
                             ),
                             AppSpacing.md.h,
 

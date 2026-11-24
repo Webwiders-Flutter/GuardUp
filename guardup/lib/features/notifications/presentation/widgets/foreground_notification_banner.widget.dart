@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:go_router/go_router.dart';
 import 'package:guardup/core/extensions/number.extension.dart';
 
 import '/core/constants/app_radius.dart';
@@ -12,8 +11,7 @@ import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/core/services/notification/push_notification_service.dart';
-import '/app/routes/app_router.dart';
-import '/features/notifications/presentation/screens/notifications_screen.dart';
+import '/features/notifications/presentation/notification_navigator.dart';
 
 /// Data model representing an active in-app foreground notification banner.
 class ForegroundBannerData {
@@ -156,17 +154,8 @@ class _ForegroundNotificationBannerState
       return;
     }
 
-    final targetRoute = data.data['route']?.toString();
-    final route = (targetRoute != null && targetRoute.isNotEmpty)
-        ? targetRoute
-        : NotificationsScreen.route;
-
-    final navContext = AppRouter.rootNavigatorKey.currentContext;
-    if (navContext != null) {
-      navContext.push(route);
-    } else {
-      AppRouter.router.push(route);
-    }
+    // Same as tapping the push: open what it is about, else the list.
+    NotificationNavigator.openPush(data.data);
   }
 
   @override

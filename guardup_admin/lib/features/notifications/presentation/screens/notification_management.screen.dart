@@ -21,6 +21,7 @@ import '../../data/enums/notification_type.enum.dart';
 import '../../data/models/notification.model.dart';
 import '../../di/notification.providers.dart';
 import '../controllers/notification.controller.dart';
+import '../notification_navigator.dart';
 
 class NotificationManagementScreen extends ConsumerStatefulWidget {
   /// Route path of this screen.
@@ -79,6 +80,12 @@ class _NotificationManagementScreenState
     _searchController.dispose();
     _selectedItemsNotifier.dispose();
     super.dispose();
+  }
+
+  /// Marks [item] read and opens what it is about (user / bodyguard).
+  void _onOpenNotification(NotificationModel item) {
+    if (!item.isRead) controller.markAsRead(item.id);
+    NotificationNavigator.open(context, item.data);
   }
 
   Future<void> _onDeleteNotification(NotificationModel item) async {
@@ -245,12 +252,23 @@ class _NotificationManagementScreenState
       ),
       TableColumn<NotificationModel>(
         title: 'Actions',
-        width: (AppSpacing.xxxl * 3) + AppSpacing.md,
+        width: (AppSpacing.xxxl * 4) + AppSpacing.md,
         alignment: Alignment.center,
         cellBuilder: (item, index) {
           return Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              if (NotificationNavigator.canOpen(item.data)) ...[
+                AppButton.outline(
+                  size: .small,
+                  type: .primary,
+                  tooltip: 'Open',
+                  icon: Icons.open_in_new_rounded,
+                  onPressed: () => _onOpenNotification(item),
+                ),
+                AppSpacing.sm.w,
+              ],
+
               // Mark as Read Button (one-way: once read, cannot toggle back)
               if (!item.isRead) ...[
                 AppButton.outline(
@@ -299,6 +317,7 @@ class _NotificationManagementScreenState
         totalEntries: paginationState.total,
         rowsPerPage: paginationState.pageSize,
         showCheckbox: true,
+        onRowTap: _onOpenNotification,
         selectedItemsNotifier: _selectedItemsNotifier,
         selectionActions: [
           AppButton(

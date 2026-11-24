@@ -10,6 +10,7 @@ import '/core/extensions/textstyle_extension.dart';
 import '/core/services/document_submission/document_submission_service.dart';
 import '/features/auth/auth.dart';
 import '/features/body_guard/data/enum/document_status.enum.dart';
+import '/features/body_guard/data/model/body_guard.model.dart';
 import '/features/body_guard/data/model/document_type.model.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
@@ -20,7 +21,9 @@ import '/shared/widgets/inputs/document_upload_card.dart';
 /// Existing documents are read-only (tap to preview), while un-uploaded documents
 /// can be directly selected and uploaded in-place.
 class BodyguardDocumentsWidget extends StatefulWidget {
-  const BodyguardDocumentsWidget({super.key});
+  final BodyGuardModel? bodyguard;
+
+  const BodyguardDocumentsWidget({super.key, this.bodyguard});
 
   @override
   State<BodyguardDocumentsWidget> createState() =>
@@ -65,7 +68,32 @@ class _BodyguardDocumentsWidgetState extends State<BodyguardDocumentsWidget> {
   }
 
   Future<void> _loadDocumentTypesAndFiles() async {
-    if (sl.isRegistered<AuthBloc>()) {
+    final bodyguard = widget.bodyguard;
+    if (bodyguard != null && bodyguard.documents.isNotEmpty) {
+      final Map<String, String> urls = {};
+      final Map<String, String> names = {};
+      final Map<String, DocumentStatus> statuses = {};
+      final Map<String, String> rejectionReasons = {};
+      for (final doc in bodyguard.documents) {
+        final key = doc.docType.apiValue;
+        urls[key] = doc.url;
+        urls[doc.id] = doc.url;
+        if (doc.fileName != null) {
+          names[key] = doc.fileName!;
+          names[doc.id] = doc.fileName!;
+        }
+        statuses[key] = doc.status;
+        statuses[doc.id] = doc.status;
+        if (doc.rejectionReason != null && doc.rejectionReason!.isNotEmpty) {
+          rejectionReasons[key] = doc.rejectionReason!;
+          rejectionReasons[doc.id] = doc.rejectionReason!;
+        }
+      }
+      _remoteDocsNotifier.value = urls;
+      _remoteFileNamesNotifier.value = names;
+      _remoteStatusesNotifier.value = statuses;
+      _rejectionReasonsNotifier.value = rejectionReasons;
+    } else if (sl.isRegistered<AuthBloc>() && widget.bodyguard == null) {
       final initialDocs = sl<AuthBloc>().state.userDocuments;
       if (initialDocs.isNotEmpty) {
         final Map<String, String> urls = {};
@@ -87,18 +115,25 @@ class _BodyguardDocumentsWidgetState extends State<BodyguardDocumentsWidget> {
       final types = await docService.getDocumentTypes(UserRole.guard);
       if (mounted) _docTypesNotifier.value = types;
 
-      final currentUserId = sl.isRegistered<AuthRepository>()
-          ? sl<AuthRepository>().currentUserId
-          : null;
+      final bodyguardId = widget.bodyguard?.id;
+      final UserDocumentRecords? records;
 
-      if (currentUserId != null) {
-        final records = await docService.getUserDocuments(currentUserId);
-        if (mounted) {
-          _remoteDocsNotifier.value = records.urls;
-          _remoteFileNamesNotifier.value = records.names;
-          _remoteStatusesNotifier.value = records.statuses;
-          _rejectionReasonsNotifier.value = records.rejectionReasons;
-        }
+      if (bodyguardId != null && bodyguardId.isNotEmpty) {
+        records = await docService.getBodyguardDocuments(bodyguardId);
+      } else {
+        final currentUserId = sl.isRegistered<AuthRepository>()
+            ? sl<AuthRepository>().currentUserId
+            : null;
+        records = currentUserId != null
+            ? await docService.getUserDocuments(currentUserId)
+            : null;
+      }
+
+      if (records != null && mounted) {
+        _remoteDocsNotifier.value = records.urls;
+        _remoteFileNamesNotifier.value = records.names;
+        _remoteStatusesNotifier.value = records.statuses;
+        _rejectionReasonsNotifier.value = records.rejectionReasons;
       }
     } catch (e) {
       debugPrint('Error loading bodyguard documents: $e');
@@ -144,8 +179,12 @@ class _BodyguardDocumentsWidgetState extends State<BodyguardDocumentsWidget> {
 
       if (currentUserId == null) return;
 
+      final bodyguardId = widget.bodyguard?.id;
       await sl<DocumentSubmissionService>().uploadDocuments(
         userId: currentUserId,
+        bodyguardId: (bodyguardId != null && bodyguardId.isNotEmpty)
+            ? bodyguardId
+            : null,
         documents: newDocs,
         docTypes: _docTypesNotifier.value,
         isCompany: false,

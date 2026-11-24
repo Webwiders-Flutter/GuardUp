@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:guardup/core/di/injection_container.dart';
 import 'package:guardup/core/extensions/datetime.extension.dart';
 import 'package:guardup/shared/widgets/buttons/app_button.dart';
@@ -28,9 +27,8 @@ import '../../bloc/unread_count/unread_notification_count_cubit.dart';
 import '../../data/enums/notification_type.enum.dart';
 import '../../data/models/notification.model.dart';
 import '../widgets/app_swipeable_delete.dart';
+import '../notification_navigator.dart';
 import '../widgets/notification_card.dart';
-import '/features/booking/presentation/screens/bookings_screen.dart';
-import '/features/payments/presentation/screens/my_wallet_screen.dart';
 
 /// Notifications screen featuring category tabs, unread count badge,
 /// "Mark all as read" action, and paginated notifications grouped by date.
@@ -205,11 +203,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
       _notificationsBloc.add(NotificationMarkAsReadRequested(notification.id));
     }
 
-    if (notification.type.category == NotificationCategory.booking) {
-      context.push(BookingsScreen.route);
-    } else if (notification.type.category == NotificationCategory.payment) {
-      context.push(MyWalletScreen.route);
-    }
+    NotificationNavigator.open(notification.type, notification.data);
   }
 
   @override

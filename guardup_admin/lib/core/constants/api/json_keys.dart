@@ -57,6 +57,12 @@ final class JsonKeys {
   static const String companyPhoneNumber = 'company_phone_number';
   static const String registrationStatus = 'status';
   static const String userId = 'user_id';
+  static const String bodyguardId = 'bodyguard_id';
+
+  // Notification `data` payload keys (also sent with the push)
+  static const String event = 'event';
+  static const String route = 'route';
+  static const String notificationId = 'notification_id';
 
   /// delete_user RPC parameter.
   static const String pUserId = 'p_user_id';
@@ -80,6 +86,9 @@ final class JsonKeys {
   static const String companyId = 'company_id';
   static const String bodyguard = 'bodyguard';
   static const String capacityTons = 'capacity_tons';
+  static const String address = "address";
+  static const String latitude = "latitude";
+  static const String longitude = "longitude";
   static const String addressLine1 = "address_line_1";
   static const String addressLine2 = "address_line_2";
   static const String verificationStatus = 'verification_status';

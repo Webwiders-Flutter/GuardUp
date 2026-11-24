@@ -21,6 +21,9 @@ final class JsonKeys {
   static const String gender = 'gender';
   static const String phoneCode = 'phone_code';
   static const String phoneNumber = 'phone_number';
+  static const String address = 'address';
+  static const String latitude = 'latitude';
+  static const String longitude = 'longitude';
 
   // Company profile (companies) Keys
   static const String companyId = 'company_id';
@@ -32,6 +35,11 @@ final class JsonKeys {
 
   // Bodyguard profile (bodyguards) Keys
   static const String bodyguardId = 'bodyguard_id';
+
+  // Notification `data` payload keys (also sent with the push)
+  static const String event = 'event';
+  static const String route = 'route';
+  static const String notificationId = 'notification_id';
   static const String hourlyRate = 'hourly_rate';
   static const String rating = 'rating';
   static const String experienceYears = 'experience_years';

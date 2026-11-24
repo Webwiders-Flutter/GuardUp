@@ -16,6 +16,56 @@ import '/features/legal/legal.dart';
 import '/features/notifications/notifications.dart';
 import '/features/payments/payments.dart';
 
+BodyGuardModel? _parseBodyGuard(dynamic extra) {
+  if (extra is BodyGuardModel) return extra;
+  if (extra is Map) {
+    try {
+      final map = Map<String, dynamic>.from(extra);
+      if (map['bodyguard'] is BodyGuardModel) {
+        return map['bodyguard'] as BodyGuardModel;
+      }
+      if (map['bodyguard'] is Map) {
+        try {
+          return BodyGuardModel.fromJson(
+              Map<String, dynamic>.from(map['bodyguard'] as Map));
+        } catch (_) {}
+      }
+      return BodyGuardModel.fromJson(map);
+    } catch (_) {}
+  }
+  return null;
+}
+
+CompanyModel? _parseCompany(dynamic extra) {
+  if (extra is CompanyModel) return extra;
+  if (extra is Map) {
+    try {
+      final map = Map<String, dynamic>.from(extra);
+      if (map['company'] is CompanyModel) {
+        return map['company'] as CompanyModel;
+      }
+      if (map['company'] is Map) {
+        try {
+          return CompanyModel.fromJson(
+              Map<String, dynamic>.from(map['company'] as Map));
+        } catch (_) {}
+      }
+      return CompanyModel.fromJson(map);
+    } catch (_) {}
+  }
+  return null;
+}
+
+ConversationModel? _parseConversation(dynamic extra) {
+  if (extra is ConversationModel) return extra;
+  if (extra is Map) {
+    try {
+      return ConversationModel.fromJson(Map<String, dynamic>.from(extra));
+    } catch (_) {}
+  }
+  return null;
+}
+
 final class AppRouter {
   AppRouter._();
 
@@ -222,22 +272,14 @@ final class AppRouter {
       GoRoute(
         path: BodyGuardCompleteProfileScreen.route,
         builder: (context, state) {
-          final extra = state.extra;
-          BodyGuardModel? bodyguard;
-          if (extra is BodyGuardModel) {
-            bodyguard = extra;
-          }
+          final bodyguard = _parseBodyGuard(state.extra);
           return BodyGuardCompleteProfileScreen(bodyguard: bodyguard);
         },
       ),
       GoRoute(
         path: BodyGuardUploadDocumentsScreen.route,
         builder: (context, state) {
-          final extra = state.extra;
-          BodyGuardModel? bodyguard;
-          if (extra is BodyGuardModel) {
-            bodyguard = extra;
-          }
+          final bodyguard = _parseBodyGuard(state.extra);
           return BodyGuardUploadDocumentsScreen(bodyguard: bodyguard);
         },
       ),
@@ -350,9 +392,9 @@ final class AppRouter {
               bodyguard: extra,
               isCompanyBodyguardFlow: true,
             );
-          } else if (extra is Map<String, dynamic>) {
+          } else if (extra is Map) {
             return AdminApprovalScreen(
-              bodyguard: extra['bodyguard'] as BodyGuardModel?,
+              bodyguard: _parseBodyGuard(extra),
               isCompanyBodyguardFlow:
                   extra['isCompanyBodyguardFlow'] as bool? ?? false,
             );
@@ -479,14 +521,14 @@ final class AppRouter {
       GoRoute(
         path: CompanyDetailsScreen.route,
         builder: (context, state) {
-          final company = state.extra as CompanyModel?;
+          final company = _parseCompany(state.extra);
           return CompanyDetailsScreen(company: company);
         },
       ),
       GoRoute(
         path: BodyGuardProfileScreen.route,
         builder: (context, state) {
-          final guard = state.extra as BodyGuardModel?;
+          final guard = _parseBodyGuard(state.extra);
           return BodyGuardProfileScreen(bodyguard: guard);
         },
       ),
@@ -518,13 +560,11 @@ final class AppRouter {
             return GuardDetailScreen(id: extra.id, bodyguard: extra);
           } else if (extra is String) {
             return GuardDetailScreen(id: extra);
-          } else if (extra is Map<String, dynamic>) {
+          } else if (extra is Map) {
+            final guard = _parseBodyGuard(extra);
             return GuardDetailScreen(
-              id: (extra['id'] ??
-                      (extra['bodyguard'] as BodyGuardModel?)?.id ??
-                      '')
-                  .toString(),
-              bodyguard: extra['bodyguard'] as BodyGuardModel?,
+              id: (extra['id'] ?? guard?.id ?? '').toString(),
+              bodyguard: guard,
               isCompanyView: extra['isCompanyView'] as bool?,
             );
           }
@@ -555,7 +595,7 @@ final class AppRouter {
       GoRoute(
         path: ChatScreen.route,
         builder: (context, state) {
-          final conversation = state.extra as ConversationModel?;
+          final conversation = _parseConversation(state.extra);
           return ChatScreen(conversation: conversation);
         },
       ),
@@ -672,6 +712,9 @@ final class AppRouter {
               is ({CompanyModel? company, BodyGuardModel? guard})) {
             company = extra.company;
             guard = extra.guard;
+          } else if (extra is Map) {
+            company = _parseCompany(extra);
+            guard = _parseBodyGuard(extra);
           }
           return BookingScreen(company: company, initialBodyguard: guard);
         },
@@ -680,9 +723,9 @@ final class AppRouter {
         path: CustomerBookingDetailsScreen.route,
         builder: (context, state) {
           final extra = state.extra;
-          if (extra is Map<String, dynamic>) {
+          if (extra is Map) {
             return CustomerBookingDetailsScreen(
-              bodyguard: extra['bodyguard'] as BodyGuardModel?,
+              bodyguard: _parseBodyGuard(extra),
               startDate: extra['startDate'] as DateTime? ?? DateTime.now(),
               startTime:
                   extra['startTime'] as TimeOfDay? ??
@@ -716,9 +759,9 @@ final class AppRouter {
         path: CustomerBookingConfirmedScreen.route,
         builder: (context, state) {
           final extra = state.extra;
-          if (extra is Map<String, dynamic>) {
+          if (extra is Map) {
             return CustomerBookingConfirmedScreen(
-              bodyguard: extra['bodyguard'] as BodyGuardModel?,
+              bodyguard: _parseBodyGuard(extra),
               guardName: extra['guardName'] as String?,
               guardPhoto: extra['guardPhoto'] as String?,
               startDate: extra['startDate'] as DateTime?,

@@ -85,7 +85,8 @@ class NotificationIconWidget extends ConsumerWidget {
               foregroundColor: badgeTextColor,
             )
           : null,
-      onPressed: onTap ??
+      onPressed:
+          onTap ??
           () {
             if (!isCurrentRoute) {
               context.go(NotificationManagementScreen.route);

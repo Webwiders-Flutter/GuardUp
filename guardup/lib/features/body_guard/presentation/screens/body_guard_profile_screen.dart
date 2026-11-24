@@ -13,6 +13,7 @@ import '/shared/widgets/sections/app_appbar.dart';
 import '../../bloc/services/services_cubit.dart';
 import '../../data/model/body_guard.model.dart';
 import '../../data/model/service_item.model.dart';
+import '../../data/repositories/bodyguard.repository.dart';
 import '../widgets/body_guard_header_card.dart';
 import '../widgets/sheets/sheets.dart';
 import '../widgets/tabs/bodyguard_about.widget.dart';
@@ -38,6 +39,7 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
   late final TabController _tabController;
   final ValueNotifier<List<ServiceItemModel>> _servicesNotifier =
       ValueNotifier<List<ServiceItemModel>>([]);
+  BodyGuardModel? _currentBodyguard;
 
   static const List<String> _tabNames = [
     'About',
@@ -49,14 +51,30 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
   @override
   void initState() {
     super.initState();
+    _currentBodyguard = widget.bodyguard;
     _tabController = TabController(length: _tabNames.length, vsync: this);
-    if (sl.isRegistered<AuthBloc>()) {
+    if (sl.isRegistered<AuthBloc>() && widget.bodyguard == null) {
       final initialServices = sl<AuthBloc>().state.userServices;
       if (initialServices.isNotEmpty) {
         _servicesNotifier.value = initialServices;
       }
     }
     _loadUserServices();
+    if (widget.bodyguard != null) {
+      _reloadBodyguard();
+    }
+  }
+
+  Future<void> _reloadBodyguard() async {
+    final id = _currentBodyguard?.id ?? widget.bodyguard?.id;
+    if (id != null && id.isNotEmpty) {
+      try {
+        final reloaded = await sl<BodyguardRepository>().getDetails(id);
+        if (mounted) {
+          setState(() => _currentBodyguard = reloaded);
+        }
+      } catch (_) {}
+    }
   }
 
   @override
@@ -67,19 +85,28 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
   }
 
   Future<void> _loadUserServices() async {
+    final bodyguardId = _currentBodyguard?.id ?? widget.bodyguard?.id;
     final currentUserId = sl.isRegistered<AuthRepository>()
         ? sl<AuthRepository>().currentUserId
         : null;
-    if (currentUserId == null) return;
+
+    if (bodyguardId == null && currentUserId == null) return;
 
     try {
-      // 1. Fetch user's assigned service IDs from public.user_services
-      final userServicesRows = await Supabase.instance.client
-          .from(DatabaseTables.userServices)
-          .select('service_id')
-          .eq('user_id', currentUserId);
+      final List<dynamic> userServicesRows;
+      if (bodyguardId != null && bodyguardId.isNotEmpty) {
+        userServicesRows = await Supabase.instance.client
+            .from(DatabaseTables.userServices)
+            .select('service_id')
+            .eq('bodyguard_id', bodyguardId);
+      } else {
+        userServicesRows = await Supabase.instance.client
+            .from(DatabaseTables.userServices)
+            .select('service_id')
+            .eq('user_id', currentUserId!);
+      }
 
-      final serviceIds = (userServicesRows as List<dynamic>)
+      final serviceIds = userServicesRows
           .map((r) => r['service_id']?.toString() ?? '')
           .where((id) => id.isNotEmpty)
           .toSet();
@@ -92,12 +119,11 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
       // 2. Fetch active services via global ServicesCubit cache
       final services = await sl<ServicesCubit>().loadServices();
 
-      final loaded =
-          services.where((s) => serviceIds.contains(s.id)).toList();
+      final loaded = services.where((s) => serviceIds.contains(s.id)).toList();
 
       if (mounted) {
         _servicesNotifier.value = loaded;
-        if (sl.isRegistered<AuthBloc>()) {
+        if (widget.bodyguard == null && sl.isRegistered<AuthBloc>()) {
           sl<AuthBloc>().add(AuthUpdateUserServices(loaded));
         }
       }
@@ -107,7 +133,19 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
   }
 
   void _showEditBioSheet(BuildContext context, String currentBio) {
-    EditBioSheet.show(context, currentBio: currentBio);
+    EditBioSheet.show(
+      context,
+      currentBio: currentBio,
+      bodyguardId: _currentBodyguard?.id ?? widget.bodyguard?.id,
+      onBioUpdated: (newBio) {
+        if (_currentBodyguard != null) {
+          setState(() {
+            _currentBodyguard = _currentBodyguard!.copyWith(bio: newBio);
+          });
+        }
+        _reloadBodyguard();
+      },
+    );
   }
 
   void _showEditKeyDetailsSheet(
@@ -122,6 +160,7 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
   }) {
     EditKeyDetailsSheet.show(
       context,
+      bodyguardId: _currentBodyguard?.id ?? widget.bodyguard?.id,
       experienceYears: experienceYears,
       hourlyRate: hourlyRate,
       address: address,
@@ -129,6 +168,33 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
       longitude: longitude,
       languages: languages,
       certifications: certifications,
+      onKeyDetailsUpdated: ({
+        experienceYears,
+        hourlyRate,
+        languages,
+        certifications,
+        address,
+        latitude,
+        longitude,
+      }) {
+        if (_currentBodyguard != null) {
+          setState(() {
+            _currentBodyguard = _currentBodyguard!.copyWith(
+              experienceYears:
+                  experienceYears ?? _currentBodyguard!.experienceYears,
+              hourlyRate:
+                  hourlyRate?.toDouble() ?? _currentBodyguard!.hourlyRate,
+              languages: languages ?? _currentBodyguard!.languages,
+              certifications:
+                  certifications ?? _currentBodyguard!.certifications,
+              address: address ?? _currentBodyguard!.address,
+              latitude: latitude ?? _currentBodyguard!.latitude,
+              longitude: longitude ?? _currentBodyguard!.longitude,
+            );
+          });
+        }
+        _reloadBodyguard();
+      },
     );
   }
 
@@ -138,10 +204,12 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
   }) {
     EditServicesSheet.show(
       context,
+      bodyguardId: _currentBodyguard?.id ?? widget.bodyguard?.id,
       currentServices: currentServices,
       onServicesUpdated: (updated) {
         _servicesNotifier.value = updated;
         _loadUserServices();
+        _reloadBodyguard();
       },
     );
   }
@@ -157,32 +225,50 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
         }
       },
       builder: (context, state) {
-        final guard = widget.bodyguard;
-        final name =
-            guard?.user.name ?? (state.user?.name ?? state.displayName);
+        final guard = _currentBodyguard ?? widget.bodyguard;
+        final isCompanyGuard = guard != null;
+        final name = isCompanyGuard
+            ? (guard.user.name.isNotEmpty ? guard.user.name : 'Bodyguard')
+            : (state.user?.name ?? state.displayName);
         final rating = guard?.rating ?? state.rating;
-        final hourlyRate =
-            guard?.hourlyRate ??
+        final hourlyRate = guard?.hourlyRate ??
             (state.hourlyRate > 0 ? state.hourlyRate : 60.0);
-        final avatar =
-            guard?.user.profileImageUrl ??
-            (state.avatarUrl.isNotEmpty
+        final avatar = isCompanyGuard
+            ? (guard.user.profileImageUrl ?? Assets.images.dummyAvatar.path)
+            : (state.avatarUrl.isNotEmpty
                 ? state.avatarUrl
                 : Assets.images.dummyAvatar.path);
-        final bio = guard?.bio ?? (state.bio.isNotEmpty ? state.bio : null);
-        final location = state.address.isNotEmpty
-            ? state.address
-            : 'Location not set';
+        final bio = isCompanyGuard
+            ? guard.bio
+            : (state.bio.isNotEmpty ? state.bio : null);
+        final location = (guard?.address?.isNotEmpty == true)
+            ? guard!.address!
+            : (state.guardAddress.isNotEmpty
+                ? state.guardAddress
+                : 'Location not set');
+        final experienceYears = isCompanyGuard
+            ? guard.experienceYears
+            : state.experienceYears;
+        final languages = isCompanyGuard
+            ? (guard.languages ?? '')
+            : state.languages;
+        final certifications = isCompanyGuard
+            ? (guard.certifications ?? '')
+            : state.certifications;
 
         return ValueListenableBuilder<List<ServiceItemModel>>(
           valueListenable: _servicesNotifier,
           builder: (context, userServices, _) {
-            final effectiveServices = userServices.isNotEmpty
+            final effectiveServices = isCompanyGuard
                 ? userServices
-                : state.userServices;
+                : (userServices.isNotEmpty
+                    ? userServices
+                    : state.userServices);
             final specialization = effectiveServices.isNotEmpty
                 ? effectiveServices.map((s) => s.name).join(', ')
-                : (guard?.clearanceLevel ?? state.specializationText);
+                : (isCompanyGuard
+                    ? (guard.clearanceLevel ?? 'Security Operative')
+                    : (guard?.clearanceLevel ?? state.specializationText));
 
             return Scaffold(
               appBar: const AppAppBar.transparent(
@@ -232,22 +318,30 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
                               bodyguard: guard,
                               bio: bio,
                               hourlyRate: hourlyRate,
-                              experienceYears: state.experienceYears,
+                              experienceYears: experienceYears,
                               location: location,
-                              languages: state.languages,
-                              certifications: state.certifications,
+                              languages: languages,
+                              certifications: certifications,
                               services: effectiveServices,
                               onEditBio: () =>
                                   _showEditBioSheet(context, bio ?? ''),
                               onEditKeyDetails: () => _showEditKeyDetailsSheet(
                                 context,
-                                experienceYears: state.experienceYears,
+                                experienceYears: experienceYears,
                                 hourlyRate: hourlyRate,
-                                address: state.address,
-                                latitude: state.latitude,
-                                longitude: state.longitude,
-                                languages: state.languages,
-                                certifications: state.certifications,
+                                address: location == 'Location not set'
+                                    ? ''
+                                    : location,
+                                latitude: guard?.latitude ??
+                                    (isCompanyGuard
+                                        ? null
+                                        : state.guardLatitude),
+                                longitude: guard?.longitude ??
+                                    (isCompanyGuard
+                                        ? null
+                                        : state.guardLongitude),
+                                languages: languages,
+                                certifications: certifications,
                               ),
                               onEditServices: () => _showEditServicesSheet(
                                 context,
@@ -261,7 +355,9 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
                             padding:
                                 context.horizontalEdgeInsets +
                                 AppSpacing.md.yPadding,
-                            child: const BodyguardAvailabilityWidget(),
+                            child: BodyguardAvailabilityWidget(
+                              bodyguard: guard,
+                            ),
                           ),
 
                           // Tab 3: My Documents
@@ -269,7 +365,7 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
                             padding:
                                 context.horizontalEdgeInsets +
                                 AppSpacing.md.yPadding,
-                            child: const BodyguardDocumentsWidget(),
+                            child: BodyguardDocumentsWidget(bodyguard: guard),
                           ),
 
                           // Tab 4: Reviews

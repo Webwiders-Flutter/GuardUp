@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '/features/auth/presentation/screens/profile.screen.dart';
+import '/features/company_bodyguards/presentation/screens/company_bodyguards_management.screen.dart';
 import '/features/dashboard/presentation/screens/dashboard.screen.dart';
 import '/features/document-type/presentation/screens/document_type_management.screen.dart';
 import '/features/help-support/presentation/screens/help_support_management.screen.dart';
@@ -148,6 +149,26 @@ final class AdminNavigation {
               ),
               description: 'Suspended security companies',
             ),
+          ],
+        ),
+        AdminNavItem(
+          icon: Icons.groups_outlined,
+          label: 'Company Bodyguards',
+          route: CompanyBodyguardsManagementScreen.route,
+          description: 'Bodyguards added by security companies',
+          children: [
+            for (final status in CompanyBodyguardsManagementScreen.statuses)
+              AdminNavItem(
+                icon: status.icon,
+                label: status.isPendingApproval ? 'Pending' : status.label(),
+                route: CompanyBodyguardsManagementScreen.location(status),
+                description: switch (status) {
+                  UserStatus.approvalPending =>
+                    'Company bodyguards awaiting review',
+                  UserStatus.active => 'Approved company bodyguards',
+                  _ => 'Rejected company bodyguards',
+                },
+              ),
           ],
         ),
       ],

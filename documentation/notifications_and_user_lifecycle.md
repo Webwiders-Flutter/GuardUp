@@ -277,6 +277,43 @@ Changed function code or email templates? Redeploy that function.
 
 ---
 
+## 9a. Opening a notification
+
+Tapping a notification opens what it is about. The target comes from the notification's
+`data` (the same keys travel in the push payload, plus `type` and `notification_id`), so
+the in-app list, the foreground banner and a tapped push behave the same.
+
+**Mobile app** (`guardup/lib/features/notifications/presentation/notification_navigator.dart`):
+
+| Notification | Opens |
+|---|---|
+| `data.route` set | that route |
+| company bodyguard event (`data.bodyguard_id`) | the bodyguard's details (`GuardDetailScreen`) |
+| company bodyguard removed (`data.event = BODYGUARD_DELETED`) | the company's bodyguards list |
+| own account `ACCOUNT_APPROVED` / `REJECTED` / `BLOCKED` / `UNBLOCKED` / `DELETED` | the screen for the account's current status (router redirect from the splash route: home, approval / rejection, blocked, or login) |
+| `NEW_USER_REGISTRATION`, `SYSTEM` | nothing from the list; a push opens the notifications list |
+
+- A tapped push is marked read (`notification_id`) and the unread badge refreshed.
+- `NotificationTapHandler` (wraps the app) handles push taps once the session is known and
+  the router has left the splash route. The tap that launched the app is buffered by
+  `PushNotificationService` (`takePendingTap`) until it is listened to. Taps while signed
+  out are dropped (the user signs in first).
+
+**Admin panel** (`guardup_admin/lib/features/notifications/presentation/notification_navigator.dart`):
+
+| Notification | Opens |
+|---|---|
+| `data.route` set | that admin route |
+| `data.bodyguard_id` (company bodyguard submitted) | the company bodyguard review panel |
+| `data.user_id` (account submitted) | the user's details side panel |
+| none of these (e.g. `SYSTEM`) | nothing |
+
+Clicking a row in Notifications (or its Open button) marks it read and opens it; the
+foreground banner opens the target, else the Notifications page.
+
+When adding a notification type, add it to the mobile navigator's `switch` (the compiler
+asks for it) and put the ids the target needs in `data`.
+
 ## 10. Common Tasks
 
 ### Send a notification to some users (admin)
@@ -297,7 +334,9 @@ Or simply insert a row into `public.notifications`; the push is sent automatical
    (keep it in its own migration file; Postgres needs it committed before it can be used).
 2. Add the value to `notification_type.enum.dart` in the admin app (and the mobile app
    when it has one). Unknown types show as `SYSTEM` in older app versions, so nothing crashes.
-3. Insert notifications with the new type wherever needed.
+3. Decide what tapping it opens (section 9a) and handle it in both
+   `notification_navigator.dart` files.
+4. Insert notifications with the new type wherever needed.
 
 ### Change an email's text or design
 

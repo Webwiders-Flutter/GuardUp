@@ -81,8 +81,10 @@ class App extends StatelessWidget {
                       fit: BoxFit.cover,
                     ),
                   ),
-                  AppGate(
-                    child: child ?? const SizedBox.shrink(),
+                  NotificationTapHandler(
+                    child: AppGate(
+                      child: child ?? const SizedBox.shrink(),
+                    ),
                   ),
                   const Align(
                     alignment: Alignment.topCenter,

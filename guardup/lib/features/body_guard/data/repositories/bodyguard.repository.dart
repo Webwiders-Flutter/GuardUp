@@ -219,12 +219,24 @@ class BodyguardRepository {
     required String name,
     required double hourlyRate,
     required String bio,
+    int? experienceYears,
+    String? languages,
+    String? certifications,
+    String? address,
+    double? latitude,
+    double? longitude,
     String? profileImageUrl,
   }) async {
     final payload = <String, dynamic>{
       JsonKeys.name: name,
       JsonKeys.hourlyRate: hourlyRate,
       JsonKeys.bio: bio,
+      JsonKeys.experienceYears: ?experienceYears,
+      JsonKeys.languages: ?languages,
+      JsonKeys.certifications: ?certifications,
+      JsonKeys.address: ?address,
+      JsonKeys.latitude: ?latitude,
+      JsonKeys.longitude: ?longitude,
       JsonKeys.profileImageUrl: ?profileImageUrl,
     };
 
@@ -321,6 +333,11 @@ class BodyguardRepository {
       ),
       hourlyRate: _toDouble(row[JsonKeys.hourlyRate]),
       bio: (row[JsonKeys.bio] as String?) ?? '',
+      languages: row[JsonKeys.languages] as String?,
+      certifications: row[JsonKeys.certifications] as String?,
+      address: row[JsonKeys.address] as String?,
+      latitude: _toDoubleNullable(row[JsonKeys.latitude]),
+      longitude: _toDoubleNullable(row[JsonKeys.longitude]),
       experienceYears: _toDouble(row[JsonKeys.experienceYears]).toInt(),
       rating: _toDouble(row[JsonKeys.rating]),
       verificationStatus: UserStatus.fromApiValue(row[JsonKeys.status] as String?),
@@ -450,5 +467,11 @@ class BodyguardRepository {
     num n => n.toDouble(),
     String s => double.tryParse(s) ?? 0,
     _ => 0,
+  };
+
+  static double? _toDoubleNullable(Object? value) => switch (value) {
+    num n => n.toDouble(),
+    String s => double.tryParse(s),
+    _ => null,
   };
 }

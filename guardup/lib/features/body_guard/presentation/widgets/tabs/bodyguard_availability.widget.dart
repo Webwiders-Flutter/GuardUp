@@ -14,6 +14,7 @@ import '/core/extensions/textstyle_extension.dart';
 import '/features/auth/bloc/auth_bloc.dart';
 import '/features/auth/domain/repositories/auth_repository.dart';
 import '/features/auth/domain/repositories/user_repository.dart';
+import '/features/body_guard/data/model/body_guard.model.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
@@ -23,9 +24,14 @@ import '/shared/widgets/selection/selection.controller.dart';
 /// Tab content widget allowing bodyguards to manage their active weekly
 /// availability hours and designated days off dynamically via user_availabilities table.
 class BodyguardAvailabilityWidget extends StatefulWidget {
+  final BodyGuardModel? bodyguard;
   final ValueChanged<List<WeekDay>>? onAvailabilityChanged;
 
-  const BodyguardAvailabilityWidget({super.key, this.onAvailabilityChanged});
+  const BodyguardAvailabilityWidget({
+    super.key,
+    this.bodyguard,
+    this.onAvailabilityChanged,
+  });
 
   @override
   State<BodyguardAvailabilityWidget> createState() =>
@@ -60,21 +66,32 @@ class _BodyguardAvailabilityWidgetState
   }
 
   Future<void> _loadAvailability() async {
+    final bodyguardId = widget.bodyguard?.id;
     final currentUserId = sl.isRegistered<AuthRepository>()
         ? sl<AuthRepository>().currentUserId
         : null;
 
-    if (currentUserId == null) {
+    if (bodyguardId == null && currentUserId == null) {
       if (mounted) setState(() => _isLoading = false);
       return;
     }
 
     try {
       // 1. Fetch from user_availabilities table
-      final rows = await Supabase.instance.client
-          .from(DatabaseTables.userAvailabilities)
-          .select()
-          .eq('user_id', currentUserId);
+      final dynamic query;
+      if (bodyguardId != null && bodyguardId.isNotEmpty) {
+        query = Supabase.instance.client
+            .from(DatabaseTables.userAvailabilities)
+            .select()
+            .eq('bodyguard_id', bodyguardId);
+      } else {
+        query = Supabase.instance.client
+            .from(DatabaseTables.userAvailabilities)
+            .select()
+            .eq('user_id', currentUserId!);
+      }
+
+      final rows = await query;
 
       final availableDays = <WeekDay>[];
 
@@ -196,54 +213,72 @@ class _BodyguardAvailabilityWidgetState
   }
 
   Future<void> _handleSaveAvailability() async {
+    final bodyguardId = widget.bodyguard?.id;
     final currentUserId = sl.isRegistered<AuthRepository>()
         ? sl<AuthRepository>().currentUserId
         : null;
-    if (currentUserId == null) return;
+    if (bodyguardId == null && currentUserId == null) return;
 
     setState(() => _isSaving = true);
     try {
       final selectedDays = _selectionController.value;
 
-      // 1. Save to user_availabilities table
-      final rows = WeekDay.values.map((day) {
-        return {
-          'user_id': currentUserId,
-          'day_of_week': day.name.toLowerCase(),
-          'is_available': selectedDays.contains(day),
-          'from_time': _fromControllers[day]!.text.trim(),
-          'to_time': _toControllers[day]!.text.trim(),
-          'updated_at': DateTime.now().toIso8601String(),
-        };
-      }).toList();
+      if (bodyguardId != null && bodyguardId.isNotEmpty) {
+        final rows = WeekDay.values.map((day) {
+          return {
+            'bodyguard_id': bodyguardId,
+            'day_of_week': day.name.toLowerCase(),
+            'is_available': selectedDays.contains(day),
+            'from_time': _fromControllers[day]!.text.trim(),
+            'to_time': _toControllers[day]!.text.trim(),
+            'updated_at': DateTime.now().toIso8601String(),
+          };
+        }).toList();
 
-      await Supabase.instance.client
-          .from(DatabaseTables.userAvailabilities)
-          .upsert(rows, onConflict: 'user_id, day_of_week');
+        await Supabase.instance.client
+            .from(DatabaseTables.userAvailabilities)
+            .upsert(rows, onConflict: 'bodyguard_id, day_of_week');
+      } else if (currentUserId != null) {
+        // 1. Save to user_availabilities table
+        final rows = WeekDay.values.map((day) {
+          return {
+            'user_id': currentUserId,
+            'day_of_week': day.name.toLowerCase(),
+            'is_available': selectedDays.contains(day),
+            'from_time': _fromControllers[day]!.text.trim(),
+            'to_time': _toControllers[day]!.text.trim(),
+            'updated_at': DateTime.now().toIso8601String(),
+          };
+        }).toList();
 
-      // 2. Also keep metadata['availability'] in sync for backward compatibility
-      if (sl.isRegistered<UserRepository>()) {
-        try {
-          final availabilityMap = <String, dynamic>{};
-          for (final day in WeekDay.values) {
-            availabilityMap[day.name] = {
-              'is_available': selectedDays.contains(day),
-              'from': _fromControllers[day]!.text.trim(),
-              'to': _toControllers[day]!.text.trim(),
-            };
-          }
-          final userRow =
-              await sl<UserRepository>().getUserData(currentUserId);
-          final existingMeta = (userRow?['metadata'] is Map)
-              ? Map<String, dynamic>.from(userRow!['metadata'] as Map)
-              : <String, dynamic>{};
-          existingMeta['availability'] = availabilityMap;
+        await Supabase.instance.client
+            .from(DatabaseTables.userAvailabilities)
+            .upsert(rows, onConflict: 'user_id, day_of_week');
 
-          await sl<UserRepository>().updateProfileFields(
-            userId: currentUserId,
-            data: {'metadata': existingMeta},
-          );
-        } catch (_) {}
+        // 2. Also keep metadata['availability'] in sync for backward compatibility
+        if (sl.isRegistered<UserRepository>()) {
+          try {
+            final availabilityMap = <String, dynamic>{};
+            for (final day in WeekDay.values) {
+              availabilityMap[day.name] = {
+                'is_available': selectedDays.contains(day),
+                'from': _fromControllers[day]!.text.trim(),
+                'to': _toControllers[day]!.text.trim(),
+              };
+            }
+            final userRow =
+                await sl<UserRepository>().getUserData(currentUserId);
+            final existingMeta = (userRow?['metadata'] is Map)
+                ? Map<String, dynamic>.from(userRow!['metadata'] as Map)
+                : <String, dynamic>{};
+            existingMeta['availability'] = availabilityMap;
+
+            await sl<UserRepository>().updateProfileFields(
+              userId: currentUserId,
+              data: {'metadata': existingMeta},
+            );
+          } catch (_) {}
+        }
       }
 
       if (mounted) {

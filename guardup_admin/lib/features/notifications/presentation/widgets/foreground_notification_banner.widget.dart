@@ -11,7 +11,9 @@ import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
+import '/app/routes/app_router.dart';
 import '/core/services/notification/push_notification_service.dart';
+import '/features/notifications/presentation/notification_navigator.dart';
 import '/features/notifications/presentation/screens/notification_management.screen.dart';
 
 /// Data model representing an active in-app foreground notification banner.
@@ -170,12 +172,13 @@ class _ForegroundNotificationBannerState
       return;
     }
 
-    // Default: Check if route is present in payload, else go to notifications
-    final targetRoute = data.data['route']?.toString();
-    if (targetRoute != null && targetRoute.isNotEmpty) {
-      context.push(targetRoute);
-    } else {
-      context.push(NotificationManagementScreen.route);
+    // Default: open what the notification is about (route / bodyguard /
+    // user), else the notifications page. The banner sits above the
+    // Navigator, so side panels open from the root navigator.
+    final navigatorContext = AppRouter.rootNavigatorKey.currentContext;
+    if (navigatorContext == null) return;
+    if (!NotificationNavigator.open(navigatorContext, data.data)) {
+      navigatorContext.go(NotificationManagementScreen.route);
     }
   }
 

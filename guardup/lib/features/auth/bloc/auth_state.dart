@@ -198,30 +198,31 @@ class AuthState extends Equatable {
 
   GenderType get genderType => GenderType.fromApiValue(gender);
 
-  String get address =>
-      (userData?['address'] as String?) ??
-      (userData?['metadata'] is Map
-          ? (userData!['metadata'] as Map)['address'] as String?
-          : null) ??
-      '';
+  String get guardAddress {
+    final bg = userData?['bodyguard'];
+    if (bg is Map) {
+      return (bg['address'] as String?)?.trim() ?? '';
+    }
+    return '';
+  }
 
-  double? get latitude {
-    final raw = userData?['latitude'] ??
-        (userData?['metadata'] is Map
-            ? (userData!['metadata'] as Map)['latitude']
-            : null);
-    if (raw is num) return raw.toDouble();
-    if (raw is String) return double.tryParse(raw);
+  double? get guardLatitude {
+    final bg = userData?['bodyguard'];
+    if (bg is Map) {
+      final raw = bg['latitude'];
+      if (raw is num) return raw.toDouble();
+      if (raw is String) return double.tryParse(raw);
+    }
     return null;
   }
 
-  double? get longitude {
-    final raw = userData?['longitude'] ??
-        (userData?['metadata'] is Map
-            ? (userData!['metadata'] as Map)['longitude']
-            : null);
-    if (raw is num) return raw.toDouble();
-    if (raw is String) return double.tryParse(raw);
+  double? get guardLongitude {
+    final bg = userData?['bodyguard'];
+    if (bg is Map) {
+      final raw = bg['longitude'];
+      if (raw is num) return raw.toDouble();
+      if (raw is String) return double.tryParse(raw);
+    }
     return null;
   }
 

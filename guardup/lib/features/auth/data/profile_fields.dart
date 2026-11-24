@@ -14,6 +14,9 @@ abstract final class ProfileFields {
     JsonKeys.experienceYears,
     JsonKeys.languages,
     JsonKeys.certifications,
+    JsonKeys.address,
+    JsonKeys.latitude,
+    JsonKeys.longitude,
   };
 
   /// Columns stored in `companies` for a COMPANY account.

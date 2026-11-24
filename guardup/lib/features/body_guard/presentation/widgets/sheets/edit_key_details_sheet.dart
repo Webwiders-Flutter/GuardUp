@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/core/constants/api/database_tables.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
@@ -15,8 +17,19 @@ import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_address_picker_sheet.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 
+typedef KeyDetailsUpdatedCallback = void Function({
+  int? experienceYears,
+  num? hourlyRate,
+  String? languages,
+  String? certifications,
+  String? address,
+  double? latitude,
+  double? longitude,
+});
+
 /// Modal bottom sheet for viewing and updating key bodyguard operational details.
 class EditKeyDetailsSheet extends StatefulWidget {
+  final String? bodyguardId;
   final int experienceYears;
   final num hourlyRate;
   final String address;
@@ -24,9 +37,11 @@ class EditKeyDetailsSheet extends StatefulWidget {
   final double? longitude;
   final String languages;
   final String certifications;
+  final KeyDetailsUpdatedCallback? onKeyDetailsUpdated;
 
   const EditKeyDetailsSheet({
     super.key,
+    this.bodyguardId,
     required this.experienceYears,
     required this.hourlyRate,
     required this.address,
@@ -34,10 +49,12 @@ class EditKeyDetailsSheet extends StatefulWidget {
     required this.longitude,
     required this.languages,
     required this.certifications,
+    this.onKeyDetailsUpdated,
   });
 
   static Future<void> show(
     BuildContext context, {
+    String? bodyguardId,
     required int experienceYears,
     required num hourlyRate,
     required String address,
@@ -45,6 +62,7 @@ class EditKeyDetailsSheet extends StatefulWidget {
     required double? longitude,
     required String languages,
     required String certifications,
+    KeyDetailsUpdatedCallback? onKeyDetailsUpdated,
   }) {
     return showModalBottomSheet<void>(
       context: context,
@@ -54,6 +72,7 @@ class EditKeyDetailsSheet extends StatefulWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       builder: (_) => EditKeyDetailsSheet(
+        bodyguardId: bodyguardId,
         experienceYears: experienceYears,
         hourlyRate: hourlyRate,
         address: address,
@@ -61,6 +80,7 @@ class EditKeyDetailsSheet extends StatefulWidget {
         longitude: longitude,
         languages: languages,
         certifications: certifications,
+        onKeyDetailsUpdated: onKeyDetailsUpdated,
       ),
     );
   }
@@ -113,51 +133,76 @@ class _EditKeyDetailsSheetState extends State<EditKeyDetailsSheet> {
     setState(() => _isSaving = true);
 
     try {
-      final authState = sl<AuthBloc>().state;
-      final userId = authState.user?.id ?? '';
-      if (userId.isNotEmpty) {
-        final exp = int.tryParse(_expController.text.trim()) ?? 0;
-        final rate = num.tryParse(_rateController.text.trim()) ?? 0;
-        final addr = _addressController.text.trim();
-        final langs = _languagesController.text.trim();
-        final certs = _certificationsController.text.trim();
+      final exp = int.tryParse(_expController.text.trim()) ?? 0;
+      final rate = num.tryParse(_rateController.text.trim()) ?? 0;
+      final addr = _addressController.text.trim();
+      final langs = _languagesController.text.trim();
+      final certs = _certificationsController.text.trim();
 
-        try {
-          await sl<UserRepository>().updateProfileFields(
-            userId: userId,
-            data: {
+      if (widget.bodyguardId != null && widget.bodyguardId!.isNotEmpty) {
+        await Supabase.instance.client
+            .from(DatabaseTables.bodyguards)
+            .update({
               'experience_years': exp,
               'hourly_rate': rate,
-              'address': addr,
-              if (_selectedLat != null) 'latitude': _selectedLat,
-              if (_selectedLng != null) 'longitude': _selectedLng,
               'languages': langs,
               'certifications': certs,
-            },
-          );
-        } catch (_) {
-          // Fallback if migration is still pending on remote DB
-          final userRow = await sl<UserRepository>().getUserData(userId);
-          final meta = (userRow?['metadata'] is Map)
-              ? Map<String, dynamic>.from(userRow!['metadata'] as Map)
-              : <String, dynamic>{};
-          meta['languages'] = langs;
-          meta['certifications'] = certs;
-          await sl<UserRepository>().updateProfileFields(
-            userId: userId,
-            data: {
-              'experience_years': exp,
-              'hourly_rate': rate,
               'address': addr,
               if (_selectedLat != null) 'latitude': _selectedLat,
               if (_selectedLng != null) 'longitude': _selectedLng,
-              'metadata': meta,
-            },
-          );
-        }
+            })
+            .eq('id', widget.bodyguardId!);
+      } else {
+        final authState = sl<AuthBloc>().state;
+        final userId = authState.user?.id ?? '';
+        if (userId.isNotEmpty) {
+          try {
+            await sl<UserRepository>().updateProfileFields(
+              userId: userId,
+              data: {
+                'experience_years': exp,
+                'hourly_rate': rate,
+                'address': addr,
+                if (_selectedLat != null) 'latitude': _selectedLat,
+                if (_selectedLng != null) 'longitude': _selectedLng,
+                'languages': langs,
+                'certifications': certs,
+              },
+            );
+          } catch (_) {
+            // Fallback if migration is still pending on remote DB
+            final userRow = await sl<UserRepository>().getUserData(userId);
+            final meta = (userRow?['metadata'] is Map)
+                ? Map<String, dynamic>.from(userRow!['metadata'] as Map)
+                : <String, dynamic>{};
+            meta['languages'] = langs;
+            meta['certifications'] = certs;
+            await sl<UserRepository>().updateProfileFields(
+              userId: userId,
+              data: {
+                'experience_years': exp,
+                'hourly_rate': rate,
+                'address': addr,
+                if (_selectedLat != null) 'latitude': _selectedLat,
+                if (_selectedLng != null) 'longitude': _selectedLng,
+                'metadata': meta,
+              },
+            );
+          }
 
-        sl<AuthBloc>().add(const AuthCheckStatusRequested());
+          sl<AuthBloc>().add(const AuthCheckStatusRequested());
+        }
       }
+
+      widget.onKeyDetailsUpdated?.call(
+        experienceYears: exp,
+        hourlyRate: rate,
+        languages: langs,
+        certifications: certs,
+        address: addr,
+        latitude: _selectedLat,
+        longitude: _selectedLng,
+      );
 
       if (mounted) {
         Navigator.pop(context);

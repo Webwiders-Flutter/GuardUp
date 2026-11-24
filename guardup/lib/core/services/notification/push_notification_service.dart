@@ -269,12 +269,27 @@ final class PushNotificationService {
   //   );
   // }
 
+  /// A tap that arrived before anything listened to [onNotificationTap]
+  /// (the notification that launched the app: [init] runs before the UI).
+  static Map<String, dynamic>? _pendingTap;
+
+  /// Returns (and clears) the tap that arrived before anyone listened.
+  static Map<String, dynamic>? takePendingTap() {
+    final tap = _pendingTap;
+    _pendingTap = null;
+    return tap;
+  }
+
   /// Dispatches the tapped notification data to both stream listeners and the callback.
   static void _handleNotificationTap(
     Map<String, dynamic> data,
     void Function(Map<String, dynamic> data)? callback,
   ) {
-    _notificationTapController.add(data);
+    if (_notificationTapController.hasListener) {
+      _notificationTapController.add(data);
+    } else {
+      _pendingTap = data;
+    }
     callback?.call(data);
   }
 
