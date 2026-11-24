@@ -15,8 +15,6 @@ import '/features/body_guard/body_guard.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/pagination/app_pagination.dart';
 import '/shared/widgets/pagination/pagination.state.dart';
-import '/features/guard_detail/presentation/customer_bodygaurd_profile.screen.dart';
-import '/features/guard_detail/presentation/customer_booking_details.screen.dart';
 
 /// Tab content rendering the list of active bodyguard operatives deployed by the company.
 class CompanyBodyguardsTab extends StatelessWidget {
@@ -93,7 +91,7 @@ class CompanyBodyguardsTab extends StatelessWidget {
           bodyguard: guard,
           role: role,
           onTap: () =>
-              context.push(CustomerBodygaurdProfileScreen.route, extra: guard),
+              context.push(GuardDetailScreen.route, extra: guard),
           onBookNow: () => context.push(CustomerBookingDetailsScreen.route),
         );
       },

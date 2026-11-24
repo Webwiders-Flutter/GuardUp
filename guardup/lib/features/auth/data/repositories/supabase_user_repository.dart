@@ -34,7 +34,7 @@ class SupabaseUserRepository extends UserRepository {
   ///
   /// Realtime cannot watch a view, so this listens to the account row in
   /// `users` plus the role's profile row (`bodyguards` for a guard,
-  /// `companies` for a company) and re-reads `user_profiles` on every change.
+  /// `companies` for a company) and re-reads the merged data on every change.
   /// Emits `null` only when the account row itself disappears.
   @override
   Stream<Map<String, dynamic>?> watchUserData(String userId) {
@@ -139,11 +139,12 @@ class SupabaseUserRepository extends UserRepository {
     return controller.stream;
   }
 
-  /// Reads the merged account + role profile row from `user_profiles`.
+  /// Reads the merged account + role profile row from `users` with embedded
+  /// company and bodyguard relations. Replaces the old `user_profiles` view query.
   Future<Map<String, dynamic>?> _fetchProfileRow(String userId) {
     return _supabase
-        .from(DatabaseTables.userProfiles)
-        .select()
+        .from(DatabaseTables.users)
+        .select('*, bodyguard:bodyguards!bodyguards_user_id_fkey(*), company:companies!companies_user_id_fkey(*)')
         .eq(JsonKeys.id, userId)
         .maybeSingle();
   }

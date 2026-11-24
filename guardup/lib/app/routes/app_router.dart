@@ -12,7 +12,6 @@ import '/features/booking/booking.dart';
 import '/features/chat/chat.dart';
 import '/features/company/company.dart';
 import '/features/customer/customer.dart';
-import '/features/guard_detail/guard_detail.dart';
 import '/features/legal/legal.dart';
 import '/features/notifications/notifications.dart';
 import '/features/payments/payments.dart';
@@ -492,17 +491,45 @@ final class AppRouter {
         },
       ),
       GoRoute(
-        path: CustomerBodygaurdProfileScreen.route,
+        path: '/customer-bodyguard-profile',
         builder: (context, state) {
-          final guard = state.extra as BodyGuardModel?;
-          return CustomerBodygaurdProfileScreen(bodyguard: guard);
+          final extra = state.extra;
+          if (extra is BodyGuardModel) {
+            return GuardDetailScreen(
+              id: extra.id,
+              bodyguard: extra,
+              isCompanyView: false,
+            );
+          } else if (extra is String) {
+            return GuardDetailScreen(
+              id: extra,
+              isCompanyView: false,
+            );
+          }
+          final pathId = state.pathParameters['id'] ?? '';
+          return GuardDetailScreen(id: pathId, isCompanyView: false);
         },
       ),
       GoRoute(
         path: GuardDetailScreen.route,
         builder: (context, state) {
-          final guard = state.extra as BodyGuardModel?;
-          return GuardDetailScreen(bodyguard: guard);
+          final extra = state.extra;
+          if (extra is BodyGuardModel) {
+            return GuardDetailScreen(id: extra.id, bodyguard: extra);
+          } else if (extra is String) {
+            return GuardDetailScreen(id: extra);
+          } else if (extra is Map<String, dynamic>) {
+            return GuardDetailScreen(
+              id: (extra['id'] ??
+                      (extra['bodyguard'] as BodyGuardModel?)?.id ??
+                      '')
+                  .toString(),
+              bodyguard: extra['bodyguard'] as BodyGuardModel?,
+              isCompanyView: extra['isCompanyView'] as bool?,
+            );
+          }
+          final pathId = state.pathParameters['id'] ?? '';
+          return GuardDetailScreen(id: pathId);
         },
       ),
       GoRoute(

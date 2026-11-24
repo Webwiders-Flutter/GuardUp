@@ -22,7 +22,6 @@ import '../widgets/customer_promo_banner.widget.dart';
 import '../widgets/customer_services_row.widget.dart';
 import 'all_services_screen.dart';
 import '/features/customer/presentation/screens/booking_screen.dart';
-import '/features/guard_detail/presentation/customer_bodygaurd_profile.screen.dart';
 import '/features/customer/presentation/screens/search_bodyguards_screen.dart';
 
 /// Screen 1: Primary Customer Home Screen displaying greeting, search bar,
@@ -246,13 +245,13 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
                 role: UserRole.customer,
                 onTap: () {
                   context.push(
-                    CustomerBodygaurdProfileScreen.route,
+                    GuardDetailScreen.route,
                     extra: topBodyguard,
                   );
                 },
                 onBookNow: () {
                   context.push(
-                    CustomerBodygaurdProfileScreen.route,
+                    GuardDetailScreen.route,
                     extra: topBodyguard,
                   );
                 },

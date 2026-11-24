@@ -1,4 +1,5 @@
 import '/features/body_guard/presentation/widgets/body_guard_list_skeleton.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -28,7 +29,9 @@ import '/shared/widgets/sections/app_appbar.dart';
 import '../../data/model/body_guard.model.dart';
 import '../widgets/body_guard_card.dart';
 import '/features/body_guard/presentation/screens/body_guard_complete_profile_screen.dart';
+import '/features/body_guard/presentation/screens/body_guard_profile_screen.dart';
 import '/features/customer/presentation/screens/customer_home_screen.dart';
+import '/shared/widgets/navigation/app_tab_bar.dart';
 
 /// Screen presenting all company or platform bodyguards with search,
 /// pagination, and management actions (Add, Edit, Delete).
@@ -42,9 +45,18 @@ class CompanyBodyguardsScreen extends StatefulWidget {
       _CompanyBodyguardsScreenState();
 }
 
-class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen> {
+class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen>
+    with SingleTickerProviderStateMixin {
   final _searchController = TextEditingController();
   late final PaginationController<BodyGuardModel> _paginationController;
+  late final TabController _tabController;
+
+  static const List<String> _statusTabs = [
+    'All',
+    'Approved',
+    'Pending',
+    'Rejected',
+  ];
 
   /// Companies see and manage their own bodyguards (live data). Other roles
   /// still browse the sample roster until the public listing is built.
@@ -57,6 +69,9 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: _statusTabs.length, vsync: this);
+    _tabController.addListener(_onTabChanged);
+
     if (_isCompany) {
       final cubit = sl<CompanyBodyguardsCubit>();
       _cubit = cubit;
@@ -79,6 +94,17 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen> {
     }
   }
 
+  void _onTabChanged() {
+    if (_tabController.indexIsChanging) return;
+    final selectedStatus = switch (_tabController.index) {
+      1 => UserStatus.active,
+      2 => UserStatus.pendingApproval,
+      3 => UserStatus.rejected,
+      _ => null,
+    };
+    _cubit?.refresh(status: selectedStatus, updateStatus: true);
+  }
+
   void _onCubitState(CompanyBodyguardsState state) {
     if (!mounted) return;
     _paginationController.updateState(state.pagination);
@@ -98,6 +124,8 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen> {
 
   @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
+    _tabController.dispose();
     _searchDebounce?.cancel();
     _cubitSubscription?.cancel();
     _cubit?.close();
@@ -115,10 +143,14 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen> {
   }
 
   Future<void> _handleEditBodyguard(BodyGuardModel bodyguard) async {
-    await context.push(
-      BodyGuardCompleteProfileScreen.route,
-      extra: bodyguard,
-    );
+    if (bodyguard.verificationStatus == UserStatus.active) {
+      await context.push(BodyGuardProfileScreen.route, extra: bodyguard);
+    } else {
+      await context.push(
+        BodyGuardCompleteProfileScreen.route,
+        extra: bodyguard,
+      );
+    }
     if (mounted) _cubit?.refresh();
   }
 
@@ -182,25 +214,36 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen> {
                     ),
                   ),
                   if (_isCompany) ...[
-                  AppSpacing.sm.w,
-                  Expanded(
-                    child: AppButton(
-                      text: 'Add',
-                      isFlexible: true,
-                      leading: Icon(
-                        Icons.add_rounded,
-                        size: AppSizes.iconMd,
-                        color: context.colors.onPrimary,
+                    AppSpacing.sm.w,
+                    Expanded(
+                      child: AppButton(
+                        text: 'Add',
+                        isFlexible: true,
+                        leading: Icon(
+                          Icons.add_rounded,
+                          size: AppSizes.iconMd,
+                          color: context.colors.onPrimary,
+                        ),
+                        type: ButtonType.primary,
+                        size: ButtonSize.normal,
+                        onPressed: _handleAddBodyguard,
                       ),
-                      type: ButtonType.primary,
-                      size: ButtonSize.normal,
-                      onPressed: _handleAddBodyguard,
                     ),
-                  ),
                   ],
                 ],
               ),
             ),
+            if (_isCompany) ...[
+              AppSpacing.sm.h,
+              Padding(
+                padding: context.horizontalEdgeInsets,
+                child: AppTabBar.pill(
+                  tabNames: _statusTabs,
+                  controller: _tabController,
+                  isScrollable: false,
+                ),
+              ),
+            ],
             AppSpacing.md.h,
 
             // -----------------------------------------------------------------

@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '/features/auth/auth.dart';
+import '/features/company/company.dart';
 import '/gen/assets.gen.dart';
 import '../enum/body_guard_status.enum.dart';
 import '../enum/guard_service.enum.dart';
@@ -17,6 +18,7 @@ abstract class BodyGuardModel with _$BodyGuardModel {
   const factory BodyGuardModel({
     required String id,
     required UserModel user,
+    CompanyModel? company,
     @Default([]) List<LicenseAndBadgeModel> licensesAndBadges,
     @Default([]) List<AvailabilityModel> availabilities,
     @Default([]) List<DocumentModel> documents,
@@ -38,6 +40,8 @@ abstract class BodyGuardModel with _$BodyGuardModel {
 
     /// Why the admin rejected this bodyguard (`bodyguards.rejection_reason`).
     String? rejectionReason,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) = _BodyGuardModel;
 
   factory BodyGuardModel.fromJson(Map<String, dynamic> json) =>
@@ -53,6 +57,7 @@ abstract class BodyGuardModel with _$BodyGuardModel {
         profileImageUrl: Assets.images.profilePicture.path,
         role: UserRole.guard,
       ),
+      company: CompanyModel.fakeData.first,
       licensesAndBadges: LicenseAndBadgeModel.fakeData,
       availabilities: AvailabilityModel.fakeData,
       documents: DocumentModel.fakeData,
@@ -80,17 +85,13 @@ abstract class BodyGuardModel with _$BodyGuardModel {
         profileImageUrl: Assets.images.profilePicture.path,
         role: UserRole.guard,
       ),
-      licensesAndBadges: LicenseAndBadgeModel.fakeData
-          .take(2)
-          .toList(),
+      company: CompanyModel.fakeData[1],
+      licensesAndBadges: LicenseAndBadgeModel.fakeData.take(2).toList(),
       availabilities: AvailabilityModel.fakeData,
       documents: DocumentModel.fakeData.take(2).toList(),
       hourlyRate: 85.0,
       currency: 'USD',
-      serviceTypes: [
-        GuardService.armedEscort,
-        GuardService.assetProtection,
-      ],
+      serviceTypes: [GuardService.armedEscort, GuardService.assetProtection],
       bio: 'High-value bullion and luxury asset courier protection specialist with extensive urban combat and emergency route-clearing background.',
       experienceYears: 8,
       rating: 4.95,
@@ -108,6 +109,7 @@ abstract class BodyGuardModel with _$BodyGuardModel {
         profileImageUrl: Assets.images.profilePicture2.path,
         role: UserRole.guard,
       ),
+      company: CompanyModel.fakeData[2],
       licensesAndBadges: LicenseAndBadgeModel.fakeData,
       availabilities: AvailabilityModel.fakeData,
       documents: DocumentModel.fakeData,
@@ -134,9 +136,8 @@ abstract class BodyGuardModel with _$BodyGuardModel {
         profileImageUrl: Assets.images.profilePicture.path,
         role: UserRole.guard,
       ),
-      licensesAndBadges: LicenseAndBadgeModel.fakeData
-          .take(3)
-          .toList(),
+      company: CompanyModel.fakeData.first,
+      licensesAndBadges: LicenseAndBadgeModel.fakeData.take(3).toList(),
       availabilities: AvailabilityModel.fakeData,
       documents: DocumentModel.fakeData.take(3).toList(),
       hourlyRate: 65.0,

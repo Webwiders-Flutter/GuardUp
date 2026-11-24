@@ -122,13 +122,18 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
   void _handleShareLocation(BookingModel booking) {}
 
   Future<void> _handleEditBodyguard(BodyGuardModel bodyguard) async {
-    await context.push(BodyGuardCompleteProfileScreen.route, extra: bodyguard);
+    if (bodyguard.verificationStatus == UserStatus.active) {
+      await context.push(BodyGuardProfileScreen.route, extra: bodyguard);
+    } else {
+      await context.push(
+        BodyGuardCompleteProfileScreen.route,
+        extra: bodyguard,
+      );
+    }
     if (mounted) _bodyguardsCubit.refresh();
   }
 
   Future<void> _handleViewAllBodyguards() async {
-    // AppSnackbar.show(message: "Coming soon");
-    // return;
     await context.push(CompanyBodyguardsScreen.route);
     // Bodyguards may have been added, edited or removed there.
     if (mounted) _bodyguardsCubit.refresh();

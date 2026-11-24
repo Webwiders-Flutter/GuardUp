@@ -12,6 +12,8 @@ abstract class UserModel with _$UserModel {
     required String name,
     String? profileImageUrl,
     UserRole? role,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) = _UserModel;
 
   /// Creates a [UserModel] for request payloads (omitting the server-generated [id]).
@@ -19,11 +21,15 @@ abstract class UserModel with _$UserModel {
     required String name,
     String? profileImageUrl,
     UserRole? role,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) => UserModel(
     id: '',
     name: name,
     profileImageUrl: profileImageUrl,
     role: role,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
   );
 
   factory UserModel.fromJson(Map<String, dynamic> json) =>
@@ -34,6 +40,7 @@ abstract class UserModel with _$UserModel {
       id: 'usr_vikram',
       name: 'Vikram Singh',
       role: UserRole.guard,
+      
     ),
     UserModel(
       id: 'usr_marcus',

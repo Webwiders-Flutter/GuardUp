@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '/core/constants/app_radius.dart';
@@ -7,17 +8,22 @@ import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 
-/// "Experience" tab content highlighting operative tenure and specialized security services.
-class GuardExperienceTabWidget extends StatelessWidget {
+/// Customer View "Experience" Tab: Highlights operative tenure, service specializations, and tactical credentials.
+class CustomerGuardExperienceTabWidget extends StatelessWidget {
   final String yearsExperience;
   final String specializationTitle;
   final List<String> services;
 
-  const GuardExperienceTabWidget({
+  const CustomerGuardExperienceTabWidget({
     super.key,
-    this.yearsExperience = '8+ Years',
-    this.specializationTitle = 'Executive Protection',
-    this.services = const ['Premium car', 'Licensed armed', 'Corporate visits'],
+    this.yearsExperience = '5+ Years',
+    this.specializationTitle = 'Licensed Armed, Corporate Visits',
+    this.services = const [
+      'VIP Close Protection',
+      'Armed Escort',
+      'Tactical Driver',
+      'Asset Security',
+    ],
   });
 
   @override
@@ -59,11 +65,11 @@ class GuardExperienceTabWidget extends StatelessWidget {
                 AppSpacing.xs.h,
                 Text(
                   yearsExperience,
-                  style: context.textTheme.headlineSmall?.bold().colour(
-                    context.colors.primary,
+                  style: context.textTheme.titleMedium?.bold().colour(
+                    context.colors.onSurface,
                   ),
                 ),
-                AppSpacing.xs.h,
+                AppSpacing.xxs.h,
                 Text(
                   specializationTitle,
                   style: context.textTheme.bodySmall?.colour(
@@ -73,39 +79,54 @@ class GuardExperienceTabWidget extends StatelessWidget {
               ],
             ),
           ),
+
           AppSpacing.lg.h,
 
-          // Services Section
+          // Services & Certifications List
           Text(
-            'Services',
-            style: context.textTheme.labelLarge,
+            'SPECIALIZED SERVICES',
+            style: context.textTheme.labelMedium
+                ?.bold()
+                .copyWith(letterSpacing: 0.8)
+                .colour(context.colors.onSurfaceVariant),
           ),
           AppSpacing.sm.h,
 
           Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
             children: services.map((service) {
-              return Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.xs + 2,
+              return QuickContainer(
+                px: 12,
+                py: 8,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                color: context.colors.surfaceContainer,
+                border: Border.all(
+                  color: context.colors.primary.withValues(alpha: 0.25),
+                  width: 0.8,
                 ),
-                decoration: BoxDecoration(
-                  color: context.colors.onPrimary,
-                  borderRadius: BorderRadius.circular(AppRadius.full),
-                  border: Border.all(
-                    color: context.colors.borderColor.withValues(alpha: 0.6),
-                    width: 1,
-                  ),
-                ),
-                child: Text(
-                  service,
-                  style: context.textTheme.labelSmall?.copyWith(fontSize: 11),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.shield_outlined,
+                      size: 13,
+                      color: context.colors.primary,
+                    ),
+                    AppSpacing.xs.w,
+                    Text(
+                      service,
+                      style: context.textTheme.bodySmall?.bold().colour(
+                        context.colors.onSurface,
+                      ),
+                    ),
+                  ],
                 ),
               );
             }).toList(),
           ),
+
+          AppSpacing.xxl.h,
         ],
       ),
     );

@@ -30,6 +30,7 @@ class GuardProfileHeaderWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rateInt = hourlyRate.toInt();
+    final isNetwork = imagePath.startsWith('http');
 
     return QuickContainer(
       w: double.infinity,
@@ -52,10 +53,17 @@ class GuardProfileHeaderWidget extends StatelessWidget {
                 child: SizedBox(
                   width: double.infinity,
                   height: 190,
-                  child: AppImage.asset(
-                    assetPath: imagePath,
-                    fit: BoxFit.cover,
-                  ),
+                  child: isNetwork
+                      ? AppImage.network(
+                          imageUrl: imagePath,
+                          fit: BoxFit.cover,
+                        )
+                      : AppImage.asset(
+                          assetPath: imagePath.isNotEmpty
+                              ? imagePath
+                              : Assets.images.profilePicture.path,
+                          fit: BoxFit.cover,
+                        ),
                 ),
               ),
 
@@ -81,47 +89,50 @@ class GuardProfileHeaderWidget extends StatelessWidget {
               ),
 
               // Verified Officer Badge
-              Positioned(
-                top: 12,
-                right: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.colors.surfaceDim.withValues(alpha: 0.85),
-                    borderRadius: BorderRadius.circular(AppRadius.full),
-                    border: Border.all(
-                      color: context.colors.primary.withValues(alpha: 0.6),
-                      width: 0.8,
+              if (isVerified)
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.colors.surfaceDim.withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(AppRadius.full),
+                      border: Border.all(
+                        color: context.colors.primary.withValues(alpha: 0.6),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: context.colors.success,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        AppSpacing.xs.w,
+                        Text(
+                          'VERIFIED OFFICER',
+                          style: context.textTheme.labelSmall
+                              ?.copyWith(
+                                fontSize: 9.5,
+                                letterSpacing: 0.8,
+                              )
+                              .colour(context.colors.primary),
+                        ),
+                      ],
                     ),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: context.colors.success,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      AppSpacing.xs.w,
-                      Text(
-                        'VERIFIED OFFICER',
-                        style: context.textTheme.labelSmall
-                            ?.copyWith(
-                              fontSize: 9.5,
-                              letterSpacing: 0.8,
-                            )
-                            .colour(context.colors.primary),
-                      ),
-                    ],
-                  ),
                 ),
-              ),
+
+              // Operative Name, Specialization, and Rate
               Positioned(
                 bottom: 10,
                 left: 20,
@@ -136,11 +147,14 @@ class GuardProfileHeaderWidget extends StatelessWidget {
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(
-                                name,
-                                style: context.textTheme.titleMedium
-                                    ?.bold()
-                                    .colour(context.colors.onSurface),
+                              Flexible(
+                                child: Text(
+                                  name,
+                                  style: context.textTheme.titleMedium
+                                      ?.bold()
+                                      .colour(context.colors.onSurface),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                               if (isVerified) ...[
                                 AppSpacing.xs.w,
@@ -157,6 +171,8 @@ class GuardProfileHeaderWidget extends StatelessWidget {
                             style: context.textTheme.bodySmall
                                 ?.copyWith(fontSize: 10)
                                 .colour(context.colors.primary),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
@@ -204,8 +220,6 @@ class GuardProfileHeaderWidget extends StatelessWidget {
               ),
             ],
           ),
-
-          // Operative Details Row (Name, Spec, Rate)
         ],
       ),
     );

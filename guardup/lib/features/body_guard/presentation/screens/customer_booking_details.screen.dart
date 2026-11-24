@@ -13,7 +13,7 @@ import '/gen/assets.gen.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/app_image.dart';
-import '/features/guard_detail/presentation/customer_booking_confirmed.screen.dart';
+import '/features/body_guard/presentation/screens/customer_booking_confirmed.screen.dart';
 import '/features/payments/presentation/screens/payment_success_screen.dart';
 
 /// Screen 4: Final Booking Details & Payment Summary review screen before payment authorization.

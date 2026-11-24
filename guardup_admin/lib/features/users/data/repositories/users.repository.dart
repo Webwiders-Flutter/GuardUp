@@ -10,29 +10,38 @@ import '/features/users/data/enums/user_role.enum.dart';
 import '/features/users/data/enums/user_status.enum.dart';
 import '/features/users/data/models/user_model.dart';
 
-/// Lists and searches accounts through the `user_profiles` view (account +
-/// company / bodyguard profile columns, same names as before the split) and
-/// writes account fields to `users`. See documentation/user_profiles.md.
+/// Lists and searches accounts directly through the `users` table and
+/// writes account fields to `users`. Role-specific profile rows are embedded
+/// via PostgREST relations. See documentation/user_profiles.md.
 final class UsersRepository extends BaseSupabaseRepository<UserModel> {
   UsersRepository(SupabaseClient client)
     : super(
         client: client,
-        tableName: DatabaseTables.userProfiles,
-        fromJson: UserModel.fromJson,
+        tableName: DatabaseTables.users,
+        fromJson: (json) => UserModel.fromJson(_normalizeProfiles(json)),
         entityName: 'user',
+        // Only columns that live on `users`; company/bodyguard columns are
+        // accessed via the embedded relation select below, not searched here.
         searchFields: const [
           JsonKeys.fullName,
           JsonKeys.email,
           JsonKeys.mobileNumber,
           JsonKeys.phoneCode,
-          JsonKeys.businessName,
-          JsonKeys.businessEmail,
-          JsonKeys.companyPhoneNumber,
-          JsonKeys.companyPhoneCode,
         ],
+        // Embed company and bodyguard for every list row so UserModel.fromJson
+        // can populate the nested company/bodyguard fields.
+        selectColumns: _listSelect,
         primarySortColumn: JsonKeys.createdAt,
         primarySortAscending: false,
       );
+
+  /// Lightweight select for list / paginated queries.
+  ///
+  /// - `company`: only `company_name` — the list shows it as the display name
+  ///   for COMPANY accounts; all other company fields are loaded via [getDetails].
+  /// - `bodyguard`: not needed on the list — guards are shown by their `users.name`.
+  static const String _listSelect =
+      '*, company:companies!companies_user_id_fkey(id, user_id, company_name)';
 
   @override
   String? buildSearchFilter(String queryStr) {
@@ -42,11 +51,9 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
     final sanitizedRaw = raw.replaceAll('"', '');
     final filters = <String>{};
 
-    // 1. Core Profile and Business text fields
+    // 1. Core account text fields (columns on `users` only)
     filters.add('${JsonKeys.fullName}.ilike."%$sanitizedRaw%"');
     filters.add('${JsonKeys.email}.ilike."%$sanitizedRaw%"');
-    filters.add('${JsonKeys.businessName}.ilike."%$sanitizedRaw%"');
-    filters.add('${JsonKeys.businessEmail}.ilike."%$sanitizedRaw%"');
 
     // 2. Phone Number & Phone Code analysis
     final cleanDigits = raw.replaceAll(RegExp(r'\D'), '');
@@ -166,8 +173,17 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
   // link users to companies), so PostgREST would see several relationships.
   static const String _detailsSelect = '''
     *,
-    company:companies!companies_user_id_fkey(*),
-    bodyguard:bodyguards!bodyguards_user_id_fkey(*),
+    company:companies!companies_user_id_fkey(
+      id, user_id, company_name, business_email, company_type,
+      company_phone_code, company_phone_number, experience_years,
+      created_at, updated_at
+    ),
+    bodyguard:bodyguards!bodyguards_user_id_fkey(
+      id, user_id, company_id, name, profile_image_url, gender,
+      phone_code, phone_number, hourly_rate, rating, experience_years,
+      bio, languages, certifications, is_active, status, rejection_reason,
+      created_at, updated_at
+    ),
     user_services(
       id,
       service:services(id, name, description, icon_name, is_active, display_order)
@@ -261,7 +277,7 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
   };
 
   /// Admins only change account fields (e.g. status) here: they are written
-  /// to `users`, then the merged row is read back from `user_profiles`.
+  /// to `users`, then the merged row is read back via the embedded select.
   @override
   Future<UserModel> addOrUpdate(Map<String, dynamic> data, {String? id}) async {
     if (id == null) {
@@ -285,9 +301,9 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
         .inFilter(JsonKeys.id, ids);
     final rows = await client
         .from(tableName)
-        .select()
+        .select(_listSelect)
         .inFilter(JsonKeys.id, ids);
-    return rows.map(UserModel.fromJson).toList();
+    return rows.map((r) => UserModel.fromJson(_normalizeProfiles(r))).toList();
   }
 
   /// Deleting goes through delete_user (see [delete]) for every account.
@@ -301,7 +317,7 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
   Future<UserModel> _getListRow(String id) async {
     final row = await client
         .from(tableName)
-        .select()
+        .select(_listSelect)
         .eq(JsonKeys.id, id)
         .maybeSingle();
     if (row == null) {
@@ -309,7 +325,7 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
         "Unable to get $entityName details. Please try again later.",
       );
     }
-    return UserModel.fromJson(row);
+    return UserModel.fromJson(_normalizeProfiles(row));
   }
 
   // Approving / rejecting an application lives in UserReviewRepository

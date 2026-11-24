@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:guardup/features/auth/data/enum/user_status.enum.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
@@ -11,15 +11,13 @@ import '/core/extensions/textstyle_extension.dart';
 class GuardMetricsRowWidget extends StatelessWidget {
   final String experience;
   final String qualifications;
-  final String status;
-  final bool isAvailable;
+  final UserStatus status;
 
   const GuardMetricsRowWidget({
     super.key,
     this.experience = '5+ yrs',
     this.qualifications = 'Certified Spec',
-    this.status = 'Available',
-    this.isAvailable = true,
+    this.status= UserStatus.active,
   });
 
   @override
@@ -79,22 +77,18 @@ class GuardMetricsRowWidget extends StatelessWidget {
                   width: 6,
                   height: 6,
                   decoration: BoxDecoration(
-                    color: isAvailable
-                        ? context.colors.success
-                        : context.colors.error,
+                    color: status.color(context),
                     shape: BoxShape.circle,
                   ),
                 ),
                 AppSpacing.xs.w,
                 Flexible(
                   child: Text(
-                    status,
+                    status.label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: context.textTheme.labelSmall?.colour(
-                      isAvailable
-                          ? context.colors.success
-                          : context.colors.error,
+                      status.color(context),
                     ),
                   ),
                 ),
@@ -112,24 +106,20 @@ class GuardMetricsRowWidget extends StatelessWidget {
     required Widget valueWidget,
   }) {
     return QuickContainer(
-      py: 13,
-      px: AppSpacing.xs,
-      borderRadius: BorderRadius.circular(AppRadius.md),
-      // color: context.colors.onPrimary,
-      border: Border.all(
-        color: Colors.white.withValues(alpha: 0.7),
-        width: 0.9,
-      ),
+      p: 10,
+      radius: 12,
+      color: context.colors.onPrimary.withValues(alpha: 0.6),
+      borderColor: context.colors.onSurface.withValues(alpha: 0.15),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             label,
-            style: context.textTheme.labelSmall
-                ?.copyWith(fontSize: 10)
-                .colour(context.colors.onSurfaceVariant.withValues(alpha: 0.6)),
+            style: context.textTheme.labelSmall?.copyWith(
+              color: context.colors.onSurface.withValues(alpha: 0.6),
+              fontSize: 10,
+            ),
           ),
-          AppSpacing.xs.h,
+          AppSpacing.xxs.h,
           valueWidget,
         ],
       ),

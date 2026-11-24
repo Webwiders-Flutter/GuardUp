@@ -20,8 +20,6 @@ import '/shared/widgets/pagination/pagination.controller.dart';
 import '/shared/widgets/pagination/pagination.state.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/features/customer/presentation/screens/booking_screen.dart';
-import '/features/guard_detail/presentation/customer_bodygaurd_profile.screen.dart';
-import '/features/guard_detail/presentation/customer_booking_details.screen.dart';
 
 /// All Bodyguards & Security Roster listing screen featuring live search,
 /// Solo vs Company mode toggling with [AppTabBar.pill], and paginated feeds using [AppPagination].
@@ -246,7 +244,7 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
           isCompact: false,
           role: UserRole.customer,
           onTap: () {
-            context.push(CustomerBodygaurdProfileScreen.route, extra: guard);
+            context.push(GuardDetailScreen.route, extra: guard);
           },
           onBookNow: () {
             context.push(CustomerBookingDetailsScreen.route, extra: guard);

@@ -34,22 +34,24 @@ enum GuardService {
   const GuardService(this.apiValue);
 
   static GuardService fromApiValue(String? value) {
-    if (value == null) return GuardService.vipCloseProtection;
-    return GuardService.values.firstWhere(
-      (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      orElse: () => GuardService.vipCloseProtection,
-    );
+    return tryFromApiValue(value) ?? GuardService.vipCloseProtection;
   }
 
   static GuardService? tryFromApiValue(String? value) {
-    if (value == null) return null;
-    try {
-      return GuardService.values.firstWhere(
-        (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      );
-    } catch (_) {
-      return null;
+    if (value == null || value.trim().isEmpty) return null;
+    final normalized = value
+        .trim()
+        .toUpperCase()
+        .replaceAll(RegExp(r'[\s\-]+'), '_');
+
+    for (final e in GuardService.values) {
+      if (e.apiValue == normalized ||
+          e.name.toUpperCase() == normalized ||
+          e.label.toUpperCase() == value.trim().toUpperCase()) {
+        return e;
+      }
     }
+    return null;
   }
 
   String get label {

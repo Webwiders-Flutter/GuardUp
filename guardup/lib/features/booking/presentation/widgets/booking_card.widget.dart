@@ -64,11 +64,15 @@ class BookingCard extends StatelessWidget {
   final VoidCallback? onChat;
   final Widget? customBottomAction;
 
+  /// Whether to suppress all bottom action buttons (defaults to false).
+  final bool noAction;
+
   const BookingCard({
     super.key,
     required this.booking,
     this.role,
     this.isCustomerView,
+    this.noAction = false,
     this.onTap,
     this.onAccept,
     this.onReject,
@@ -88,6 +92,7 @@ class BookingCard extends StatelessWidget {
   }
 
   bool get _hasBottomActions {
+    if (noAction) return false;
     if (customBottomAction != null) return true;
     if (_isCustomer) {
       // Customer has actions across all states (Rate/Book Again, Track/Chat, Cancel)

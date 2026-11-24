@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '/core/error/api_exception.dart';
 import '/core/logger/supabase_logger.dart';
 import '/core/state/api_state.dart';
+import '/features/auth/data/enum/user_status.enum.dart';
 import '/shared/widgets/pagination/pagination.state.dart';
 import '../../data/model/body_guard.model.dart';
 import '../../data/repositories/bodyguard.repository.dart';
@@ -11,6 +12,7 @@ import '../../data/repositories/bodyguard.repository.dart';
 class CompanyBodyguardsState extends Equatable {
   final PaginationState<BodyGuardModel> pagination;
   final String search;
+  final UserStatus? statusFilter;
 
   /// Set when an action (e.g. delete) failed; cleared on the next action.
   final String? actionError;
@@ -18,24 +20,29 @@ class CompanyBodyguardsState extends Equatable {
   const CompanyBodyguardsState({
     this.pagination = const PaginationState<BodyGuardModel>(),
     this.search = '',
+    this.statusFilter,
     this.actionError,
   });
 
   CompanyBodyguardsState copyWith({
     PaginationState<BodyGuardModel>? pagination,
     String? search,
+    UserStatus? statusFilter,
+    bool clearStatusFilter = false,
     String? actionError,
     bool clearActionError = false,
   }) {
     return CompanyBodyguardsState(
       pagination: pagination ?? this.pagination,
       search: search ?? this.search,
+      statusFilter:
+          clearStatusFilter ? null : (statusFilter ?? this.statusFilter),
       actionError: clearActionError ? null : (actionError ?? this.actionError),
     );
   }
 
   @override
-  List<Object?> get props => [pagination, search, actionError];
+  List<Object?> get props => [pagination, search, statusFilter, actionError];
 }
 
 /// Loads and manages the bodyguards of the signed-in company.
@@ -48,15 +55,23 @@ class CompanyBodyguardsCubit extends Cubit<CompanyBodyguardsState> {
   CompanyBodyguardsCubit(this._repository)
     : super(const CompanyBodyguardsState());
 
-  /// Loads page 1. [search] replaces the current filter when given.
-  Future<void> refresh({String? search}) async {
+  /// Loads page 1. [search] or [status] replaces the current filter when given.
+  Future<void> refresh({
+    String? search,
+    UserStatus? status,
+    bool updateStatus = false,
+  }) async {
     final term = search ?? state.search;
+    final statusFilter =
+        updateStatus ? status : state.statusFilter;
     final requestId = ++_requestId;
     final pageSize = state.pagination.pageSize;
 
     emit(
       state.copyWith(
         search: term,
+        statusFilter: statusFilter,
+        clearStatusFilter: updateStatus && status == null,
         clearActionError: true,
         pagination: state.pagination.copyWith(
           status: const ApiState.loading(),
@@ -66,10 +81,15 @@ class CompanyBodyguardsCubit extends Cubit<CompanyBodyguardsState> {
     );
 
     try {
+      final statuses = statusFilter == UserStatus.pendingApproval
+          ? [UserStatus.pendingApproval, UserStatus.incomplete]
+          : (statusFilter != null ? [statusFilter] : null);
+
       final result = await _repository.getCompanyBodyguards(
         page: 1,
         pageSize: pageSize,
         search: term,
+        statuses: statuses,
       );
       if (isClosed || requestId != _requestId) return;
       emit(
@@ -112,10 +132,15 @@ class CompanyBodyguardsCubit extends Cubit<CompanyBodyguardsState> {
     );
 
     try {
+      final statuses = state.statusFilter == UserStatus.pendingApproval
+          ? [UserStatus.pendingApproval, UserStatus.incomplete]
+          : (state.statusFilter != null ? [state.statusFilter!] : null);
+
       final result = await _repository.getCompanyBodyguards(
         page: nextPage,
         pageSize: current.pageSize,
         search: state.search,
+        statuses: statuses,
       );
       if (isClosed || requestId != _requestId) return;
       emit(
