@@ -12,7 +12,11 @@ abstract class UserDocumentModel with _$UserDocumentModel {
 
   const factory UserDocumentModel({
     required String id,
-    required String userId,
+
+    /// Owner: a login account (`user_id`) or a company-managed bodyguard
+    /// (`bodyguard_id`); exactly one is set.
+    String? userId,
+    String? bodyguardId,
     String? documentTypeId,
     String? documentTypeName,
     DocumentTypeModel? documentType,

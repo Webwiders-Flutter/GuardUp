@@ -5,6 +5,8 @@ documents, approving and rejecting the profile, where the rejection reason is st
 and what the user is told.
 
 Deleting users is a separate action, covered in [user_deletion.md](user_deletion.md).
+Bodyguards added by a company have no account to approve; an admin can review their
+documents at any time ([user_profiles.md](user_profiles.md#documents-of-a-company-managed-bodyguard)).
 Notifications in general are covered in
 [notifications_and_user_lifecycle.md](notifications_and_user_lifecycle.md).
 
@@ -23,6 +25,12 @@ An application can be reviewed while the user is **`PENDING_APPROVAL`** or **`RE
 | Rejected document back to `PENDING` (re-submitted) | `user_documents.status = PENDING`, `rejection_reason` **kept** | `REJECTED` → `PENDING_APPROVAL` once no document is still `REJECTED` |
 | Approve a rejected document | `user_documents.status = APPROVED`, `rejection_reason` cleared | `REJECTED` → `PENDING_APPROVAL` once no document is still `REJECTED` |
 
+- **The owner can re-upload a rejected document.** The app updates the row (new file,
+  `status = PENDING`); the RLS policy allows the owner to update a `PENDING` or
+  `REJECTED` document as long as it ends `PENDING`. Any client write is forced to
+  `PENDING` and keeps the admin's last reason (`guard_user_document_review`), so a user
+  can never approve a document or edit its reason. (Before migration
+  `20261124000019` only `PENDING` rows matched, so re-uploads silently changed nothing.)
 - **One rejected document is enough** to move the user to `REJECTED`.
 - **The profile can only be approved once every document is `APPROVED`.** The database
   refuses otherwise (`All documents must be approved before the profile can be approved`).

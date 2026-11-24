@@ -10,11 +10,14 @@ import '/features/users/data/enums/user_role.enum.dart';
 import '/features/users/data/enums/user_status.enum.dart';
 import '/features/users/data/models/user_model.dart';
 
+/// Lists and searches accounts through the `user_profiles` view (account +
+/// company / bodyguard profile columns, same names as before the split) and
+/// writes account fields to `users`. See documentation/user_profiles.md.
 final class UsersRepository extends BaseSupabaseRepository<UserModel> {
   UsersRepository(SupabaseClient client)
     : super(
         client: client,
-        tableName: DatabaseTables.users,
+        tableName: DatabaseTables.userProfiles,
         fromJson: UserModel.fromJson,
         entityName: 'user',
         searchFields: const [
@@ -71,12 +74,13 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
 
     // B. Query has phone code + phone number separated by space, hyphen, brackets, etc.
     // e.g. "+91 9876543210", "+91-9876543210", "91 9876543210", "+1 (555) 123-4567"
-    final splitBySeparatorMatch =
-        RegExp(r'^\+?(\d{1,4})[\s\-./()]+(\d.*)$').firstMatch(raw);
+    final splitBySeparatorMatch = RegExp(r'^\+?(\d{1,4})[\s\-./()]+(\d.*)$')
+        .firstMatch(raw);
     if (splitBySeparatorMatch != null) {
       final codeDigits = splitBySeparatorMatch.group(1)!;
-      final numberPart =
-          splitBySeparatorMatch.group(2)!.replaceAll(RegExp(r'\D'), '');
+      final numberPart = splitBySeparatorMatch
+          .group(2)!
+          .replaceAll(RegExp(r'\D'), '');
       addPhoneFilter(codeDigits, numberPart);
     }
 
@@ -157,8 +161,13 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
     );
   }
 
+  // companies / bodyguards need the FK hint: user_services, user_documents
+  // and user_availabilities also link users to bodyguards (and bodyguards
+  // link users to companies), so PostgREST would see several relationships.
   static const String _detailsSelect = '''
     *,
+    company:companies!companies_user_id_fkey(*),
+    bodyguard:bodyguards!bodyguards_user_id_fkey(*),
     user_services(
       id,
       service:services(id, name, description, icon_name, is_active, display_order)
@@ -210,7 +219,7 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
   @override
   Future<UserModel> getDetails(String id) async {
     final response = await client
-        .from(tableName)
+        .from(DatabaseTables.users)
         .select(_detailsSelect)
         .eq(JsonKeys.id, id)
         // Bank accounts: primary first, then newest first.
@@ -232,7 +241,75 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
       );
     }
 
-    return UserModel.fromJson(Map<String, dynamic>.from(response));
+    return UserModel.fromJson(_normalizeProfiles(response));
+  }
+
+  /// `company` / `bodyguard` are one-to-one embeds: an object, or a one-item
+  /// list on older PostgREST versions. [UserModel] expects an object or null.
+  static Map<String, dynamic> _normalizeProfiles(Map<String, dynamic> row) {
+    return Map<String, dynamic>.from(row)
+      ..[JsonKeys.company] = _singleEmbed(row[JsonKeys.company])
+      ..[JsonKeys.bodyguard] = _singleEmbed(row[JsonKeys.bodyguard]);
+  }
+
+  static Map<String, dynamic>? _singleEmbed(Object? value) => switch (value) {
+    Map<String, dynamic> map => map,
+    List<dynamic> list
+        when list.isNotEmpty && list.first is Map<String, dynamic> =>
+      list.first as Map<String, dynamic>,
+    _ => null,
+  };
+
+  /// Admins only change account fields (e.g. status) here: they are written
+  /// to `users`, then the merged row is read back from `user_profiles`.
+  @override
+  Future<UserModel> addOrUpdate(Map<String, dynamic> data, {String? id}) async {
+    if (id == null) {
+      throw ApiException('Accounts are created by signing up in the app.');
+    }
+    final payload = Map<String, dynamic>.from(data)..remove(JsonKeys.id);
+    await client.from(DatabaseTables.users).update(payload).eq(JsonKeys.id, id);
+    return _getListRow(id);
+  }
+
+  @override
+  Future<List<UserModel>> updateMany(
+    Map<String, dynamic> data,
+    List<String> ids,
+  ) async {
+    if (ids.isEmpty) return [];
+    final payload = Map<String, dynamic>.from(data)..remove(JsonKeys.id);
+    await client
+        .from(DatabaseTables.users)
+        .update(payload)
+        .inFilter(JsonKeys.id, ids);
+    final rows = await client
+        .from(tableName)
+        .select()
+        .inFilter(JsonKeys.id, ids);
+    return rows.map(UserModel.fromJson).toList();
+  }
+
+  /// Deleting goes through delete_user (see [delete]) for every account.
+  @override
+  Future<void> deleteMany(List<String> ids) async {
+    for (final id in ids) {
+      await delete(id);
+    }
+  }
+
+  Future<UserModel> _getListRow(String id) async {
+    final row = await client
+        .from(tableName)
+        .select()
+        .eq(JsonKeys.id, id)
+        .maybeSingle();
+    if (row == null) {
+      throw ApiException(
+        "Unable to get $entityName details. Please try again later.",
+      );
+    }
+    return UserModel.fromJson(row);
   }
 
   // Approving / rejecting an application lives in UserReviewRepository
@@ -241,7 +318,7 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
   /// Blocks user account.
   Future<UserModel> blockUser(String id) async {
     await client
-        .from(tableName)
+        .from(DatabaseTables.users)
         .update({JsonKeys.registrationStatus: UserStatus.blocked.apiValue})
         .eq(JsonKeys.id, id);
 
@@ -251,7 +328,7 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
   /// Unblocks user account to approved status.
   Future<UserModel> unblockUser(String id) async {
     await client
-        .from(tableName)
+        .from(DatabaseTables.users)
         .update({JsonKeys.registrationStatus: UserStatus.active.apiValue})
         .eq(JsonKeys.id, id);
 

@@ -11,26 +11,38 @@ Reviewing applications is covered in
 
 ## 1. Tables
 
+Account data lives in `users`; role profiles live in `companies` and `bodyguards`.
+How the split works (company-managed bodyguards, RLS, the `user_profiles` view) is in
+[user_profiles.md](user_profiles.md).
+
 | Table | One row per | Written by | Admin access |
 |---|---|---|---|
-| `users` | user | user (mobile app), status / rejection by admin | read + review |
-| `user_services` | user × service | user | read |
-| `user_documents` | user × document type | user (upload), admin (review) | read + review |
-| `user_availabilities` | user × day of week | bodyguard | read (public read policy) |
+| `users` | login account | user (mobile app), status / rejection by admin | read + review |
+| `companies` | COMPANY account | company | read |
+| `bodyguards` | bodyguard (self-registered or company-managed) | guard / their company | read |
+| `user_services` | owner × service | guard / company | read |
+| `user_documents` | owner × document type | owner (upload), admin (review) | read + review |
+| `user_availabilities` | owner × day of week | bodyguard / their company | read (public read policy) |
 | `user_bank_accounts` | payout account | bodyguard / company | **read only** (`Admins can read all bank accounts`) |
 
-All child tables use `ON DELETE CASCADE` on `user_id`, so deleting a user's row removes
-them too.
+"Owner" is `user_id` for a login account or `bodyguard_id` for a company-managed
+bodyguard (exactly one is set). All child tables cascade on delete from their owner.
 
-### `users` columns by role
+### Columns by table
 
-| Group | Columns | Shown for |
+| Table | Columns | Shown for |
 |---|---|---|
-| Account | `name`, `email`, `phone_code` + `phone_number`, `role`, `status`, `rejection_reason`, `profile_image_url` | everyone |
-| Personal | `gender` (`MALE` / `FEMALE` / `OTHER`), `address`, `latitude`, `longitude`, `is_push_notification_enabled` | everyone |
-| Bodyguard | `hourly_rate`, `rating`, `experience_years`, `bio`, `languages`, `certifications` | `GUARD` |
-| Company | `company_name`, `business_email`, `company_type`, `company_phone_code` + `company_phone_number` | `COMPANY` |
+| `users` (account) | `name`, `email`, `phone_code` + `phone_number`, `role`, `status`, `rejection_reason`, `profile_image_url` | everyone |
+| `users` (personal) | `gender` (`MALE` / `FEMALE` / `OTHER`), `address`, `latitude`, `longitude`, `is_push_notification_enabled` | everyone |
+| `bodyguards` | `hourly_rate`, `rating`, `experience_years`, `bio`, `languages`, `certifications`, `is_active` | `GUARD` |
+| `companies` | `company_name`, `business_email`, `company_type`, `company_phone_code` + `company_phone_number`, `experience_years` | `COMPANY` |
 
+The `user_profiles` view returns all of these flattened per account under the same
+names, which is what both apps read.
+
+- `companies.company_type` always stores the `BusinessType` API value (`PVT_LTD`, …);
+  screens show its label (`businessTypeLabel` extension in the app). Rows the old edit
+  screen saved as labels are converted by migration `20261124000019`.
 - `languages` and `certifications` are free text. The admin panel splits them on
   commas / new lines and shows each item as a chip.
 - `phone_code` and `company_phone_code` default to `+91`.
@@ -67,8 +79,9 @@ document's status.
 ## 2. Admin panel: User Details screen
 
 `UsersRepository.getDetails` loads the user with every relation in one query
-(`user_services`, `documents:user_documents`, `bank_accounts:user_bank_accounts`,
-`availabilities:user_availabilities`). A user with none of these gets empty lists.
+(`company:companies`, `bodyguard:bodyguards`, `user_services`, `documents:user_documents`,
+`bank_accounts:user_bank_accounts`, `availabilities:user_availabilities`) and copies the
+company / bodyguard columns onto the user. The users list reads the `user_profiles` view. A user with none of these gets empty lists.
 
 Sections, in order:
 

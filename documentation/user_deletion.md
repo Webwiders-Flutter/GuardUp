@@ -22,7 +22,11 @@ The database does everything else, based on the status the user had **before**:
 | `BLOCKED` | ✅ Kept, `status = DELETED` | ❌ Removed | ✅ Kept | Same. |
 
 When the row is removed, everything linked to it goes too (`ON DELETE CASCADE`):
-`user_documents`, `user_services`, `user_devices`, `notifications`.
+`user_documents`, `user_services`, `user_devices`, `notifications`, and the role profile
+(`companies` / `bodyguards`). Deleting a company's row also removes its company-managed
+bodyguards and their services, documents and availability
+([user_profiles.md](user_profiles.md)). When the row is kept (`DELETED`), the
+company's bodyguards stay for the record but are no longer listed.
 
 In every case the email and phone number become free, so the person can register again.
 (The unique indexes on email / phone ignore `DELETED` rows.)

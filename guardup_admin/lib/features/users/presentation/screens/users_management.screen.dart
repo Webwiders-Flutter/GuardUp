@@ -114,7 +114,7 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
   //     ref
   //         .read(provider)
   //         .handleResult(
-  //           successMessage: '${item.fullName} has been approved successfully',
+  //           successMessage: '${item.name} has been approved successfully',
   //           fallbackErrorMessage: 'Failed to approve user',
   //         );
   //   }
@@ -124,7 +124,7 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
 
   //   final result = await AppPopup.showRejectConfirmation(
   //     context,
-  //     itemName: item.fullName,
+  //     itemName: item.name,
   //   );
 
   //   if (result?.action == PopupAction.confirm && mounted) {
@@ -134,7 +134,7 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
   //       ref
   //           .read(provider)
   //           .handleResult(
-  //             successMessage: '${item.fullName} has been rejected',
+  //             successMessage: '${item.name} has been rejected',
   //             fallbackErrorMessage: 'Failed to reject user',
   //           );
   //     }
@@ -146,11 +146,14 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
   }
 
   Future<void> _onToggleBlock(UserModel item, bool block) async {
+    final itemName = item.name.isNotEmpty
+        ? item.name
+        : (item.company?.companyName ?? item.email);
     final result = block
-        ? await AppPopup.showBlockConfirmation(context, itemName: item.fullName)
+        ? await AppPopup.showBlockConfirmation(context, itemName: itemName)
         : await AppPopup.showUnblockConfirmation(
             context,
-            itemName: item.fullName,
+            itemName: itemName,
           );
 
     if (result?.action == PopupAction.confirm && mounted) {
@@ -161,8 +164,8 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
             .read(provider)
             .handleResult(
               successMessage: block
-                  ? '${item.fullName} has been blocked'
-                  : '${item.fullName} has been unblocked',
+                  ? '$itemName has been blocked'
+                  : '$itemName has been unblocked',
               fallbackErrorMessage: 'Failed to update user status',
             );
       }
@@ -170,9 +173,12 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
   }
 
   Future<void> _onDeleteUser(UserModel item) async {
+    final itemName = item.name.isNotEmpty
+        ? item.name
+        : (item.company?.companyName ?? item.email);
     final result = await AppPopup.showDeleteConfirmation(
       context,
-      deleteItemName: item.fullName,
+      deleteItemName: itemName,
     );
 
     if (result?.action == PopupAction.confirm && mounted) {
@@ -234,9 +240,12 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
             onTap:
                 item.profileImageUrl != null && item.profileImageUrl!.isNotEmpty
                 ? () {
+                    final photoTitle = item.name.isNotEmpty
+                        ? item.name
+                        : (item.company?.companyName ?? item.email);
                     AppFileViewer.show(
                       context: context,
-                      title: '${item.fullName} — Profile Photo',
+                      title: '$photoTitle — Profile Photo',
                       fileUrl: item.profileImageUrl,
                     );
                   }
@@ -260,8 +269,11 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
         title: 'User Details',
         alignment: Alignment.centerLeft,
         cellBuilder: (item, index) {
+          final displayName = item.name.isNotEmpty
+              ? item.name
+              : (item.company?.companyName ?? item.email);
           return Text(
-            item.fullName,
+            displayName,
             style: context.textTheme.bodyMedium?.decreaseSize(1).semiBold(),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -291,7 +303,7 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
         title: 'Phone Number',
         alignment: Alignment.centerLeft,
         cellBuilder: (item, index) {
-          final phone = item.mobileNumber.toE164(countryCode: item.phoneCode);
+          final phone = (item.phoneNumber ?? '').toE164(countryCode: item.phoneCode);
           return Text(
             phone.isNotEmpty ? phone : '—',
             style: context.textTheme.bodyMedium?.decreaseSize(1).semiBold(),

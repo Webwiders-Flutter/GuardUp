@@ -86,17 +86,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   void _syncControllersWithModel(UserModel? user) {
     if (user == null || _hasInitialisedFields) return;
-    _nameController.text = user.fullName;
+    _nameController.text = user.name;
     _emailController.text = user.email;
-    _phoneController.text = user.mobileNumber;
+    _phoneController.text = user.phoneNumber ?? '';
     _hasInitialisedFields = true;
   }
 
   void _resetProfileForm(UserModel? user) {
     if (user != null) {
-      _nameController.text = user.fullName;
+      _nameController.text = user.name;
       _emailController.text = user.email;
-      _phoneController.text = user.mobileNumber;
+      _phoneController.text = user.phoneNumber ?? '';
     }
   }
 
@@ -211,13 +211,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       _hasInitialisedFields = true;
     }
 
-    final displayName =
-        user?.fullName ??
-        (authUser?.userMetadata?['full_name'] as String?) ??
-        'Super Admin';
+    final displayName = user?.name.isNotEmpty == true
+        ? user!.name
+        : ((authUser?.userMetadata?['full_name'] as String?) ?? 'Super Admin');
     final displayEmail = user?.email ?? authUser?.email ?? 'admin@guardup.com';
-    final displayPhone = user?.mobileNumber.isNotEmpty == true
-        ? '+91 ${user!.mobileNumber}'
+    final displayPhone = user?.phoneNumber?.isNotEmpty == true
+        ? '+91 ${user!.phoneNumber}'
         : (authUser?.phone?.isNotEmpty == true
               ? authUser!.phone!
               : 'Not configured');

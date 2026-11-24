@@ -71,6 +71,14 @@ final class JsonKeys {
   static const String bio = 'bio';
   static const String services = 'services';
   static const String rating = 'rating';
+  static const String experienceYears = 'experience_years';
+  static const String languages = 'languages';
+  static const String certifications = 'certifications';
+
+  /// Embedded role profiles in the user details query (see UsersRepository).
+  static const String company = 'company';
+  static const String companyId = 'company_id';
+  static const String bodyguard = 'bodyguard';
   static const String capacityTons = 'capacity_tons';
   static const String addressLine1 = "address_line_1";
   static const String addressLine2 = "address_line_2";

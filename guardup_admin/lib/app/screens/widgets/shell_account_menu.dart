@@ -33,7 +33,7 @@ class ShellAccountMenu extends ConsumerWidget {
     final adminUser = ref.watch(adminUserControllerProvider).value;
     final authUser = ref.watch(authControllerProvider).value;
 
-    final adminName = adminUser?.fullName ?? '';
+    final adminName = adminUser?.name ?? '';
     final metadataName = authUser?.userMetadata?['full_name'] as String? ?? '';
     final name = adminName.isNotBlank
         ? adminName

@@ -10,7 +10,11 @@ part 'user_availability.model.g.dart';
 abstract class UserAvailabilityModel with _$UserAvailabilityModel {
   const factory UserAvailabilityModel({
     required String id,
-    required String userId,
+
+    /// Owner: a login account (`user_id`) or a company-managed bodyguard
+    /// (`bodyguard_id`); exactly one is set.
+    String? userId,
+    String? bodyguardId,
     @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
     WeekDay? dayOfWeek,
     @Default(true) bool isAvailable,

@@ -10,19 +10,22 @@ import '/core/extensions/context.extension.dart';
 import '/core/extensions/datetime.extension.dart';
 import '/core/extensions/layout.extension.dart';
 import '/core/extensions/localization.extension.dart';
-import '/core/extensions/number.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/string.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/core/services/launcher/app_launcher.service.dart';
 import '/features/users/data/enums/user_role.enum.dart';
 import '/features/users/data/enums/user_status.enum.dart';
+import '/features/users/data/models/company.model.dart';
 import '/features/users/data/models/user_model.dart';
+import '/features/users/presentation/widgets/bodyguard_details.section.dart';
+import '/features/users/presentation/widgets/company_bodyguards.section.dart';
 import '/features/users/di/users.providers.dart';
 import '/core/extensions/riverpod.extension.dart';
 import '/features/users/data/models/user_document.model.dart';
 import '/features/users/presentation/controllers/user_review.controller.dart';
 import '/features/users/presentation/controllers/users.controller.dart';
+import '/features/users/presentation/widgets/review.widgets.dart';
 import '/features/users/presentation/widgets/user_availability.section.dart';
 import '/features/users/presentation/widgets/user_bank_accounts.section.dart';
 import '/shared/widgets/admin_layout/app_side_panel.dart';
@@ -135,18 +138,29 @@ class _UserDetailsBody extends StatelessWidget {
         _PersonalInfoSection(user: user),
         AppSpacing.md.h,
 
-        // 4. Role-specific Information
-        if (user.role.isGuard) ...[
-          _GuardDetailsSection(user: user),
+        // 4. Role profile (bodyguards / companies)
+        if (user.role.isGuard && user.bodyguard != null) ...[
+          BodyguardDetailsSection(
+            bodyguard: user.bodyguard!,
+            services: user.serviceListData
+                    ?.map((s) => s.name)
+                    .where((n) => n.isNotEmpty)
+                    .toList() ??
+                const [],
+          ),
           AppSpacing.md.h,
         ] else if (user.role.isCompany) ...[
-          _CompanyDetailsSection(user: user),
+          _CompanyDetailsSection(user: user, company: user.company),
           AppSpacing.md.h,
+          if (user.company != null) ...[
+            CompanyBodyguardsSection(company: user.company!),
+            AppSpacing.md.h,
+          ],
         ],
 
         // 5. Weekly availability (bodyguards, or anyone who has set one)
         if (user.role.isGuard || user.availabilities?.isNotEmpty == true) ...[
-          UserAvailabilitySection(user: user),
+          UserAvailabilitySection(availabilities: user.availabilities),
           AppSpacing.md.h,
         ],
 
@@ -227,51 +241,6 @@ class _PersonalInfoSection extends StatelessWidget {
   }
 }
 
-/// Titled wrap of chips (services, languages, certifications).
-class _ChipGroup extends StatelessWidget {
-  const _ChipGroup({
-    required this.title,
-    required this.values,
-    required this.color,
-    this.icon,
-  });
-
-  final String title;
-  final List<String> values;
-  final Color color;
-  final IconData? icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AppSpacing.sm.h,
-        Text(
-          title,
-          style: context.textTheme.bodySmall?.semiBold().colour(
-            context.colors.onSurfaceSecondary,
-          ),
-        ),
-        AppSpacing.xs.h,
-        Wrap(
-          spacing: AppSpacing.xs,
-          runSpacing: AppSpacing.xs,
-          children: [
-            for (final value in values)
-              AppChip(
-                title: value,
-                icon: icon,
-                size: AppChipSize.small,
-                color: color,
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
 class _UserProfileHero extends StatelessWidget {
   const _UserProfileHero({required this.user});
 
@@ -280,7 +249,10 @@ class _UserProfileHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final phone = user.mobileNumber.toE164(countryCode: user.phoneCode);
+    final displayName = user.name.isNotEmpty
+        ? user.name
+        : (user.company?.companyName ?? user.email);
+    final phone = (user.phoneNumber ?? '').toE164(countryCode: user.phoneCode);
     final hasPhone = phone.isNotEmpty;
     final hasEmail = user.email.trim().isNotEmpty;
 
@@ -328,10 +300,9 @@ class _UserProfileHero extends StatelessWidget {
                               height: 64,
                               fit: BoxFit.cover,
                               onTap: () {
-                                
                                 AppFileViewer.show(
                                   context: context,
-                                  title: '${user.fullName} — Photo',
+                                  title: '$displayName — Photo',
                                   fileUrl: user.profileImageUrl,
                                 );
                               },
@@ -339,8 +310,8 @@ class _UserProfileHero extends StatelessWidget {
                           )
                         : Center(
                             child: Text(
-                              user.fullName.isNotEmpty
-                                  ? user.fullName.characters.first.toUpperCase()
+                              displayName.isNotEmpty
+                                  ? displayName.characters.first.toUpperCase()
                                   : 'U',
                               style: context.textTheme.titleLarge
                                   ?.bold()
@@ -385,7 +356,7 @@ class _UserProfileHero extends StatelessWidget {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(
-                          user.fullName,
+                          displayName,
                           style: context.textTheme.titleMedium?.bold(),
                         ),
                         AppChip(
@@ -514,7 +485,7 @@ class _UserProfileHero extends StatelessWidget {
           ),
           if (user.rejectionReason?.trim().isNotEmpty == true) ...[
             AppSpacing.md.h,
-            _RejectionReasonNote(
+            RejectionReasonNote(
               label: 'Profile rejection reason',
               reason: user.rejectionReason!,
             ),
@@ -684,6 +655,10 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
   UserReviewController get _reviewController =>
       ref.read(userReviewControllerProvider(widget.user.id).notifier);
 
+  String get _userName => widget.user.name.isNotEmpty
+      ? widget.user.name
+      : (widget.user.company?.companyName ?? widget.user.email);
+
   /// Shown only once every document is approved.
   Future<void> _onApproveProfile() async {
     await _reviewController.approveUser();
@@ -692,7 +667,7 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
           .read(userReviewControllerProvider(widget.user.id))
           .handleResult(
             successMessage:
-                '${widget.user.fullName} has been approved successfully',
+                '$_userName has been approved successfully',
             fallbackErrorMessage: 'Failed to approve user',
           );
     }
@@ -703,7 +678,7 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
   Future<void> _onRejectProfile() async {
     final result = await AppPopup.showRejectWithReason(
       context,
-      title: 'Reject ${widget.user.fullName}',
+      title: 'Reject $_userName',
       message:
           'The user will be notified with this reason. Their account is kept.',
       confirmLabel: 'Reject Profile',
@@ -718,7 +693,7 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
       ref
           .read(userReviewControllerProvider(widget.user.id))
           .handleResult(
-            successMessage: '${widget.user.fullName} has been rejected',
+            successMessage: '$_userName has been rejected',
             fallbackErrorMessage: 'Failed to reject user',
           );
     }
@@ -728,11 +703,11 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
     final result = block
         ? await AppPopup.showBlockConfirmation(
             context,
-            itemName: widget.user.fullName,
+            itemName: _userName,
           )
         : await AppPopup.showUnblockConfirmation(
             context,
-            itemName: widget.user.fullName,
+            itemName: _userName,
           );
 
     if (result?.action == PopupAction.confirm && mounted) {
@@ -744,8 +719,8 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
           ref.invalidate(userDetailsProvider(widget.user.id));
           AppSnackbar.show(
             message: block
-                ? '${widget.user.fullName} has been blocked'
-                : '${widget.user.fullName} has been unblocked',
+                ? '$_userName has been blocked'
+                : '$_userName has been unblocked',
             type: block ? SnackbarType.error : SnackbarType.success,
           );
         }
@@ -765,7 +740,7 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
   Future<void> _onDelete() async {
     final result = await AppPopup.showDeleteConfirmation(
       context,
-      deleteItemName: widget.user.fullName,
+      deleteItemName: _userName,
     );
 
     if (result?.action == PopupAction.confirm && mounted) {
@@ -775,7 +750,7 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
 
         if (mounted) {
           AppSnackbar.show(
-            message: '${widget.user.fullName} deleted successfully',
+            message: '$_userName deleted successfully',
             type: SnackbarType.success,
           );
           if (Navigator.of(context).canPop()) {
@@ -877,98 +852,27 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
   }
 }
 
-class _GuardDetailsSection extends StatelessWidget {
-  const _GuardDetailsSection({required this.user});
-
-  final UserModel user;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final bio = user.bio?.trim();
-    final languages = user.languages?.toCommaSeparatedList ?? const [];
-    final certifications =
-        user.certifications?.toCommaSeparatedList ?? const [];
-    final experienceYears = user.experienceYears ?? 0;
-    final hasChips =
-        user.services.isNotEmpty ||
-        languages.isNotEmpty ||
-        certifications.isNotEmpty;
-
-    return AppDetailSection(
-      title: 'Bodyguard Operative Details',
-      subtitle: 'Rates, experience, skills and professional bio',
-      icon: Icons.security_outlined,
-      items: [
-        (
-          label: 'Hourly Rate',
-          value: (user.hourlyRate ?? 0) > 0
-              ? '${user.hourlyRate!.toUsdAmount} / hr'
-              : 'Not set',
-          icon: Icons.attach_money_rounded,
-        ),
-        (
-          label: 'Rating',
-          value: user.rating != null && user.rating! > 0
-              ? '★ ${user.rating!.toStringAsFixed(1)}'
-              : '0.0 (New)',
-          icon: Icons.star_rate_rounded,
-        ),
-        (
-          label: 'Experience',
-          value: experienceYears > 0
-              ? '$experienceYears ${experienceYears == 1 ? 'year' : 'years'}'
-              : 'Less than a year',
-          icon: Icons.workspace_premium_outlined,
-        ),
-        if (bio != null && bio.isNotEmpty)
-          (label: 'Bio', value: bio, icon: Icons.description_outlined),
-      ],
-      child: hasChips
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (user.services.isNotEmpty)
-                  _ChipGroup(
-                    title: 'Services & Specializations',
-                    values: user.services,
-                    color: colors.primary,
-                  ),
-                if (languages.isNotEmpty)
-                  _ChipGroup(
-                    title: 'Languages',
-                    values: languages,
-                    color: colors.info,
-                    icon: Icons.translate_rounded,
-                  ),
-                if (certifications.isNotEmpty)
-                  _ChipGroup(
-                    title: 'Certifications & Licenses',
-                    values: certifications,
-                    color: colors.success,
-                    icon: Icons.verified_outlined,
-                  ),
-              ],
-            )
-          : null,
-    );
-  }
-}
-
 class _CompanyDetailsSection extends StatelessWidget {
-  const _CompanyDetailsSection({required this.user});
+  const _CompanyDetailsSection({required this.user, required this.company});
 
   final UserModel user;
+
+  /// Null only if the company row is missing (the account is shown as is).
+  final CompanyModel? company;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final businessEmail = user.businessEmail ?? '';
+    final businessEmail = company?.businessEmail ?? '';
     final email = businessEmail.isNotBlank ? businessEmail : user.email;
-    final contactPhone = user.mobileNumber.toE164(countryCode: user.phoneCode);
-    final companyPhone = (user.companyPhoneNumber ?? '').toE164(
-      countryCode: user.companyPhoneCode,
+    final contactPhone = (user.phoneNumber ?? '').toE164(countryCode: user.phoneCode);
+    final companyPhone = (company?.companyPhoneNumber ?? '').toE164(
+      countryCode: company?.companyPhoneCode ?? '+91',
     );
+    final companyType = company?.companyType;
+    final experienceYears = company?.experienceYears ?? 0;
+    final displayName = company?.companyName ??
+        (user.name.isNotEmpty ? user.name : user.email);
 
     return AppDetailSection(
       title: 'Security Company Details',
@@ -977,13 +881,20 @@ class _CompanyDetailsSection extends StatelessWidget {
       items: [
         (
           label: 'Company Name',
-          value: user.companyName ?? user.fullName,
+          value: displayName,
           icon: Icons.business_outlined,
         ),
         (
           label: 'Company Type',
-          value: user.companyType?.label(context.l10n) ?? '—',
-          icon: user.companyType?.icon ?? Icons.category_outlined,
+          value: companyType?.label(context.l10n) ?? '—',
+          icon: companyType?.icon ?? Icons.category_outlined,
+        ),
+        (
+          label: 'In Operation',
+          value: experienceYears > 0
+              ? '$experienceYears ${experienceYears == 1 ? 'year' : 'years'}'
+              : '—',
+          icon: Icons.workspace_premium_outlined,
         ),
         (label: 'Contact Person', value: user.name, icon: Icons.person_outline),
         (
@@ -1011,12 +922,21 @@ class _CompanyDetailsSection extends StatelessWidget {
             onTap: () => AppLauncher.sendEmail(email: email),
             isCopyable: true,
           ),
-          if (user.services.isNotEmpty)
-            _ChipGroup(
-              title: 'Offered Services & Capabilities',
-              values: user.services,
-              color: colors.primary,
-            ),
+          Builder(
+            builder: (context) {
+              final services = user.serviceListData
+                      ?.map((s) => s.name)
+                      .where((n) => n.isNotEmpty)
+                      .toList() ??
+                  const <String>[];
+              if (services.isEmpty) return const SizedBox.shrink();
+              return ProfileChipGroup(
+                title: 'Offered Services & Capabilities',
+                values: services,
+                color: colors.primary,
+              );
+            },
+          ),
         ],
       ),
     );
@@ -1054,12 +974,15 @@ class _UserDocumentsSection extends ConsumerWidget {
     UserDocumentModel doc,
     String title,
   ) async {
+    final userName = user.name.isNotEmpty
+        ? user.name
+        : (user.company?.companyName ?? user.email);
     final result = await AppPopup.showRejectWithReason(
       context,
       title: 'Reject $title',
       message:
           'The reason is saved on this document. Rejecting a document also '
-          'rejects ${user.fullName}\'s profile.',
+          'rejects $userName\'s profile.',
       confirmLabel: 'Reject Document',
     );
     final reason = result?.data;
@@ -1084,288 +1007,13 @@ class _UserDocumentsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.colors;
-    final docs = user.documents ?? [];
-    final canReview = user.status.isUnderReview;
-    final isReviewing = ref
-        .watch(userReviewControllerProvider(user.id))
-        .isLoading;
-
-    if (docs.isEmpty) {
-      return AppDetailSection(
-        title: 'Verification Documents',
-        subtitle: 'No documents submitted yet',
-        icon: Icons.folder_outlined,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-          child: Text(
-            'User has not uploaded any verification credentials yet.',
-            style: context.textTheme.bodyMedium?.colour(
-              colors.onSurfaceSecondary,
-            ),
-          ),
-        ),
-      );
-    }
-
-    return AppDetailSection(
-      title: 'Verification Documents',
-      subtitle: '${docs.length} submitted credentials and licenses',
-      icon: Icons.folder_shared_outlined,
-      child: ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: docs.length,
-        separatorBuilder: (_, _) => AppSpacing.sm.h,
-        itemBuilder: (context, index) {
-          final doc = docs[index];
-          final docName = doc.resolvedDocumentName;
-          final title = docName?.isNotEmpty == true
-              ? docName!
-              : (doc.fileName?.isNotEmpty == true
-                    ? doc.fileName!
-                    : (doc.documentTypeId ?? 'Document #${index + 1}'));
-          final subtitle = docName?.isNotEmpty == true
-              ? (doc.fileName ?? doc.documentTypeId)
-              : doc.documentTypeId;
-
-          final isApproved = doc.verificationStatus.isVerified;
-          final isRejected = doc.verificationStatus.isRejected;
-
-          return Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: colors.backgroundLight,
-              borderRadius: AppRadius.smRadius,
-              border: Border.all(color: colors.borderLight),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: colors.primary.withValues(alpha: 0.1),
-                    borderRadius: AppRadius.xsRadius,
-                  ),
-                  child: Icon(
-                    Icons.description_outlined,
-                    color: colors.primary,
-                    size: 20,
-                  ),
-                ),
-                AppSpacing.md.w,
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: context.textTheme.bodyMedium?.bold(),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (subtitle != null) ...[
-                        (AppSpacing.xs / 2).h,
-                        Text(
-                          subtitle,
-                          style: context.textTheme.bodySmall?.colour(
-                            colors.onSurfaceSecondary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                      if (doc.uploadedAt != null || doc.validTill != null) ...[
-                        AppSpacing.xs.h,
-                        _DocumentDates(doc: doc),
-                      ],
-                      if (doc.rejectionReason?.trim().isNotEmpty == true) ...[
-                        AppSpacing.xs.h,
-                        _RejectionReasonNote(
-                          label: 'Rejection reason',
-                          reason: doc.rejectionReason!,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                AppSpacing.md.w,
-
-                // Status Badge
-                AppChip(
-                  title: doc.verificationStatus.label(),
-                  color: doc.verificationStatus.color(context),
-                  size: AppChipSize.small,
-                ),
-                AppSpacing.sm.w,
-
-                // Review Actions (only while the application is under review)
-                if (canReview && !isRejected && !isApproved) ...[
-                  AppButton.outline(
-                    size: .small,
-                    type: .success,
-                    tooltip: 'Approve Document',
-                    icon: Icons.check_circle_outline_rounded,
-                    onPressed: isReviewing
-                        ? null
-                        : () => _onApproveDocument(context, ref, doc, title),
-                  ),
-                  AppSpacing.xs.w,
-                  AppButton.outline(
-                    size: .small,
-                    type: .danger,
-                    tooltip: 'Reject Document',
-                    icon: Icons.cancel_outlined,
-                    onPressed: isReviewing
-                        ? null
-                        : () => _onRejectDocument(context, ref, doc, title),
-                  ),
-                  AppSpacing.xs.w,
-                ],
-
-                // Preview File Action
-                AppButton.outline(
-                  size: .small,
-                  type: .primary,
-                  tooltip: 'View Document',
-                  icon: Icons.visibility_outlined,
-                  onPressed: () {
-                    if (doc.fileUrl.isNotEmpty) {
-                      AppFileViewer.show(
-                        context: context,
-                        title: title,
-                        fileUrl: doc.fileUrl,
-                      );
-                    }
-                  },
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-/// Upload date and expiry (`valid_till`) of a document; expired ones are
-/// flagged in red.
-class _DocumentDates extends StatelessWidget {
-  const _DocumentDates({required this.doc});
-
-  final UserDocumentModel doc;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final metaStyle = context.textTheme.bodySmall?.colour(
-      colors.onSurfaceSecondary,
-    );
-    final uploadedAt = doc.uploadedAt;
-    final validTill = doc.validTill;
-    final isExpired =
-        validTill != null && validTill.isBefore(DateTime.now().startOfDay);
-
-    return Wrap(
-      spacing: AppSpacing.md,
-      runSpacing: AppSpacing.xs,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        if (uploadedAt != null)
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.upload_file_outlined,
-                size: AppSpacing.md - 2,
-                color: colors.onSurfaceSecondary,
-              ),
-              (AppSpacing.xs / 2).w,
-              Text('Uploaded ${uploadedAt.readableDate}', style: metaStyle),
-            ],
-          ),
-        if (validTill != null)
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.event_outlined,
-                size: AppSpacing.md - 2,
-                color: isExpired ? colors.error : colors.onSurfaceSecondary,
-              ),
-              (AppSpacing.xs / 2).w,
-              Text(
-                'Valid till ${validTill.readableDate}',
-                style: isExpired
-                    ? context.textTheme.bodySmall?.semiBold().colour(
-                        colors.error,
-                      )
-                    : metaStyle,
-              ),
-              if (isExpired) ...[
-                AppSpacing.xs.w,
-                AppChip(
-                  title: 'Expired',
-                  color: colors.error,
-                  size: AppChipSize.small,
-                ),
-              ],
-            ],
-          ),
-      ],
-    );
-  }
-}
-
-/// Highlighted rejection reason (profile or document).
-class _RejectionReasonNote extends StatelessWidget {
-  const _RejectionReasonNote({required this.label, required this.reason});
-
-  final String label;
-  final String reason;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm + 2,
-        vertical: AppSpacing.xs + 2,
-      ),
-      decoration: BoxDecoration(
-        color: colors.error.withValues(alpha: 0.06),
-        borderRadius: AppRadius.smRadius,
-        border: Border.all(color: colors.error.withValues(alpha: 0.25)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.info_outline_rounded, size: 16, color: colors.error),
-          AppSpacing.xs.w,
-          Expanded(
-            child: Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: '$label: ',
-                    style: context.textTheme.bodySmall?.semiBold().colour(
-                      colors.error,
-                    ),
-                  ),
-                  TextSpan(
-                    text: reason,
-                    style: context.textTheme.bodySmall?.colour(
-                      colors.onSurface,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+    return DocumentReviewList(
+      documents: user.documents ?? const [],
+      canReview: user.status.isUnderReview,
+      isReviewing: ref.watch(userReviewControllerProvider(user.id)).isLoading,
+      emptyMessage: 'User has not uploaded any verification credentials yet.',
+      onApprove: (doc, title) => _onApproveDocument(context, ref, doc, title),
+      onReject: (doc, title) => _onRejectDocument(context, ref, doc, title),
     );
   }
 }

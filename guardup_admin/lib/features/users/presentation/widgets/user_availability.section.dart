@@ -8,20 +8,20 @@ import '/core/extensions/textstyle_extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/features/users/data/enums/week_day.enum.dart';
 import '/features/users/data/models/user_availability.model.dart';
-import '/features/users/data/models/user_model.dart';
 import '/shared/widgets/misc/app_chip.dart';
 import '/shared/widgets/sections/app_detail_section.dart';
 
 /// Weekly working hours from `user_availabilities`, Monday → Sunday.
 class UserAvailabilitySection extends StatelessWidget {
-  const UserAvailabilitySection({super.key, required this.user});
+  const UserAvailabilitySection({super.key, required this.availabilities});
 
-  final UserModel user;
+  /// Rows of an account or of a company-managed bodyguard.
+  final List<UserAvailabilityModel>? availabilities;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final rows = user.availabilities ?? const <UserAvailabilityModel>[];
+    final rows = availabilities ?? const <UserAvailabilityModel>[];
     final hasSchedule = rows.isNotEmpty;
     final availableDays = rows.where((r) => r.isAvailable).length;
 
