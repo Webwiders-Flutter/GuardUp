@@ -94,6 +94,16 @@ class _CompanyDocumentsScreenState extends State<CompanyDocumentsScreen> {
   }
 
   Future<void> _pickDocument(DocumentTypeModel doc) async {
+    final key = doc.docKey;
+    final status = _remoteStatusesNotifier.value[key] ??
+        (doc.code.isNotEmpty ? _remoteStatusesNotifier.value[doc.code] : null);
+    if (status == DocumentStatus.approved) {
+      AppSnackbar.info(
+        'This document is already verified and cannot be changed.',
+      );
+      return;
+    }
+
     final picked = await AppMediaPickerSheet.show(
       context: context,
       allowCrop: doc.allowCrop,
@@ -327,8 +337,14 @@ class _CompanyDocumentsScreenState extends State<CompanyDocumentsScreen> {
                                                               localFile != null)
                                                           ? null
                                                           : rejectionReason,
-                                                      onPick: () =>
-                                                          _pickDocument(doc),
+                                                      onPick: status ==
+                                                              DocumentStatus
+                                                                  .approved
+                                                          ? null
+                                                          : () =>
+                                                              _pickDocument(
+                                                                doc,
+                                                              ),
                                                     ),
                                                   );
                                                 }),

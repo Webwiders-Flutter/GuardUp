@@ -108,6 +108,16 @@ class _BodyguardDocumentsWidgetState extends State<BodyguardDocumentsWidget> {
   }
 
   Future<void> _pickDocument(DocumentTypeModel doc) async {
+    final key = doc.docKey;
+    final status = _remoteStatusesNotifier.value[key] ??
+        (doc.code.isNotEmpty ? _remoteStatusesNotifier.value[doc.code] : null);
+    if (status == DocumentStatus.approved) {
+      AppSnackbar.info(
+        'This document is already verified and cannot be changed.',
+      );
+      return;
+    }
+
     final picked = await AppMediaPickerSheet.show(
       context: context,
       allowCrop: doc.allowCrop,
@@ -260,7 +270,8 @@ class _BodyguardDocumentsWidgetState extends State<BodyguardDocumentsWidget> {
                       size: AppSizes.iconLg,
                     ),
                     isRequired: doc.isRequired,
-                    isReadOnly: status != DocumentStatus.rejected,
+                    isReadOnly: status == DocumentStatus.approved ||
+                        status != DocumentStatus.rejected,
                     initialUrl: localFile == null ? remoteUrl : null,
                     selectedFilePath: localFile?.path,
                     fileName: localFile != null ? localFile.name : remoteName,
@@ -272,7 +283,9 @@ class _BodyguardDocumentsWidgetState extends State<BodyguardDocumentsWidget> {
                     rejectionReason: (isResubmitted || localFile != null)
                         ? null
                         : rejectionReason,
-                    onPick: () => _pickDocument(doc),
+                    onPick: status == DocumentStatus.approved
+                        ? null
+                        : () => _pickDocument(doc),
                   ),
                 );
               }),

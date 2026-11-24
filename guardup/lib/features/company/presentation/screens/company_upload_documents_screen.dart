@@ -89,6 +89,17 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
   }
 
   Future<void> _pickDocument(DocumentTypeModel doc) async {
+    final key = doc.docKey;
+    final status =
+        _remoteStatusesNotifier.value[key] ??
+        (doc.code.isNotEmpty ? _remoteStatusesNotifier.value[doc.code] : null);
+    if (status == DocumentStatus.approved) {
+      AppSnackbar.info(
+        'This document is already verified and cannot be changed.',
+      );
+      return;
+    }
+
     final picked = await AppMediaPickerSheet.show(
       context: context,
       allowCrop: doc.allowCrop,
@@ -114,7 +125,8 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
     // 1. Ensure any rejected documents have an updated replacement file selected
     for (final doc in docTypes) {
       final key = doc.docKey;
-      final status = remoteStatuses[key] ??
+      final status =
+          remoteStatuses[key] ??
           (doc.code.isNotEmpty ? remoteStatuses[doc.code] : null);
       if (status == DocumentStatus.rejected && !localDocs.containsKey(key)) {
         AppSnackbar.error('Please upload an updated document for ${doc.name}');
@@ -152,8 +164,9 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
           );
         } else {
           // Documents already uploaded & valid. Transition user status back to PENDING_APPROVAL
-          await sl<DocumentSubmissionService>()
-              .submitApplicationForReview(currentUserId);
+          await sl<DocumentSubmissionService>().submitApplicationForReview(
+            currentUserId,
+          );
         }
       }
 
@@ -243,220 +256,162 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
                       final remoteStatuses = _remoteStatusesNotifier.value;
                       final rejectionReasons = _rejectionReasonsNotifier.value;
 
-                      final hasRejectedDoc =
-                          remoteStatuses.values.any(
-                            (s) =>
-                                s ==
-                                DocumentStatus.rejected,
-                          );
+                      final hasRejectedDoc = remoteStatuses.values.any(
+                        (s) => s == DocumentStatus.rejected,
+                      );
 
                       return Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.stretch,
-                                                children: [
-                                                  AppSpacing.lg.h,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          AppSpacing.lg.h,
 
-                                                  if (hasRejectedDoc) ...[
-                                                    QuickContainer(
-                                                      p: AppSpacing.md,
-                                                      radius: AppRadius.md,
-                                                      color: context
-                                                          .colors
-                                                          .error
-                                                          .withValues(
-                                                            alpha: 0.12,
-                                                          ),
-                                                      border: Border.all(
-                                                        color: context
-                                                            .colors
-                                                            .error
-                                                            .withValues(
-                                                              alpha: 0.35,
-                                                            ),
-                                                        width: 1,
-                                                      ),
-                                                      child: Row(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        children: [
-                                                          Icon(
-                                                            Icons
-                                                                .warning_amber_rounded,
-                                                            color: context
-                                                                .colors
-                                                                .error,
-                                                            size: 22,
-                                                          ),
-                                                          AppSpacing.sm.w,
-                                                          Expanded(
-                                                            child: Column(
-                                                              crossAxisAlignment:
-                                                                  CrossAxisAlignment
-                                                                      .start,
-                                                              children: [
-                                                                Text(
-                                                                  'Revisions Required',
-                                                                  style: context
-                                                                      .textTheme
-                                                                      .labelMedium
-                                                                      ?.bold()
-                                                                      .colour(
-                                                                        context
-                                                                            .colors
-                                                                            .error,
-                                                                      ),
-                                                                ),
-                                                                AppSpacing
-                                                                    .xxs
-                                                                    .h,
-                                                                Text(
-                                                                  'One or more documents were rejected by compliance. Please review the reasons below, re-upload clear copies, and resubmit.',
-                                                                  style: context
-                                                                      .textTheme
-                                                                      .bodySmall
-                                                                      ?.colour(
-                                                                        context
-                                                                            .colors
-                                                                            .onSurface,
-                                                                      ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                    AppSpacing.md.h,
-                                                  ],
-
-                                                  ...docTypes.map((doc) {
-                                                    final key = doc.docKey;
-                                                    final localFile = docs[key];
-                                                    final remoteUrl =
-                                                        remoteDocs[key] ??
-                                                        (doc.code.isNotEmpty
-                                                            ? remoteDocs[doc
-                                                                  .code]
-                                                            : null);
-                                                    final remoteName =
-                                                        remoteNames[key] ??
-                                                        (doc.code.isNotEmpty
-                                                            ? remoteNames[doc
-                                                                  .code]
-                                                            : null);
-                                                    final remoteStatus =
-                                                        remoteStatuses[key] ??
-                                                        (doc.code.isNotEmpty
-                                                            ? remoteStatuses[doc
-                                                                  .code]
-                                                            : null);
-                                                    final rejectionReason =
-                                                        rejectionReasons[key] ??
-                                                        (doc.code.isNotEmpty
-                                                            ? rejectionReasons[doc
-                                                                  .code]
-                                                            : null);
-
-                                                    final wasRejected =
-                                                        remoteStatus ==
-                                                        DocumentStatus.rejected;
-                                                    final isResubmitted =
-                                                        (wasRejected &&
-                                                                localFile !=
-                                                                    null) ||
-                                                            (remoteStatus ==
-                                                                    DocumentStatus
-                                                                        .pending &&
-                                                                rejectionReason !=
-                                                                    null &&
-                                                                rejectionReason
-                                                                    .isNotEmpty);
-
-                                                    return Column(
-                                                      mainAxisSize:
-                                                          MainAxisSize.min,
-                                                      children: [
-                                                        DocumentUploadCard(
-                                                          key: ValueKey(
-                                                            'doc_$key',
-                                                          ),
-                                                          title: doc.name,
-                                                          description:
-                                                              doc.description,
-                                                          icon: Icon(
-                                                            doc.icon,
-                                                            color: context
-                                                                .colors
-                                                                .primary,
-                                                            size:
-                                                                AppSizes.iconLg,
-                                                          ),
-                                                          isRequired:
-                                                              doc.isRequired,
-                                                          isOptional:
-                                                              !doc.isRequired,
-                                                          isLoading: false,
-                                                          initialUrl:
-                                                              localFile == null
-                                                                  ? remoteUrl
-                                                                  : null,
-                                                          fileName: localFile !=
-                                                                  null
-                                                              ? localFile.name
-                                                              : remoteName,
-                                                          selectedFilePath:
-                                                              localFile?.path,
-                                                          status:
-                                                              isResubmitted ||
-                                                              localFile != null
-                                                              ? DocumentStatus
-                                                                    .pending
-                                                              : remoteStatus,
-                                                          isResubmitted:
-                                                              isResubmitted,
-                                                          statusLabel:
-                                                              isResubmitted
-                                                              ? 'Resubmitted'
-                                                              : null,
-                                                          rejectionReason:
-                                                              (isResubmitted ||
-                                                                      localFile !=
-                                                                          null)
-                                                              ? null
-                                                              : rejectionReason,
-                                                          onPick: () =>
-                                                              _pickDocument(
-                                                                doc,
-                                                              ),
-                                                        ),
-                                                        AppSpacing.md.h,
-                                                      ],
-                                                    );
-                                                  }),
-
-                                                  const Spacer(),
-                                                  AppSpacing.lg.h,
-
-                                                  // Upload Documents Button
-                                                  AppButton(
-                                                    text: context
-                                                        .l10n
-                                                        .uploadDocuments,
-                                                    isLoading: isLoading,
-                                                    onPressed: _handleSubmit,
-                                                  ),
-                                                  AppSpacing.xl.h,
-                                                ],
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
+                          if (hasRejectedDoc) ...[
+                            QuickContainer(
+                              p: AppSpacing.md,
+                              radius: AppRadius.md,
+                              color: context.colors.error.withValues(
+                                alpha: 0.12,
                               ),
+                              border: Border.all(
+                                color: context.colors.error.withValues(
+                                  alpha: 0.35,
+                                ),
+                                width: 1,
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(
+                                    Icons.warning_amber_rounded,
+                                    color: context.colors.error,
+                                    size: 22,
+                                  ),
+                                  AppSpacing.sm.w,
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Revisions Required',
+                                          style: context.textTheme.labelMedium
+                                              ?.bold()
+                                              .colour(context.colors.error),
+                                        ),
+                                        AppSpacing.xxs.h,
+                                        Text(
+                                          'One or more documents were rejected by compliance. Please review the reasons below, re-upload clear copies, and resubmit.',
+                                          style: context.textTheme.bodySmall
+                                              ?.colour(
+                                                context.colors.onSurface,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            AppSpacing.md.h,
+                          ],
+
+                          ...docTypes.map((doc) {
+                            final key = doc.docKey;
+                            final localFile = docs[key];
+                            final remoteUrl =
+                                remoteDocs[key] ??
+                                (doc.code.isNotEmpty
+                                    ? remoteDocs[doc.code]
+                                    : null);
+                            final remoteName =
+                                remoteNames[key] ??
+                                (doc.code.isNotEmpty
+                                    ? remoteNames[doc.code]
+                                    : null);
+                            final remoteStatus =
+                                remoteStatuses[key] ??
+                                (doc.code.isNotEmpty
+                                    ? remoteStatuses[doc.code]
+                                    : null);
+                            final rejectionReason =
+                                rejectionReasons[key] ??
+                                (doc.code.isNotEmpty
+                                    ? rejectionReasons[doc.code]
+                                    : null);
+
+                            final wasRejected =
+                                remoteStatus == DocumentStatus.rejected;
+                            final isVerified =
+                                remoteStatus == DocumentStatus.approved;
+                            final isResubmitted =
+                                (wasRejected && localFile != null) ||
+                                (remoteStatus == DocumentStatus.pending &&
+                                    rejectionReason != null &&
+                                    rejectionReason.isNotEmpty);
+
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                DocumentUploadCard(
+                                  key: ValueKey('doc_$key'),
+                                  title: doc.name,
+                                  description: doc.description,
+                                  icon: Icon(
+                                    doc.icon,
+                                    color: context.colors.primary,
+                                    size: AppSizes.iconLg,
+                                  ),
+                                  isRequired: doc.isRequired,
+                                  isOptional: !doc.isRequired,
+                                  isLoading: false,
+                                  isReadOnly: isVerified,
+                                  initialUrl: localFile == null
+                                      ? remoteUrl
+                                      : null,
+                                  fileName: localFile != null
+                                      ? localFile.name
+                                      : remoteName,
+                                  selectedFilePath: localFile?.path,
+                                  status: isResubmitted || localFile != null
+                                      ? DocumentStatus.pending
+                                      : remoteStatus,
+                                  isResubmitted: isResubmitted,
+                                  statusLabel: isResubmitted
+                                      ? 'Resubmitted'
+                                      : null,
+                                  rejectionReason:
+                                      (isResubmitted || localFile != null)
+                                      ? null
+                                      : rejectionReason,
+                                  onPick: isVerified
+                                      ? null
+                                      : () => _pickDocument(doc),
+                                ),
+                                AppSpacing.md.h,
+                              ],
                             );
-                          }
+                          }),
+
+                          const Spacer(),
+                          AppSpacing.lg.h,
+
+                          // Upload Documents Button
+                          AppButton(
+                            text: context.l10n.uploadDocuments,
+                            isLoading: isLoading,
+                            onPressed: _handleSubmit,
+                          ),
+                          AppSpacing.xl.h,
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
 }

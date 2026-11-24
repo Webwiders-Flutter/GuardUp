@@ -1,4 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+
+import '/core/extensions/context.extension.dart';
 
 /// Represents the verification and access status of a user across all 3 roles:
 /// - Customer
@@ -72,6 +75,23 @@ enum UserStatus {
         return 'Blocked';
       case UserStatus.deleted:
         return 'Deleted';
+    }
+  }
+
+  /// Accent colour for status chips / banners.
+  Color color(BuildContext context) {
+    final colors = context.colors;
+    switch (this) {
+      case UserStatus.active:
+        return colors.success;
+      case UserStatus.pendingApproval:
+        return colors.warning;
+      case UserStatus.incomplete:
+        return colors.info;
+      case UserStatus.rejected:
+      case UserStatus.blocked:
+      case UserStatus.deleted:
+        return colors.error;
     }
   }
 }

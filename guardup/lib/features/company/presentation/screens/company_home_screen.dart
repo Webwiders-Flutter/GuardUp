@@ -1,3 +1,8 @@
+import '/core/extensions/localization.extension.dart';
+import '/core/extensions/business_type.extension.dart';
+
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -17,6 +22,8 @@ import '/features/auth/auth.dart';
 import '/features/body_guard/body_guard.dart';
 import '/features/booking/booking.dart';
 import '/shared/widgets/buttons/app_button.dart';
+import '/shared/widgets/feedbacks/widgets/app_popup.dart';
+import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/pagination/app_pagination.dart';
 import '/shared/widgets/pagination/pagination.controller.dart';
@@ -49,6 +56,10 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
   late final PaginationController<BodyGuardModel>
   _bodyguardsPaginationController;
 
+  /// The company's own bodyguards (live data).
+  final CompanyBodyguardsCubit _bodyguardsCubit = sl<CompanyBodyguardsCubit>();
+  StreamSubscription<CompanyBodyguardsState>? _bodyguardsSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -62,16 +73,36 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
     );
 
     _bodyguardsPaginationController = PaginationController<BodyGuardModel>(
-      initialState: PaginationState<BodyGuardModel>(
-        items: BodyGuardModel.fakeData.take(3).toList(),
-        total: 3,
-        status: const ApiState.success(null),
-      ),
+      initialState: _rosterPreview(_bodyguardsCubit.state.pagination),
+      onRefresh: _bodyguardsCubit.refresh,
+    );
+    _bodyguardsSubscription = _bodyguardsCubit.stream.listen((state) {
+      if (!mounted) return;
+      _bodyguardsPaginationController.updateState(
+        _rosterPreview(state.pagination),
+      );
+      final error = state.actionError;
+      if (error != null) AppSnackbar.error(error);
+    });
+    _bodyguardsCubit.refresh();
+  }
+
+  /// Number of bodyguards previewed on the home screen ("View All" for more).
+  static const _rosterPreviewCount = 3;
+
+  PaginationState<BodyGuardModel> _rosterPreview(
+    PaginationState<BodyGuardModel> state,
+  ) {
+    return state.copyWith(
+      items: state.items.take(_rosterPreviewCount).toList(),
+      explicitIsLastPage: true,
     );
   }
 
   @override
   void dispose() {
+    _bodyguardsSubscription?.cancel();
+    _bodyguardsCubit.close();
     _bookingSearchController.dispose();
     _bookingsPaginationController.dispose();
     _bodyguardsPaginationController.dispose();
@@ -90,24 +121,31 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
 
   void _handleShareLocation(BookingModel booking) {}
 
-  void _handleEditBodyguard(BodyGuardModel bodyguard) {
-    context.push(
-      BodyGuardCompleteProfileScreen.route,
-      extra: bodyguard,
-    );
+  Future<void> _handleEditBodyguard(BodyGuardModel bodyguard) async {
+    await context.push(BodyGuardCompleteProfileScreen.route, extra: bodyguard);
+    if (mounted) _bodyguardsCubit.refresh();
   }
 
-  void _handleDeleteBodyguard(BodyGuardModel bodyguard) {
-    final updated = List<BodyGuardModel>.from(
-      _bodyguardsPaginationController.value.items,
-    )..removeWhere((g) => g.id == bodyguard.id);
+  Future<void> _handleViewAllBodyguards() async {
+    // AppSnackbar.show(message: "Coming soon");
+    // return;
+    await context.push(CompanyBodyguardsScreen.route);
+    // Bodyguards may have been added, edited or removed there.
+    if (mounted) _bodyguardsCubit.refresh();
+  }
 
-    _bodyguardsPaginationController.updateState(
-      _bodyguardsPaginationController.value.copyWith(
-        items: updated,
-        total: updated.length,
-      ),
+  Future<void> _handleDeleteBodyguard(BodyGuardModel bodyguard) async {
+    final result = await AppPopup.showDeleteConfirmation(
+      context,
+      deleteItemName: bodyguard.user.name,
     );
+    if (result?.action != PopupAction.confirm || !mounted) return;
+    final deleted = await _bodyguardsCubit.delete(bodyguard);
+    if (deleted && mounted) {
+      AppSnackbar.success('${bodyguard.user.name} removed.');
+      // Pull the next bodyguard into the preview.
+      _bodyguardsCubit.refresh();
+    }
   }
 
   @override
@@ -234,8 +272,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
                       text: 'View All >',
                       type: ButtonType.text,
                       size: ButtonSize.small,
-                      onPressed: () =>
-                          context.push(CompanyBodyguardsScreen.route),
+                      onPressed: _handleViewAllBodyguards,
                     ),
                   ],
                 ),
@@ -251,6 +288,8 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 padding: context.horizontalEdgeInsets + AppSpacing.xxl.bPadding,
                 separatorBuilder: (context, index) => AppSpacing.md.h,
+                initialLoaderBuilder: (context) =>
+                    const BodyGuardListSkeleton(itemCount: _rosterPreviewCount),
                 emptyBuilder: (context) => Center(
                   child: Padding(
                     padding: AppSpacing.lg.allPadding,
@@ -295,7 +334,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
             : 'CO';
         final rating = state.rating.toString();
         final companyType = state.companyType.isNotEmpty
-            ? state.companyType
+            ? state.companyType.businessTypeLabel(context.l10n)
             : 'Agency';
 
         return GestureDetector(
@@ -421,7 +460,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
         children: [
           Expanded(
             child: WrapperCard(
-              onTap: () => context.push(CompanyBodyguardsScreen.route),
+              onTap: _handleViewAllBodyguards,
               padding: AppSpacing.xlg.allPadding,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

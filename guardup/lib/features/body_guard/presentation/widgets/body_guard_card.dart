@@ -12,6 +12,7 @@ import '/core/extensions/textstyle_extension.dart';
 import '/features/auth/auth.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/buttons/app_button.dart';
+import '/shared/widgets/misc/app_rich_text.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 import '../../data/enum/body_guard_status.enum.dart';
@@ -151,6 +152,14 @@ class BodyGuardCard extends StatelessWidget {
           // 1. Operative Header Section (Avatar, Status Pill, Details, Rate, Checkbox)
           // -------------------------------------------------------------------
           _buildHeader(context),
+
+          // Admin verification of a company's bodyguard (hidden once approved
+          // and never shown to customers, who only see approved bodyguards).
+          if (!_isCustomer &&
+              bodyguard.verificationStatus != UserStatus.active) ...[
+            AppSpacing.md.h,
+            _buildVerificationNote(context),
+          ],
 
           if (showActions) ...[
             AppSpacing.sm.h,
@@ -554,6 +563,54 @@ class BodyGuardCard extends StatelessWidget {
                 color: context.colors.onPrimary,
               )
             : null,
+      ),
+    );
+  }
+
+  Widget _buildVerificationNote(BuildContext context) {
+    final verification = bodyguard.verificationStatus;
+    final color = verification.color(context);
+    final reason = bodyguard.rejectionReason;
+    final message = switch (verification) {
+      UserStatus.incomplete => 'Finish the details and documents to submit for review.',
+      UserStatus.pendingApproval => 'Waiting for admin approval.',
+      UserStatus.rejected =>
+        (reason != null && reason.isNotEmpty)
+            ? reason
+            : 'Some documents were rejected. Edit to review and resubmit.',
+      UserStatus.blocked => 'Suspended by admin. Contact support for details.',
+      _ => null,
+    };
+
+    return QuickContainer(
+      radius: AppRadius.sm,
+      color: color.withValues(alpha: 0.1),
+      border: Border.all(color: color.withValues(alpha: 0.35), width: 1.0),
+      px: AppSpacing.sm,
+      py: AppSpacing.xs,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.verified_user_outlined, size: AppSizes.iconSm, color: color),
+          AppSpacing.xs.w,
+          Expanded(
+            child: AppRichText(
+              spans: [
+                AppTextSpan(
+                  text: verification.label,
+                  style: context.textTheme.labelSmall?.semiBold().colour(color),
+                ),
+                if (message != null)
+                  AppTextSpan(
+                    text: '  •  $message',
+                    style: context.textTheme.labelSmall?.colour(
+                      context.colors.onSurfaceVariant,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

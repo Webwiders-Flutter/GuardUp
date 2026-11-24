@@ -1,3 +1,4 @@
+import '/core/extensions/business_type.extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -245,7 +246,7 @@ class ProfileScreen extends StatelessWidget {
     final logoUrl = state.avatarUrl.isNotEmpty ? state.avatarUrl : null;
     final rating = state.rating;
     final companyType = state.companyType.isNotEmpty
-        ? state.companyType
+        ? state.companyType.businessTypeLabel(context.l10n)
         : 'Licensed Agency';
 
     final dynamicCompany = CompanyModel(

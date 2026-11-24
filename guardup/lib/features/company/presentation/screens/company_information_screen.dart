@@ -1,3 +1,5 @@
+import '/features/company/data/enum/business_type.enum.dart';
+import '/core/extensions/business_type.extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -52,8 +54,8 @@ class CompanyInformationScreen extends StatelessWidget {
                 : 'Not specified');
         final effectiveCompanyType = companyType ??
             (state.companyType.isNotEmpty
-                ? state.companyType
-                : 'Private Limited (Pvt Ltd)');
+                ? state.companyType.businessTypeLabel(context.l10n)
+                : BusinessType.pvtLtd.label(context.l10n));
 
         return Scaffold(
           appBar: AppAppBar.transparent(

@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '/core/constants/api/database_tables.dart';
+import '/core/constants/api/json_keys.dart';
 import '/core/constants/api/storage_buckets.dart';
 import '/core/di/injection_container.dart';
 import '/core/services/file_storage/file_storage.service.dart';
@@ -37,13 +38,23 @@ abstract class DocumentSubmissionService {
   /// Fetches already uploaded user documents for a user, returned as [UserDocumentRecords].
   Future<UserDocumentRecords> getUserDocuments(String userId);
 
+  /// Fetches the documents of a company-managed bodyguard (no login account).
+  Future<UserDocumentRecords> getBodyguardDocuments(String bodyguardId);
+
   /// Uploads one or more documents to Supabase Storage, updates/inserts into `user_documents`,
   /// optionally syncs company logo if applicable, and triggers AuthBloc status & role refresh.
+  ///
+  /// With [bodyguardId] the documents belong to that company-managed
+  /// bodyguard: rows are keyed by `bodyguard_id`, files are stored under
+  /// `<userId>/bodyguards/<bodyguardId>/` ([userId] = the signed-in company,
+  /// which the storage policies require as the first folder), and the
+  /// company's own account / logo are left untouched.
   Future<void> uploadDocuments({
     required String userId,
     required Map<String, XFile> documents,
     required List<DocumentTypeModel> docTypes,
     bool isCompany = false,
+    String? bodyguardId,
   });
 
   /// Submits or resubmits the user's application for review without uploading new documents
@@ -79,11 +90,22 @@ class SupabaseDocumentSubmissionService implements DocumentSubmissionService {
   }
 
   @override
-  Future<UserDocumentRecords> getUserDocuments(String userId) async {
+  Future<UserDocumentRecords> getUserDocuments(String userId) =>
+      _getDocuments(JsonKeys.userId, userId);
+
+  @override
+  Future<UserDocumentRecords> getBodyguardDocuments(String bodyguardId) =>
+      _getDocuments(JsonKeys.bodyguardId, bodyguardId);
+
+  /// Documents whose owner column ([ownerColumn]) equals [ownerId].
+  Future<UserDocumentRecords> _getDocuments(
+    String ownerColumn,
+    String ownerId,
+  ) async {
     final rows = await _supabase
         .from(DatabaseTables.userDocuments)
         .select()
-        .eq('user_id', userId);
+        .eq(ownerColumn, ownerId);
 
     final Map<String, String> urls = {};
     final Map<String, String> names = {};
@@ -124,8 +146,16 @@ class SupabaseDocumentSubmissionService implements DocumentSubmissionService {
     required Map<String, XFile> documents,
     required List<DocumentTypeModel> docTypes,
     bool isCompany = false,
+    String? bodyguardId,
   }) async {
     if (documents.isEmpty) return;
+
+    final isManagedBodyguard = bodyguardId != null;
+    final ownerColumn = isManagedBodyguard ? JsonKeys.bodyguardId : JsonKeys.userId;
+    final ownerId = bodyguardId ?? userId;
+    final storageFolder = isManagedBodyguard
+        ? '$userId/bodyguards/$bodyguardId'
+        : userId;
 
     String? uploadedLogoUrl;
 
@@ -143,7 +173,7 @@ class SupabaseDocumentSubmissionService implements DocumentSubmissionService {
 
       final ext = xFile.name.split('.').last;
       final storagePath =
-          '$userId/${resolvedDocTypeId.toLowerCase()}_${DateTime.now().millisecondsSinceEpoch}.$ext';
+          '$storageFolder/${resolvedDocTypeId.toLowerCase()}_${DateTime.now().millisecondsSinceEpoch}.$ext';
 
       // 1. Upload to Supabase Storage Bucket
       final fileUrl = await fileStorageService.uploadSingleFile(
@@ -156,7 +186,7 @@ class SupabaseDocumentSubmissionService implements DocumentSubmissionService {
       );
 
       // 2. Track company logo if applicable
-      if (isCompany) {
+      if (isCompany && !isManagedBodyguard) {
         final isLogo = resolvedDocTypeId == 'COMPANY_LOGO' ||
             matchingDocType.name.toUpperCase().contains('LOGO') ||
             matchingDocType.code.toUpperCase().contains('LOGO');
@@ -168,9 +198,9 @@ class SupabaseDocumentSubmissionService implements DocumentSubmissionService {
       // 3. Update existing document or insert new document
       final existingDoc = await _supabase
           .from(DatabaseTables.userDocuments)
-          .select('id')
-          .eq('user_id', userId)
-          .eq('document_type_id', resolvedDocTypeId)
+          .select(JsonKeys.id)
+          .eq(ownerColumn, ownerId)
+          .eq(JsonKeys.documentTypeId, resolvedDocTypeId)
           .maybeSingle();
 
       if (existingDoc != null && existingDoc['id'] != null) {
@@ -186,7 +216,7 @@ class SupabaseDocumentSubmissionService implements DocumentSubmissionService {
         await _supabase
             .from(DatabaseTables.userDocuments)
             .insert({
-              'user_id': userId,
+              ownerColumn: ownerId,
               'document_type_id': resolvedDocTypeId,
               'file_url': fileUrl,
               'file_name': xFile.name,
@@ -210,7 +240,8 @@ class SupabaseDocumentSubmissionService implements DocumentSubmissionService {
     }
 
     // 5. Notify AuthBloc so real-time status and role data reload immediately
-    if (sl.isRegistered<AuthBloc>()) {
+    // (only the signed-in account's own documents affect its status).
+    if (!isManagedBodyguard && sl.isRegistered<AuthBloc>()) {
       sl<AuthBloc>().add(const AuthCheckStatusRequested());
       sl<AuthBloc>().add(const AuthReloadRoleDataRequested());
     }

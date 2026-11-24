@@ -344,7 +344,22 @@ final class AppRouter {
       ),
       GoRoute(
         path: AdminApprovalScreen.route,
-        builder: (context, state) => const AdminApprovalScreen(),
+        builder: (context, state) {
+          final extra = state.extra;
+          if (extra is BodyGuardModel) {
+            return AdminApprovalScreen(
+              bodyguard: extra,
+              isCompanyBodyguardFlow: true,
+            );
+          } else if (extra is Map<String, dynamic>) {
+            return AdminApprovalScreen(
+              bodyguard: extra['bodyguard'] as BodyGuardModel?,
+              isCompanyBodyguardFlow:
+                  extra['isCompanyBodyguardFlow'] as bool? ?? false,
+            );
+          }
+          return const AdminApprovalScreen();
+        },
       ),
       GoRoute(
         path: AccountStatusScreen.blockedRoute,

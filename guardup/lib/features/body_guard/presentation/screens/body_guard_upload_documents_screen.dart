@@ -24,6 +24,7 @@ import '/shared/widgets/sections/wrapper_card.dart';
 import '../../data/enum/document_status.enum.dart';
 import '../../data/model/body_guard.model.dart';
 import '../../data/model/document_type.model.dart';
+import '../../data/repositories/bodyguard.repository.dart';
 import '/features/payments/presentation/screens/registration_fee_screen.dart';
 
 /// Screen for bodyguard verification credentials and document upload.
@@ -83,16 +84,22 @@ class _BodyGuardUploadDocumentsScreenState
       final currentUserId = sl.isRegistered<AuthRepository>()
           ? sl<AuthRepository>().currentUserId
           : null;
-      final targetUserId = isGuard
-          ? currentUserId
-          : (widget.bodyguard?.user.id.isNotEmpty == true
-              ? widget.bodyguard!.user.id
-              : (widget.bodyguard?.id.isNotEmpty == true
-                  ? widget.bodyguard!.id
-                  : currentUserId));
 
-      if (targetUserId != null) {
-        final records = await docService.getUserDocuments(targetUserId);
+      // Guard: own documents (user_id). Company: the managed bodyguard's
+      // documents (bodyguard_id), never the company's own.
+      final UserDocumentRecords? records;
+      if (isGuard) {
+        records = currentUserId == null
+            ? null
+            : await docService.getUserDocuments(currentUserId);
+      } else {
+        final bodyguardId = _managedBodyguardId;
+        records = bodyguardId == null
+            ? null
+            : await docService.getBodyguardDocuments(bodyguardId);
+      }
+
+      if (records != null) {
         if (mounted) {
           _remoteDocsNotifier.value = records.urls;
           _remoteFileNamesNotifier.value = records.names;
@@ -123,6 +130,16 @@ class _BodyGuardUploadDocumentsScreenState
   }
 
   Future<void> _pickDocument(DocumentTypeModel doc) async {
+    final key = doc.docKey;
+    final status = _remoteStatusesNotifier.value[key] ??
+        (doc.code.isNotEmpty ? _remoteStatusesNotifier.value[doc.code] : null);
+    if (status == DocumentStatus.approved) {
+      AppSnackbar.info(
+        'This document is already verified and cannot be changed.',
+      );
+      return;
+    }
+
     final picked = await AppMediaPickerSheet.show(
       context: context,
       allowCrop: doc.allowCrop,
@@ -172,34 +189,39 @@ class _BodyGuardUploadDocumentsScreenState
 
     _isLoadingNotifier.value = true;
 
-    try {
-      final isGuard =
-          sl.isRegistered<AuthBloc>() && sl<AuthBloc>().state.isGuard;
-      final currentUserId = sl.isRegistered<AuthRepository>()
-          ? sl<AuthRepository>().currentUserId
-          : null;
-      final targetUserId = isGuard
-          ? currentUserId
-          : (widget.bodyguard?.user.id.isNotEmpty == true
-              ? widget.bodyguard!.user.id
-              : (widget.bodyguard?.id.isNotEmpty == true
-                  ? widget.bodyguard!.id
-                  : currentUserId));
+    final isGuard =
+        sl.isRegistered<AuthBloc>() && sl<AuthBloc>().state.isGuard;
+    final currentUserId = sl.isRegistered<AuthRepository>()
+        ? sl<AuthRepository>().currentUserId
+        : null;
 
-      if (targetUserId != null) {
-        if (localDocs.isNotEmpty) {
-          await sl<DocumentSubmissionService>().uploadDocuments(
-            userId: targetUserId,
-            documents: localDocs,
-            docTypes: docTypes,
-            isCompany: !isGuard,
-          );
-        } else {
-          // Documents already uploaded & valid. Transition user status back to PENDING_APPROVAL
-          await sl<DocumentSubmissionService>().submitApplicationForReview(
-            targetUserId,
-          );
-        }
+    if (currentUserId == null) {
+      _isLoadingNotifier.value = false;
+      AppSnackbar.error('User session expired. Please sign in again.');
+      return;
+    }
+
+    if (!isGuard) {
+      await _submitCompanyBodyguardDocuments(
+        companyUserId: currentUserId,
+        localDocs: localDocs,
+        docTypes: docTypes,
+      );
+      return;
+    }
+
+    try {
+      if (localDocs.isNotEmpty) {
+        await sl<DocumentSubmissionService>().uploadDocuments(
+          userId: currentUserId,
+          documents: localDocs,
+          docTypes: docTypes,
+        );
+      } else {
+        // Documents already uploaded & valid. Transition user status back to PENDING_APPROVAL
+        await sl<DocumentSubmissionService>().submitApplicationForReview(
+          currentUserId,
+        );
       }
 
       if (mounted) {
@@ -207,36 +229,89 @@ class _BodyGuardUploadDocumentsScreenState
         await _loadDocumentTypesAndFiles();
         if (!mounted) return;
 
-        if (isGuard) {
-          final authState = sl.isRegistered<AuthBloc>()
-              ? sl<AuthBloc>().state
-              : null;
-          final isPreviouslySubmitted =
-              authState?.isRejected == true ||
-              authState?.isPendingApproval == true;
+        final authState = sl.isRegistered<AuthBloc>()
+            ? sl<AuthBloc>().state
+            : null;
+        final isPreviouslySubmitted =
+            authState?.isRejected == true ||
+            authState?.isPendingApproval == true;
 
-          if (isPreviouslySubmitted) {
-            AppSnackbar.success(
-              localDocs.isNotEmpty
-                  ? 'Documents resubmitted successfully. Your application is under review.'
-                  : 'Application resubmitted successfully. Your profile is under review.',
-            );
-            context.go(AdminApprovalScreen.route);
-          } else {
-            context.go(RegistrationFeeScreen.route);
-          }
-        } else {
+        if (isPreviouslySubmitted) {
           AppSnackbar.success(
             localDocs.isNotEmpty
-                ? 'Documents submitted successfully. The guard profile is under review.'
-                : 'Application submitted successfully. The guard profile is under review.',
+                ? 'Documents resubmitted successfully. Your application is under review.'
+                : 'Application resubmitted successfully. Your profile is under review.',
           );
           context.go(AdminApprovalScreen.route);
+        } else {
+          context.go(RegistrationFeeScreen.route);
         }
       }
     } catch (e) {
       if (mounted) {
         AppSnackbar.error('Failed to submit application: $e');
+      }
+    } finally {
+      if (mounted) {
+        _isLoadingNotifier.value = false;
+      }
+    }
+  }
+
+  /// `bodyguards.id` of the company-managed bodyguard being edited, if saved.
+  String? get _managedBodyguardId {
+    final id = widget.bodyguard?.id;
+    return (id != null && id.isNotEmpty) ? id : null;
+  }
+
+  /// Company flow: stores the managed bodyguard's documents (keyed by
+  /// `bodyguard_id`), sends the bodyguard to admin review and returns to the
+  /// previous screen with `true`. The company's own account is never touched.
+  Future<void> _submitCompanyBodyguardDocuments({
+    required String companyUserId,
+    required Map<String, XFile> localDocs,
+    required List<DocumentTypeModel> docTypes,
+  }) async {
+    final bodyguardId = _managedBodyguardId;
+    if (bodyguardId == null) {
+      _isLoadingNotifier.value = false;
+      AppSnackbar.error('Please save the bodyguard details first.');
+      return;
+    }
+
+    try {
+      if (localDocs.isNotEmpty) {
+        await sl<DocumentSubmissionService>().uploadDocuments(
+          userId: companyUserId,
+          bodyguardId: bodyguardId,
+          documents: localDocs,
+          docTypes: docTypes,
+        );
+      }
+      // INCOMPLETE / REJECTED -> PENDING_APPROVAL; no-op once approved.
+      await sl<BodyguardRepository>().submitForReview(bodyguardId);
+      if (!mounted) return;
+      _documentsNotifier.value = {};
+      AppSnackbar.success(
+        widget.bodyguard?.verificationStatus == UserStatus.active
+            ? 'Bodyguard updated successfully.'
+            : 'Bodyguard submitted for admin review.',
+      );
+      if (widget.bodyguard?.verificationStatus != UserStatus.active) {
+        context.go(
+          AdminApprovalScreen.route,
+          extra: {
+            'bodyguard': widget.bodyguard,
+            'isCompanyBodyguardFlow': true,
+          },
+        );
+      } else {
+        context.pop(true);
+      }
+    } catch (e) {
+      debugPrint('Failed to upload bodyguard documents: $e');
+      if (mounted) {
+        AppSnackbar.error('Failed to upload documents. Please try again.');
       }
     } finally {
       if (mounted) {
@@ -444,6 +519,8 @@ class _BodyGuardUploadDocumentsScreenState
 
                             final wasRejected =
                                 remoteStatus == DocumentStatus.rejected;
+                            final isVerified =
+                                remoteStatus == DocumentStatus.approved;
                             final isResubmitted =
                                 (wasRejected && localFile != null) ||
                                 (remoteStatus == DocumentStatus.pending &&
@@ -465,6 +542,7 @@ class _BodyGuardUploadDocumentsScreenState
                                   isRequired: doc.isRequired,
                                   isOptional: !doc.isRequired,
                                   isLoading: false,
+                                  isReadOnly: isVerified,
                                   initialUrl: localFile == null
                                       ? remoteUrl
                                       : null,
@@ -483,7 +561,9 @@ class _BodyGuardUploadDocumentsScreenState
                                       (isResubmitted || localFile != null)
                                       ? null
                                       : rejectionReason,
-                                  onPick: () => _pickDocument(doc),
+                                  onPick: isVerified
+                                      ? null
+                                      : () => _pickDocument(doc),
                                 ),
                                 AppSpacing.lg.h,
                               ],

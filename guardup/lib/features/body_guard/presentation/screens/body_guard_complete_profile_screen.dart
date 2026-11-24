@@ -11,7 +11,10 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/constants/api/database_functions.dart';
 import '../../../../core/constants/api/database_tables.dart';
+import '../../../../core/constants/api/json_keys.dart';
+import '../../../../core/error/api_exception.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../auth/auth.dart';
 import '/core/constants/app_sizes.dart';
@@ -34,6 +37,7 @@ import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/selection/selection.dart';
 import '../../bloc/services/services_cubit.dart';
 import '../../data/model/body_guard.model.dart';
+import '../../data/repositories/bodyguard.repository.dart';
 import '../../data/model/service_item.model.dart';
 import '/features/body_guard/presentation/screens/body_guard_upload_documents_screen.dart';
 
@@ -82,6 +86,22 @@ class _BodyGuardCompleteProfileScreenState
   final ValueNotifier<String?> _networkImageUrlNotifier =
       ValueNotifier<String?>(null);
   final ValueNotifier<bool> _isLoadingNotifier = ValueNotifier<bool>(false);
+
+  /// Company flow: id of the `bodyguards` row once it has been saved here.
+  String? _savedBodyguardId;
+
+  /// Company flow: admin's reason when the bodyguard was rejected.
+  late final ValueNotifier<String?> _managedRejectionNotifier =
+      ValueNotifier<String?>(_rejectionReasonOf(widget.bodyguard));
+
+  static String? _rejectionReasonOf(BodyGuardModel? bodyguard) {
+    final reason = bodyguard?.rejectionReason?.trim();
+    return bodyguard?.verificationStatus == UserStatus.rejected &&
+            reason != null &&
+            reason.isNotEmpty
+        ? reason
+        : null;
+  }
 
   @override
   void initState() {
@@ -155,19 +175,58 @@ class _BodyGuardCompleteProfileScreenState
     }
   }
 
+  /// Company flow: prefill from the saved `bodyguards` row and its services.
+  Future<void> _loadCompanyBodyguard(String bodyguardId) async {
+    try {
+      final repository = sl<BodyguardRepository>();
+      final results = await Future.wait([
+        repository.getBodyguard(bodyguardId),
+        repository.getServiceIds(bodyguardId),
+      ]);
+      if (!mounted) return;
+
+      final saved = results[0] as BodyGuardModel?;
+      if (saved != null) {
+        _managedRejectionNotifier.value = _rejectionReasonOf(saved);
+        _fullNameController.text = saved.user.name;
+        _hourlyRateController.text = saved.hourlyRate > 0
+            ? saved.hourlyRate.toInt().toString()
+            : '';
+        _bioController.text = saved.bio;
+        final avatar = saved.user.profileImageUrl;
+        if (avatar != null &&
+            avatar.isNotEmpty &&
+            _profileImageNotifier.value == null) {
+          _networkImageUrlNotifier.value = avatar;
+        }
+      }
+
+      final activeIds = _availableServicesNotifier.value.map((s) => s.id).toSet();
+      final validServices = (results[1] as List<String>)
+          .where(activeIds.contains)
+          .toList();
+      _selectedServicesNotifier.value = validServices;
+      _serviceDropdownController.setSelection(validServices);
+    } catch (e, stack) {
+      debugPrint('Error loading company bodyguard: $e\n$stack');
+    }
+  }
+
   Future<void> _loadExistingProfile() async {
     final isGuard = sl.isRegistered<AuthBloc>() && sl<AuthBloc>().state.isGuard;
-    final currentUserId = sl.isRegistered<AuthRepository>()
+
+    // Company adding / editing one of its own bodyguards (no login account).
+    if (!isGuard) {
+      final bodyguardId = widget.bodyguard?.id;
+      if (bodyguardId != null && bodyguardId.isNotEmpty) {
+        await _loadCompanyBodyguard(bodyguardId);
+      }
+      return;
+    }
+
+    final targetUserId = sl.isRegistered<AuthRepository>()
         ? sl<AuthRepository>().currentUserId
         : null;
-
-    final targetUserId = isGuard
-        ? currentUserId
-        : (widget.bodyguard?.user.id.isNotEmpty == true
-              ? widget.bodyguard!.user.id
-              : (widget.bodyguard?.id.isNotEmpty == true
-                    ? widget.bodyguard!.id
-                    : null));
 
     if (targetUserId == null || !sl.isRegistered<UserRepository>()) return;
 
@@ -239,6 +298,7 @@ class _BodyGuardCompleteProfileScreenState
     _profileImageNotifier.dispose();
     _networkImageUrlNotifier.dispose();
     _isLoadingNotifier.dispose();
+    _managedRejectionNotifier.dispose();
     super.dispose();
   }
 
@@ -284,20 +344,17 @@ class _BodyGuardCompleteProfileScreenState
     }
 
     final isGuard = sl.isRegistered<AuthBloc>() && sl<AuthBloc>().state.isGuard;
-    final currentUserId = sl.isRegistered<AuthRepository>()
+    final targetUserId = sl.isRegistered<AuthRepository>()
         ? sl<AuthRepository>().currentUserId
         : null;
 
-    final targetUserId = isGuard
-        ? currentUserId
-        : (widget.bodyguard?.user.id.isNotEmpty == true
-              ? widget.bodyguard!.user.id
-              : (widget.bodyguard?.id.isNotEmpty == true
-                    ? widget.bodyguard!.id
-                    : currentUserId));
-
     if (targetUserId == null) {
       AppSnackbar.error('User session expired. Please sign in again.');
+      return;
+    }
+
+    if (!isGuard) {
+      await _saveCompanyBodyguard(companyUserId: targetUserId);
       return;
     }
 
@@ -341,10 +398,10 @@ class _BodyGuardCompleteProfileScreenState
         // Atomic sync of services in user_services junction table
         try {
           await Supabase.instance.client.rpc(
-            'set_user_services',
+            DatabaseFunctions.setUserServices,
             params: {
-              'p_user_id': targetUserId,
-              'p_service_ids': _selectedServicesNotifier.value,
+              JsonKeys.pUserId: targetUserId,
+              JsonKeys.pServiceIds: _selectedServicesNotifier.value,
             },
           );
         } catch (_) {
@@ -378,7 +435,7 @@ class _BodyGuardCompleteProfileScreenState
         final isRejected = authState?.isRejected == true;
         final hasRejectedDocs = authState?.hasRejectedDocuments == true;
 
-        if (isGuard && isRejected && !hasRejectedDocs) {
+        if (isRejected && !hasRejectedDocs) {
           // Only profile was rejected, documents are already fine.
           // Resubmit application directly to PENDING_APPROVAL!
           await sl<DocumentSubmissionService>().submitApplicationForReview(
@@ -395,50 +452,87 @@ class _BodyGuardCompleteProfileScreenState
             context.go(AdminApprovalScreen.route);
           }
         } else {
-          final effectiveBodyguard = widget.bodyguard != null
-              ? widget.bodyguard!.copyWith(
-                  user: widget.bodyguard!.user.copyWith(
-                    name: _fullNameController.text.trim(),
-                    profileImageUrl:
-                        avatarUrl ??
-                        _networkImageUrlNotifier.value ??
-                        widget.bodyguard!.user.profileImageUrl,
-                  ),
-                  hourlyRate:
-                      double.tryParse(_hourlyRateController.text.trim()) ??
-                      widget.bodyguard!.hourlyRate,
-                  bio: _bioController.text.trim(),
-                )
-              : BodyGuardModel(
-                  id: targetUserId,
-                  user: UserModel(
-                    id: targetUserId,
-                    name: _fullNameController.text.trim(),
-                    profileImageUrl:
-                        avatarUrl ?? _networkImageUrlNotifier.value,
-                    role: UserRole.guard,
-                  ),
-                  hourlyRate:
-                      double.tryParse(_hourlyRateController.text.trim()) ?? 0.0,
-                  bio: _bioController.text.trim(),
-                );
-          if (isGuard) {
-            context.go(
-              BodyGuardUploadDocumentsScreen.route,
-              extra: effectiveBodyguard,
-            );
-          } else {
-            context.push(
-              BodyGuardUploadDocumentsScreen.route,
-              extra: effectiveBodyguard,
-            );
-          }
+          // The upload screen identifies a self-registered guard by the
+          // session, so no bodyguard needs to be passed along.
+          context.go(BodyGuardUploadDocumentsScreen.route);
         }
       }
     } catch (e, stack) {
       debugPrint('Failed to save bodyguard profile: $e\n$stack');
       if (mounted) {
         AppSnackbar.error('Failed to save profile details. Please try again.');
+      }
+    } finally {
+      if (mounted) {
+        _isLoadingNotifier.value = false;
+      }
+    }
+  }
+
+  /// Company flow: creates (or updates) a company-managed `bodyguards` row,
+  /// syncs its services, then continues to its documents. The company's own
+  /// account and profile are never written here.
+  Future<void> _saveCompanyBodyguard({required String companyUserId}) async {
+    _isLoadingNotifier.value = true;
+    String? avatarUrl = _networkImageUrlNotifier.value;
+
+    try {
+      final pickedAvatar = _profileImageNotifier.value;
+      if (pickedAvatar != null && sl.isRegistered<FileStorageService>()) {
+        try {
+          // First folder must be the signed-in user (storage policies).
+          avatarUrl = await sl<FileStorageService>().uploadSingleFile(
+            FileUploadRequest.fromXFile(
+              bucket: StorageBuckets.avatars,
+              path:
+                  '$companyUserId/bodyguards/avatar_${DateTime.now().millisecondsSinceEpoch}.jpg',
+              xFile: pickedAvatar,
+              upsert: true,
+            ),
+          );
+        } catch (e, stack) {
+          debugPrint('Bodyguard avatar upload failed: $e\n$stack');
+        }
+      }
+
+      final repository = sl<BodyguardRepository>();
+      // After the first save, keep editing the same row (e.g. the user came
+      // back from the documents step) instead of creating a duplicate.
+      final existingId = _savedBodyguardId ?? widget.bodyguard?.id;
+      final saved = await repository.saveCompanyBodyguard(
+        bodyguardId: (existingId != null && existingId.isNotEmpty)
+            ? existingId
+            : null,
+        name: _fullNameController.text.trim(),
+        hourlyRate: double.tryParse(_hourlyRateController.text.trim()) ?? 0.0,
+        bio: _bioController.text.trim(),
+        profileImageUrl: (avatarUrl != null && avatarUrl.isNotEmpty)
+            ? avatarUrl
+            : null,
+      );
+      _savedBodyguardId = saved.id;
+      await repository.setServices(saved.id, _selectedServicesNotifier.value);
+
+      if (!mounted) return;
+      _isLoadingNotifier.value = false;
+
+      // Documents screen pops `true` once submitted; then close this screen
+      // too so the company lands back on its bodyguard list.
+      final submitted = await context.push<bool>(
+        BodyGuardUploadDocumentsScreen.route,
+        extra: saved,
+      );
+      if (submitted == true && mounted) {
+        context.pop(true);
+      }
+    } catch (e, stack) {
+      debugPrint('Failed to save company bodyguard: $e\n$stack');
+      if (mounted) {
+        AppSnackbar.error(
+          e is ApiException
+              ? e.message
+              : 'Failed to save bodyguard details. Please try again.',
+        );
       }
     } finally {
       if (mounted) {
@@ -504,16 +598,20 @@ class _BodyGuardCompleteProfileScreenState
                         children: [
                           AppSpacing.lg.h,
 
-                          // Profile Rejection Reason Banner
-                          Builder(
-                            builder: (context) {
+                          // Profile Rejection Reason Banner (own profile for
+                          // a guard, the managed bodyguard for a company)
+                          ValueListenableBuilder<String?>(
+                            valueListenable: _managedRejectionNotifier,
+                            builder: (context, managedReason, _) {
                               final authState = sl.isRegistered<AuthBloc>()
                                   ? sl<AuthBloc>().state
                                   : null;
-                              final profileReason =
-                                  authState?.profileRejectionReason;
-                              if (authState?.isRejected != true ||
-                                  profileReason == null ||
+                              final profileReason = isGuard
+                                  ? (authState?.isRejected == true
+                                        ? authState?.profileRejectionReason
+                                        : null)
+                                  : managedReason;
+                              if (profileReason == null ||
                                   profileReason.isEmpty) {
                                 return const SizedBox.shrink();
                               }

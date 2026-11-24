@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -131,7 +132,6 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
   Future<void> _handleSave() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    final l10n = context.l10n;
     final currentUserId = sl.isRegistered<AuthRepository>()
         ? sl<AuthRepository>().currentUserId
         : null;
@@ -160,16 +160,16 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
       }
 
       final companyName = _companyNameController.text.trim();
-      final typeLabel = _businessTypeController.selectedItem != null
-          ? _businessTypeController.selectedItem!.label(l10n)
-          : 'Private Limited (Pvt Ltd)';
+      // Always store the API value; screens format it with businessTypeLabel.
+      final companyType =
+          (_businessTypeController.selectedItem ?? BusinessType.pvtLtd).apiValue;
       final addressText = _addressController.text.trim();
       final expYears = int.tryParse(_experienceController.text.trim()) ?? 0;
 
       final updateData = <String, dynamic>{
         'company_name': companyName,
         'name': companyName,
-        'company_type': typeLabel,
+        'company_type': companyType,
         'address': addressText,
         'experience_years': expYears,
         'latitude': ?_latitude,
@@ -201,7 +201,7 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
             data: {
               'company_name': companyName,
               'name': companyName,
-              'company_type': typeLabel,
+              'company_type': companyType,
               'metadata': existingMeta,
               'profile_image_url': ?logoUrl,
             },

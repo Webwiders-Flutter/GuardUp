@@ -165,6 +165,8 @@ class DocumentUploadCard extends StatelessWidget {
         path.endsWith('.heic');
   }
 
+  bool get _isVerified => status == DocumentStatus.approved;
+
   bool get _isPdf {
     final path = (selectedFilePath ?? initialUrl ?? '').toLowerCase();
     return path.endsWith('.pdf');
@@ -205,7 +207,7 @@ class DocumentUploadCard extends StatelessWidget {
 
     final VoidCallback? tapCallback = _hasFile && showPreview
         ? () => _handlePreview(context)
-        : (!_hasFile && (!isReadOnly || status == DocumentStatus.rejected)
+        : (!_hasFile && !_isVerified && (!isReadOnly || status == DocumentStatus.rejected)
             ? onPick
             : null);
 
@@ -550,7 +552,8 @@ class DocumentUploadCard extends StatelessWidget {
 
   /// Compact inline actions for uploaded files: "View  •  Change / Re-upload".
   Widget _buildCompactFileActions(BuildContext context) {
-    final canChange = !isReadOnly || status == DocumentStatus.rejected;
+    final canChange =
+        !_isVerified && (!isReadOnly || status == DocumentStatus.rejected);
     final isActionRejected =
         status == DocumentStatus.rejected && !isResubmitted;
 
@@ -643,7 +646,7 @@ class DocumentUploadCard extends StatelessWidget {
     final statusBadge =
         status != null ? _buildStatusBadge(context, status!) : null;
 
-    if (isReadOnly) {
+    if (isReadOnly || _isVerified) {
       return statusBadge ?? const SizedBox.shrink();
     }
 

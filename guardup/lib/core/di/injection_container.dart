@@ -86,6 +86,12 @@ Future<void> initDependencies() async {
     () => ServicesCubit(),
   );
 
+  // Company-managed bodyguards (bodyguards rows without a login)
+  sl.registerLazySingleton<BodyguardRepository>(() => BodyguardRepository());
+  sl.registerFactory<CompanyBodyguardsCubit>(
+    () => CompanyBodyguardsCubit(sl<BodyguardRepository>()),
+  );
+
   sl.registerLazySingleton<NotificationRepository>(
     () => NotificationRepository(),
   );

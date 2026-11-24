@@ -31,6 +31,13 @@ abstract class BodyGuardModel with _$BodyGuardModel {
     @Default(false) bool isVerified,
     @Default(0) int totalCompletedMissions,
     @Default(BodyGuardStatus.availableToday) BodyGuardStatus status,
+
+    /// Admin verification (`bodyguards.status`). Only ACTIVE bodyguards are
+    /// shown to customers; a company sees the others with their state.
+    @Default(UserStatus.active) UserStatus verificationStatus,
+
+    /// Why the admin rejected this bodyguard (`bodyguards.rejection_reason`).
+    String? rejectionReason,
   }) = _BodyGuardModel;
 
   factory BodyGuardModel.fromJson(Map<String, dynamic> json) =>

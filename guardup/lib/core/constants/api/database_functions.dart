@@ -23,4 +23,10 @@ final class DatabaseFunctions {
 
   /// Changes the push language of one of the caller's devices.
   static const String updateUserDeviceLanguage = 'update_user_device_language';
+
+  /// Replaces the services of a login account (guard / company) atomically.
+  static const String setUserServices = 'set_user_services';
+
+  /// Replaces the services of a company-managed bodyguard atomically.
+  static const String setBodyguardServices = 'set_bodyguard_services';
 }

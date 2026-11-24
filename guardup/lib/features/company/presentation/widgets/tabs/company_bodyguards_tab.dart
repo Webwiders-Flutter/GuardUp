@@ -76,6 +76,7 @@ class CompanyBodyguardsTab extends StatelessWidget {
       ),
       padding: context.horizontalEdgeInsets + AppSpacing.md.yPadding,
       separatorBuilder: (context, index) => AppSpacing.md.h,
+      initialLoaderBuilder: (context) => BodyGuardListSkeleton(),
       emptyBuilder: (context) => Padding(
         padding: AppSpacing.xxl.allPadding,
         child: Center(

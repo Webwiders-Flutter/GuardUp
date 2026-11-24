@@ -17,18 +17,28 @@ import '/core/extensions/textstyle_extension.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/sections/app_appbar.dart';
+import '/features/body_guard/data/model/body_guard.model.dart';
 import '/features/body_guard/presentation/screens/body_guard_complete_profile_screen.dart';
 import '/features/body_guard/presentation/screens/body_guard_upload_documents_screen.dart';
+import '/features/body_guard/presentation/screens/company_bodyguards_screen.dart';
 import '/features/company/presentation/screens/company_complete_profile_screen.dart';
 import '/features/legal/presentation/screens/contact_us_screen.dart';
 import '/features/customer/presentation/screens/customer_home_screen.dart';
 import '/features/company/presentation/screens/company_upload_documents_screen.dart';
 
-/// Screen displaying the application status / review stage for onboarding operatives & companies.
+/// Screen displaying the application status / review stage for onboarding operatives & companies,
+/// or for company-managed bodyguards submitted for admin verification.
 class AdminApprovalScreen extends StatefulWidget {
   static const route = '/admin-approval';
 
-  const AdminApprovalScreen({super.key});
+  final BodyGuardModel? bodyguard;
+  final bool isCompanyBodyguardFlow;
+
+  const AdminApprovalScreen({
+    super.key,
+    this.bodyguard,
+    this.isCompanyBodyguardFlow = false,
+  });
 
   @override
   State<AdminApprovalScreen> createState() => _AdminApprovalScreenState();
@@ -37,11 +47,15 @@ class AdminApprovalScreen extends StatefulWidget {
 class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
   bool _isChecking = false;
 
+  void _navigateToListing(BuildContext context) {
+    context.go(CompanyBodyguardsScreen.route);
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && sl.isRegistered<AuthBloc>()) {
+      if (mounted && sl.isRegistered<AuthBloc>() && !widget.isCompanyBodyguardFlow) {
         sl<AuthBloc>().add(const AuthReloadRoleDataRequested());
       }
     });
@@ -123,16 +137,30 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthBloc>().state;
-    final isRejected = authState.isRejected;
+    final isRejected = widget.isCompanyBodyguardFlow
+        ? widget.bodyguard?.verificationStatus == UserStatus.rejected
+        : authState.isRejected;
     final statusColor = isRejected
         ? context.colors.error
         : context.colors.primary;
 
-    return Scaffold(
-      appBar: AppAppBar.transparent(
-        titleWidget: Assets.svg.appBanner.svg(height: AppSizes.iconLg),
-        alignTitle: .center,
-      ),
+    return PopScope(
+      canPop: !widget.isCompanyBodyguardFlow,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (widget.isCompanyBodyguardFlow) {
+          _navigateToListing(context);
+        }
+      },
+      child: Scaffold(
+        appBar: AppAppBar.transparent(
+          titleWidget: Assets.svg.appBanner.svg(height: AppSizes.iconLg),
+          alignTitle: .center,
+          showBackIcon: widget.isCompanyBodyguardFlow,
+          onBackTap: widget.isCompanyBodyguardFlow
+              ? () => _navigateToListing(context)
+              : null,
+        ),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -171,7 +199,9 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                                     Text(
                                       isRejected
                                           ? 'APPLICATION REJECTED'
-                                          : context.l10n.applicationStatus,
+                                          : (widget.isCompanyBodyguardFlow
+                                              ? 'APPLICATION SUBMITTED'
+                                              : context.l10n.applicationStatus),
                                       style: context.textTheme.labelMedium
                                           ?.bold()
                                           .colour(statusColor)
@@ -196,7 +226,9 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                             Text(
                               isRejected
                                   ? 'Application Needs Revision'
-                                  : context.l10n.applicationSubmitted,
+                                  : (widget.isCompanyBodyguardFlow
+                                      ? 'Bodyguard Application Submitted'
+                                      : context.l10n.applicationSubmitted),
                               textAlign: TextAlign.center,
                               style: context.textTheme.titleMedium?.bold(),
                             ),
@@ -241,11 +273,17 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                                   AppSpacing.md.w,
                                   Expanded(
                                     child: Text(
-                                      isRejected
-                                          ? _buildRejectionMessage(authState)
-                                          : context
-                                                .l10n
-                                                .applicationUnderReviewNotice,
+                                      widget.isCompanyBodyguardFlow
+                                          ? (isRejected
+                                              ? (widget.bodyguard?.rejectionReason?.isNotEmpty == true
+                                                  ? 'Verification Needs Revision:\n${widget.bodyguard!.rejectionReason}'
+                                                  : 'One or more documents or details did not meet our verification standards. Please review and update.')
+                                              : 'Your bodyguard\'s profile and documents have been submitted to admin for verification. Once approved, the bodyguard will be active and available in your company roster.')
+                                          : (isRejected
+                                              ? _buildRejectionMessage(authState)
+                                              : context
+                                                    .l10n
+                                                    .applicationUnderReviewNotice),
                                       style: context.textTheme.bodySmall
                                           ?.colour(
                                             isRejected
@@ -267,7 +305,16 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                       AppSpacing.colossal.h,
 
                       // 5. Actions (Check Status, Back to Home, & Logout)
-                      if (authState.isApproved) ...[
+                      if (widget.isCompanyBodyguardFlow) ...[
+                        AppButton(
+                          text: 'Okay, Back to Guard List',
+                          leading: const Icon(
+                            Icons.people_outline_rounded,
+                            size: AppSizes.iconSmd,
+                          ),
+                          onPressed: () => _navigateToListing(context),
+                        ),
+                      ] else if (authState.isApproved) ...[
                         AppButton(
                           text: 'Go to Home',
                           trailing: const Icon(
@@ -408,6 +455,7 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
           },
         ),
       ),
+    ),
     );
   }
 

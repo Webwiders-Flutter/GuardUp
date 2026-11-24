@@ -12,12 +12,17 @@ export 'data/model/document.model.dart';
 export 'data/model/license_and_badge.model.dart';
 export 'data/model/service_item.model.dart';
 
+// Repositories
+export 'data/repositories/bodyguard.repository.dart';
+
 // BloC / Cubit
+export 'bloc/company_bodyguards/company_bodyguards_cubit.dart';
 export 'bloc/services/services_cubit.dart';
 
 // Widgets
 export 'presentation/widgets/body_guard_header_card.dart';
 export 'presentation/widgets/body_guard_card.dart';
+export 'presentation/widgets/body_guard_list_skeleton.dart';
 export 'presentation/widgets/tabs/bodyguard_about.widget.dart';
 export 'presentation/widgets/tabs/bodyguard_availability.widget.dart';
 export 'presentation/widgets/tabs/bodyguard_documents.widget.dart';

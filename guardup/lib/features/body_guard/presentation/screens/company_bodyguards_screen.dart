@@ -1,8 +1,17 @@
+import '/features/body_guard/presentation/widgets/body_guard_list_skeleton.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/features/body_guard/presentation/screens/guard_detail.screen.dart';
 
+import '/core/constants/app_durations.dart';
 import '/core/constants/app_radius.dart';
+import '/core/di/injection_container.dart';
+import '/features/auth/auth.dart';
+import '/shared/widgets/feedbacks/widgets/app_popup.dart';
+import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
+import '../../bloc/company_bodyguards/company_bodyguards_cubit.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
@@ -19,6 +28,7 @@ import '/shared/widgets/sections/app_appbar.dart';
 import '../../data/model/body_guard.model.dart';
 import '../widgets/body_guard_card.dart';
 import '/features/body_guard/presentation/screens/body_guard_complete_profile_screen.dart';
+import '/features/customer/presentation/screens/customer_home_screen.dart';
 
 /// Screen presenting all company or platform bodyguards with search,
 /// pagination, and management actions (Add, Edit, Delete).
@@ -36,20 +46,61 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen> {
   final _searchController = TextEditingController();
   late final PaginationController<BodyGuardModel> _paginationController;
 
+  /// Companies see and manage their own bodyguards (live data). Other roles
+  /// still browse the sample roster until the public listing is built.
+  late final bool _isCompany =
+      sl.isRegistered<AuthBloc>() && sl<AuthBloc>().state.isCompany;
+  CompanyBodyguardsCubit? _cubit;
+  StreamSubscription<CompanyBodyguardsState>? _cubitSubscription;
+  Timer? _searchDebounce;
+
   @override
   void initState() {
     super.initState();
-    _paginationController = PaginationController<BodyGuardModel>(
-      initialState: PaginationState<BodyGuardModel>(
-        items: BodyGuardModel.fakeData,
-        total: 3,
-        status: const ApiState.success(null),
-      ),
+    if (_isCompany) {
+      final cubit = sl<CompanyBodyguardsCubit>();
+      _cubit = cubit;
+      _paginationController = PaginationController<BodyGuardModel>(
+        initialState: cubit.state.pagination,
+        onRefresh: cubit.refresh,
+        onLoadMore: cubit.loadMore,
+      );
+      _cubitSubscription = cubit.stream.listen(_onCubitState);
+      _searchController.addListener(_onSearchChanged);
+      cubit.refresh();
+    } else {
+      _paginationController = PaginationController<BodyGuardModel>(
+        initialState: PaginationState<BodyGuardModel>(
+          items: BodyGuardModel.fakeData,
+          total: 3,
+          status: const ApiState.success(null),
+        ),
+      );
+    }
+  }
+
+  void _onCubitState(CompanyBodyguardsState state) {
+    if (!mounted) return;
+    _paginationController.updateState(state.pagination);
+    final error = state.actionError;
+    if (error != null) AppSnackbar.error(error);
+  }
+
+  void _onSearchChanged() {
+    final term = _searchController.text.trim();
+    if (term == _cubit?.state.search) return;
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(
+      AppDurations.slow,
+      () => _cubit?.refresh(search: term),
     );
   }
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
+    _cubitSubscription?.cancel();
+    _cubit?.close();
     _searchController.dispose();
     _paginationController.dispose();
     super.dispose();
@@ -57,24 +108,48 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen> {
 
   // ── Clickflow Action Handlers ──────────────────────────────────────────────
 
-  void _handleAddBodyguard() {
-    context.push(BodyGuardCompleteProfileScreen.route);
+  Future<void> _handleAddBodyguard() async {
+    await context.push(BodyGuardCompleteProfileScreen.route);
+    // A bodyguard may have been created even if the flow was not finished.
+    if (mounted) _cubit?.refresh();
   }
 
-  void _handleEditBodyguard(BodyGuardModel bodyguard) {
-    context.push(
+  Future<void> _handleEditBodyguard(BodyGuardModel bodyguard) async {
+    await context.push(
       BodyGuardCompleteProfileScreen.route,
       extra: bodyguard,
     );
+    if (mounted) _cubit?.refresh();
+  }
+
+  Future<void> _handleDeleteBodyguard(BodyGuardModel bodyguard) async {
+    final cubit = _cubit;
+    if (cubit == null) return;
+    final result = await AppPopup.showDeleteConfirmation(
+      context,
+      deleteItemName: bodyguard.user.name,
+    );
+    if (result?.action != PopupAction.confirm || !mounted) return;
+    final deleted = await cubit.delete(bodyguard);
+    if (deleted && mounted) {
+      AppSnackbar.success('${bodyguard.user.name} removed.');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AppAppBar.transparent(
+      appBar: AppAppBar.transparent(
         title: 'All Bodyguards',
         fontSize: 14,
         showBackIcon: true,
+        onBackTap: () {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go(CustomerHomeScreen.route);
+          }
+        },
       ),
       body: SafeArea(
         child: Column(
@@ -106,6 +181,7 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen> {
                       style: TextStyle(color: context.colors.onSurface),
                     ),
                   ),
+                  if (_isCompany) ...[
                   AppSpacing.sm.w,
                   Expanded(
                     child: AppButton(
@@ -121,6 +197,7 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen> {
                       onPressed: _handleAddBodyguard,
                     ),
                   ),
+                  ],
                 ],
               ),
             ),
@@ -134,6 +211,8 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen> {
                 controller: _paginationController,
                 padding: context.horizontalEdgeInsets + AppSpacing.lg.bPadding,
                 separatorBuilder: (context, index) => AppSpacing.md.h,
+                initialLoaderBuilder: (context) =>
+                    const BodyGuardListSkeleton(itemCount: 4),
                 emptyBuilder: (context) => Center(
                   child: Padding(
                     padding: AppSpacing.xxl.allPadding,
@@ -152,7 +231,9 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen> {
                         ),
                         AppSpacing.xs.h,
                         Text(
-                          'Try adjusting your search criteria.',
+                          _isCompany && _searchController.text.trim().isEmpty
+                              ? 'Tap Add to register your first bodyguard.'
+                              : 'Try adjusting your search criteria.',
                           style: context.textTheme.bodySmall?.colour(
                             context.colors.onSurfaceVariant,
                           ),
@@ -168,8 +249,12 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen> {
                     onTap: () {
                       context.push(GuardDetailScreen.route, extra: guard);
                     },
-                    // onTap: () => _handleEditBodyguard(guard),
-                    onEdit: () => _handleEditBodyguard(guard),
+                    onEdit: _isCompany
+                        ? () => _handleEditBodyguard(guard)
+                        : null,
+                    onDelete: _isCompany
+                        ? () => _handleDeleteBodyguard(guard)
+                        : null,
                   );
                 },
               ),
