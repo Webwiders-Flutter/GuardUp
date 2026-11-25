@@ -30,6 +30,10 @@ import '/shared/widgets/table/table_models.dart';
 /// Bodyguards (GUARD accounts) listing; review happens in
 /// [CompanyBodyguardReviewPanel]. Company bodyguards are only approved,
 /// rejected or deleted, never blocked.
+///
+/// When [companyId] is provided (navigated from a company's detail page) the
+/// table is pre-filtered to that company's guards and shows a dismissible
+/// active-filter chip.
 class CompanyBodyguardsManagementScreen extends ConsumerStatefulWidget {
   /// Base route (redirects to [defaultLocation]), inside the users section.
   static const route = '${UsersManagementScreen.route}/company-bodyguards';
@@ -45,16 +49,28 @@ class CompanyBodyguardsManagementScreen extends ConsumerStatefulWidget {
   ];
 
   /// Status opened when only [route] is in the URL.
-  static const defaultStatus = UserStatus.approvalPending;
+  static const defaultStatus = UserStatus.active;
 
   /// `/users/company-bodyguards/<status>`, e.g. `.../pending`.
   static String location(UserStatus status) => '$route/${status.slug}';
 
   static String get defaultLocation => location(defaultStatus);
 
-  const CompanyBodyguardsManagementScreen({super.key, required this.status});
+  const CompanyBodyguardsManagementScreen({
+    super.key,
+    required this.status,
+    this.companyId,
+    this.companyName,
+  });
 
   final UserStatus status;
+
+  /// When non-null, the table is pre-filtered to this company's guards.
+  final String? companyId;
+
+  /// Display label for the active-filter chip (company name). Falls back to
+  /// a short ID fragment when not provided.
+  final String? companyName;
 
   @override
   ConsumerState<CompanyBodyguardsManagementScreen> createState() =>
@@ -78,6 +94,15 @@ class _CompanyBodyguardsManagementScreenState
   void initState() {
     super.initState();
     _searchController = TextEditingController();
+    // Apply the company filter from the navigation extra on first load.
+    if (widget.companyId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _controller.getPaginatedRecords(
+          forceRefresh: true,
+          companyId: widget.companyId,
+        );
+      });
+    }
   }
 
   @override
@@ -310,6 +335,30 @@ class _CompanyBodyguardsManagementScreenState
         rowsPerPage: paginationState.pageSize,
         load: asyncState.isLoading,
         onRowTap: _onView,
+        // Active company filter chip: shown when navigated from a company page.
+        activeFilters: [
+          if (_controller.companyId != null) (
+            label: 'Company: ${widget.companyName ?? _controller.companyId!.substring(0, 8)}',
+            icon: Icons.business_outlined,
+            key: 'companyId',
+            onRemove: () {
+              _controller.getPaginatedRecords(
+                forceRefresh: true,
+                companyId: '',
+                search: _searchController.text,
+              );
+            },
+          ),
+        ],
+        onClearAllFilters: _controller.companyId != null
+            ? () {
+                _controller.getPaginatedRecords(
+                  forceRefresh: true,
+                  companyId: '',
+                  search: _searchController.text,
+                );
+              }
+            : null,
         onFilterChanged: (filter) {
           _controller.getPaginatedRecords(
             forceRefresh: true,

@@ -21,9 +21,7 @@ class CompanyGuardBookingsTabWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Generate bookings using standard mock data mapped to the current operative
-    final bookings = BookingModel.fakeData
-        .map((booking) => booking.copyWith(bodyguard: bodyguard))
-        .toList();
+    final bookings = const <BookingModel>[];
 
     return AppPagination<BookingModel>.list(
       state: PaginationState<BookingModel>(

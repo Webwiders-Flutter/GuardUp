@@ -86,6 +86,7 @@ final class CompanyBodyguardsRepository
   }
 
   /// Company-managed bodyguards with [status], newest first.
+  /// Optionally filtered to bodyguards belonging to [companyId].
   @override
   Future<({List<BodyguardModel> data, int total})> getPaginated({
     required int page,
@@ -93,6 +94,7 @@ final class CompanyBodyguardsRepository
     UserStatus? status,
     bool? isActive,
     String? search,
+    String? companyId,
     CustomQueryBuilder? customQuery,
   }) {
     return super.getPaginated(
@@ -103,6 +105,9 @@ final class CompanyBodyguardsRepository
         query = query.isFilter(JsonKeys.userId, null);
         if (status != null) {
           query = query.eq(JsonKeys.registrationStatus, status.apiValue);
+        }
+        if (companyId != null && companyId.isNotEmpty) {
+          query = query.eq(JsonKeys.companyId, companyId);
         }
         return customQuery?.call(query) ?? query;
       },

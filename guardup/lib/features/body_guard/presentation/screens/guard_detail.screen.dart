@@ -5,6 +5,7 @@ import 'package:guardup/features/company/company.dart';
 import 'package:guardup/features/customer/presentation/screens/booking_screen.dart';
 import 'package:guardup/features/body_guard/presentation/screens/customer_booking_details.screen.dart';
 import 'package:guardup/shared/widgets/buttons/app_button.dart';
+import 'package:guardup/shared/widgets/feedbacks/widgets/app_file_preview.dart';
 
 import '/core/constants/app_spacing.dart';
 import '/core/di/injection_container.dart';
@@ -109,7 +110,7 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
     return diff > 0 ? diff : 4;
   }
 
-  double get _hourlyRate => _guard?.hourlyRate ?? 60.0;
+  double get _hourlyRate => _guard?.hourlyRate ?? 0.0;
   double get _totalAmount => _hourlyRate * _durationHours;
 
   @override
@@ -378,6 +379,15 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
                       hourlyRate: _hourlyRate,
                       imagePath: photoPath,
                       isVerified: isVerified,
+                      onImageTap: () {
+                        if (photoPath.isNotEmpty) {
+                          AppFilePreviewSheet.show(
+                            context: context,
+                            title: guardName,
+                            fileUrl: photoPath,
+                          );
+                        }
+                      },
                     ),
 
                     AppSpacing.md.h,
@@ -404,15 +414,19 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
 
                     // 3. Three Metrics Summary Row
                     GuardMetricsRowWidget(
-                      experience: '${_guard?.experienceYears ?? 5}+ yrs',
+                      experience: (_guard?.experienceYears != null &&
+                              _guard!.experienceYears > 0)
+                          ? '${_guard!.experienceYears}+ yrs'
+                          : '0 yrs',
                       qualifications:
                           (_guard?.qualifications?.isNotEmpty == true)
                               ? _guard!.qualifications!
                               : (_guard?.bio.isNotEmpty == true
                                   ? _guard!.bio
-                                  : 'Certified Spec'),
+                                  : 'Not specified'),
                       status: _guard?.availabilityStatus ??
                           BodyguardAvailabilityStatus.notSet,
+                      verificationStatus: _guard?.verificationStatus,
                     ),
 
                     AppSpacing.md.h,

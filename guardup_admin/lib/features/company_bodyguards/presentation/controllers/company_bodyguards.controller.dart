@@ -26,6 +26,10 @@ class CompanyBodyguardsController
 
   String? _currentSearch;
 
+  /// When set, the listing is scoped to this company (`companies.id`).
+  String? _companyId;
+  String? get companyId => _companyId;
+
   @override
   FutureOr<PaginationState<BodyguardModel>> build() {
     return asyncHandler(
@@ -36,11 +40,15 @@ class CompanyBodyguardsController
   Future<void> getPaginatedRecords({
     bool forceRefresh = false,
     String? search,
+    String? companyId,
     int page = 1,
     int pageSize = AppConstants.paginationLimit,
   }) async {
     if (search != null) {
       _currentSearch = search;
+    }
+    if (companyId != null) {
+      _companyId = companyId.isEmpty ? null : companyId;
     }
 
     final current = state.value;
@@ -89,6 +97,7 @@ class CompanyBodyguardsController
       pageSize: pageSize,
       status: status,
       search: _currentSearch,
+      companyId: _companyId,
     );
     return PaginationState<BodyguardModel>(
       items: [...?previous, ...result.data],

@@ -185,7 +185,7 @@ class AppPagination<T> extends StatefulWidget {
       emptyBuilder: emptyBuilder,
       loadMoreBuilder: loadMoreBuilder,
       noMoreDataBuilder: noMoreDataBuilder,
-      errorBuilder: errorBuilder,
+      errorBuilder: errorBuilder,  
       loadMoreErrorBuilder: loadMoreErrorBuilder,
       enablePullToRefresh: enablePullToRefresh,
       builder: (scrollController, internalItemBuilder, itemCount) {
@@ -397,12 +397,19 @@ class _AppPaginationState<T> extends State<AppPagination<T>> {
               );
 
           return _buildRefreshable(
-            child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              children: [
-                if (widget.header != null) widget.header!,
-                errorWidget,
-              ],
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    if (widget.header != null) widget.header!,
+                    SizedBox(
+                      height: constraints.maxHeight - AppSpacing.colossal * 2,
+                      child: Center(child: errorWidget),
+                    ),
+                  ],
+                );
+              },
             ),
           );
         }
@@ -413,13 +420,19 @@ class _AppPaginationState<T> extends State<AppPagination<T>> {
               widget.emptyBuilder?.call(context) ?? AppStateView.empty();
 
           return _buildRefreshable(
-            child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              shrinkWrap: true,
-              children: [
-                if (widget.header != null) widget.header!,
-                emptyWidget,
-              ],
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    if (widget.header != null) widget.header!,
+                    SizedBox(
+                      height: constraints.maxHeight - AppSpacing.colossal * 2,
+                      child: Center(child: emptyWidget),
+                    ),
+                  ],
+                );
+              },
             ),
           );
         }

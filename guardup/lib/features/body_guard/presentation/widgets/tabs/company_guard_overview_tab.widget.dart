@@ -163,7 +163,7 @@ class CompanyGuardOverviewTabWidget extends StatelessWidget {
         Flexible(
           child: Text(
             value,
-            style: context.textTheme.bodyMedium?.bold().colour(valueColor),
+            style: context.textTheme.bodyMedium?.colour(valueColor),
             textAlign: .right,
           ),
         ),

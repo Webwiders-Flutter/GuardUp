@@ -17,6 +17,7 @@ class GuardProfileHeaderWidget extends StatelessWidget {
   final double hourlyRate;
   final String imagePath;
   final bool isVerified;
+  final VoidCallback? onImageTap;
 
   const GuardProfileHeaderWidget({
     super.key,
@@ -25,6 +26,7 @@ class GuardProfileHeaderWidget extends StatelessWidget {
     this.hourlyRate = 60.0,
     required this.imagePath,
     this.isVerified = true,
+    this.onImageTap,
   });
 
   @override
@@ -44,181 +46,185 @@ class GuardProfileHeaderWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Operative Photo with Top-Right Verified Badge
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.all(
-                  Radius.circular(AppRadius.lg),
-                ),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 190,
-                  child: isNetwork
-                      ? AppImage.network(
-                          imageUrl: imagePath,
-                          fit: BoxFit.cover,
-                        )
-                      : AppImage.asset(
-                          assetPath: imagePath.isNotEmpty
-                              ? imagePath
-                              : Assets.images.profilePicture.path,
-                          fit: BoxFit.cover,
-                        ),
-                ),
-              ),
-
-              // Gradient fade overlay at bottom of photo
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: 60,
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.transparent,
-                        context.colors.surfaceContainer.withValues(alpha: 0.2),
-                        context.colors.surfaceContainer.withValues(alpha: 0.6),
-                      ],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
+          GestureDetector(
+            onTap: onImageTap,
+            behavior: HitTestBehavior.opaque,
+            child: Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.all(
+                    Radius.circular(AppRadius.lg),
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 190,
+                    child: isNetwork
+                        ? AppImage.network(
+                            imageUrl: imagePath,
+                            fit: BoxFit.cover,
+                          )
+                        : AppImage.asset(
+                            assetPath: imagePath.isNotEmpty
+                                ? imagePath
+                                : Assets.images.profilePicture.path,
+                            fit: BoxFit.cover,
+                          ),
                   ),
                 ),
-              ),
 
-              // Verified Officer Badge
-              if (isVerified)
+                // Gradient fade overlay at bottom of photo
                 Positioned(
-                  top: 12,
-                  right: 12,
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  height: 60,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: 4,
-                    ),
                     decoration: BoxDecoration(
-                      color: context.colors.surfaceDim.withValues(alpha: 0.85),
-                      borderRadius: BorderRadius.circular(AppRadius.full),
-                      border: Border.all(
-                        color: context.colors.primary.withValues(alpha: 0.6),
-                        width: 0.8,
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.transparent,
+                          context.colors.surfaceContainer.withValues(alpha: 0.2),
+                          context.colors.surfaceContainer.withValues(alpha: 0.6),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
                       ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 6,
-                          height: 6,
-                          decoration: BoxDecoration(
-                            color: context.colors.success,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        AppSpacing.xs.w,
-                        Text(
-                          'VERIFIED OFFICER',
-                          style: context.textTheme.labelSmall
-                              ?.copyWith(
-                                fontSize: 9.5,
-                                letterSpacing: 0.8,
-                              )
-                              .colour(context.colors.primary),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
 
-              // Operative Name, Specialization, and Rate
-              Positioned(
-                bottom: 10,
-                left: 20,
-                right: 20,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                // Verified Officer Badge
+                if (isVerified)
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.colors.surfaceDim.withValues(alpha: 0.85),
+                        borderRadius: BorderRadius.circular(AppRadius.full),
+                        border: Border.all(
+                          color: context.colors.primary.withValues(alpha: 0.6),
+                          width: 0.8,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  name,
-                                  style: context.textTheme.titleMedium
-                                      ?.bold()
-                                      .colour(context.colors.onSurface),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              if (isVerified) ...[
-                                AppSpacing.xs.w,
-                                Assets.svg.verifiedBadge.svg(
-                                  width: 20,
-                                  height: 20,
-                                ),
-                              ],
-                            ],
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: context.colors.success,
+                              shape: BoxShape.circle,
+                            ),
                           ),
-                          AppSpacing.xxs.h,
+                          AppSpacing.xs.w,
                           Text(
-                            specialization,
-                            style: context.textTheme.bodySmall
-                                ?.copyWith(fontSize: 10)
+                            'VERIFIED OFFICER',
+                            style: context.textTheme.labelSmall
+                                ?.copyWith(
+                                  fontSize: 9.5,
+                                  letterSpacing: 0.8,
+                                )
                                 .colour(context.colors.primary),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
                     ),
+                  ),
 
-                    // Hourly Rate Column
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          'Rate',
-                          style: context.textTheme.labelSmall
-                              ?.copyWith(fontSize: 10)
-                              .colour(
-                                context.colors.onSurfaceVariant.withValues(
-                                  alpha: 0.6,
+                // Operative Name, Specialization, and Rate
+                Positioned(
+                  bottom: 10,
+                  left: 20,
+                  right: 20,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    name,
+                                    style: context.textTheme.titleMedium
+                                        ?.bold()
+                                        .colour(context.colors.onSurface),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
-                              ),
+                                if (isVerified) ...[
+                                  AppSpacing.xs.w,
+                                  Assets.svg.verifiedBadge.svg(
+                                    width: 20,
+                                    height: 20,
+                                  ),
+                                ],
+                              ],
+                            ),
+                            AppSpacing.xxs.h,
+                            Text(
+                              specialization,
+                              style: context.textTheme.bodySmall
+                                  ?.copyWith(fontSize: 10)
+                                  .colour(context.colors.primary),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
-                        Text.rich(
-                          TextSpan(
-                            children: [
-                              TextSpan(
-                                text: '\$$rateInt',
-                                style: context.textTheme.titleMedium
-                                    ?.bold()
-                                    .colour(context.colors.primary),
-                              ),
-                              TextSpan(
-                                text: ' /hr',
-                                style: context.textTheme.labelSmall
-                                    ?.copyWith(fontSize: 10)
-                                    .colour(
-                                      context.colors.onSurfaceVariant
-                                          .withValues(alpha: 0.6),
-                                    ),
-                              ),
-                            ],
+                      ),
+
+                      // Hourly Rate Column
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            'Rate',
+                            style: context.textTheme.labelSmall
+                                ?.copyWith(fontSize: 10)
+                                .colour(
+                                  context.colors.onSurfaceVariant.withValues(
+                                    alpha: 0.6,
+                                  ),
+                                ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                          Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: '\$$rateInt',
+                                  style: context.textTheme.titleMedium
+                                      ?.bold()
+                                      .colour(context.colors.primary),
+                                ),
+                                TextSpan(
+                                  text: ' /hr',
+                                  style: context.textTheme.labelSmall
+                                      ?.copyWith(fontSize: 10)
+                                      .colour(
+                                        context.colors.onSurfaceVariant
+                                            .withValues(alpha: 0.6),
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),

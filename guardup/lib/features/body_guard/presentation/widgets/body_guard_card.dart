@@ -406,8 +406,12 @@ class BodyGuardCard extends StatelessWidget {
         (bodyguard.bio.isNotEmpty
             ? bodyguard.bio
             : (bodyguard.serviceTypes.isNotEmpty
-                ? bodyguard.serviceTypes.map((s) => s.label).take(2).join(', ')
-                : (bodyguard.qualifications ?? 'Licensed armed, Corporate visits')));
+                  ? bodyguard.serviceTypes
+                        .map((s) => s.label)
+                        .take(2)
+                        .join(', ')
+                  : (bodyguard.qualifications ??
+                        'Licensed armed, Corporate visits')));
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -459,7 +463,7 @@ class BodyGuardCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Row(
-                mainAxisAlignment: .spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _buildStatusBadge(context),
                   Row(
@@ -581,7 +585,8 @@ class BodyGuardCard extends StatelessWidget {
     final color = verification.color(context);
     final reason = bodyguard.rejectionReason;
     final message = switch (verification) {
-      UserStatus.incomplete => 'Finish the details and documents to submit for review.',
+      UserStatus.incomplete =>
+        'Finish the details and documents to submit for review.',
       UserStatus.pendingApproval => 'Waiting for admin approval.',
       UserStatus.rejected =>
         (reason != null && reason.isNotEmpty)
@@ -600,7 +605,11 @@ class BodyGuardCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.verified_user_outlined, size: AppSizes.iconSm, color: color),
+          Icon(
+            Icons.verified_user_outlined,
+            size: AppSizes.iconSm,
+            color: color,
+          ),
           AppSpacing.xs.w,
           Expanded(
             child: AppRichText(
@@ -625,10 +634,30 @@ class BodyGuardCard extends StatelessWidget {
   }
 
   Widget _buildStatusBadge(BuildContext context) {
-    final effectiveAvailability = availabilityStatus ?? bodyguard.availabilityStatus;
-    final color = effectiveAvailability.badgeColor(context);
-    final bgColor = effectiveAvailability.badgeBackgroundColor(context);
-    final borderColor = effectiveAvailability.badgeBorderColor(context);
+    final isActive = bodyguard.verificationStatus == UserStatus.active;
+
+    final String label;
+    final Color color;
+    final Color bgColor;
+    final Color borderColor;
+    final bool hasDot;
+
+    if (isActive) {
+      final effectiveAvailability =
+          availabilityStatus ?? bodyguard.availabilityStatus;
+      label = effectiveAvailability.label;
+      color = effectiveAvailability.badgeColor(context);
+      bgColor = effectiveAvailability.badgeBackgroundColor(context);
+      borderColor = effectiveAvailability.badgeBorderColor(context);
+      hasDot = effectiveAvailability.hasDot;
+    } else {
+      final verification = bodyguard.verificationStatus;
+      label = verification.label;
+      color = verification.color(context);
+      bgColor = verification.color(context).withValues(alpha: 0.12);
+      borderColor = verification.color(context).withValues(alpha: 0.35);
+      hasDot = true;
+    }
 
     return QuickContainer(
       radius: AppRadius.sm,
@@ -639,7 +668,7 @@ class BodyGuardCard extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (effectiveAvailability.hasDot) ...[
+          if (hasDot) ...[
             QuickContainer(
               shape: QuickContainerShape.circle,
               color: color,
@@ -649,7 +678,7 @@ class BodyGuardCard extends StatelessWidget {
             AppSpacing.xs.w,
           ],
           Text(
-            effectiveAvailability.label,
+            label,
             style: context.textTheme.labelSmall
                 ?.semiBold()
                 .colour(color)

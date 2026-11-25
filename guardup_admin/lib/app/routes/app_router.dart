@@ -165,10 +165,17 @@ final class AppRouter {
                             in CompanyBodyguardsManagementScreen.statuses)
                           GoRoute(
                             path: status.slug,
-                            builder: (context, state) =>
-                                CompanyBodyguardsManagementScreen(
-                                  status: status,
-                                ),
+                            builder: (context, state) {
+                              final extra = state.extra;
+                              final companyFilter = extra is ({String companyId, String? companyName})
+                                  ? extra
+                                  : null;
+                              return CompanyBodyguardsManagementScreen(
+                                status: status,
+                                companyId: companyFilter?.companyId,
+                                companyName: companyFilter?.companyName,
+                              );
+                            },
                           ),
                       ],
                     ),

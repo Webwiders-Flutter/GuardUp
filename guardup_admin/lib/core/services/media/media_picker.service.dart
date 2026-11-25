@@ -4,13 +4,14 @@ import 'package:image_picker/image_picker.dart';
 
 import '/app/theme/colors/color_accessor.dart';
 import '/core/error/api_exception.dart';
+import '/core/extensions/file_object.extension.dart';
 
 enum ImageSourceType { camera, gallery }
 
 class MediaPickerService {
   static Future<XFile?> pickImage(
     ImageSourceType source, {
-    int imageQuality = 100,
+    int? imageQuality,
     double? maxWidth,
     double? maxHeight,
   }) async {
@@ -180,9 +181,16 @@ class MediaPickerService {
           .where((e) => e.isNotEmpty)
           .toList();
 
+      final isAllImages = cleanExtensions.isNotEmpty &&
+          cleanExtensions.every((ext) => ext.isImage);
+
       final file = await FilePicker.pickFile(
-        type: cleanExtensions.isEmpty ? FileType.any : FileType.custom,
-        allowedExtensions: cleanExtensions.isEmpty ? null : cleanExtensions,
+        type: isAllImages
+            ? FileType.image
+            : (cleanExtensions.isEmpty ? FileType.any : FileType.custom),
+        allowedExtensions: isAllImages
+            ? null
+            : (cleanExtensions.isEmpty ? null : cleanExtensions),
       );
       if (file == null) return null;
       return file.xFile;

@@ -19,7 +19,7 @@ import '/features/users/data/enums/user_status.enum.dart';
 import '/features/users/data/models/company.model.dart';
 import '/features/users/data/models/user_model.dart';
 import '/features/users/presentation/widgets/bodyguard_details.section.dart';
-import '/features/company_bodyguards/presentation/widgets/company_bodyguards.section.dart';
+import '/features/company_bodyguards/presentation/screens/company_bodyguards_management.screen.dart';
 import '/features/users/di/users.providers.dart';
 import '/core/extensions/riverpod.extension.dart';
 import '/features/users/data/models/user_document.model.dart';
@@ -152,10 +152,6 @@ class _UserDetailsBody extends StatelessWidget {
         ] else if (user.role.isCompany) ...[
           _CompanyDetailsSection(user: user, company: user.company),
           AppSpacing.md.h,
-          if (user.company != null) ...[
-            CompanyBodyguardsSection(company: user.company!),
-            AppSpacing.md.h,
-          ],
         ],
 
         // 5. Weekly availability (bodyguards, or anyone who has set one)
@@ -737,6 +733,18 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
     }
   }
 
+  void _navigateToCompanyBodyguards(BuildContext context) {
+    final company = widget.user.company;
+    if (company == null) return;
+    if (Navigator.of(context).canPop()) Navigator.of(context).pop();
+    context.go(
+      CompanyBodyguardsManagementScreen.location(
+        CompanyBodyguardsManagementScreen.defaultStatus,
+      ),
+      extra: (companyId: company.id, companyName: company.companyName),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isApproved = widget.user.status.isApproved;
@@ -758,6 +766,18 @@ class _UserActionsBarState extends ConsumerState<_UserActionsBar> {
           alignment: WrapAlignment.end,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
+            // Company: quick-link to the bodyguard management table,
+            // pre-filtered to this company.
+            if (widget.user.role.isCompany && widget.user.company != null)
+              AppButton(
+                text: 'See Bodyguards',
+                leading: const Icon(Icons.groups_outlined, size: 16),
+                type: ButtonType.secondaryOff,
+                size: ButtonSize.small,
+                fullWidth: false,
+                onPressed: () => _navigateToCompanyBodyguards(context),
+              ),
+
             if (isApproved || isBlocked) ...[
               // 1. Block / Unblock Button
               AppButton.outline(

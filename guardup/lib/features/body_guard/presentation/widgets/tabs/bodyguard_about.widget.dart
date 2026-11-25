@@ -141,62 +141,88 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
         // ---------------------------------------------------------------------
         WrapperCard(
           padding: AppSpacing.lg.allPadding,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              const maxBioLines = 4;
+              final bioStyle = context.textTheme.bodySmall?.lineHeight(1.8);
+
+              // Calculate whether text exceeds maxBioLines
+              // Account for the edit pencil button width + spacing if present
+              final availableWidth = constraints.maxWidth > 40
+                  ? constraints.maxWidth - 40
+                  : constraints.maxWidth;
+
+              final textSpan = TextSpan(text: bioText, style: bioStyle);
+              final textPainter = TextPainter(
+                text: textSpan,
+                textDirection: Directionality.of(context),
+                maxLines: maxBioLines,
+              );
+              textPainter.layout(maxWidth: availableWidth);
+              final canOverflow = textPainter.didExceedMaxLines;
+
+              return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: ValueListenableBuilder<bool>(
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: ValueListenableBuilder<bool>(
+                          valueListenable: _isBioExpandedNotifier,
+                          builder: (context, isExpanded, _) {
+                            return Text(
+                              bioText,
+                              maxLines: (isExpanded || !canOverflow)
+                                  ? null
+                                  : maxBioLines,
+                              overflow: (isExpanded || !canOverflow)
+                                  ? TextOverflow.visible
+                                  : TextOverflow.ellipsis,
+                              style: bioStyle,
+                            );
+                          },
+                        ),
+                      ),
+                      AppSpacing.sm.w,
+                      _buildEditPencilButton(onTap: widget.onEditBio ?? () {}),
+                    ],
+                  ),
+                  if (canOverflow) ...[
+                    AppSpacing.sm.h,
+                    ValueListenableBuilder<bool>(
                       valueListenable: _isBioExpandedNotifier,
                       builder: (context, isExpanded, _) {
-                        return Text(
-                          bioText,
-                          maxLines: isExpanded ? null : 4,
-                          overflow: isExpanded
-                              ? TextOverflow.visible
-                              : TextOverflow.ellipsis,
-                          style: context.textTheme.bodySmall?.lineHeight(1.8),
+                        return GestureDetector(
+                          onTap: () => _isBioExpandedNotifier.value =
+                              !_isBioExpandedNotifier.value,
+                          behavior: HitTestBehavior.opaque,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                isExpanded ? 'Show Less' : 'Read More',
+                                style: context.textTheme.labelMedium?.colour(
+                                  context.colors.primary,
+                                ),
+                              ),
+                              AppSpacing.xxs.w,
+                              Icon(
+                                isExpanded
+                                    ? Icons.keyboard_arrow_up_rounded
+                                    : Icons.chevron_right_rounded,
+                                size: AppSizes.iconXs,
+                                color: context.colors.primary,
+                              ),
+                            ],
+                          ),
                         );
                       },
                     ),
-                  ),
-                  AppSpacing.sm.w,
-                  _buildEditPencilButton(onTap: widget.onEditBio ?? () {}),
+                  ],
                 ],
-              ),
-              AppSpacing.sm.h,
-              ValueListenableBuilder<bool>(
-                valueListenable: _isBioExpandedNotifier,
-                builder: (context, isExpanded, _) {
-                  return GestureDetector(
-                    onTap: () => _isBioExpandedNotifier.value =
-                        !_isBioExpandedNotifier.value,
-                    behavior: HitTestBehavior.opaque,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          isExpanded ? 'Show Less' : 'Read More',
-                          style: context.textTheme.labelMedium?.colour(
-                            context.colors.primary,
-                          ),
-                        ),
-                        AppSpacing.xxs.w,
-                        Icon(
-                          isExpanded
-                              ? Icons.keyboard_arrow_up_rounded
-                              : Icons.chevron_right_rounded,
-                          size: AppSizes.iconXs,
-                          color: context.colors.primary,
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ],
+              );
+            },
           ),
         ),
         AppSpacing.xl.h,

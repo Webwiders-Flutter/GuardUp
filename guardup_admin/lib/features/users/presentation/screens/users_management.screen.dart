@@ -151,10 +151,7 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
         : (item.company?.companyName ?? item.email);
     final result = block
         ? await AppPopup.showBlockConfirmation(context, itemName: itemName)
-        : await AppPopup.showUnblockConfirmation(
-            context,
-            itemName: itemName,
-          );
+        : await AppPopup.showUnblockConfirmation(context, itemName: itemName);
 
     if (result?.action == PopupAction.confirm && mounted) {
       await controller.toggleBlock(item.id, block);
@@ -303,7 +300,9 @@ class _UsersManagementScreenState extends ConsumerState<UsersManagementScreen> {
         title: 'Phone Number',
         alignment: Alignment.centerLeft,
         cellBuilder: (item, index) {
-          final phone = (item.phoneNumber ?? '').toE164(countryCode: item.phoneCode);
+          final phone = (item.phoneNumber ?? '').toE164(
+            countryCode: item.phoneCode,
+          );
           return Text(
             phone.isNotEmpty ? phone : '—',
             style: context.textTheme.bodyMedium?.decreaseSize(1).semiBold(),

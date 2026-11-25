@@ -234,20 +234,25 @@ class _AppMediaPickerCardState extends State<AppMediaPickerCard> {
     if (!widget.enabled || widget.readOnly || _isLoadingNotifier.value) return;
 
     try {
-      final hasSvg = widget.allowedExtensions.any(
-        (ext) => ext.toLowerCase().trim() == 'svg',
-      );
-      // If SVG is allowed or on web, use pickDocument (FilePicker) so that
-      // vector SVG files are not rasterized to canvas PNGs by ImagePicker.
-      final shouldUseImagePicker =
-          !hasSvg &&
-          !kIsWeb &&
-          widget.allowedExtensions.isNotEmpty &&
+      final isAllImages = widget.allowedExtensions.isNotEmpty &&
           widget.allowedExtensions.every((ext) => ext.isImage);
 
       XFile? picked;
-      if (shouldUseImagePicker) {
-        picked = await MediaPickerService.pickImage(ImageSourceType.gallery);
+      if (isAllImages) {
+        // Use ImagePicker for image collections.
+        // It provides reliable native picker integration across Safari, Chrome, and Firefox on Web
+        // without window blur cancellation bugs.
+        // Passing imageQuality = null preserves original file bytes (including vector SVGs).
+        picked = await MediaPickerService.pickImage(
+          ImageSourceType.gallery,
+          imageQuality: null,
+        );
+        // On desktop/native platforms where gallery may not include SVGs, fallback to document picker
+        if (picked == null && !kIsWeb) {
+          picked = await MediaPickerService.pickDocument(
+            allowedExtensions: widget.allowedExtensions,
+          );
+        }
       } else {
         picked = await MediaPickerService.pickDocument(
           allowedExtensions: widget.allowedExtensions,
