@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/logger/app_logger.dart';
 import '../../../../core/services/document_submission/document_submission_service.dart';
 import '../../../auth/auth.dart';
 import '/core/constants/app_radius.dart';
@@ -107,8 +108,8 @@ class _BodyGuardUploadDocumentsScreenState
           _rejectionReasonsNotifier.value = records.rejectionReasons;
         }
       }
-    } catch (e) {
-      debugPrint('Error loading bodyguard document types & files: $e');
+    } catch (e, st) {
+      AppLogger.d('Error loading bodyguard document types & files: $e', tag: 'BodyGuardUploadDocumentsScreen', error: e, stackTrace: st);
     } finally {
       if (mounted) {
         _isDocTypesLoadingNotifier.value = false;
@@ -308,8 +309,8 @@ class _BodyGuardUploadDocumentsScreenState
       } else {
         context.pop(true);
       }
-    } catch (e) {
-      debugPrint('Failed to upload bodyguard documents: $e');
+    } catch (e, st) {
+      AppLogger.d('Failed to upload bodyguard documents: $e', tag: 'BodyGuardUploadDocumentsScreen', error: e, stackTrace: st);
       if (mounted) {
         AppSnackbar.error('Failed to upload documents. Please try again.');
       }

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -6,6 +5,7 @@ import '/core/constants/api/database_tables.dart';
 import '/core/constants/api/json_keys.dart';
 import '/core/constants/api/storage_buckets.dart';
 import '/core/di/injection_container.dart';
+import '/core/logger/app_logger.dart';
 import '/core/services/file_storage/file_storage.service.dart';
 import '/core/services/file_storage/models/file_upload_request.model.dart';
 import '/features/auth/auth.dart';
@@ -234,8 +234,8 @@ class SupabaseDocumentSubmissionService implements DocumentSubmissionService {
           userId: userId,
           data: {'profile_image_url': uploadedLogoUrl},
         );
-      } catch (e) {
-        debugPrint('Failed to sync company logo URL: $e');
+      } catch (e, st) {
+        AppLogger.d('Failed to sync company logo URL: $e', tag: 'DocumentSubmissionService', error: e, stackTrace: st);
       }
     }
 

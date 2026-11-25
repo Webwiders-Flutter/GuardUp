@@ -5,6 +5,19 @@ import '/features/users/data/enums/week_day.enum.dart';
 part 'user_availability.model.freezed.dart';
 part 'user_availability.model.g.dart';
 
+WeekDay? _weekDayFromJson(dynamic value) {
+  if (value == null) return null;
+  final str = value.toString().toLowerCase().trim();
+  for (final day in WeekDay.values) {
+    if (day.apiValue.toLowerCase() == str || day.name.toLowerCase() == str) {
+      return day;
+    }
+  }
+  return null;
+}
+
+String? _weekDayToJson(WeekDay? day) => day?.apiValue;
+
 /// One row of `user_availabilities`: a user's working hours for one day.
 @freezed
 abstract class UserAvailabilityModel with _$UserAvailabilityModel {
@@ -15,7 +28,7 @@ abstract class UserAvailabilityModel with _$UserAvailabilityModel {
     /// (`bodyguard_id`); exactly one is set.
     String? userId,
     String? bodyguardId,
-    @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
+    @JsonKey(fromJson: _weekDayFromJson, toJson: _weekDayToJson)
     WeekDay? dayOfWeek,
     @Default(true) bool isAvailable,
     @Default('09:00 AM') String fromTime,

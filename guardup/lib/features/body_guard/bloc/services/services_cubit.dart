@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:guardup/core/logger/app_logger.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '/core/constants/api/database_tables.dart';
@@ -40,7 +40,7 @@ class ServicesCubit extends Cubit<List<ServiceItemModel>> {
       emit(services);
       return services;
     } catch (e, stack) {
-      debugPrint('Error loading services in ServicesCubit: $e\n$stack');
+      AppLogger.d('Error loading services in ServicesCubit: $e', tag: 'ServicesCubit', error: e, stackTrace: stack);
       return state;
     } finally {
       _isLoading = false;

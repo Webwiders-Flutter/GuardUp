@@ -26,7 +26,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     // Platform-specific configuration might already be initialized natively.
   }
 
-  AppLogger.i(
+  AppLogger.d(
     'FCM Background message received: '
     'id=${message.messageId}, '
     'title=${message.notification?.title}, '
@@ -128,7 +128,7 @@ final class PushNotificationService {
 
       // 6. Listen to foreground FCM messages
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        AppLogger.i(
+        AppLogger.d(
           'Foreground message received: id=${message.messageId}, data=${message.data}',
           tag: 'PushNotificationService',
         );
@@ -140,7 +140,7 @@ final class PushNotificationService {
 
       // 7. Handle notification tap when app is brought to foreground from background
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-        AppLogger.i(
+        AppLogger.d(
           'Notification tapped from background state: id=${message.messageId}, data=${message.data}',
           tag: 'PushNotificationService',
         );
@@ -151,7 +151,7 @@ final class PushNotificationService {
       final RemoteMessage? initialMessage = await _messaging
           .getInitialMessage();
       if (initialMessage != null) {
-        AppLogger.i(
+        AppLogger.d(
           'App opened from terminated state via notification: id=${initialMessage.messageId}, data=${initialMessage.data}',
           tag: 'PushNotificationService',
         );
@@ -160,7 +160,7 @@ final class PushNotificationService {
 
       // 9. Listen for FCM token registration & refresh events
       _messaging.onRegistered.listen((String newToken) {
-        AppLogger.i(
+        AppLogger.d(
           'FCM token registered / refreshed: $newToken',
           tag: 'PushNotificationService',
         );
@@ -306,7 +306,7 @@ final class PushNotificationService {
         sound: true,
       );
 
-      AppLogger.i(
+      AppLogger.d(
         'Notification permission status: ${settings.authorizationStatus}',
         tag: 'PushNotificationService',
       );
@@ -421,7 +421,7 @@ final class PushNotificationService {
     try {
       await _messaging.unregister();
       _cachedToken = null;
-      AppLogger.i(
+      AppLogger.d(
         'FCM token unregistered successfully.',
         tag: 'PushNotificationService',
       );
@@ -442,7 +442,7 @@ final class PushNotificationService {
   static Future<void> subscribeToTopic(String topic) async {
     try {
       await _messaging.subscribeToTopic(topic);
-      AppLogger.i(
+      AppLogger.d(
         'Subscribed to topic: $topic',
         tag: 'PushNotificationService',
       );
@@ -460,7 +460,7 @@ final class PushNotificationService {
   static Future<void> unsubscribeFromTopic(String topic) async {
     try {
       await _messaging.unsubscribeFromTopic(topic);
-      AppLogger.i(
+      AppLogger.d(
         'Unsubscribed from topic: $topic',
         tag: 'PushNotificationService',
       );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/core/di/injection_container.dart';
+import 'package:guardup/core/logger/app_logger.dart';
 import 'package:quick_container/quick_container.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -147,7 +148,7 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
         _updateSelectedPlan();
       }
     } catch (e, stack) {
-      debugPrint('Error loading dynamic membership plans: $e\n$stack');
+      AppLogger.d('Error loading dynamic membership plans: $e', tag: 'MembershipPlansScreen', error: e, stackTrace: stack);
       if (mounted && _plansNotifier.value.isEmpty) {
         _plansNotifier.value = PlanModel.fakeData;
         _updateSelectedPlan();
@@ -203,7 +204,7 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
     //       context.go(CustomerHomeScreen.route);
     //     }
     //   } catch (e) {
-    //     debugPrint('Failed to save membership plan on onboarding: $e');
+    //     // Failed to save membership plan on onboarding
     //     if (mounted) {
     //       context.go(CustomerHomeScreen.route);
     //     }
@@ -251,7 +252,7 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
     //     context.pop();
     //   }
     // } catch (e) {
-    //   debugPrint('Failed to update membership plan: $e');
+    //   // Failed to update membership plan
     //   if (mounted) {
     //     AppSnackbar.error('Failed to update membership plan: $e');
     //   }

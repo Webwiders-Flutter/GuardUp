@@ -1,9 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
 import '/core/constants/api/database_tables.dart';
 import '/core/di/injection_container.dart';
+import '/core/logger/app_logger.dart';
 import '/core/state/api_state.dart';
 import '/features/auth/bloc/auth_bloc.dart';
 import '/features/auth/data/enum/user_role.enum.dart';
@@ -65,8 +65,8 @@ class LegalContentBloc extends Bloc<LegalContentEvent, LegalContentState> {
         // Fallback to static content if no database record exists
         emit(state.copyWith(contentState: ApiState.success(fallbackData)));
       }
-    } catch (e) {
-      debugPrint('Error fetching legal content from Supabase: $e');
+    } catch (e, st) {
+      AppLogger.d('Error fetching legal content from Supabase: $e', tag: 'LegalContentBloc', error: e, stackTrace: st);
       emit(state.copyWith(contentState: ApiState.success(fallbackData)));
     }
   }

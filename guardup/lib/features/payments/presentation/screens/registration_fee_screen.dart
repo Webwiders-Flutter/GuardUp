@@ -54,8 +54,8 @@ class _RegistrationFeeScreenState extends State<RegistrationFeeScreen> {
           : (authState.user?.name ?? 'User'),
       role: authState.user?.role ?? authState.sessionRole,
       profileImageUrl:
-          (authState.userData?['profile_image_url'] as String?) ??
-          authState.user?.profileImageUrl,
+          authState.user?.profileImageUrl ??
+          authState.avatarUrl,
     );
   }
 

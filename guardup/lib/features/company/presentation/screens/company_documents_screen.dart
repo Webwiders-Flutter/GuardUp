@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:guardup/core/di/injection_container.dart';
+import 'package:guardup/core/logger/app_logger.dart';
 import 'package:guardup/core/services/document_submission/document_submission_service.dart';
 import 'package:guardup/features/auth/auth.dart';
 import 'package:image_picker/image_picker.dart';
@@ -86,8 +87,8 @@ class _CompanyDocumentsScreenState extends State<CompanyDocumentsScreen> {
           _rejectionReasonsNotifier.value = records.rejectionReasons;
         }
       }
-    } catch (e) {
-      debugPrint('Error loading company documents: $e');
+    } catch (e, st) {
+      AppLogger.d('Error loading company documents: $e', tag: 'CompanyDocumentsScreen', error: e, stackTrace: st);
     } finally {
       if (mounted) _isInitialLoadingNotifier.value = false;
     }

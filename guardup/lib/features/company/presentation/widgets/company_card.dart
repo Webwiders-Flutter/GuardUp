@@ -15,7 +15,6 @@ import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 import '../../data/model/company.model.dart';
 import '/features/customer/presentation/screens/booking_screen.dart';
-import '/features/company/presentation/screens/company_details_screen.dart';
 
 /// A luxury security company presentation card rendered across feeds and customer directories.
 ///
@@ -50,7 +49,7 @@ class CompanyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return WrapperCard(
-      onTap: onTap ?? () => context.push(CompanyDetailsScreen.route),
+      onTap: onTap,
       borderRadius: AppRadius.xxl,
       padding: AppSpacing.mlg.allPadding,
       child: Row(
@@ -253,7 +252,7 @@ class CompanyCard extends StatelessWidget {
         ),
         Expanded(
           child: Text(
-            company.experienceYears,
+            company.experienceYearsFormatted,
             style: context.textTheme.labelSmall?.regular().colour(
               context.colors.primary.withValues(alpha: 0.7),
             ),

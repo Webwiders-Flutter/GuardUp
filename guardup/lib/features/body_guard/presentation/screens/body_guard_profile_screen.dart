@@ -7,6 +7,7 @@ import '/core/constants/api/database_tables.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/di/injection_container.dart';
 import '/core/extensions/spacing.extension.dart';
+import '/core/logger/app_logger.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/navigation/app_tab_bar.dart';
 import '/shared/widgets/sections/app_appbar.dart';
@@ -127,8 +128,8 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
           sl<AuthBloc>().add(AuthUpdateUserServices(loaded));
         }
       }
-    } catch (e) {
-      debugPrint('Error loading user services: $e');
+    } catch (e, st) {
+      AppLogger.d('Error loading user services: $e', tag: 'BodyGuardProfileScreen', error: e, stackTrace: st);
     }
   }
 
@@ -136,7 +137,7 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
     EditBioSheet.show(
       context,
       currentBio: currentBio,
-      bodyguardId: _currentBodyguard?.id ?? widget.bodyguard?.id,
+      bodyguardId: _currentBodyguard?.id ?? widget.bodyguard?.id ?? sl<AuthBloc>().state.guardBodyguardId,
       onBioUpdated: (newBio) {
         if (_currentBodyguard != null) {
           setState(() {
@@ -160,7 +161,7 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
   }) {
     EditKeyDetailsSheet.show(
       context,
-      bodyguardId: _currentBodyguard?.id ?? widget.bodyguard?.id,
+      bodyguardId: _currentBodyguard?.id ?? widget.bodyguard?.id ?? sl<AuthBloc>().state.guardBodyguardId,
       experienceYears: experienceYears,
       hourlyRate: hourlyRate,
       address: address,
@@ -204,7 +205,7 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
   }) {
     EditServicesSheet.show(
       context,
-      bodyguardId: _currentBodyguard?.id ?? widget.bodyguard?.id,
+      bodyguardId: _currentBodyguard?.id ?? widget.bodyguard?.id ?? sl<AuthBloc>().state.guardBodyguardId,
       currentServices: currentServices,
       onServicesUpdated: (updated) {
         _servicesNotifier.value = updated;
@@ -225,35 +226,33 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
         }
       },
       builder: (context, state) {
-        final guard = _currentBodyguard ?? widget.bodyguard;
-        final isCompanyGuard = guard != null;
+        final guard = _currentBodyguard ?? widget.bodyguard ?? state.guardProfile;
+        final isCompanyGuard = widget.bodyguard != null;
         final name = isCompanyGuard
-            ? (guard.user.name.isNotEmpty ? guard.user.name : 'Bodyguard')
+            ? (guard?.user.name.isNotEmpty == true ? guard!.user.name : (guard?.name ?? 'Bodyguard'))
             : (state.user?.name ?? state.displayName);
         final rating = guard?.rating ?? state.rating;
         final hourlyRate = guard?.hourlyRate ??
             (state.hourlyRate > 0 ? state.hourlyRate : 60.0);
         final avatar = isCompanyGuard
-            ? (guard.user.profileImageUrl ?? Assets.images.dummyAvatar.path)
+            ? (guard?.user.profileImageUrl ?? guard?.profileImageUrl ?? Assets.images.dummyAvatar.path)
             : (state.avatarUrl.isNotEmpty
                 ? state.avatarUrl
                 : Assets.images.dummyAvatar.path);
-        final bio = isCompanyGuard
-            ? guard.bio
+        final bio = (guard?.bio.isNotEmpty == true)
+            ? guard!.bio
             : (state.bio.isNotEmpty ? state.bio : null);
         final location = (guard?.address?.isNotEmpty == true)
             ? guard!.address!
             : (state.guardAddress.isNotEmpty
                 ? state.guardAddress
                 : 'Location not set');
-        final experienceYears = isCompanyGuard
-            ? guard.experienceYears
-            : state.experienceYears;
-        final languages = isCompanyGuard
-            ? (guard.languages ?? '')
+        final experienceYears = guard?.experienceYears ?? state.experienceYears;
+        final languages = (guard?.languages?.isNotEmpty == true)
+            ? guard!.languages!
             : state.languages;
-        final certifications = isCompanyGuard
-            ? (guard.certifications ?? '')
+        final certifications = (guard?.certifications?.isNotEmpty == true)
+            ? guard!.certifications!
             : state.certifications;
 
         return ValueListenableBuilder<List<ServiceItemModel>>(
@@ -267,7 +266,7 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
             final specialization = effectiveServices.isNotEmpty
                 ? effectiveServices.map((s) => s.name).join(', ')
                 : (isCompanyGuard
-                    ? (guard.clearanceLevel ?? 'Security Operative')
+                    ? (guard?.clearanceLevel ?? 'Security Operative')
                     : (guard?.clearanceLevel ?? state.specializationText));
 
             return Scaffold(
@@ -356,7 +355,7 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
                                 context.horizontalEdgeInsets +
                                 AppSpacing.md.yPadding,
                             child: BodyguardAvailabilityWidget(
-                              bodyguard: guard,
+                              bodyguard: isCompanyGuard ? guard : null,
                             ),
                           ),
 
@@ -365,7 +364,9 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
                             padding:
                                 context.horizontalEdgeInsets +
                                 AppSpacing.md.yPadding,
-                            child: BodyguardDocumentsWidget(bodyguard: guard),
+                            child: BodyguardDocumentsWidget(
+                              bodyguard: isCompanyGuard ? guard : null,
+                            ),
                           ),
 
                           // Tab 4: Reviews

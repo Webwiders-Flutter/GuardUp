@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '/core/error/api_exception.dart';
-import '/core/logger/supabase_logger.dart';
+import '/core/logger/app_logger.dart';
 import '/core/state/api_state.dart';
 import '/features/auth/data/enum/user_status.enum.dart';
 import '/shared/widgets/pagination/pagination.state.dart';
@@ -104,7 +104,7 @@ class CompanyBodyguardsCubit extends Cubit<CompanyBodyguardsState> {
         ),
       );
     } catch (e, st) {
-      SupabaseLogger.error('CompanyBodyguardsCubit.refresh', e, st);
+      AppLogger.e('CompanyBodyguardsCubit.refresh', tag: 'CompanyBodyguards', error: e, stackTrace: st);
       if (isClosed || requestId != _requestId) return;
       emit(
         state.copyWith(
@@ -154,7 +154,7 @@ class CompanyBodyguardsCubit extends Cubit<CompanyBodyguardsState> {
         ),
       );
     } catch (e, st) {
-      SupabaseLogger.error('CompanyBodyguardsCubit.loadMore', e, st);
+      AppLogger.e('CompanyBodyguardsCubit.loadMore', tag: 'CompanyBodyguards', error: e, stackTrace: st);
       if (isClosed || requestId != _requestId) return;
       emit(
         state.copyWith(
@@ -183,7 +183,7 @@ class CompanyBodyguardsCubit extends Cubit<CompanyBodyguardsState> {
       );
       return true;
     } catch (e, st) {
-      SupabaseLogger.error('CompanyBodyguardsCubit.delete', e, st);
+      AppLogger.e('CompanyBodyguardsCubit.delete', tag: 'CompanyBodyguards', error: e, stackTrace: st);
       if (!isClosed) emit(state.copyWith(actionError: _message(e)));
       return false;
     }

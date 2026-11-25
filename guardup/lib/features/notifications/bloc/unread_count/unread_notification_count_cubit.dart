@@ -26,7 +26,7 @@ class UnreadNotificationCountCubit extends Cubit<int> {
     _pushSubscription = PushNotificationService.onForegroundMessage.listen((
       message,
     ) {
-      AppLogger.i(
+      AppLogger.d(
         'New push notification received in foreground. Incrementing unread count.',
         tag: 'UnreadNotificationCountCubit',
       );

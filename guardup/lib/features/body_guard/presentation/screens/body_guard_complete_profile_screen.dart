@@ -16,6 +16,7 @@ import '../../../../core/constants/api/database_tables.dart';
 import '../../../../core/constants/api/json_keys.dart';
 import '../../../../core/error/api_exception.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/logger/app_logger.dart';
 import '../../../auth/auth.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
@@ -167,7 +168,7 @@ class _BodyGuardCompleteProfileScreenState
         _availableServicesNotifier.value = services;
       }
     } catch (e, stack) {
-      debugPrint('Error loading services: $e\n$stack');
+      AppLogger.d('Error loading services: $e', tag: 'BodyGuardCompleteProfileScreen', error: e, stackTrace: stack);
     } finally {
       if (mounted) {
         _isServicesLoadingNotifier.value = false;
@@ -208,7 +209,7 @@ class _BodyGuardCompleteProfileScreenState
       _selectedServicesNotifier.value = validServices;
       _serviceDropdownController.setSelection(validServices);
     } catch (e, stack) {
-      debugPrint('Error loading company bodyguard: $e\n$stack');
+      AppLogger.d('Error loading company bodyguard: $e', tag: 'BodyGuardCompleteProfileScreen', error: e, stackTrace: stack);
     }
   }
 
@@ -270,7 +271,7 @@ class _BodyGuardCompleteProfileScreenState
           _selectedServicesNotifier.value = validServices;
           _serviceDropdownController.setSelection(validServices);
         } catch (e, stack) {
-          debugPrint('Error loading user services: $e\n$stack');
+          AppLogger.d('Error loading user services: $e', tag: 'BodyGuardCompleteProfileScreen', error: e, stackTrace: stack);
         }
 
         final dbAvatar = data['profile_image_url'] as String?;
@@ -282,7 +283,7 @@ class _BodyGuardCompleteProfileScreenState
         }
       }
     } catch (e, stack) {
-      debugPrint('Error loading existing profile: $e\n$stack');
+      AppLogger.d('Error loading existing profile: $e', tag: 'BodyGuardCompleteProfileScreen', error: e, stackTrace: stack);
     }
   }
 
@@ -376,7 +377,7 @@ class _BodyGuardCompleteProfileScreenState
               ),
             );
           } catch (e, stack) {
-            debugPrint('Avatar upload failed: $e\n$stack');
+            AppLogger.d('Avatar upload failed: $e', tag: 'BodyGuardCompleteProfileScreen', error: e, stackTrace: stack);
           }
         }
 
@@ -458,7 +459,7 @@ class _BodyGuardCompleteProfileScreenState
         }
       }
     } catch (e, stack) {
-      debugPrint('Failed to save bodyguard profile: $e\n$stack');
+      AppLogger.d('Failed to save bodyguard profile: $e', tag: 'BodyGuardCompleteProfileScreen', error: e, stackTrace: stack);
       if (mounted) {
         AppSnackbar.error('Failed to save profile details. Please try again.');
       }
@@ -491,7 +492,7 @@ class _BodyGuardCompleteProfileScreenState
             ),
           );
         } catch (e, stack) {
-          debugPrint('Bodyguard avatar upload failed: $e\n$stack');
+          AppLogger.d('Bodyguard avatar upload failed: $e', tag: 'BodyGuardCompleteProfileScreen', error: e, stackTrace: stack);
         }
       }
 
@@ -512,6 +513,9 @@ class _BodyGuardCompleteProfileScreenState
       );
       _savedBodyguardId = saved.id;
       await repository.setServices(saved.id, _selectedServicesNotifier.value);
+      if (existingId == null) {
+        await repository.initDefaultAvailability(saved.id);
+      }
 
       if (!mounted) return;
       _isLoadingNotifier.value = false;
@@ -526,7 +530,7 @@ class _BodyGuardCompleteProfileScreenState
         context.pop(true);
       }
     } catch (e, stack) {
-      debugPrint('Failed to save company bodyguard: $e\n$stack');
+      AppLogger.d('Failed to save company bodyguard: $e', tag: 'BodyGuardCompleteProfileScreen', error: e, stackTrace: stack);
       if (mounted) {
         AppSnackbar.error(
           e is ApiException

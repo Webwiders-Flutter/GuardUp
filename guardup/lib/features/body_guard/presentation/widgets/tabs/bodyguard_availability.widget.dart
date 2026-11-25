@@ -122,8 +122,8 @@ class _BodyguardAvailabilityWidgetState
         // Fallback to metadata['availability'] if table is not yet populated
         final rawAvailability = sl<AuthBloc>()
             .state
-            .userData?['metadata'] is Map
-            ? (sl<AuthBloc>().state.userData!['metadata'] as Map)['availability']
+            .user?.metadata?['availability'] is Map
+            ? sl<AuthBloc>().state.user!.metadata!['availability']
                 as Map<String, dynamic>?
             : null;
 

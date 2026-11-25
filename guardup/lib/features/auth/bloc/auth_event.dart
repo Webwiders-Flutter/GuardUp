@@ -34,17 +34,15 @@ class AuthProfileChanged extends AuthEvent {
   final UserModel? profile;
   final UserStatus? status;
   final String? email;
-  final Map<String, dynamic>? userData;
 
   const AuthProfileChanged(
     this.profile, {
     this.status,
     this.email,
-    this.userData,
   });
 
   @override
-  List<Object?> get props => [profile, status, email, userData];
+  List<Object?> get props => [profile, status, email];
 }
 
 /// Internal event dispatched when an error occurs on a background stream.

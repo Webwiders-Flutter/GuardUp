@@ -256,7 +256,7 @@ class ProfileScreen extends StatelessWidget {
       logoUrl: logoUrl,
       rating: rating,
       bio: companyType,
-      experienceYears: state.experienceYearsFormatted,
+      experienceYears: state.experienceYears,
       isVerified: true,
       isOnline: true,
       activeGuards: 0,

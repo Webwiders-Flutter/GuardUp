@@ -104,7 +104,7 @@ class UserDeviceController extends AsyncNotifier<UserDeviceModel?> {
     PushNotificationService.onTokenRefresh.listen((newToken) async {
       final userId = getUserId();
       if (userId.isNotEmpty) {
-        AppLogger.i(
+        AppLogger.d(
           'New token emitted from FCM. Updating user_devices...',
           tag: 'UserDeviceController',
         );

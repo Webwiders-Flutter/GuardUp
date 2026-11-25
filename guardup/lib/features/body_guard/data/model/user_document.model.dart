@@ -3,7 +3,8 @@ import '../enum/document_status.enum.dart';
 /// Represents a document submitted by a Guard or Company user.
 class UserDocumentModel {
   final String id;
-  final String userId;
+  final String? userId;
+  final String? bodyguardId;
   final String documentTypeId;
   final String fileUrl;
   final String? fileName;
@@ -14,7 +15,8 @@ class UserDocumentModel {
 
   const UserDocumentModel({
     required this.id,
-    required this.userId,
+    this.userId,
+    this.bodyguardId,
     required this.documentTypeId,
     required this.fileUrl,
     this.fileName,
@@ -27,7 +29,8 @@ class UserDocumentModel {
   factory UserDocumentModel.fromJson(Map<String, dynamic> json) {
     return UserDocumentModel(
       id: (json['id'] ?? '') as String,
-      userId: (json['user_id'] ?? '') as String,
+      userId: json['user_id'] as String?,
+      bodyguardId: json['bodyguard_id'] as String?,
       documentTypeId: (json['document_type_id'] ?? '') as String,
       fileUrl: (json['file_url'] ?? '') as String,
       fileName: json['file_name'] as String?,
@@ -45,7 +48,8 @@ class UserDocumentModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'user_id': userId,
+      if (userId != null) 'user_id': userId,
+      if (bodyguardId != null) 'bodyguard_id': bodyguardId,
       'document_type_id': documentTypeId,
       'file_url': fileUrl,
       'file_name': fileName,
@@ -56,4 +60,3 @@ class UserDocumentModel {
     };
   }
 }
-

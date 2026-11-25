@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:supabase_flutter/supabase_flutter.dart' as supa;
 
-import '/core/logger/supabase_logger.dart';
+import '/core/logger/app_logger.dart';
 import '../../domain/repositories/auth_repository.dart';
 
 /// Concrete Supabase implementation of [AuthRepository] with full logging.
@@ -15,12 +15,14 @@ class SupabaseAuthRepository implements AuthRepository {
     return client ?? supa.Supabase.instance.client;
   }
 
+  static const String _tag = 'AuthRepository';
+
   @override
   Stream<String?> get authStateChanges {
     return _supabase.auth.onAuthStateChange.map((data) {
-      SupabaseLogger.info(
+      AppLogger.d(
         'Auth state changed: event=${data.event}, sessionUser=${data.session?.user.id}',
-        operation: 'authStateChanges',
+        tag: _tag,
       );
       return data.session?.user.id;
     });
@@ -39,11 +41,7 @@ class SupabaseAuthRepository implements AuthRepository {
     Map<String, dynamic>? metadata,
   }) async {
     final normalizedEmail = email.trim().toLowerCase();
-    SupabaseLogger.request('signUpWithEmail', payload: {
-      'email': normalizedEmail,
-      'password': password,
-      'metadata': metadata,
-    });
+    AppLogger.d('signUpWithEmail: $normalizedEmail', tag: _tag);
 
     try {
       final response = await _supabase.auth.signUp(
@@ -55,10 +53,10 @@ class SupabaseAuthRepository implements AuthRepository {
       if (user == null) {
         throw Exception('Sign up failed: User response was null.');
       }
-      SupabaseLogger.success('signUpWithEmail', result: 'userId=${user.id}, email=${user.email}');
+      AppLogger.d('signUpWithEmail success: userId=${user.id}, email=${user.email}', tag: _tag);
       return user.id;
     } catch (e, st) {
-      SupabaseLogger.error('signUpWithEmail', e, st);
+      AppLogger.e('signUpWithEmail error', tag: _tag, error: e, stackTrace: st);
       rethrow;
     }
   }
@@ -68,10 +66,7 @@ class SupabaseAuthRepository implements AuthRepository {
     required String email,
     required String password,
   }) async {
-    SupabaseLogger.request('signInWithEmail', payload: {
-      'email': email.trim(),
-      'password': password,
-    });
+    AppLogger.d('signInWithEmail: ${email.trim()}', tag: _tag);
 
     try {
       final response = await _supabase.auth.signInWithPassword(
@@ -82,10 +77,10 @@ class SupabaseAuthRepository implements AuthRepository {
       if (user == null) {
         throw Exception('Sign in failed: User response was null.');
       }
-      SupabaseLogger.success('signInWithEmail', result: 'userId=${user.id}');
+      AppLogger.d('signInWithEmail success: userId=${user.id}', tag: _tag);
       return user.id;
     } catch (e, st) {
-      SupabaseLogger.error('signInWithEmail', e, st);
+      AppLogger.e('signInWithEmail error', tag: _tag, error: e, stackTrace: st);
       rethrow;
     }
   }
@@ -96,10 +91,7 @@ class SupabaseAuthRepository implements AuthRepository {
     String? password,
     Map<String, dynamic>? metadata,
   }) async {
-    SupabaseLogger.request('signUpWithPhone', payload: {
-      'phone': phoneNumber.trim(),
-      'metadata': metadata,
-    });
+    AppLogger.d('signUpWithPhone: ${phoneNumber.trim()}', tag: _tag);
 
     try {
       if (password != null && password.isNotEmpty) {
@@ -114,21 +106,21 @@ class SupabaseAuthRepository implements AuthRepository {
           data: metadata,
         );
       }
-      SupabaseLogger.success('signUpWithPhone', message: 'SMS OTP or signup initiated');
+      AppLogger.d('signUpWithPhone success', tag: _tag);
     } catch (e, st) {
-      SupabaseLogger.error('signUpWithPhone', e, st);
+      AppLogger.e('signUpWithPhone error', tag: _tag, error: e, stackTrace: st);
       rethrow;
     }
   }
 
   @override
   Future<void> signInWithPhone({required String phoneNumber}) async {
-    SupabaseLogger.request('signInWithPhone', details: phoneNumber.trim());
+    AppLogger.d('signInWithPhone: ${phoneNumber.trim()}', tag: _tag);
     try {
       await _supabase.auth.signInWithOtp(phone: phoneNumber.trim());
-      SupabaseLogger.success('signInWithPhone', message: 'SMS OTP sent');
+      AppLogger.d('signInWithPhone success: SMS OTP sent', tag: _tag);
     } catch (e, st) {
-      SupabaseLogger.error('signInWithPhone', e, st);
+      AppLogger.e('signInWithPhone error', tag: _tag, error: e, stackTrace: st);
       rethrow;
     }
   }
@@ -139,11 +131,9 @@ class SupabaseAuthRepository implements AuthRepository {
     required String token,
     required OtpType type,
   }) async {
-    SupabaseLogger.request('verifyOtp', payload: {
-      'target': target,
-      'token': token,
-      'type': type.apiValue,
-    });
+    final isEmail = target.contains('@');
+    final normalizedTarget = isEmail ? target.trim().toLowerCase() : target.trim();
+    AppLogger.d('verifyOtp: target=$normalizedTarget, type=${type.apiValue}', tag: _tag);
 
     supa.OtpType supaOtpType;
     switch (type) {
@@ -160,13 +150,6 @@ class SupabaseAuthRepository implements AuthRepository {
       case OtpType.phoneChange:
         supaOtpType = supa.OtpType.phoneChange;
     }
-
-    final isEmail = target.contains('@');
-    final normalizedTarget = isEmail ? target.trim().toLowerCase() : target.trim();
-    SupabaseLogger.request(
-      'verifyOtp',
-      details: 'target=$normalizedTarget, type=${type.apiValue}, tokenLength=${token.trim().length}',
-    );
 
     try {
       supa.AuthResponse response;
@@ -201,10 +184,10 @@ class SupabaseAuthRepository implements AuthRepository {
       if (user == null) {
         throw Exception('OTP verification failed: User was null.');
       }
-      SupabaseLogger.success('verifyOtp', result: 'verified userId=${user.id}');
+      AppLogger.d('verifyOtp success: userId=${user.id}', tag: _tag);
       return user.id;
     } catch (e, st) {
-      SupabaseLogger.error('verifyOtp', e, st);
+      AppLogger.e('verifyOtp error', tag: _tag, error: e, stackTrace: st);
       rethrow;
     }
   }
@@ -213,15 +196,15 @@ class SupabaseAuthRepository implements AuthRepository {
   Future<void> resendOtp({required String target, required OtpType type}) async {
     final isEmail = target.contains('@');
     final normalizedTarget = isEmail ? target.trim().toLowerCase() : target.trim();
-    SupabaseLogger.request('resendOtp', details: 'target=$normalizedTarget, type=${type.apiValue}');
+    AppLogger.d('resendOtp: target=$normalizedTarget, type=${type.apiValue}', tag: _tag);
 
     if (type == OtpType.recovery && isEmail) {
       try {
         await _supabase.auth.resetPasswordForEmail(normalizedTarget);
-        SupabaseLogger.success('resendOtp', message: 'Resent recovery code to $normalizedTarget');
+        AppLogger.d('resendOtp success: resent recovery code to $normalizedTarget', tag: _tag);
         return;
       } catch (e, st) {
-        SupabaseLogger.error('resendOtp', e, st);
+        AppLogger.e('resendOtp error', tag: _tag, error: e, stackTrace: st);
         rethrow;
       }
     }
@@ -247,9 +230,9 @@ class SupabaseAuthRepository implements AuthRepository {
         email: isEmail ? normalizedTarget : null,
         phone: !isEmail ? normalizedTarget : null,
       );
-      SupabaseLogger.success('resendOtp', message: 'Resent code to $normalizedTarget');
+      AppLogger.d('resendOtp success: resent code to $normalizedTarget', tag: _tag);
     } catch (e, st) {
-      SupabaseLogger.error('resendOtp', e, st);
+      AppLogger.e('resendOtp error', tag: _tag, error: e, stackTrace: st);
       rethrow;
     }
   }
@@ -260,7 +243,7 @@ class SupabaseAuthRepository implements AuthRepository {
     List<String>? scopes,
     Map<String, String>? queryParams,
   }) async {
-    SupabaseLogger.request('signInWithOAuth', details: 'provider=${provider.name}');
+    AppLogger.d('signInWithOAuth: provider=${provider.name}', tag: _tag);
 
     supa.OAuthProvider supaProvider;
     switch (provider) {
@@ -285,51 +268,51 @@ class SupabaseAuthRepository implements AuthRepository {
       if (!success) {
         throw Exception('OAuth sign in initiation failed.');
       }
-      SupabaseLogger.success('signInWithOAuth', message: 'OAuth flow opened');
+      AppLogger.d('signInWithOAuth success: flow opened', tag: _tag);
       return currentUserId ?? '';
     } catch (e, st) {
-      SupabaseLogger.error('signInWithOAuth', e, st);
+      AppLogger.e('signInWithOAuth error', tag: _tag, error: e, stackTrace: st);
       rethrow;
     }
   }
 
   @override
   Future<void> signInWithMagicLink({required String email}) async {
-    SupabaseLogger.request('signInWithMagicLink', details: email.trim());
+    AppLogger.d('signInWithMagicLink: ${email.trim()}', tag: _tag);
     try {
       await _supabase.auth.signInWithOtp(email: email.trim());
-      SupabaseLogger.success('signInWithMagicLink', message: 'Magic link sent');
+      AppLogger.d('signInWithMagicLink success: sent', tag: _tag);
     } catch (e, st) {
-      SupabaseLogger.error('signInWithMagicLink', e, st);
+      AppLogger.e('signInWithMagicLink error', tag: _tag, error: e, stackTrace: st);
       rethrow;
     }
   }
 
   @override
   Future<String> signInAnonymously() async {
-    SupabaseLogger.request('signInAnonymously');
+    AppLogger.d('signInAnonymously', tag: _tag);
     try {
       final response = await _supabase.auth.signInAnonymously();
       final user = response.user;
       if (user == null) {
         throw Exception('Anonymous sign in failed.');
       }
-      SupabaseLogger.success('signInAnonymously', result: 'userId=${user.id}');
+      AppLogger.d('signInAnonymously success: userId=${user.id}', tag: _tag);
       return user.id;
     } catch (e, st) {
-      SupabaseLogger.error('signInAnonymously', e, st);
+      AppLogger.e('signInAnonymously error', tag: _tag, error: e, stackTrace: st);
       rethrow;
     }
   }
 
   @override
   Future<void> sendPasswordResetEmail({required String email}) async {
-    SupabaseLogger.request('sendPasswordResetEmail', details: email.trim());
+    AppLogger.d('sendPasswordResetEmail: ${email.trim()}', tag: _tag);
     try {
       await _supabase.auth.resetPasswordForEmail(email.trim());
-      SupabaseLogger.success('sendPasswordResetEmail', message: 'Reset email sent');
+      AppLogger.d('sendPasswordResetEmail success', tag: _tag);
     } catch (e, st) {
-      SupabaseLogger.error('sendPasswordResetEmail', e, st);
+      AppLogger.e('sendPasswordResetEmail error', tag: _tag, error: e, stackTrace: st);
       rethrow;
     }
   }
@@ -339,7 +322,7 @@ class SupabaseAuthRepository implements AuthRepository {
     required String newPassword,
     String? oldPassword,
   }) async {
-    SupabaseLogger.request('changePassword');
+    AppLogger.d('changePassword', tag: _tag);
     try {
       if (oldPassword != null && oldPassword.isNotEmpty) {
         final currentEmail = _supabase.auth.currentUser?.email;
@@ -360,9 +343,9 @@ class SupabaseAuthRepository implements AuthRepository {
       await _supabase.auth.updateUser(
         supa.UserAttributes(password: newPassword),
       );
-      SupabaseLogger.success('changePassword', message: 'Password updated successfully');
+      AppLogger.d('changePassword success', tag: _tag);
     } catch (e, st) {
-      SupabaseLogger.error('changePassword', e, st);
+      AppLogger.e('changePassword error', tag: _tag, error: e, stackTrace: st);
       rethrow;
     }
   }
@@ -373,10 +356,7 @@ class SupabaseAuthRepository implements AuthRepository {
     String? password,
     Map<String, dynamic>? metadata,
   }) async {
-    SupabaseLogger.request('updateUser', payload: {
-      'email': email,
-      'metadata': metadata,
-    });
+    AppLogger.d('updateUser: email=$email', tag: _tag);
     try {
       await _supabase.auth.updateUser(
         supa.UserAttributes(
@@ -385,33 +365,33 @@ class SupabaseAuthRepository implements AuthRepository {
           data: metadata,
         ),
       );
-      SupabaseLogger.success('updateUser', message: 'User updated successfully');
+      AppLogger.d('updateUser success', tag: _tag);
     } catch (e, st) {
-      SupabaseLogger.error('updateUser', e, st);
+      AppLogger.e('updateUser error', tag: _tag, error: e, stackTrace: st);
       rethrow;
     }
   }
 
   @override
   Future<void> refreshSession() async {
-    SupabaseLogger.request('refreshSession');
+    AppLogger.d('refreshSession', tag: _tag);
     try {
       await _supabase.auth.refreshSession();
-      SupabaseLogger.success('refreshSession', message: 'Session refreshed');
+      AppLogger.d('refreshSession success', tag: _tag);
     } catch (e, st) {
-      SupabaseLogger.error('refreshSession', e, st);
+      AppLogger.e('refreshSession error', tag: _tag, error: e, stackTrace: st);
       rethrow;
     }
   }
 
   @override
   Future<void> signOut() async {
-    SupabaseLogger.request('signOut', details: 'userId=$currentUserId');
+    AppLogger.d('signOut: userId=$currentUserId', tag: _tag);
     try {
       await _supabase.auth.signOut();
-      SupabaseLogger.success('signOut', message: 'Signed out successfully');
+      AppLogger.d('signOut success', tag: _tag);
     } catch (e, st) {
-      SupabaseLogger.error('signOut', e, st);
+      AppLogger.e('signOut error', tag: _tag, error: e, stackTrace: st);
       rethrow;
     }
   }
@@ -419,7 +399,7 @@ class SupabaseAuthRepository implements AuthRepository {
   @override
   Future<void> deleteAccount() async {
     final uid = currentUserId;
-    SupabaseLogger.warning('deleteAccount requested for userId=$uid');
+    AppLogger.w('deleteAccount requested for userId=$uid', tag: _tag);
     try {
       if (uid != null) {
         await _supabase.rpc('delete_user', params: {'p_user_id': uid});
@@ -429,9 +409,9 @@ class SupabaseAuthRepository implements AuthRepository {
       } catch (_) {
         // Ignored: session could already be destroyed by delete_user RPC
       }
-      SupabaseLogger.success('deleteAccount', message: 'Account deleted');
+      AppLogger.d('deleteAccount success', tag: _tag);
     } catch (e, st) {
-      SupabaseLogger.error('deleteAccount', e, st);
+      AppLogger.e('deleteAccount error', tag: _tag, error: e, stackTrace: st);
       rethrow;
     }
   }

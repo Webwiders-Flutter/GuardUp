@@ -88,7 +88,7 @@ class UserDeviceCubit extends Cubit<UserDeviceModel?> {
     ) async {
       final userId = getUserId();
       if (userId.isNotEmpty) {
-        AppLogger.i(
+        AppLogger.d(
           'New token emitted from FCM. Updating user_devices...',
           tag: 'UserDeviceCubit',
         );

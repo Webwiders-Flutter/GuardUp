@@ -35,7 +35,7 @@ class UnreadNotificationCountController extends AsyncNotifier<int> {
     _pushSubscription = PushNotificationService.onForegroundMessage.listen((
       message,
     ) {
-      AppLogger.i(
+      AppLogger.d(
         'New push notification received in foreground. Incrementing unread count.',
         tag: 'UnreadNotificationCountController',
       );

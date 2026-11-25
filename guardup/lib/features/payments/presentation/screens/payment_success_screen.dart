@@ -56,7 +56,7 @@ class PaymentSuccessScreen extends StatelessWidget {
     final initials = companyName.isNotEmpty ? companyName.getInitials() : 'SP';
     final referenceId = transaction?.referenceId ??
         transaction?.bookingId ??
-        (authState?.userData?['metadata']?['payment_reference'] as String?) ??
+        (authState?.user?.metadata?['payment_reference'] as String?) ??
         '#GD-884920';
     final scheduleText =
         transaction?.scheduleText ??
@@ -64,7 +64,7 @@ class PaymentSuccessScreen extends StatelessWidget {
         'Today, 2:00 PM – 4:00 PM';
     final dynamicFee = transaction?.amount ??
         double.tryParse(
-          authState?.userData?['metadata']?['payment_amount']?.toString() ?? '',
+          authState?.user?.metadata?['payment_amount']?.toString() ?? '',
         ) ??
         context.read<AdminSettingsCubit>().getRegistrationFee(
           isGuard ? UserRole.guard : UserRole.company,

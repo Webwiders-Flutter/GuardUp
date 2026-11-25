@@ -49,7 +49,7 @@ class BodyguardDetailsSection extends StatelessWidget {
         ),
         (
           label: 'Rating',
-          value: rating > 0 ? '★ ${rating.toStringAsFixed(1)}' : '0.0 (New)',
+          value: rating > 0 ? '★ ${rating.toStringAsFixed(1)}' : '0.0',
           icon: Icons.star_rate_rounded,
         ),
         (

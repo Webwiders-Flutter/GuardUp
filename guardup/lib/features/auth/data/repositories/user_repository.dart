@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' as supa;
 
 import '/core/constants/api/database_tables.dart';
 import '/core/constants/api/json_keys.dart';
-import '/core/logger/supabase_logger.dart';
+import '/core/logger/app_logger.dart';
 import '../../domain/repositories/user_repository.dart';
 import '../profile_fields.dart';
 import '../model/user.model.dart';
@@ -22,6 +22,8 @@ class SupabaseUserRepository extends UserRepository {
     return client ?? supa.Supabase.instance.client;
   }
 
+  static const String _tag = 'UserRepository';
+
   @override
   Stream<UserModel?> watchUserProfile(String userId) {
     return watchUserData(userId).map((data) {
@@ -38,10 +40,7 @@ class SupabaseUserRepository extends UserRepository {
   /// Emits `null` only when the account row itself disappears.
   @override
   Stream<Map<String, dynamic>?> watchUserData(String userId) {
-    SupabaseLogger.info(
-      'Subscribing to realtime user profile for userId=$userId',
-      operation: 'watchUserData',
-    );
+    AppLogger.d('Subscribing to realtime user profile for userId=$userId', tag: _tag);
 
     final subscriptions = <StreamSubscription<List<Map<String, dynamic>>>>[];
     late final StreamController<Map<String, dynamic>?> controller;
@@ -52,10 +51,7 @@ class SupabaseUserRepository extends UserRepository {
     var isClosed = false;
 
     void logError(Object error) {
-      SupabaseLogger.warning(
-        'Realtime subscription error for userId=$userId: $error',
-        operation: 'watchUserData',
-      );
+      AppLogger.w('Realtime subscription error for userId=$userId: $error', tag: _tag);
     }
 
     Future<void> emitMerged() async {
@@ -64,10 +60,7 @@ class SupabaseUserRepository extends UserRepository {
       try {
         merged = await _fetchProfileRow(userId);
       } catch (e) {
-        SupabaseLogger.warning(
-          'Could not re-read profile for userId=$userId: $e',
-          operation: 'watchUserData',
-        );
+        AppLogger.w('Could not re-read profile for userId=$userId: $e', tag: _tag);
       }
       // A newer change (or cancellation) superseded this read.
       if (isClosed || current != generation) return;
@@ -108,8 +101,9 @@ class SupabaseUserRepository extends UserRepository {
               .eq(JsonKeys.id, userId)
               .listen((rows) {
                 if (rows.isEmpty) {
-                  SupabaseLogger.warning(
+                  AppLogger.w(
                     'Realtime stream received empty rows for userId=$userId (User might be deleted)',
+                    tag: _tag,
                   );
                   generation++;
                   accountRow = null;
@@ -118,8 +112,9 @@ class SupabaseUserRepository extends UserRepository {
                   return;
                 }
                 final row = rows.first;
-                SupabaseLogger.info(
+                AppLogger.d(
                   'Realtime user update: status=${row[JsonKeys.status]}, name=${row[JsonKeys.name]}, role=${row[JsonKeys.role]}',
+                  tag: _tag,
                 );
                 accountRow = row;
                 watchProfileTable(row[JsonKeys.role] as String?);
@@ -151,73 +146,69 @@ class SupabaseUserRepository extends UserRepository {
 
   @override
   Future<UserModel?> getUserProfile(String userId) async {
-    SupabaseLogger.request('getUserProfile', details: 'userId=$userId');
+    AppLogger.d('getUserProfile: userId=$userId', tag: _tag);
     try {
-      final response = await _supabase
-          .from(DatabaseTables.users)
-          .select()
-          .eq('id', userId)
-          .maybeSingle();
+      final response = await _fetchProfileRow(userId);
 
       if (response == null) {
-        SupabaseLogger.warning('No profile found in users table for userId=$userId');
+        AppLogger.w('No profile found in users table for userId=$userId', tag: _tag);
         return null;
       }
       final model = UserModel.fromJson(response);
-      SupabaseLogger.success('getUserProfile', result: 'name=${model.name}, role=${model.role}');
+      AppLogger.d('getUserProfile success: name=${model.name}, role=${model.role}', tag: _tag);
       return model;
     } catch (e, st) {
-      SupabaseLogger.error('getUserProfile', e, st);
+      AppLogger.e('getUserProfile error', tag: _tag, error: e, stackTrace: st);
       rethrow;
     }
   }
 
   @override
   Future<Map<String, dynamic>?> getUserData(String userId) async {
-    SupabaseLogger.request('getUserData', details: 'userId=$userId');
+    AppLogger.d('getUserData: userId=$userId', tag: _tag);
     try {
       final response = await _fetchProfileRow(userId);
 
       if (response == null) {
-        SupabaseLogger.warning('No data found in users table for userId=$userId');
+        AppLogger.w('No data found in users table for userId=$userId', tag: _tag);
         return null;
       }
-      SupabaseLogger.success(
-        'getUserData',
-        result: 'role=${response['role']}, status=${response['status']}',
+      AppLogger.d(
+        'getUserData success: role=${response['role']}, status=${response['status']}',
+        tag: _tag,
       );
       return response;
     } catch (e, st) {
-      SupabaseLogger.error('getUserData', e, st);
+      AppLogger.e('getUserData error', tag: _tag, error: e, stackTrace: st);
       return null;
     }
   }
 
   @override
   Future<void> createUserProfile({required UserModel user}) async {
-    SupabaseLogger.request('createUserProfile', payload: user.toJson());
+    AppLogger.d('createUserProfile: id=${user.id}', tag: _tag);
     try {
       final json = user.toJson();
       json['id'] = user.id;
       await _supabase.from(DatabaseTables.users).upsert(json);
-      SupabaseLogger.success('createUserProfile', message: 'User profile created for id=${user.id}');
+      AppLogger.d('createUserProfile success: id=${user.id}', tag: _tag);
     } catch (e, st) {
-      SupabaseLogger.error('createUserProfile', e, st);
+      AppLogger.e('createUserProfile error', tag: _tag, error: e, stackTrace: st);
       rethrow;
     }
   }
 
   @override
   Future<void> updateUserProfile({required UserModel user}) async {
-    SupabaseLogger.request('updateUserProfile', payload: user.toJson());
+    AppLogger.d('updateUserProfile: id=${user.id}', tag: _tag);
     try {
       await _supabase
           .from(DatabaseTables.users)
           .update(user.toJson())
           .eq('id', user.id);
-      SupabaseLogger.success('updateUserProfile', message: 'User updated for id=${user.id}');
+      AppLogger.d('updateUserProfile success: id=${user.id}', tag: _tag);
     } catch (e, st) {
-      SupabaseLogger.error('updateUserProfile', e, st);
+      AppLogger.e('updateUserProfile error', tag: _tag, error: e, stackTrace: st);
       rethrow;
     }
   }
@@ -234,7 +225,7 @@ class SupabaseUserRepository extends UserRepository {
     required String userId,
     required Map<String, dynamic> data,
   }) async {
-    SupabaseLogger.request('updateProfileFields', payload: {'userId': userId, ...data});
+    AppLogger.d('updateProfileFields: userId=$userId', tag: _tag);
     try {
       String? role;
       if (ProfileFields.hasRoleColumns(data)) {
@@ -248,8 +239,9 @@ class SupabaseUserRepository extends UserRepository {
 
       final split = ProfileFields.split(data, role);
       if (split.ignored.isNotEmpty) {
-        SupabaseLogger.warning(
+        AppLogger.w(
           'updateProfileFields: ignoring ${split.ignored}, not profile columns for role=$role',
+          tag: _tag,
         );
       }
 
@@ -268,21 +260,21 @@ class SupabaseUserRepository extends UserRepository {
             .update(split.account)
             .eq(JsonKeys.id, userId);
       }
-      SupabaseLogger.success('updateProfileFields', message: 'Fields updated for userId=$userId');
+      AppLogger.d('updateProfileFields success: userId=$userId', tag: _tag);
     } catch (e, st) {
-      SupabaseLogger.error('updateProfileFields', e, st);
+      AppLogger.e('updateProfileFields error', tag: _tag, error: e, stackTrace: st);
       rethrow;
     }
   }
 
   @override
   Future<void> deleteUserProfile(String userId) async {
-    SupabaseLogger.request('deleteUserProfile', details: 'userId=$userId');
+    AppLogger.d('deleteUserProfile: userId=$userId', tag: _tag);
     try {
       await _supabase.from(DatabaseTables.users).delete().eq('id', userId);
-      SupabaseLogger.success('deleteUserProfile', message: 'Deleted profile for userId=$userId');
+      AppLogger.d('deleteUserProfile success: userId=$userId', tag: _tag);
     } catch (e, st) {
-      SupabaseLogger.error('deleteUserProfile', e, st);
+      AppLogger.e('deleteUserProfile error', tag: _tag, error: e, stackTrace: st);
       rethrow;
     }
   }
@@ -296,10 +288,10 @@ class SupabaseUserRepository extends UserRepository {
           .eq('id', userId)
           .maybeSingle();
       final exists = response != null;
-      SupabaseLogger.info('userProfileExists: $exists for userId=$userId');
+      AppLogger.d('userProfileExists: $exists for userId=$userId', tag: _tag);
       return exists;
     } catch (e, st) {
-      SupabaseLogger.error('userProfileExists', e, st);
+      AppLogger.e('userProfileExists error', tag: _tag, error: e, stackTrace: st);
       return false;
     }
   }
@@ -314,11 +306,7 @@ class SupabaseUserRepository extends UserRepository {
     final cleanPhone = phone?.trim();
     final cleanPhoneCode = phoneCode?.trim() ?? '+91';
 
-    SupabaseLogger.request('checkRegistrationConflict', payload: {
-      'email': cleanEmail,
-      'phone': cleanPhone,
-      'phone_code': cleanPhoneCode,
-    });
+    AppLogger.d('checkRegistrationConflict: $cleanEmail', tag: _tag);
 
     try {
       // Call Security Definer RPC so anonymous sign-up flow can check conflicts
@@ -337,18 +325,15 @@ class SupabaseUserRepository extends UserRepository {
         if (hasConflict) {
           final message = res['message'] as String? ??
               'This account is already registered. Please sign in or use different details.';
-          SupabaseLogger.warning('Conflict detected: $message');
+          AppLogger.w('Conflict detected: $message', tag: _tag);
           return message;
         }
       }
 
-      SupabaseLogger.success(
-        'checkRegistrationConflict',
-        result: 'No active conflicts',
-      );
+      AppLogger.d('checkRegistrationConflict: No active conflicts', tag: _tag);
       return null;
     } catch (e) {
-      SupabaseLogger.warning('checkRegistrationConflict error: $e');
+      AppLogger.w('checkRegistrationConflict error: $e', tag: _tag);
       return null;
     }
   }
@@ -356,7 +341,7 @@ class SupabaseUserRepository extends UserRepository {
   @override
   Future<({bool exists, String? errorMessage})> checkEmailExists(String email) async {
     final cleanEmail = email.trim().toLowerCase();
-    SupabaseLogger.request('checkEmailExists', payload: {'email': cleanEmail});
+    AppLogger.d('checkEmailExists: $cleanEmail', tag: _tag);
 
     try {
       // Reuses the existing security definer check_registration_conflict RPC
@@ -383,7 +368,7 @@ class SupabaseUserRepository extends UserRepository {
 
       return (exists: true, errorMessage: null);
     } catch (e) {
-      SupabaseLogger.warning('checkEmailExists error: $e');
+      AppLogger.w('checkEmailExists error: $e', tag: _tag);
       return (exists: true, errorMessage: null);
     }
   }

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:guardup/core/constants/app_radius.dart';
 import 'package:guardup/core/di/injection_container.dart';
 import 'package:guardup/core/extensions/textstyle_extension.dart';
+import 'package:guardup/core/logger/app_logger.dart';
 import 'package:guardup/core/services/document_submission/document_submission_service.dart';
 import 'package:guardup/features/auth/auth.dart';
 import 'package:image_picker/image_picker.dart';
@@ -71,8 +72,8 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
           _rejectionReasonsNotifier.value = records.rejectionReasons;
         }
       }
-    } catch (e) {
-      debugPrint('Error loading company document types & files: $e');
+    } catch (e, st) {
+      AppLogger.d('Error loading company document types & files: $e', tag: 'CompanyUploadDocumentsScreen', error: e, stackTrace: st);
     }
   }
 

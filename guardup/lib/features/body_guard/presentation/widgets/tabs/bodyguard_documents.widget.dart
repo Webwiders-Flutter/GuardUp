@@ -7,6 +7,7 @@ import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
+import '/core/logger/app_logger.dart';
 import '/core/services/document_submission/document_submission_service.dart';
 import '/features/auth/auth.dart';
 import '/features/body_guard/data/enum/document_status.enum.dart';
@@ -135,8 +136,8 @@ class _BodyguardDocumentsWidgetState extends State<BodyguardDocumentsWidget> {
         _remoteStatusesNotifier.value = records.statuses;
         _rejectionReasonsNotifier.value = records.rejectionReasons;
       }
-    } catch (e) {
-      debugPrint('Error loading bodyguard documents: $e');
+    } catch (e, st) {
+      AppLogger.d('Error loading bodyguard documents: $e', tag: 'BodyguardDocumentsWidget', error: e, stackTrace: st);
     } finally {
       if (mounted) _isInitialLoadingNotifier.value = false;
     }

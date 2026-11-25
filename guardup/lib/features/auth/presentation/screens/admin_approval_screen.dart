@@ -137,9 +137,7 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthBloc>().state;
-    final isRejected = widget.isCompanyBodyguardFlow
-        ? widget.bodyguard?.verificationStatus == UserStatus.rejected
-        : authState.isRejected;
+    final isRejected = !widget.isCompanyBodyguardFlow && authState.isRejected;
     final statusColor = isRejected
         ? context.colors.error
         : context.colors.primary;
@@ -274,11 +272,7 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                                   Expanded(
                                     child: Text(
                                       widget.isCompanyBodyguardFlow
-                                          ? (isRejected
-                                              ? (widget.bodyguard?.rejectionReason?.isNotEmpty == true
-                                                  ? 'Verification Needs Revision:\n${widget.bodyguard!.rejectionReason}'
-                                                  : 'One or more documents or details did not meet our verification standards. Please review and update.')
-                                              : 'Your bodyguard\'s profile and documents have been submitted to admin for verification. Once approved, the bodyguard will be active and available in your company roster.')
+                                          ? 'Your bodyguard\'s profile and documents have been submitted to admin for verification. Once approved, the bodyguard will be active and available in your company roster.'
                                           : (isRejected
                                               ? _buildRejectionMessage(authState)
                                               : context

@@ -3,6 +3,7 @@ import 'package:guardup/core/constants/api/database_tables.dart';
 import 'package:guardup/core/constants/app_radius.dart';
 import 'package:guardup/core/di/injection_container.dart';
 import 'package:guardup/core/extensions/string.extension.dart';
+import 'package:guardup/core/logger/app_logger.dart';
 import 'package:guardup/features/auth/auth.dart';
 import 'package:quick_container/quick_container.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -92,8 +93,8 @@ class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
       if (mounted) {
         _accountsNotifier.value = accounts;
       }
-    } catch (e) {
-      debugPrint('Error loading bank accounts: $e');
+    } catch (e, st) {
+      AppLogger.d('Error loading bank accounts: $e', tag: 'MyBankDetailsScreen', error: e, stackTrace: st);
     } finally {
       if (mounted) {
         _isLoadingNotifier.value = false;

@@ -23,7 +23,7 @@ final class CompanyBodyguardsRepository
         tableName: DatabaseTables.bodyguards,
         fromJson: BodyguardModel.fromJson,
         entityName: 'bodyguard',
-        searchFields: const [JsonKeys.name, JsonKeys.mobileNumber],
+        searchFields: const [JsonKeys.name],
         selectColumns: _listSelect,
         primarySortColumn: JsonKeys.createdAt,
         primarySortAscending: false,

@@ -123,7 +123,7 @@ class CompanyGuardOverviewTabWidget extends StatelessWidget {
                   context,
                   title: 'Client Rating',
                   value:
-                      '${bodyguard.rating.toStringAsFixed(1)} ★ (${bodyguard.reviewCount > 0 ? bodyguard.reviewCount : 48} Reviews)',
+                      '${bodyguard.rating.toStringAsFixed(1)} ★ (${bodyguard.reviewCount > 0 ? bodyguard.reviewCount : 0} Reviews)',
                   valueColor: context.colors.onSurface,
                 ),
                 AppSpacing.sm.h,
@@ -160,9 +160,12 @@ class CompanyGuardOverviewTabWidget extends StatelessWidget {
             context.colors.onSurfaceVariant,
           ),
         ),
-        Text(
-          value,
-          style: context.textTheme.bodyMedium?.bold().colour(valueColor),
+        Flexible(
+          child: Text(
+            value,
+            style: context.textTheme.bodyMedium?.bold().colour(valueColor),
+            textAlign: .right,
+          ),
         ),
       ],
     );

@@ -18,7 +18,7 @@ final class AppUpdateService {
 
     try {
       final info = await InAppUpdate.checkForUpdate();
-      AppLogger.i(
+      AppLogger.d(
         'InAppUpdate check: availability=${info.updateAvailability}, '
         'immediateAllowed=${info.immediateUpdateAllowed}, '
         'flexibleAllowed=${info.flexibleUpdateAllowed}',

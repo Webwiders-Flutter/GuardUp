@@ -4,7 +4,7 @@ import '/core/constants/api/database_functions.dart';
 import '/core/constants/api/database_tables.dart';
 import '/core/constants/api/json_keys.dart';
 import '/core/error/api_exception.dart';
-import '/core/logger/supabase_logger.dart';
+import '/core/logger/app_logger.dart';
 import '/features/auth/data/enum/user_role.enum.dart';
 import '/features/auth/data/enum/user_status.enum.dart';
 import '/features/auth/data/model/user.model.dart';
@@ -165,7 +165,7 @@ class BodyguardRepository {
         return model;
       }
     } catch (e, st) {
-      SupabaseLogger.error('BodyguardRepository.getDetails (join)', e, st);
+      AppLogger.e('BodyguardRepository.getDetails (join)', tag: 'BodyguardRepository', error: e, stackTrace: st);
     }
 
     // Fallback: basic bodyguard fetch with company embed
@@ -187,7 +187,7 @@ class BodyguardRepository {
         return model;
       }
     } catch (e, st) {
-      SupabaseLogger.error('BodyguardRepository.getDetails (fallback)', e, st);
+      AppLogger.e('BodyguardRepository.getDetails (fallback)', tag: 'BodyguardRepository', error: e, stackTrace: st);
     }
 
     // Fallback to fake data if ID matches
@@ -208,7 +208,7 @@ class BodyguardRepository {
           .eq(JsonKeys.userId, userId);
       return _parseServices(rows);
     } catch (e) {
-      SupabaseLogger.warning('Error fetching user services for userId=$userId: $e');
+      AppLogger.w('Error fetching user services for userId=$userId: $e', tag: 'BodyguardRepository');
       return const [];
     }
   }
@@ -240,10 +240,7 @@ class BodyguardRepository {
       JsonKeys.profileImageUrl: ?profileImageUrl,
     };
 
-    SupabaseLogger.request(
-      'saveCompanyBodyguard',
-      payload: {JsonKeys.id: bodyguardId, ...payload},
-    );
+    AppLogger.d('saveCompanyBodyguard: id=$bodyguardId', tag: 'BodyguardRepository');
 
     final Map<String, dynamic> row;
     if (bodyguardId == null) {
@@ -264,7 +261,7 @@ class BodyguardRepository {
       row = rows.first;
     }
 
-    SupabaseLogger.success('saveCompanyBodyguard', result: 'id=${row[JsonKeys.id]}');
+    AppLogger.d('saveCompanyBodyguard success: id=${row[JsonKeys.id]}', tag: 'BodyguardRepository');
     return _toModel(row);
   }
 
@@ -319,6 +316,40 @@ class BodyguardRepository {
     );
   }
 
+  /// Seeds default weekly availability (Monday-Friday 09:00 AM - 05:00 PM) for
+  /// a company-managed bodyguard if none has been set yet.
+  Future<void> initDefaultAvailability(String bodyguardId) async {
+    try {
+      final existing = await _supabase
+          .from(DatabaseTables.userAvailabilities)
+          .select('id')
+          .eq('bodyguard_id', bodyguardId)
+          .limit(1);
+      if (existing.isNotEmpty) return;
+
+      const workingDays = {'monday', 'tuesday', 'wednesday', 'thursday', 'friday'};
+      const allDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      final now = DateTime.now().toIso8601String();
+      final rows = [
+        for (final day in allDays)
+          {
+            'bodyguard_id': bodyguardId,
+            'day_of_week': day,
+            'is_available': workingDays.contains(day),
+            'from_time': '09:00 AM',
+            'to_time': '05:00 PM',
+            'created_at': now,
+            'updated_at': now,
+          },
+      ];
+      await _supabase
+          .from(DatabaseTables.userAvailabilities)
+          .upsert(rows, onConflict: 'bodyguard_id, day_of_week');
+    } catch (e) {
+      AppLogger.e('initDefaultAvailability failed', tag: 'BodyguardRepository', error: e);
+    }
+  }
+
   /// Maps a `bodyguards` row to the UI model. A company-managed bodyguard has
   /// no login, so its [UserModel.id] is empty.
   BodyGuardModel _toModel(Map<String, dynamic> row) {
@@ -371,7 +402,7 @@ class BodyguardRepository {
         initials: compMap['initials'] as String?,
         logoUrl: (compMap['logo_url'] ?? compMap['logoUrl']) as String?,
         rating: _toDouble(compMap['rating']),
-        experienceYears: '${compMap['experience_years'] ?? 0}+ Yrs Exp',
+        experienceYears: _toDouble(compMap['experience_years']).toInt(),
         isVerified: true,
       );
     }

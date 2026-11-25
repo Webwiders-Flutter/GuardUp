@@ -308,10 +308,8 @@ class _ReviewBody extends ConsumerWidget {
         AppSpacing.md.h,
 
         // 3. Weekly availability
-        if (bodyguard.availabilities?.isNotEmpty == true) ...[
-          UserAvailabilitySection(availabilities: bodyguard.availabilities),
-          AppSpacing.md.h,
-        ],
+        UserAvailabilitySection(availabilities: bodyguard.availabilities),
+        AppSpacing.md.h,
 
         // 4. Documents (reviewable while pending or rejected)
         DocumentReviewList(

@@ -179,8 +179,8 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
       created_at, updated_at
     ),
     bodyguard:bodyguards!bodyguards_user_id_fkey(
-      id, user_id, company_id, name, profile_image_url, gender,
-      phone_code, phone_number, hourly_rate, rating, experience_years,
+      id, user_id, company_id, name, profile_image_url, address,
+      latitude, longitude, hourly_rate, rating, experience_years,
       bio, languages, certifications, is_active, status, rejection_reason,
       created_at, updated_at
     ),

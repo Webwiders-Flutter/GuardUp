@@ -35,7 +35,7 @@ class UserAvailabilitySection extends StatelessWidget {
           ? Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
               child: Text(
-                'User has not set their weekly availability yet.',
+                'No weekly availability has been set yet.',
                 style: context.textTheme.bodyMedium?.colour(
                   colors.onSurfaceSecondary,
                 ),

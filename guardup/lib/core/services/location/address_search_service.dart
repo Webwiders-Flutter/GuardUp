@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 
 import '/core/config/config.dart';
 import '/core/constants/api/api_endpoints.dart';
-import '/core/logger/supabase_logger.dart';
+import '/core/logger/app_logger.dart';
 
 class PlaceSuggestion {
   final String placeId;
@@ -77,7 +77,7 @@ class AddressSearchService {
           }).toList();
         }
       } catch (e) {
-        SupabaseLogger.warning('Google Places autocomplete error: $e');
+        AppLogger.w('Google Places autocomplete error: $e', tag: 'AddressSearch');
       }
     }
 
@@ -113,7 +113,7 @@ class AddressSearchService {
         );
       }).toList();
     } catch (e) {
-      SupabaseLogger.warning('Nominatim address search error: $e');
+      AppLogger.w('Nominatim address search error: $e', tag: 'AddressSearch');
       return const [];
     }
   }
@@ -151,7 +151,7 @@ class AddressSearchService {
           );
         }
       } catch (e) {
-        SupabaseLogger.warning('Google Place Details error: $e');
+        AppLogger.w('Google Place Details error: $e', tag: 'AddressSearch');
       }
     }
 

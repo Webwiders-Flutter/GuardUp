@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState, OtpType;
 
 import '/core/constants/api/database_tables.dart';
-import '/core/logger/supabase_logger.dart';
+import '/core/logger/app_logger.dart';
 import '/core/state/api_state.dart';
 import '/features/body_guard/data/model/service_item.model.dart';
 import '/features/body_guard/data/model/user_document.model.dart';
@@ -66,10 +66,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         add(AuthUserChanged(userId));
       },
       onError: (Object error) {
-        SupabaseLogger.warning(
-          'Auth state changes stream error: $error',
-          operation: 'authStateChanges',
-        );
+        AppLogger.w('Auth state changes stream error: $error', tag: 'AuthBloc');
       },
     );
   }
@@ -94,15 +91,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
                 profile,
                 status: status,
                 email: data['email'] as String?,
-                userData: data,
               ),
             );
           },
           onError: (Object error) {
-            SupabaseLogger.warning(
-              'Realtime profile subscription error for userId=$userId: $error',
-              operation: 'watchUserData',
-            );
+            AppLogger.w('Realtime profile subscription error for userId=$userId: $error', tag: 'AuthBloc');
           },
         );
   }
@@ -133,36 +126,28 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       try {
         _listenToProfile(currentUid);
 
-        Map<String, dynamic>? userData;
+        UserModel? profile;
         if (_userRepo != null) {
-          userData = await _userRepo.getUserData(currentUid);
+          profile = await _userRepo.getUserProfile(currentUid);
         }
 
-        if (userData != null) {
-          final profile = UserModel.fromJson(userData);
-          final status = UserStatus.tryFromApiValue(
-            userData['status'] as String?,
-          );
-          final email = userData['email'] as String?;
-          final phoneCode = userData['phone_code'] as String?;
-          final phone = userData['phone_number'] as String?;
-          final role =
-              profile.role ??
-              UserRole.tryFromApiValue(userData['role'] as String?);
+        if (profile != null) {
+          final status = profile.status;
+          final role = profile.role;
 
-          List<ServiceItemModel> userServices = const [];
-          List<UserDocumentModel> userDocuments = const [];
+          List<ServiceItemModel> userServices = profile.serviceListData ?? const [];
+          List<UserDocumentModel> userDocuments = profile.documents ?? const [];
 
-          if (role == UserRole.guard || role == UserRole.company) {
+          if ((userServices.isEmpty || userDocuments.isEmpty) && (role == UserRole.guard || role == UserRole.company)) {
             try {
               final results = await Future.wait([
-                _fetchUserServices(currentUid),
-                _fetchUserDocuments(currentUid),
+                if (userServices.isEmpty) _fetchUserServices(currentUid) else Future.value(userServices),
+                if (userDocuments.isEmpty) _fetchUserDocuments(currentUid) else Future.value(userDocuments),
               ]);
               userServices = results[0] as List<ServiceItemModel>;
               userDocuments = results[1] as List<UserDocumentModel>;
             } catch (e) {
-              SupabaseLogger.warning('Error preloading role data: $e');
+              AppLogger.w('Error preloading role data: $e', tag: 'AuthBloc');
             }
           }
 
@@ -170,10 +155,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             AuthState.authenticated(
               profile,
               status: status,
-              email: email,
-              phoneCode: phoneCode,
-              phoneNumber: phone,
-              userData: userData,
+              email: profile.email,
+              phoneCode: profile.phoneCode,
+              phoneNumber: profile.phoneNumber,
               userServices: userServices,
               userDocuments: userDocuments,
             ),
@@ -183,7 +167,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           emit(const AuthState.unauthenticated());
         }
       } catch (e, st) {
-        SupabaseLogger.error('AuthBloc._onCheckStatusRequested', e, st);
+        AppLogger.e('AuthBloc._onCheckStatusRequested error', tag: 'AuthBloc', error: e, stackTrace: st);
         emit(
           AuthState.unauthenticated(
             operationState: ApiState.failure(e.toString()),
@@ -215,34 +199,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(const AuthState.unauthenticated());
     } else {
       _listenToProfile(event.userId!);
-      Map<String, dynamic>? userData;
+      UserModel? profile;
       if (_userRepo != null) {
-        userData = await _userRepo.getUserData(event.userId!);
+        profile = await _userRepo.getUserProfile(event.userId!);
       }
-      if (userData != null) {
-        final profile = UserModel.fromJson(userData);
-        final status = UserStatus.tryFromApiValue(
-          userData['status'] as String?,
-        );
-        final role =
-            profile.role ??
-            UserRole.tryFromApiValue(userData['role'] as String?);
+      if (profile != null) {
+        final status = profile.status;
+        final role = profile.role;
 
-        List<ServiceItemModel> userServices = const [];
-        List<UserDocumentModel> userDocuments = const [];
+        List<ServiceItemModel> userServices = profile.serviceListData ?? const [];
+        List<UserDocumentModel> userDocuments = profile.documents ?? const [];
 
-        if (role == UserRole.guard || role == UserRole.company) {
+        if ((userServices.isEmpty || userDocuments.isEmpty) && (role == UserRole.guard || role == UserRole.company)) {
           try {
             final results = await Future.wait([
-              _fetchUserServices(event.userId!),
-              _fetchUserDocuments(event.userId!),
+              if (userServices.isEmpty) _fetchUserServices(event.userId!) else Future.value(userServices),
+              if (userDocuments.isEmpty) _fetchUserDocuments(event.userId!) else Future.value(userDocuments),
             ]);
             userServices = results[0] as List<ServiceItemModel>;
             userDocuments = results[1] as List<UserDocumentModel>;
           } catch (e) {
-            SupabaseLogger.warning(
-              'Error preloading role data on user changed: $e',
-            );
+            AppLogger.w('Error preloading role data on user changed: $e', tag: 'AuthBloc');
           }
         }
 
@@ -250,10 +227,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           AuthState.authenticated(
             profile,
             status: status,
-            email: userData['email'] as String?,
-            phoneCode: userData['phone_code'] as String?,
-            phoneNumber: userData['phone_number'] as String?,
-            userData: userData,
+            email: profile.email,
+            phoneCode: profile.phoneCode,
+            phoneNumber: profile.phoneNumber,
             userServices: userServices,
             userDocuments: userDocuments,
           ),
@@ -277,7 +253,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             sessionStatus: AuthSessionStatus.authenticated,
             status: UserStatus.blocked,
             operationState: ApiState.success(user),
-            userData: event.userData ?? state.userData,
           ),
         );
         return;
@@ -296,7 +271,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           status: newStatus,
           email: event.email ?? state.email,
           operationState: ApiState.success(user),
-          userData: event.userData ?? state.userData,
         ),
       );
 
@@ -337,14 +311,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         password: event.password,
       );
       if (_userRepo != null) {
-        final userData = await _userRepo.getUserData(userId);
-        if (userData != null) {
-          final status = UserStatus.tryFromApiValue(
-            userData['status'] as String?,
-          );
-
+        final profile = await _userRepo.getUserProfile(userId);
+        if (profile != null) {
           // If account is deleted: sign out immediately and show invalid credentials
-          if (status == UserStatus.deleted) {
+          if (profile.status == UserStatus.deleted) {
             await authRepo.signOut();
             emit(
               state.copyWith(
@@ -358,18 +328,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             return;
           }
 
-          final profile = UserModel.fromJson(userData);
-          final email = userData['email'] as String?;
-          final phoneCode = userData['phone_code'] as String?;
-          final phone = userData['phone_number'] as String?;
-
           emit(
             AuthState.authenticated(
               profile,
-              status: status,
-              email: email,
-              phoneCode: phoneCode,
-              phoneNumber: phone,
+              status: profile.status,
+              email: profile.email,
+              phoneCode: profile.phoneCode,
+              phoneNumber: profile.phoneNumber,
             ),
           );
           _listenToProfile(userId);
@@ -379,7 +344,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthState.authenticated(UserModel(id: userId, name: 'User')));
       _listenToProfile(userId);
     } catch (e, st) {
-      SupabaseLogger.error('AuthBloc._onLoginRequested', e, st);
+      AppLogger.e('AuthBloc._onLoginRequested error', tag: 'AuthBloc', error: e, stackTrace: st);
       String cleanMessage = 'Login failed. Please check your credentials.';
       final errStr = e.toString().toLowerCase();
 
@@ -529,10 +494,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           ),
         );
       } catch (e) {
-        SupabaseLogger.warning(
-          'OTP verification failed: $e',
-          operation: 'verifyOtp',
-        );
+        AppLogger.w('OTP verification failed: $e', tag: 'AuthBloc');
 
         String cleanMessage = 'Verification failed. Please try again.';
         final errStr = e.toString().toLowerCase();
@@ -611,7 +573,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           ),
         );
       } catch (e, st) {
-        SupabaseLogger.error('AuthBloc._onSendPasswordResetRequested', e, st);
+        AppLogger.e('AuthBloc._onSendPasswordResetRequested error', tag: 'AuthBloc', error: e, stackTrace: st);
         String cleanMessage =
             'Failed to send password reset code. Please check your email and try again.';
         final errStr = e.toString().toLowerCase();
@@ -659,7 +621,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           ),
         );
       } catch (e, st) {
-        SupabaseLogger.error('AuthBloc._onResetPasswordRequested', e, st);
+        AppLogger.e('AuthBloc._onResetPasswordRequested error', tag: 'AuthBloc', error: e, stackTrace: st);
         String cleanMessage = 'Failed to reset password. Please try again.';
         final errStr = e.toString().toLowerCase();
         if (errStr.contains('same_password')) {
@@ -736,7 +698,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       try {
         await authRepo.deleteAccount();
       } catch (e, st) {
-        SupabaseLogger.error('AuthBloc._onDeleteAccountRequested', e, st);
+        AppLogger.e('AuthBloc._onDeleteAccountRequested error', tag: 'AuthBloc', error: e, stackTrace: st);
         emit(
           state.copyWith(
             operationState: ApiState.failure(
@@ -771,7 +733,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         ),
       );
     } catch (e) {
-      SupabaseLogger.warning('Error reloading role data for $uid: $e');
+      AppLogger.w('Error reloading role data for $uid: $e', tag: 'AuthBloc');
     }
   }
 
@@ -813,7 +775,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           .where((s) => serviceIds.contains(s.id))
           .toList();
     } catch (e) {
-      SupabaseLogger.warning('Error loading user services for $userId: $e');
+      AppLogger.w('Error loading user services for $userId: $e', tag: 'AuthBloc');
       return const [];
     }
   }
@@ -829,7 +791,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           .map((r) => UserDocumentModel.fromJson(r as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      SupabaseLogger.warning('Error loading user documents for $userId: $e');
+      AppLogger.w('Error loading user documents for $userId: $e', tag: 'AuthBloc');
       return const [];
     }
   }

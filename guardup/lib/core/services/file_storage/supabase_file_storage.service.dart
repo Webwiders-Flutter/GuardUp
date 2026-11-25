@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '/core/logger/supabase_logger.dart';
+import '/core/logger/app_logger.dart';
 import 'file_storage.service.dart';
 import 'models/file_upload_request.model.dart';
 import 'models/file_upload_response.model.dart';
@@ -20,7 +20,7 @@ class SupabaseFileStorageService implements FileStorageService {
 
   @override
   Future<String> uploadSingleFile(FileUploadRequest req) async {
-    SupabaseLogger.request('storage.upload', details: 'bucket=${req.bucket}, path=${req.path}');
+    AppLogger.d('uploadSingleFile: bucket=${req.bucket}, path=${req.path}', tag: 'Storage');
     final storage = _supabase.storage.from(req.bucket);
     final fileOptions = FileOptions(
       upsert: req.upsert,
@@ -39,10 +39,10 @@ class SupabaseFileStorageService implements FileStorageService {
       }
 
       final url = getPublicUrl(bucket: req.bucket, path: req.path);
-      SupabaseLogger.success('storage.upload', result: url);
+      AppLogger.d('uploadSingleFile success: $url', tag: 'Storage');
       return url;
     } catch (e, st) {
-      SupabaseLogger.error('storage.upload', e, st);
+      AppLogger.e('uploadSingleFile failed', tag: 'Storage', error: e, stackTrace: st);
       rethrow;
     }
   }

@@ -381,12 +381,14 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
                     // 2. Affiliated Security Company Card
                     CompanyCard(
                       company: company,
-                      onTap: () {
-                        context.push(
-                          CompanyDetailsScreen.route,
-                          extra: company,
-                        );
-                      },
+                      onTap: _isCompany
+                          ? null
+                          : () {
+                              context.push(
+                                CompanyDetailsScreen.route,
+                                extra: company,
+                              );
+                            },
                       onBookNow: _isCompany
                           ? null
                           : () {

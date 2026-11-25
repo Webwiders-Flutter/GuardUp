@@ -2,8 +2,10 @@ import 'package:equatable/equatable.dart';
 
 import '/core/state/api_state.dart';
 import '/features/body_guard/data/enum/document_status.enum.dart';
+import '/features/body_guard/data/model/body_guard.model.dart';
 import '/features/body_guard/data/model/service_item.model.dart';
 import '/features/body_guard/data/model/user_document.model.dart';
+import '/features/company/data/model/company.model.dart';
 import '../data/enum/gender_type.enum.dart';
 import '../data/enum/user_role.enum.dart';
 import '../data/enum/user_status.enum.dart';
@@ -23,7 +25,6 @@ class AuthState extends Equatable {
   final String? email;
   final String? phoneCode;
   final String? phoneNumber;
-  final Map<String, dynamic>? userData;
   final List<ServiceItemModel> userServices;
   final List<UserDocumentModel> userDocuments;
 
@@ -34,7 +35,6 @@ class AuthState extends Equatable {
     this.email,
     this.phoneCode,
     this.phoneNumber,
-    this.userData,
     this.userServices = const [],
     this.userDocuments = const [],
   });
@@ -52,7 +52,6 @@ class AuthState extends Equatable {
     String? email,
     String? phoneCode,
     String? phoneNumber,
-    Map<String, dynamic>? userData,
     List<ServiceItemModel> userServices = const [],
     List<UserDocumentModel> userDocuments = const [],
   }) : this(
@@ -62,7 +61,6 @@ class AuthState extends Equatable {
          email: email,
          phoneCode: phoneCode,
          phoneNumber: phoneNumber,
-         userData: userData,
          userServices: userServices,
          userDocuments: userDocuments,
        );
@@ -74,17 +72,15 @@ class AuthState extends Equatable {
     String? email,
     String? phoneCode,
     String? phoneNumber,
-    Map<String, dynamic>? userData,
     List<ServiceItemModel> userServices = const [],
     List<UserDocumentModel> userDocuments = const [],
   }) : this(
          sessionStatus: AuthSessionStatus.authenticated,
          operationState: operationState ?? ApiSuccess(user),
-         status: status ?? (user.role == UserRole.customer ? UserStatus.active : UserStatus.incomplete),
-         email: email,
-         phoneCode: phoneCode,
-         phoneNumber: phoneNumber,
-         userData: userData,
+         status: status ?? (user.role == UserRole.customer ? UserStatus.active : user.status),
+         email: email ?? (user.email.isNotEmpty ? user.email : null),
+         phoneCode: phoneCode ?? user.phoneCode,
+         phoneNumber: phoneNumber ?? user.phoneNumber,
          userServices: userServices,
          userDocuments: userDocuments,
        );
@@ -95,6 +91,9 @@ class AuthState extends Equatable {
   bool get isUnknown => sessionStatus == AuthSessionStatus.unknown;
 
   UserModel? get user => operationState.dataOrNull;
+  BodyGuardModel? get guardProfile => user?.bodyguard;
+  CompanyModel? get companyProfile => user?.company;
+
   UserRole get sessionRole => user?.role ?? UserRole.customer;
   UserRole get role => sessionRole;
   bool get isLoading => operationState.isLoading;
@@ -103,36 +102,33 @@ class AuthState extends Equatable {
 
   // ── Database Users Table Getters (Single Source of Truth) ──────────────────
   String get displayName =>
-      (userData?['company_name'] as String?)?.trim().isNotEmpty == true
-          ? userData!['company_name'] as String
-          : ((userData?['name'] as String?) ?? user?.name ?? '');
+      companyProfile?.displayName ??
+      (user?.name.isNotEmpty == true ? user!.name : '');
 
   String get companyName =>
-      (userData?['company_name'] as String?)?.trim().isNotEmpty == true
-          ? userData!['company_name'] as String
-          : ((userData?['name'] as String?) ?? user?.name ?? 'Security Company');
+      companyProfile?.displayName ??
+      (user?.name.isNotEmpty == true ? user!.name : 'Security Company');
 
-  String get companyType => (userData?['company_type'] as String?) ?? '';
+  String get companyType => companyProfile?.companyType?.apiValue ?? '';
 
   String get businessEmail =>
-      (userData?['business_email'] as String?) ??
-      (userData?['email'] as String?) ??
+      companyProfile?.businessEmail ??
+      (user?.email.isNotEmpty == true ? user!.email : null) ??
       email ??
       '';
 
   String get displayEmail =>
-      (userData?['email'] as String?) ??
-      (userData?['business_email'] as String?) ??
+      (user?.email.isNotEmpty == true ? user!.email : null) ??
       email ??
       '';
 
   String get userEmail => displayEmail;
 
   String get companyPhoneNumber =>
-      (userData?['company_phone_number'] as String?) ?? '';
+      companyProfile?.companyPhoneNumber ?? '';
 
   String get companyPhoneCode =>
-      (userData?['company_phone_code'] as String?) ?? '+91';
+      companyProfile?.companyPhoneCode ?? '+91';
 
   String get displayPhone {
     if (isCompany && companyPhoneNumber.isNotEmpty) {
@@ -145,31 +141,22 @@ class AuthState extends Equatable {
     return '';
   }
 
-  String get userPhoneNumber =>
-      (userData?['phone_number'] as String?) ?? phoneNumber ?? '';
+  String get userPhoneNumber => user?.phoneNumber ?? phoneNumber ?? '';
+  String get userPhoneCode => user?.phoneCode ?? phoneCode ?? '+91';
 
-  String get userPhoneCode =>
-      (userData?['phone_code'] as String?) ?? phoneCode ?? '+91';
-
-  num get hourlyRate =>
-      num.tryParse(userData?['hourly_rate']?.toString() ?? '0') ?? 0;
-
-  double get rating =>
-      double.tryParse(userData?['rating']?.toString() ?? '4.95') ?? 4.95;
-
-  String get bio => (userData?['bio'] as String?) ?? '';
+  num get hourlyRate => guardProfile?.hourlyRate ?? 0;
+  double get rating => guardProfile?.rating ?? 4.95;
+  String get bio => guardProfile?.bio ?? '';
 
   List<String> get services {
     if (userServices.isNotEmpty) {
       return userServices.map((s) => s.name).toList();
     }
-    final list = userData?['services'] as List<dynamic>?;
-    if (list != null && list.isNotEmpty) {
-      return list.map((e) => e.toString()).toList();
+    if (user?.serviceListData != null && user!.serviceListData!.isNotEmpty) {
+      return user!.serviceListData!.map((s) => s.name).toList();
     }
-    final meta = userData?['metadata'];
-    if (meta is Map && meta['services'] is List) {
-      return (meta['services'] as List).map((e) => e.toString()).toList();
+    if (guardProfile?.services != null && guardProfile!.services!.isNotEmpty) {
+      return guardProfile!.services!.map((s) => s.name).toList();
     }
     return const [];
   }
@@ -186,53 +173,25 @@ class AuthState extends Equatable {
   }
 
   String get avatarUrl =>
-      (userData?['profile_image_url'] as String?) ??
       user?.profileImageUrl ??
+      guardProfile?.profileImageUrl ??
       '';
 
-  String? get gender =>
-      (userData?['gender'] as String?) ??
-      (userData?['metadata'] is Map
-          ? (userData!['metadata'] as Map)['gender'] as String?
-          : null);
+  String? get gender => user?.gender?.apiValue;
+  GenderType get genderType => user?.gender ?? GenderType.male;
 
-  GenderType get genderType => GenderType.fromApiValue(gender);
-
-  String get guardAddress {
-    final bg = userData?['bodyguard'];
-    if (bg is Map) {
-      return (bg['address'] as String?)?.trim() ?? '';
-    }
-    return '';
-  }
-
-  double? get guardLatitude {
-    final bg = userData?['bodyguard'];
-    if (bg is Map) {
-      final raw = bg['latitude'];
-      if (raw is num) return raw.toDouble();
-      if (raw is String) return double.tryParse(raw);
-    }
-    return null;
-  }
-
-  double? get guardLongitude {
-    final bg = userData?['bodyguard'];
-    if (bg is Map) {
-      final raw = bg['longitude'];
-      if (raw is num) return raw.toDouble();
-      if (raw is String) return double.tryParse(raw);
-    }
-    return null;
-  }
+  String get guardAddress => guardProfile?.address?.trim() ?? '';
+  double? get guardLatitude => guardProfile?.latitude;
+  double? get guardLongitude => guardProfile?.longitude;
+  String? get guardBodyguardId => guardProfile?.id;
 
   int get experienceYears {
-    final raw = userData?['experience_years'] ??
-        (userData?['metadata'] is Map
-            ? (userData!['metadata'] as Map)['experience_years']
-            : null);
-    if (raw is num) return raw.toInt();
-    if (raw is String) return int.tryParse(raw) ?? 0;
+    if (guardProfile != null && guardProfile!.experienceYears > 0) {
+      return guardProfile!.experienceYears;
+    }
+    if (companyProfile != null && (companyProfile!.experienceYears ?? 0) > 0) {
+      return companyProfile!.experienceYears!;
+    }
     return 0;
   }
 
@@ -241,19 +200,8 @@ class AuthState extends Equatable {
     return yrs > 0 ? '$yrs+ Yrs Exp' : '0 Yrs Exp';
   }
 
-  String get languages =>
-      (userData?['languages'] as String?) ??
-      (userData?['metadata'] is Map
-          ? (userData!['metadata'] as Map)['languages'] as String?
-          : null) ??
-      '';
-
-  String get certifications =>
-      (userData?['certifications'] as String?) ??
-      (userData?['metadata'] is Map
-          ? (userData!['metadata'] as Map)['certifications'] as String?
-          : null) ??
-      '';
+  String get languages => guardProfile?.languages ?? '';
+  String get certifications => guardProfile?.certifications ?? '';
 
   // ── Role Helpers ────────────────────────────────────────────────────────────
   bool get isCustomer => sessionRole == UserRole.customer;
@@ -279,17 +227,11 @@ class AuthState extends Equatable {
   bool get isRejected => status == UserStatus.rejected;
 
   /// The administrator profile rejection reason from `users` table.
-  String? get profileRejectionReason =>
-      (userData?['rejection_reason'] as String?)?.trim().isNotEmpty == true
-          ? (userData!['rejection_reason'] as String).trim()
-          : null;
+  String? get profileRejectionReason => user?.rejectionReason;
 
   /// The user's active membership plan ID from `users` table or metadata.
   String? get membershipPlanId =>
-      (userData?['membership_plan_id'] as String?) ??
-      (userData?['metadata'] is Map
-          ? (userData!['metadata'] as Map)['membership_plan_id'] as String?
-          : null);
+      user?.metadata?['membership_plan_id'] as String?;
 
   /// Backwards compatibility getter for profile rejection reason.
   String? get rejectionReason => profileRejectionReason;
@@ -324,7 +266,6 @@ class AuthState extends Equatable {
     String? email,
     String? phoneCode,
     String? phoneNumber,
-    Map<String, dynamic>? userData,
     List<ServiceItemModel>? userServices,
     List<UserDocumentModel>? userDocuments,
   }) {
@@ -335,7 +276,6 @@ class AuthState extends Equatable {
       email: email ?? this.email,
       phoneCode: phoneCode ?? this.phoneCode,
       phoneNumber: phoneNumber ?? this.phoneNumber,
-      userData: userData ?? this.userData,
       userServices: userServices ?? this.userServices,
       userDocuments: userDocuments ?? this.userDocuments,
     );
@@ -349,7 +289,6 @@ class AuthState extends Equatable {
     email,
     phoneCode,
     phoneNumber,
-    userData,
     userServices,
     userDocuments,
   ];

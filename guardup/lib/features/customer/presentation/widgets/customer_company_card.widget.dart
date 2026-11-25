@@ -170,7 +170,7 @@ class CustomerCompanyCardWidget extends StatelessWidget {
                       ),
                       AppSpacing.xs.w,
                       Text(
-                        company.experienceYears,
+                        company.experienceYearsFormatted,
                         style: context.textTheme.bodySmall
                             ?.copyWith(fontSize: 11)
                             .colour(

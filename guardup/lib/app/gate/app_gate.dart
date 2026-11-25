@@ -44,20 +44,20 @@ class _AppGateState extends State<AppGate> with WidgetsBindingObserver {
     super.didChangeAppLifecycleState(state);
     switch (state) {
       case AppLifecycleState.resumed:
-        AppLogger.i('AppLifecycleState.resumed', tag: 'AppGate');
+        AppLogger.d('AppLifecycleState.resumed', tag: 'AppGate');
         context.read<AppGateCubit>().checkAgain();
         break;
       case AppLifecycleState.inactive:
-        AppLogger.i('AppLifecycleState.inactive', tag: 'AppGate');
+        AppLogger.d('AppLifecycleState.inactive', tag: 'AppGate');
         break;
       case AppLifecycleState.paused:
-        AppLogger.i('AppLifecycleState.paused', tag: 'AppGate');
+        AppLogger.d('AppLifecycleState.paused', tag: 'AppGate');
         break;
       case AppLifecycleState.detached:
-        AppLogger.i('AppLifecycleState.detached', tag: 'AppGate');
+        AppLogger.d('AppLifecycleState.detached', tag: 'AppGate');
         break;
       case AppLifecycleState.hidden:
-        AppLogger.i('AppLifecycleState.hidden', tag: 'AppGate');
+        AppLogger.d('AppLifecycleState.hidden', tag: 'AppGate');
         break;
     }
   }
