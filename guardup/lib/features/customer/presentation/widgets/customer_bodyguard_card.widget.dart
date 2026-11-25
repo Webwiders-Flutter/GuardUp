@@ -219,7 +219,9 @@ class CustomerBodyguardCardWidget extends StatelessWidget {
                       ),
                       AppSpacing.xs.w,
                       Text(
-                        '${guard.experienceYears}+ yrs exp',
+                        guard.experienceYears > 0
+                            ? '${guard.experienceYears}+ yrs exp'
+                            : '0 yrs exp',
                         style: context.textTheme.labelSmall
                             ?.copyWith(fontSize: 10.5)
                             .colour(context.colors.onSurfaceVariant),

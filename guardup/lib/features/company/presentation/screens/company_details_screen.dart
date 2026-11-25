@@ -44,7 +44,7 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen>
   void initState() {
     super.initState();
     final effectiveCompany = widget.company ?? CompanyModel.fakeData.first;
-    final reviewsCountLabel = effectiveCompany.reviewCount > 0 ? '48' : '0';
+    final reviewsCountLabel = '${effectiveCompany.reviewCount}';
 
     _tabNames = ['About', 'Bodyguards', 'Reviews ($reviewsCountLabel)'];
 

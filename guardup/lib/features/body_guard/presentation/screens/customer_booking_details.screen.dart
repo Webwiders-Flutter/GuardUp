@@ -213,7 +213,7 @@ class CustomerBookingDetailsScreen extends StatelessWidget {
                                     ),
                                     AppSpacing.xxs.w,
                                     Text(
-                                      '4.9',
+                                      (bodyguard?.rating ?? 0.0).toStringAsFixed(1),
                                       style: context.textTheme.labelSmall
                                           ?.copyWith(
                                             fontSize: 10.5,

@@ -86,10 +86,10 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
         titleWidget: BlocBuilder<AuthBloc, AuthState>(
           bloc: sl<AuthBloc>(),
           builder: (context, state) {
-            final name = state.user?.name ?? state.displayName;
+            final name = state.user?.name ?? '';
             return CustomerHeaderWidget(
               userName: name.isNotEmpty ? name : 'Member',
-              avatarUrl: state.avatarUrl,
+              avatarUrl: state.user?.profileImageUrl ?? '',
             );
           },
         ),

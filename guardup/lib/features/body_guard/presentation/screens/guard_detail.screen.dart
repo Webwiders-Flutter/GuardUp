@@ -490,7 +490,9 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
         },
       ),
       CustomerGuardExperienceTabWidget(
-        yearsExperience: '${currentGuard.experienceYears}+ Years',
+        yearsExperience: currentGuard.experienceYears > 0
+            ? '${currentGuard.experienceYears}+ Years'
+            : '0 Years',
         specializationTitle:
             (currentGuard.bio.isNotEmpty)
                 ? currentGuard.bio
@@ -508,9 +510,8 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
       ),
       CustomerGuardReviewsTabWidget(
         averageRating: currentGuard.rating,
-        totalReviews: currentGuard.reviewCount > 0
-            ? currentGuard.reviewCount
-            : 48,
+        totalReviews: currentGuard.reviewCount,
+        reviews: const [],
       ),
     ];
   }

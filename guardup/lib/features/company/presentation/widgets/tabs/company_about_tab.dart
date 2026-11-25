@@ -9,7 +9,7 @@ import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/features/body_guard/data/enum/document_status.enum.dart';
-import '/features/body_guard/data/model/document.model.dart';
+import '/features/body_guard/data/model/user_document.model.dart';
 import '/shared/widgets/inputs/document_upload_card.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 import '../../../data/model/company.model.dart';
@@ -33,7 +33,29 @@ class CompanyAboutTab extends StatelessWidget {
         ? 'Joined ${DateFormat('dd MMM , yyyy').format(company!.joinedAt!)}'
         : 'Joined 25 aug , 2024';
 
-    final effectiveDocs = DocumentModel.fakeData;
+    final effectiveDocs = const [
+      UserDocumentModel(
+        id: 'doc_1',
+        documentTypeId: 'incorporation',
+        fileUrl: '',
+        fileName: 'Certificate of Incorporation.pdf',
+        status: DocumentStatus.approved,
+      ),
+      UserDocumentModel(
+        id: 'doc_2',
+        documentTypeId: 'agency_license',
+        fileUrl: '',
+        fileName: 'Private Security Agency License.pdf',
+        status: DocumentStatus.approved,
+      ),
+      UserDocumentModel(
+        id: 'doc_3',
+        documentTypeId: 'insurance',
+        fileUrl: '',
+        fileName: 'Liability Insurance Coverage.pdf',
+        status: DocumentStatus.approved,
+      ),
+    ];
 
     return SingleChildScrollView(
       padding: context.horizontalEdgeInsets + AppSpacing.md.yPadding,
@@ -109,14 +131,14 @@ class CompanyAboutTab extends StatelessWidget {
   Widget _buildDocumentCard({
     required BuildContext context,
     required ({String title, IconData icon}) spec,
-    required DocumentModel? docModel,
+    required UserDocumentModel? docModel,
   }) {
     return DocumentUploadCard(
       title: spec.title,
       isReadOnly: true,
       showPreview: false,
       status: docModel?.status ?? DocumentStatus.approved,
-      initialUrl: docModel?.url,
+      initialUrl: docModel?.fileUrl,
       fileName: docModel?.fileName,
       icon: Icon(
         spec.icon,

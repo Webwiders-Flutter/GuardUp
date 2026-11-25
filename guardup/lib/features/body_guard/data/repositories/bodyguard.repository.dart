@@ -9,12 +9,10 @@ import '/features/auth/data/enum/user_role.enum.dart';
 import '/features/auth/data/enum/user_status.enum.dart';
 import '/features/auth/data/model/user.model.dart';
 import '/features/company/company.dart';
-import '../enum/document_status.enum.dart';
-import '../enum/guard_doc_type.enum.dart';
-import '../enum/guard_service.enum.dart';
 import '../model/body_guard.model.dart';
-import '../model/document.model.dart';
+import '../model/service_item.model.dart';
 import '../model/user_availability.model.dart';
+import '../model/user_document.model.dart';
 
 /// Bodyguards managed by the signed-in company (`public.bodyguards` rows with
 /// `user_id = NULL` and `company_id` = the caller's company).
@@ -155,10 +153,10 @@ class BodyguardRepository {
         var model = _toDetailedModel(row);
         // Self-registered bodyguard: user_services are linked via user_id,
         // so bodyguard_id relation may be empty. Fetch by user_id if needed.
-        if (model.serviceTypes.isEmpty && model.user.id.isNotEmpty) {
+        if ((model.services == null || model.services!.isEmpty) && model.user.id.isNotEmpty) {
           final userServices = await _fetchServicesByUserId(model.user.id);
           if (userServices.isNotEmpty) {
-            model = model.copyWith(serviceTypes: userServices);
+            model = model.copyWith(services: userServices);
           }
         }
         // Self-registered bodyguard or missing availability: fetch by user_id or bodyguard_id
@@ -188,10 +186,10 @@ class BodyguardRepository {
 
       if (baseRow != null) {
         var model = _toDetailedModel(baseRow);
-        if (model.serviceTypes.isEmpty && model.user.id.isNotEmpty) {
+        if ((model.services == null || model.services!.isEmpty) && model.user.id.isNotEmpty) {
           final userServices = await _fetchServicesByUserId(model.user.id);
           if (userServices.isNotEmpty) {
-            model = model.copyWith(serviceTypes: userServices);
+            model = model.copyWith(services: userServices);
           }
         }
         if (model.userAvailabilities == null || model.userAvailabilities!.isEmpty) {
@@ -220,13 +218,13 @@ class BodyguardRepository {
   }
 
   /// Fetches services linked directly to a login account's user_id.
-  Future<List<GuardService>> _fetchServicesByUserId(String userId) async {
+  Future<List<ServiceItemModel>> _fetchServicesByUserId(String userId) async {
     try {
       final rows = await _supabase
           .from(DatabaseTables.userServices)
           .select('id, service:services(id, name, description, icon_name, is_active, display_order)')
           .eq(JsonKeys.userId, userId);
-      return _parseServices(rows);
+      return _parseServiceItems(rows) ?? const [];
     } catch (e) {
       AppLogger.w('Error fetching user services for userId=$userId: $e', tag: 'BodyguardRepository');
       return const [];
@@ -427,7 +425,7 @@ class BodyguardRepository {
       longitude: _toDoubleNullable(row[JsonKeys.longitude]),
       experienceYears: _toDouble(row[JsonKeys.experienceYears]).toInt(),
       rating: _toDouble(row[JsonKeys.rating]),
-      verificationStatus: UserStatus.fromApiValue(row[JsonKeys.status] as String?),
+      status: UserStatus.fromApiValue(row[JsonKeys.status] as String?),
       rejectionReason: (row[JsonKeys.rejectionReason] as String?)?.trim(),
       userAvailabilities: _parseUserAvailabilities(row),
       createdAt: row[JsonKeys.createdAt] != null
@@ -455,35 +453,22 @@ class BodyguardRepository {
     if (compMap != null) {
       company = CompanyModel(
         id: (compMap['id'] ?? '').toString(),
+        userId: compMap['user_id']?.toString(),
+        companyName: compMap['company_name']?.toString(),
         name: (compMap['company_name'] ?? compMap['name'] ?? 'Security Partner').toString(),
-        initials: compMap['initials'] as String?,
-        logoUrl: (compMap['logo_url'] ?? compMap['logoUrl']) as String?,
-        rating: _toDouble(compMap['rating']),
+        businessEmail: compMap['business_email']?.toString(),
+        companyPhoneNumber: compMap['company_phone_number']?.toString(),
         experienceYears: _toDouble(compMap['experience_years']).toInt(),
-        isVerified: true,
       );
     }
 
     // 2. Documents join mapping
-    final documents = <DocumentModel>[];
-    final rawDocs = row['documents'];
+    final documents = <UserDocumentModel>[];
+    final rawDocs = row['documents'] ?? row['user_documents'];
     if (rawDocs is List) {
       for (final item in rawDocs) {
         if (item is Map<String, dynamic>) {
-          final docTypeMap = item['document_type'];
-          final docTypeName = docTypeMap is Map ? docTypeMap['name']?.toString() : null;
-          documents.add(
-            DocumentModel(
-              id: (item['id'] ?? '').toString(),
-              docType: GuardDocType.fromApiValue(docTypeName ?? item['document_type_id']?.toString()),
-              url: (item['file_url'] ?? '').toString(),
-              status: DocumentStatus.fromApiValue(item['status']?.toString()),
-              fileName: item['file_name']?.toString(),
-              validTill: item['valid_till'] != null ? DateTime.tryParse(item['valid_till'].toString()) : null,
-              uploadedAt: item['uploaded_at'] != null ? DateTime.tryParse(item['uploaded_at'].toString()) : null,
-              rejectionReason: item['rejection_reason']?.toString(),
-            ),
-          );
+          documents.add(UserDocumentModel.fromJson(item));
         }
       }
     }
@@ -506,25 +491,21 @@ class BodyguardRepository {
           ? userAvailabilities
           : baseModel.userAvailabilities,
       qualifications: row['qualifications']?.toString() ?? baseModel.qualifications,
-      serviceTypes: _parseServices(row['services']),
+      services: _parseServiceItems(row['services']) ?? baseModel.services,
     );
   }
 
-  /// Maps `user_services(service:services(name, ...))` rows to [GuardService] values.
-  /// Each item in [raw] is `{ id, service: { name, ... } }`.
-  static List<GuardService> _parseServices(Object? raw) {
-    if (raw is! List) return const [];
-    final result = <GuardService>[];
-    for (final item in raw) {
-      if (item is! Map<String, dynamic>) continue;
-      final serviceMap = item['service'];
-      if (serviceMap is! Map<String, dynamic>) continue;
-      // `name` stores the api value (e.g. "ARMED_ESCORT")
-      final name = serviceMap['name']?.toString();
-      final gs = GuardService.tryFromApiValue(name);
-      if (gs != null) result.add(gs);
-    }
-    return result;
+  /// Maps `user_services(service:services(name, ...))` rows to [ServiceItemModel] items.
+  static List<ServiceItemModel>? _parseServiceItems(Object? raw) {
+    if (raw is! List) return null;
+    return [
+      for (final item in raw)
+        if (item is Map<String, dynamic>)
+          if (item['service'] is Map<String, dynamic>)
+            ServiceItemModel.fromJson(item['service'] as Map<String, dynamic>)
+          else
+            ServiceItemModel.fromJson(item),
+    ];
   }
 
   static double _toDouble(Object? value) => switch (value) {

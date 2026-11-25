@@ -7,9 +7,10 @@ import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/sections/app_image.dart';
+import '/features/body_guard/data/enum/document_status.enum.dart';
 import '/features/body_guard/data/enum/guard_doc_type.enum.dart';
 import '/features/body_guard/data/model/body_guard.model.dart';
-import '/features/body_guard/data/model/document.model.dart';
+import '/features/body_guard/data/model/user_document.model.dart';
 import '/shared/widgets/feedbacks/widgets/app_file_preview.dart';
 
 /// Company View "Document" Tab: Displays operative credentials and compliance documents
@@ -24,9 +25,38 @@ class CompanyGuardDocumentsTabWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final docs = bodyguard.documents.isNotEmpty
-        ? bodyguard.documents
-        : DocumentModel.fakeData;
+    final docs = (bodyguard.documents != null && bodyguard.documents!.isNotEmpty)
+        ? bodyguard.documents!
+        : const [
+            UserDocumentModel(
+              id: 'doc_id_proof',
+              documentTypeId: 'id_proof',
+              fileUrl: '',
+              fileName: 'Government ID / Passport.pdf',
+              status: DocumentStatus.approved,
+            ),
+            UserDocumentModel(
+              id: 'doc_license',
+              documentTypeId: 'security_license',
+              fileUrl: '',
+              fileName: 'Armed Security Officer License.pdf',
+              status: DocumentStatus.approved,
+            ),
+            UserDocumentModel(
+              id: 'doc_police',
+              documentTypeId: 'police_verification',
+              fileUrl: '',
+              fileName: 'Police Background Clearance.pdf',
+              status: DocumentStatus.approved,
+            ),
+            UserDocumentModel(
+              id: 'doc_cert',
+              documentTypeId: 'certifications',
+              fileUrl: '',
+              fileName: 'Tactical Protection Certification.pdf',
+              status: DocumentStatus.approved,
+            ),
+          ];
 
     final auditedCount = docs.where((d) => d.status.isApproved).length;
 
@@ -72,7 +102,7 @@ class CompanyGuardDocumentsTabWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildDocumentCard(BuildContext context, DocumentModel doc) {
+  Widget _buildDocumentCard(BuildContext context, UserDocumentModel doc) {
     final isApproved = doc.status.isApproved;
     final isRejected = doc.status.isRejected;
 
@@ -82,20 +112,23 @@ class CompanyGuardDocumentsTabWidget extends StatelessWidget {
             ? context.colors.error
             : context.colors.primary;
 
+    final docType = GuardDocType.tryFromApiValue(doc.documentTypeId);
     final title = doc.fileName != null && doc.fileName!.isNotEmpty
         ? doc.fileName!
-        : switch (doc.docType) {
+        : switch (docType) {
             GuardDocType.idProof => 'Government ID / Passport',
             GuardDocType.securityLicense => 'Armed Security Officer License',
             GuardDocType.policeVerification => 'Police Background Clearance',
             GuardDocType.certifications => 'Tactical Protection Certification',
+            null => 'Verification Document',
           };
 
-    final subtitle = switch (doc.docType) {
+    final subtitle = switch (docType) {
       GuardDocType.idProof => 'Identity Verification Proof',
       GuardDocType.securityLicense => 'Security Industry Authority (SIA)',
       GuardDocType.policeVerification => 'Federal Crime Records Registry',
       GuardDocType.certifications => 'Executive Close Protection Institute',
+      null => 'Compliance & Verification',
     };
 
     return QuickContainer(
@@ -225,7 +258,7 @@ class CompanyGuardDocumentsTabWidget extends StatelessWidget {
           ],
 
           // View preview action button
-          if (doc.url.isNotEmpty) ...[
+          if (doc.fileUrl.isNotEmpty) ...[
             8.h,
             Align(
               alignment: Alignment.centerRight,
@@ -234,7 +267,7 @@ class CompanyGuardDocumentsTabWidget extends StatelessWidget {
                   AppFilePreviewSheet.show(
                     context: context,
                     title: title,
-                    fileUrl: doc.url,
+                    fileUrl: doc.fileUrl,
                   );
                 },
                 borderRadius: BorderRadius.circular(8),

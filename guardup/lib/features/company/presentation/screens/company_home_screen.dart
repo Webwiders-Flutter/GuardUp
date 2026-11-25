@@ -1,5 +1,4 @@
 import '/core/extensions/localization.extension.dart';
-import '/core/extensions/business_type.extension.dart';
 
 import 'dart:async';
 
@@ -332,14 +331,16 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
     return BlocBuilder<AuthBloc, AuthState>(
       bloc: sl<AuthBloc>(),
       builder: (context, state) {
-        final companyName = state.companyName;
-        final logoUrl = state.avatarUrl;
+        final user = state.user;
+        final company = user?.company;
+        final companyName = company?.displayName ?? user?.name ?? 'Security Company';
+        final logoUrl = user?.profileImageUrl ?? '';
         final initials = companyName.isNotEmpty
             ? companyName.getInitials()
             : 'CO';
-        final rating = state.rating.toString();
-        final companyType = state.companyType.isNotEmpty
-            ? state.companyType.businessTypeLabel(context.l10n)
+        final rating = (company?.rating ?? 0.0).toStringAsFixed(1);
+        final companyType = company?.companyType != null
+            ? company!.companyType!.label(context.l10n)
             : 'Agency';
 
         return GestureDetector(

@@ -7,11 +7,13 @@ export 'data/enum/guard_service.enum.dart';
 export 'data/enum/week_day.enum.dart';
 
 // Models
-export 'data/model/availability.model.dart';
 export 'data/model/body_guard.model.dart';
-export 'data/model/document.model.dart';
-export 'data/model/license_and_badge.model.dart';
 export 'data/model/service_item.model.dart';
+export 'data/model/user_availability.model.dart';
+export 'data/model/user_document.model.dart';
+
+// Domain
+export 'domain/helpers/bodyguard_availability.helper.dart';
 
 // Repositories
 export 'data/repositories/bodyguard.repository.dart';

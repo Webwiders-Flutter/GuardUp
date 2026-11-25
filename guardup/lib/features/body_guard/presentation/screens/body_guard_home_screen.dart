@@ -240,8 +240,14 @@ class _BodyGuardHomeScreenState extends State<BodyGuardHomeScreen> {
     return BlocBuilder<AuthBloc, AuthState>(
       bloc: sl<AuthBloc>(),
       builder: (context, state) {
-        final guardName = state.user?.name ?? state.displayName;
-        final avatar = state.avatarUrl;
+        final guardName = state.user?.name.isNotEmpty == true
+            ? state.user!.name
+            : (state.user?.bodyguard?.name.isNotEmpty == true
+                ? state.user!.bodyguard!.name
+                : 'Bodyguard');
+        final avatar = state.user?.profileImageUrl ??
+            state.user?.bodyguard?.profileImageUrl ??
+            '';
 
         return Row(
           mainAxisSize: MainAxisSize.min,

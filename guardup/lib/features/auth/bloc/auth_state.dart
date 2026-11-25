@@ -6,7 +6,6 @@ import '/features/body_guard/data/model/body_guard.model.dart';
 import '/features/body_guard/data/model/service_item.model.dart';
 import '/features/body_guard/data/model/user_document.model.dart';
 import '/features/company/data/model/company.model.dart';
-import '../data/enum/gender_type.enum.dart';
 import '../data/enum/user_role.enum.dart';
 import '../data/enum/user_status.enum.dart';
 import '../data/model/user.model.dart';
@@ -108,110 +107,6 @@ class AuthState extends Equatable {
   bool get isLoading => operationState.isLoading;
   bool get hasError => operationState.isFailure;
   String? get errorMessage => operationState.errorMessageOrNull;
-
-  // ── Database Users Table Getters (Single Source of Truth) ──────────────────
-  String get displayName =>
-      companyProfile?.displayName ??
-      (user?.name.isNotEmpty == true ? user!.name : '');
-
-  String get companyName =>
-      companyProfile?.displayName ??
-      (user?.name.isNotEmpty == true ? user!.name : 'Security Company');
-
-  String get companyType => companyProfile?.companyType?.apiValue ?? '';
-
-  String get businessEmail =>
-      companyProfile?.businessEmail ??
-      (user?.email.isNotEmpty == true ? user!.email : null) ??
-      email ??
-      '';
-
-  String get displayEmail =>
-      (user?.email.isNotEmpty == true ? user!.email : null) ??
-      email ??
-      '';
-
-  String get userEmail => displayEmail;
-
-  String get companyPhoneNumber =>
-      companyProfile?.companyPhoneNumber ?? '';
-
-  String get companyPhoneCode =>
-      companyProfile?.companyPhoneCode ?? '+91';
-
-  String get displayPhone {
-    if (isCompany && companyPhoneNumber.isNotEmpty) {
-      return '$companyPhoneCode $companyPhoneNumber';
-    }
-    final p = userPhoneNumber;
-    if (p.isNotEmpty) {
-      return '$userPhoneCode $p';
-    }
-    return '';
-  }
-
-  String get userPhoneNumber => user?.phoneNumber ?? phoneNumber ?? '';
-  String get userPhoneCode => user?.phoneCode ?? phoneCode ?? '+91';
-
-  num get hourlyRate => guardProfile?.hourlyRate ?? 0;
-  double get rating => guardProfile?.rating ?? 4.95;
-  String get bio => guardProfile?.bio ?? '';
-
-  List<String> get services {
-    if (userServices.isNotEmpty) {
-      return userServices.map((s) => s.name).toList();
-    }
-    if (user?.serviceListData != null && user!.serviceListData!.isNotEmpty) {
-      return user!.serviceListData!.map((s) => s.name).toList();
-    }
-    if (guardProfile?.services != null && guardProfile!.services!.isNotEmpty) {
-      return guardProfile!.services!.map((s) => s.name).toList();
-    }
-    return const [];
-  }
-
-  /// Primary specialization text for Guard (dynamic based on user_services)
-  String get specializationText {
-    if (userServices.isNotEmpty) {
-      return userServices.map((s) => s.name).join(', ');
-    }
-    if (services.isNotEmpty) {
-      return services.map((s) => s.replaceAll('_', ' ')).join(', ');
-    }
-    return 'Executive & VIP Protection';
-  }
-
-  String get avatarUrl =>
-      user?.profileImageUrl ??
-      guardProfile?.profileImageUrl ??
-      '';
-
-  String? get gender => user?.gender?.apiValue;
-  GenderType get genderType => user?.gender ?? GenderType.male;
-
-  String get guardAddress => guardProfile?.address?.trim() ?? '';
-  double? get guardLatitude => guardProfile?.latitude;
-  double? get guardLongitude => guardProfile?.longitude;
-  String? get guardBodyguardId => guardProfile?.id;
-
-  int get experienceYears {
-    if (guardProfile != null && guardProfile!.experienceYears > 0) {
-      return guardProfile!.experienceYears;
-    }
-    if (companyProfile != null && (companyProfile!.experienceYears ?? 0) > 0) {
-      return companyProfile!.experienceYears!;
-    }
-    return 0;
-  }
-
-  String get experienceYearsFormatted {
-    final yrs = experienceYears;
-    return yrs > 0 ? '$yrs+ Yrs Exp' : '0 Yrs Exp';
-  }
-
-  String get languages => guardProfile?.languages ?? '';
-  String get certifications => guardProfile?.certifications ?? '';
-  String get qualifications => guardProfile?.qualifications ?? '';
 
   // ── Role Helpers ────────────────────────────────────────────────────────────
   bool get isCustomer => sessionRole == UserRole.customer;

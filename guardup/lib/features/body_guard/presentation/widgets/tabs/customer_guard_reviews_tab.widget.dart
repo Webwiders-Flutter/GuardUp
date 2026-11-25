@@ -20,29 +20,7 @@ class ReviewItemData {
     required this.comment,
   });
 
-  static const List<ReviewItemData> fakeData = [
-    ReviewItemData(
-      authorName: 'Elena Rostova',
-      rating: 5.0,
-      timeAndContext: '1 week ago • Late-Night Transit',
-      comment:
-          '“Felt completely safe during late-night transit. Operative was punctual, alert, and very professional throughout the escort.”',
-    ),
-    ReviewItemData(
-      authorName: 'Marcus Sterling',
-      rating: 4.8,
-      timeAndContext: '3 weeks ago • VIP Private Event',
-      comment:
-          '“Excellent crowd deterrence and calm composure during our corporate launch event. Highly recommended.”',
-    ),
-    ReviewItemData(
-      authorName: 'Sophia Chen',
-      rating: 5.0,
-      timeAndContext: '1 month ago • Executive Airport Escort',
-      comment:
-          '“Seamless transfer from tarmac to venue. Clean route surveillance and outstanding situational awareness.”',
-    ),
-  ];
+  static const List<ReviewItemData> fakeData = [];
 }
 
 /// Customer View "Reviews" Tab: Displays operative client feedback and verified ratings.
@@ -53,8 +31,8 @@ class CustomerGuardReviewsTabWidget extends StatelessWidget {
 
   const CustomerGuardReviewsTabWidget({
     super.key,
-    this.averageRating = 4.9,
-    this.totalReviews = 48,
+    this.averageRating = 0.0,
+    this.totalReviews = 0,
     this.reviews = ReviewItemData.fakeData,
   });
 
@@ -120,7 +98,20 @@ class CustomerGuardReviewsTabWidget extends StatelessWidget {
           ),
           AppSpacing.sm.h,
 
-          ...reviews.map((review) {
+          if (reviews.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 32.0),
+              child: Center(
+                child: Text(
+                  'No client reviews yet',
+                  style: context.textTheme.bodyMedium?.colour(
+                    context.colors.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            )
+          else
+            ...reviews.map((review) {
             return QuickContainer(
               w: double.infinity,
               my: 6,

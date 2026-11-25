@@ -30,7 +30,7 @@ abstract class UserAvailabilityModel with _$UserAvailabilityModel {
     String? bodyguardId,
     @JsonKey(fromJson: _weekDayFromJson, toJson: _weekDayToJson)
     WeekDay? dayOfWeek,
-    @Default(true) bool isAvailable,
+    @Default(false) bool isAvailable,
     @Default('09:00 AM') String fromTime,
     @Default('05:00 PM') String toTime,
     DateTime? createdAt,

@@ -58,13 +58,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void initState() {
     super.initState();
     final state = sl<AuthBloc>().state;
-    _nameController.text = state.user?.name ?? state.displayName;
-    _emailController.text = state.businessEmail;
-    _phoneController.text = state.userPhoneNumber;
-    _phoneCode = state.userPhoneCode;
-    _existingAvatarUrl = state.avatarUrl;
+    final user = state.user;
+    _nameController.text = user?.name ?? '';
+    _emailController.text = user?.email ?? state.email ?? '';
+    _phoneController.text = user?.phoneNumber ?? state.phoneNumber ?? '';
+    _phoneCode = user?.phoneCode ?? state.phoneCode ?? '+91';
+    _existingAvatarUrl = user?.profileImageUrl;
     _genderController = SelectionController<GenderType>.single(
-      initial: state.genderType,
+      initial: user?.gender ?? GenderType.male,
     );
   }
 

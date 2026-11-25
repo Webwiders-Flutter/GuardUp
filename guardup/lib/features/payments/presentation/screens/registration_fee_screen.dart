@@ -44,18 +44,18 @@ class _RegistrationFeeScreenState extends State<RegistrationFeeScreen> {
         ? sl<AuthRepository>().currentUserId
         : null;
 
+    final userName = (authState.user?.name.isNotEmpty == true)
+        ? authState.user!.name
+        : (authState.user?.company?.displayName ?? 'User');
+
     return UserModel(
       id:
           currentUserId ??
           authState.user?.id ??
           'usr_${DateTime.now().millisecondsSinceEpoch}',
-      name: authState.displayName.isNotEmpty
-          ? authState.displayName
-          : (authState.user?.name ?? 'User'),
+      name: userName,
       role: authState.user?.role ?? authState.sessionRole,
-      profileImageUrl:
-          authState.user?.profileImageUrl ??
-          authState.avatarUrl,
+      profileImageUrl: authState.user?.profileImageUrl,
     );
   }
 

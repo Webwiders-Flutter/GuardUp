@@ -1,4 +1,3 @@
-import '/core/extensions/business_type.extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -13,7 +12,6 @@ import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/number.extension.dart';
 import '/core/extensions/spacing.extension.dart';
-import '/core/extensions/string.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/features/auth/bloc/auth_bloc.dart';
 import '/features/auth/bloc/auth_event.dart';
@@ -242,25 +240,15 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildCompanyCard(BuildContext context, AuthState state) {
-    final companyName = state.companyName;
-    final logoUrl = state.avatarUrl.isNotEmpty ? state.avatarUrl : null;
-    final rating = state.rating;
-    final companyType = state.companyType.isNotEmpty
-        ? state.companyType.businessTypeLabel(context.l10n)
-        : 'Licensed Agency';
+    final company = state.user?.company;
+    final companyName = company?.displayName ?? state.user?.name ?? 'Security Company';
+    final logoUrl = state.user?.profileImageUrl;
 
     final dynamicCompany = CompanyModel(
-      id: state.user?.id ?? 'comp_current',
+      id: company?.id ?? state.user?.id ?? 'comp_current',
       name: companyName,
-      initials: companyName.isNotEmpty ? companyName.getInitials() : 'SP',
-      logoUrl: logoUrl,
-      rating: rating,
-      bio: companyType,
-      experienceYears: state.experienceYears,
-      isVerified: true,
-      isOnline: true,
-      activeGuards: 0,
-      bookingsCount: '0',
+      companyName: companyName,
+      experienceYears: company?.experienceYears ?? 0,
     );
 
     return CompanyCard(
@@ -278,20 +266,31 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildGuardCard(BuildContext context, AuthState state) {
-    final guardName = state.user?.name ?? state.displayName;
-    final hourlyRate = state.hourlyRate > 0 ? state.hourlyRate : 45;
-    final rating = state.rating;
-    final avatar = state.avatarUrl.isNotEmpty
-        ? state.avatarUrl
-        : Assets.images.dummyAvatar.path;
+    final guard = state.user?.bodyguard;
+    final guardName = (guard?.name.isNotEmpty == true)
+        ? guard!.name
+        : (state.user?.name.isNotEmpty == true
+            ? state.user!.name
+            : 'Operative Guard');
+    final hourlyRate = (guard?.hourlyRate ?? 0) > 0 ? guard!.hourlyRate : 45.0;
+    final rating = guard?.rating ?? 5.0;
+    final avatar = (guard?.profileImageUrl?.isNotEmpty == true)
+        ? guard!.profileImageUrl!
+        : ((state.user?.profileImageUrl?.isNotEmpty == true)
+            ? state.user!.profileImageUrl!
+            : Assets.images.dummyAvatar.path);
 
-    final specialization = state.specializationText;
-    final location = state.guardAddress.isNotEmpty
-        ? state.guardAddress
+    final specialization = (guard?.bio.isNotEmpty == true)
+        ? guard!.bio
+        : (state.userServices.isNotEmpty
+            ? state.userServices.map((s) => s.name).join(', ')
+            : 'Executive & VIP Protection');
+    final location = (guard?.address?.isNotEmpty == true)
+        ? guard!.address!
         : 'Location not set';
 
     return _ProfileCard(
-      name: guardName.isNotEmpty ? guardName : 'Operative Guard',
+      name: guardName,
       specialization: specialization,
       rating: rating,
       location: location,
@@ -303,10 +302,10 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildCustomerCard(BuildContext context, AuthState state) {
-    final customerName = state.user?.name ?? state.displayName;
-    final email = state.businessEmail;
-    final avatar = state.avatarUrl.isNotEmpty
-        ? state.avatarUrl
+    final customerName = state.user?.name ?? '';
+    final email = state.user?.email ?? '';
+    final avatar = (state.user?.profileImageUrl?.isNotEmpty == true)
+        ? state.user!.profileImageUrl!
         : Assets.images.dummyAvatar.path;
 
     return _ProfileCard(

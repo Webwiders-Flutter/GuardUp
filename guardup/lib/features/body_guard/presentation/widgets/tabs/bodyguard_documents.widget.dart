@@ -70,15 +70,16 @@ class _BodyguardDocumentsWidgetState extends State<BodyguardDocumentsWidget> {
 
   Future<void> _loadDocumentTypesAndFiles() async {
     final bodyguard = widget.bodyguard;
-    if (bodyguard != null && bodyguard.documents.isNotEmpty) {
+    final docs = bodyguard?.documents;
+    if (docs != null && docs.isNotEmpty) {
       final Map<String, String> urls = {};
       final Map<String, String> names = {};
       final Map<String, DocumentStatus> statuses = {};
       final Map<String, String> rejectionReasons = {};
-      for (final doc in bodyguard.documents) {
-        final key = doc.docType.apiValue;
-        urls[key] = doc.url;
-        urls[doc.id] = doc.url;
+      for (final doc in docs) {
+        final key = doc.documentTypeId;
+        urls[key] = doc.fileUrl;
+        urls[doc.id] = doc.fileUrl;
         if (doc.fileName != null) {
           names[key] = doc.fileName!;
           names[doc.id] = doc.fileName!;

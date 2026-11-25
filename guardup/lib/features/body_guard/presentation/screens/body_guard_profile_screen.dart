@@ -65,7 +65,7 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
   }
 
   Future<void> _reloadBodyguard() async {
-    final id = _currentBodyguard?.id ?? widget.bodyguard?.id ?? sl<AuthBloc>().state.guardBodyguardId;
+    final id = _currentBodyguard?.id ?? widget.bodyguard?.id ?? sl<AuthBloc>().state.user?.bodyguard?.id;
     if (id != null && id.isNotEmpty) {
       try {
         final reloaded = await sl<BodyguardRepository>().getDetails(id);
@@ -135,7 +135,7 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
     EditBioSheet.show(
       context,
       currentBio: currentBio,
-      bodyguardId: _currentBodyguard?.id ?? widget.bodyguard?.id ?? sl<AuthBloc>().state.guardBodyguardId,
+      bodyguardId: _currentBodyguard?.id ?? widget.bodyguard?.id ?? sl<AuthBloc>().state.user?.bodyguard?.id,
       onBioUpdated: (newBio) {
         if (_currentBodyguard != null) {
           setState(() {
@@ -160,7 +160,7 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
   }) {
     EditKeyDetailsSheet.show(
       context,
-      bodyguardId: _currentBodyguard?.id ?? widget.bodyguard?.id ?? sl<AuthBloc>().state.guardBodyguardId,
+      bodyguardId: _currentBodyguard?.id ?? widget.bodyguard?.id ?? sl<AuthBloc>().state.user?.bodyguard?.id,
       experienceYears: experienceYears,
       hourlyRate: hourlyRate,
       address: address,
@@ -208,7 +208,7 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
   }) {
     EditServicesSheet.show(
       context,
-      bodyguardId: _currentBodyguard?.id ?? widget.bodyguard?.id ?? sl<AuthBloc>().state.guardBodyguardId,
+      bodyguardId: _currentBodyguard?.id ?? widget.bodyguard?.id ?? sl<AuthBloc>().state.user?.bodyguard?.id,
       currentServices: currentServices,
       onServicesUpdated: (updated) {
         _servicesNotifier.value = updated;
@@ -229,37 +229,27 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
         }
       },
       builder: (context, state) {
-        final guard = _currentBodyguard ?? widget.bodyguard ?? state.guardProfile;
+        final guard = _currentBodyguard ?? widget.bodyguard ?? state.user?.bodyguard;
+        final user = state.user;
         final isCompanyGuard = widget.bodyguard != null;
-        final name = isCompanyGuard
-            ? (guard?.user.name.isNotEmpty == true ? guard!.user.name : (guard?.name ?? 'Bodyguard'))
-            : (state.user?.name ?? state.displayName);
-        final rating = guard?.rating ?? state.rating;
-        final hourlyRate = guard?.hourlyRate ??
-            (state.hourlyRate > 0 ? state.hourlyRate : 60.0);
-        final avatar = isCompanyGuard
-            ? (guard?.user.profileImageUrl ?? guard?.profileImageUrl ?? Assets.images.dummyAvatar.path)
-            : (state.avatarUrl.isNotEmpty
-                ? state.avatarUrl
+        final name = (guard?.name.isNotEmpty == true)
+            ? guard!.name
+            : (user?.name.isNotEmpty == true ? user!.name : 'Bodyguard');
+        final rating = guard?.rating ?? 5.0;
+        final hourlyRate = guard?.hourlyRate ?? 60.0;
+        final avatar = (guard?.profileImageUrl?.isNotEmpty == true)
+            ? guard!.profileImageUrl!
+            : ((user?.profileImageUrl?.isNotEmpty == true)
+                ? user!.profileImageUrl!
                 : Assets.images.dummyAvatar.path);
-        final bio = (guard?.bio.isNotEmpty == true)
-            ? guard!.bio
-            : (state.bio.isNotEmpty ? state.bio : null);
+        final bio = (guard?.bio.isNotEmpty == true) ? guard!.bio : null;
         final location = (guard?.address?.isNotEmpty == true)
             ? guard!.address!
-            : (state.guardAddress.isNotEmpty
-                ? state.guardAddress
-                : 'Location not set');
-        final experienceYears = guard?.experienceYears ?? state.experienceYears;
-        final languages = (guard?.languages?.isNotEmpty == true)
-            ? guard!.languages!
-            : state.languages;
-        final certifications = (guard?.certifications?.isNotEmpty == true)
-            ? guard!.certifications!
-            : state.certifications;
-        final qualifications = (guard?.qualifications?.isNotEmpty == true)
-            ? guard!.qualifications!
-            : state.qualifications;
+            : 'Location not set';
+        final experienceYears = guard?.experienceYears ?? 0;
+        final languages = guard?.languages ?? '';
+        final certifications = guard?.certifications ?? '';
+        final qualifications = guard?.qualifications ?? '';
 
         return ValueListenableBuilder<List<ServiceItemModel>>(
           valueListenable: _servicesNotifier,
@@ -271,9 +261,9 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
                     : state.userServices);
             final specialization = effectiveServices.isNotEmpty
                 ? effectiveServices.map((s) => s.name).join(', ')
-                : (isCompanyGuard
-                    ? (guard?.bio.isNotEmpty == true ? guard!.bio : 'Security Operative')
-                    : (guard?.bio.isNotEmpty == true ? guard!.bio : state.specializationText));
+                : (guard?.bio.isNotEmpty == true
+                    ? guard!.bio
+                    : 'Executive & VIP Protection');
 
             return Scaffold(
               appBar: const AppAppBar.transparent(
@@ -338,14 +328,8 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
                                 address: location == 'Location not set'
                                     ? ''
                                     : location,
-                                latitude: guard?.latitude ??
-                                    (isCompanyGuard
-                                        ? null
-                                        : state.guardLatitude),
-                                longitude: guard?.longitude ??
-                                    (isCompanyGuard
-                                        ? null
-                                        : state.guardLongitude),
+                                latitude: guard?.latitude,
+                                longitude: guard?.longitude,
                                 languages: languages,
                                 certifications: certifications,
                                 qualifications: qualifications,

@@ -54,11 +54,11 @@ class _ContactUsViewState extends State<_ContactUsView> {
     super.initState();
     if (sl.isRegistered<AuthBloc>()) {
       final authState = sl<AuthBloc>().state;
-      final name = authState.displayName;
+      final name = authState.user?.name ?? '';
       if (name.isNotEmpty && name != 'User') {
         _nameController.text = name;
       }
-      final email = authState.userEmail;
+      final email = authState.user?.email ?? authState.email ?? '';
       if (email.isNotEmpty) {
         _emailController.text = email;
       }

@@ -1,5 +1,4 @@
 import '/features/company/data/enum/business_type.enum.dart';
-import '/core/extensions/business_type.extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -39,17 +38,24 @@ class CompanyInformationScreen extends StatelessWidget {
     return BlocBuilder<AuthBloc, AuthState>(
       bloc: sl<AuthBloc>(),
       builder: (context, state) {
+        final user = state.user;
+        final company = user?.company;
         final effectiveCompanyName = companyName ??
-            (state.companyName.isNotEmpty
-                ? state.companyName
-                : 'Security Company');
+            company?.displayName ??
+            (user?.name.isNotEmpty == true ? user!.name : 'Security Company');
 
-        final effectiveEmail = email ?? state.businessEmail;
-        final effectivePhone = phone ?? state.displayPhone;
+        final effectiveEmail = email ?? company?.businessEmail ?? user?.email ?? '';
+        final effectivePhone = phone ??
+            (company?.companyPhoneNumber?.isNotEmpty == true
+                ? '${company!.companyPhoneCode} ${company.companyPhoneNumber}'
+                : (user?.phoneNumber?.isNotEmpty == true
+                    ? '${user!.phoneCode} ${user.phoneNumber}'
+                    : ''));
         final effectiveCompanyType = companyType ??
-            (state.companyType.isNotEmpty
-                ? state.companyType.businessTypeLabel(context.l10n)
-                : BusinessType.pvtLtd.label(context.l10n));
+            company?.companyType?.label(context.l10n) ??
+            BusinessType.pvtLtd.label(context.l10n);
+        final expYears = company?.experienceYears ?? 0;
+        final experienceFormatted = expYears > 0 ? '$expYears+ Yrs Exp' : '0 Yrs Exp';
 
         return Scaffold(
           appBar: AppAppBar.transparent(
@@ -94,7 +100,7 @@ class CompanyInformationScreen extends StatelessWidget {
                         // 6. Experience Card
                         _InfoCard(
                           label: 'Experience',
-                          value: state.experienceYearsFormatted,
+                          value: experienceFormatted,
                         ),
 
                         Spacer(),

@@ -49,10 +49,12 @@ class PaymentSuccessScreen extends StatelessWidget {
         (authState?.isGuard ?? false);
     final companyName = (effectiveUser?.name.isNotEmpty == true
         ? effectiveUser!.name
-        : (authState?.companyName ?? 'SecurePro Security Ltd.'));
+        : (authState?.user?.company?.displayName ?? 'SecurePro Security Ltd.'));
     final officerName = (effectiveUser?.name.isNotEmpty == true
         ? effectiveUser!.name
-        : (authState?.displayName ?? 'Michael Carter'));
+        : (authState?.user?.name.isNotEmpty == true
+            ? authState!.user!.name
+            : 'Michael Carter'));
     final initials = companyName.isNotEmpty ? companyName.getInitials() : 'SP';
     final referenceId = transaction?.referenceId ??
         transaction?.bookingId ??

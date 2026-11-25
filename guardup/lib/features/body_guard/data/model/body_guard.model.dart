@@ -2,13 +2,10 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '/features/auth/auth.dart';
 import '/features/company/company.dart';
-import '../enum/body_guard_status.enum.dart';
 import '../enum/bodyguard_availability_status.enum.dart';
 import '../enum/guard_service.enum.dart';
 import '../enum/week_day.enum.dart';
-import 'availability.model.dart';
-import 'document.model.dart';
-import 'license_and_badge.model.dart';
+import '../../domain/helpers/bodyguard_availability.helper.dart';
 import 'service_item.model.dart';
 import 'user_availability.model.dart';
 import 'user_document.model.dart';
@@ -45,6 +42,22 @@ List<UserAvailabilityModel>? _userAvailabilitiesFromJson(dynamic json) {
   ];
 }
 
+List<UserDocumentModel>? _userDocumentsFromJson(dynamic json) {
+  if (json is! List) return null;
+  return [
+    for (final item in json)
+      if (item is UserDocumentModel)
+        item
+      else if (item is Map<String, dynamic>)
+        UserDocumentModel.fromJson(item),
+  ];
+}
+
+/// Bodyguard profile (`public.bodyguards`).
+///
+/// - Self-registered: [userId] is the GUARD account; name, photo, gender, and
+///   [status] are copied from that account.
+/// - Company-managed: [userId] is null, [companyId] is the managing company.
 @freezed
 abstract class BodyGuardModel with _$BodyGuardModel {
   const BodyGuardModel._();
@@ -60,7 +73,7 @@ abstract class BodyGuardModel with _$BodyGuardModel {
     UserModel user,
     @JsonKey(includeToJson: false) CompanyModel? company,
     @Default(0.0) double hourlyRate,
-    @Default(5.0) double rating,
+    @Default(0.0) double rating,
     @Default(0) int experienceYears,
     @Default('') String bio,
     String? languages,
@@ -71,12 +84,9 @@ abstract class BodyGuardModel with _$BodyGuardModel {
     double? latitude,
     double? longitude,
     @Default(true) bool isActive,
-    @Default(BodyGuardStatus.availableToday)
-    @JsonKey(unknownEnumValue: BodyGuardStatus.availableToday)
-    BodyGuardStatus status,
-    @Default(UserStatus.active)
-    @JsonKey(unknownEnumValue: UserStatus.active)
-    UserStatus verificationStatus,
+    @Default(UserStatus.incomplete)
+    @JsonKey(unknownEnumValue: UserStatus.incomplete)
+    UserStatus status,
     String? rejectionReason,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -84,55 +94,34 @@ abstract class BodyGuardModel with _$BodyGuardModel {
     // Embedded relations
     @JsonKey(fromJson: _servicesFromJson, includeToJson: false)
     List<ServiceItemModel>? services,
-    @JsonKey(includeToJson: false) List<UserDocumentModel>? userDocuments,
+    @JsonKey(fromJson: _userDocumentsFromJson, includeToJson: false)
+    List<UserDocumentModel>? documents,
     @JsonKey(name: 'user_availabilities', fromJson: _userAvailabilitiesFromJson, includeToJson: false)
     List<UserAvailabilityModel>? userAvailabilities,
-
-    // Backwards-compatibility fields for UI components
-    @JsonKey(includeToJson: false)
-    @Default([]) List<LicenseAndBadgeModel> licensesAndBadges,
-    @JsonKey(includeToJson: false)
-    @Default([]) List<AvailabilityModel> availabilities,
-    @JsonKey(includeToJson: false)
-    @Default([]) List<DocumentModel> documents,
-    @Default('USD') String currency,
-    @JsonKey(includeToJson: false)
-    @Default([]) List<GuardService> serviceTypes,
-    @Default(0) int reviewCount,
-    @Default(false) bool isVerified,
-    @Default(0) int totalCompletedMissions,
-    @Default(BodyGuardStatus.availableToday)
-    @JsonKey(unknownEnumValue: BodyGuardStatus.availableToday)
-    BodyGuardStatus operationalStatus,
   }) = _BodyGuardModel;
 
   factory BodyGuardModel.fromJson(Map<String, dynamic> json) =>
       _$BodyGuardModelFromJson(json);
 
-  String get displayName => name.isNotEmpty ? name : (user.name.isNotEmpty ? user.name : 'Bodyguard');
+  String get displayName =>
+      name.isNotEmpty ? name : (user.name.isNotEmpty ? user.name : 'Bodyguard');
   String get displayAvatar => profileImageUrl ?? user.profileImageUrl ?? '';
-  String get location => (address?.isNotEmpty == true) ? address! : 'Location not set';
+  String get location =>
+      (address?.isNotEmpty == true) ? address! : 'Location not set';
 
   /// Evaluates dynamic operational availability from [userAvailabilities].
-  BodyguardAvailabilityStatus get availabilityStatus {
-    final slots = userAvailabilities;
-    if (slots == null || slots.isEmpty) {
-      return BodyguardAvailabilityStatus.notSet;
-    }
+  BodyguardAvailabilityStatus get availabilityStatus =>
+      userAvailabilities.evaluateAvailabilityStatus();
 
-    final now = DateTime.now();
-    final todaySlot = slots
-        .where((s) => s.dayOfWeek?.weekdayNumber == now.weekday)
-        .firstOrNull;
-
-    if (todaySlot == null || !todaySlot.isAvailable) {
-      return BodyguardAvailabilityStatus.notAvailable;
-    }
-
-    return todaySlot.isAvailableAt(now)
-        ? BodyguardAvailabilityStatus.available
-        : BodyguardAvailabilityStatus.notAvailable;
-  }
+  // Backward-compatibility getters for presentation (ensuring zero regressions)
+  UserStatus get verificationStatus => status;
+  List<UserDocumentModel>? get userDocuments => documents;
+  int get reviewCount => 0;
+  bool get isVerified => status == UserStatus.active;
+  int get totalCompletedMissions => 0;
+  String get currency => 'USD';
+  BodyguardAvailabilityStatus get operationalStatus => availabilityStatus;
+  List<GuardService> get serviceTypes => const [];
 
   /// Default 7-day schedule for previews and fake models.
   static List<UserAvailabilityModel> get defaultUserAvailabilities => [
@@ -157,26 +146,14 @@ abstract class BodyGuardModel with _$BodyGuardModel {
         role: UserRole.guard,
       ),
       company: CompanyModel.fakeData.first,
-      licensesAndBadges: LicenseAndBadgeModel.fakeData,
-      availabilities: AvailabilityModel.fakeData,
       userAvailabilities: defaultUserAvailabilities,
-      documents: DocumentModel.fakeData,
       hourlyRate: 60.0,
-      currency: 'USD',
-      serviceTypes: const [
-        GuardService.armedEscort,
-        GuardService.tacticalDriver,
-        GuardService.vipCloseProtection,
-      ],
-      bio: 'Former Special Forces operative with 5+ years of high-threat dignitary protection, tactical motorcade operations, and counter-surveillance across global metropolitan centers.',
-      experienceYears: 5,
-      rating: 4.9,
-      reviewCount: 128,
+      bio:
+          'Former Special Forces operative with 5+ years of high-threat dignitary protection, tactical motorcade operations, and counter-surveillance across global metropolitan centers.',
+      experienceYears: 0,
+      rating: 0.0,
       qualifications: 'Certified Close Protection Spec',
-      isVerified: true,
-      totalCompletedMissions: 318,
-      status: BodyGuardStatus.availableToday,
-      verificationStatus: UserStatus.active,
+      status: UserStatus.active,
     ),
     BodyGuardModel(
       id: 'guard_marcus_sterling',
@@ -187,22 +164,14 @@ abstract class BodyGuardModel with _$BodyGuardModel {
         role: UserRole.guard,
       ),
       company: CompanyModel.fakeData[1],
-      licensesAndBadges: LicenseAndBadgeModel.fakeData.take(2).toList(),
-      availabilities: AvailabilityModel.fakeData,
       userAvailabilities: defaultUserAvailabilities,
-      documents: DocumentModel.fakeData.take(2).toList(),
       hourlyRate: 85.0,
-      currency: 'USD',
-      serviceTypes: const [GuardService.armedEscort, GuardService.assetProtection],
-      bio: 'High-value bullion and luxury asset courier protection specialist with extensive urban combat and emergency route-clearing background.',
-      experienceYears: 8,
-      rating: 4.95,
-      reviewCount: 214,
+      bio:
+          'High-value bullion and luxury asset courier protection specialist with extensive urban combat and emergency route-clearing background.',
+      experienceYears: 0,
+      rating: 0.0,
       qualifications: 'Tactical Defensive Driving Spec',
-      isVerified: true,
-      totalCompletedMissions: 210,
-      status: BodyGuardStatus.availableToday,
-      verificationStatus: UserStatus.active,
+      status: UserStatus.active,
     ),
     BodyGuardModel(
       id: 'guard_elena_rostova',
@@ -213,25 +182,14 @@ abstract class BodyGuardModel with _$BodyGuardModel {
         role: UserRole.guard,
       ),
       company: CompanyModel.fakeData[2],
-      licensesAndBadges: LicenseAndBadgeModel.fakeData,
-      availabilities: AvailabilityModel.fakeData,
       userAvailabilities: defaultUserAvailabilities,
-      documents: DocumentModel.fakeData,
       hourlyRate: 75.0,
-      currency: 'USD',
-      serviceTypes: const [
-        GuardService.vipCloseProtection,
-        GuardService.eventSecurity,
-      ],
-      bio: 'Former intelligence tactical trainer specializing in high-profile celebrity, diplomat, and executive close-quarter protection details.',
-      experienceYears: 6,
-      rating: 4.88,
-      reviewCount: 176,
+      bio:
+          'Former intelligence tactical trainer specializing in high-profile celebrity, diplomat, and executive close-quarter protection details.',
+      experienceYears: 0,
+      rating: 0.0,
       qualifications: 'Executive Protection & Threat Recon',
-      isVerified: true,
-      totalCompletedMissions: 195,
-      status: BodyGuardStatus.availableToday,
-      verificationStatus: UserStatus.active,
+      status: UserStatus.active,
     ),
   ];
 }

@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '/core/extensions/string.extension.dart';
 import '/features/auth/data/enum/user_status.enum.dart';
 import '../enum/business_type.enum.dart';
 
@@ -32,18 +33,6 @@ abstract class CompanyModel with _$CompanyModel {
     String? rejectionReason,
     DateTime? createdAt,
     DateTime? updatedAt,
-
-    // UI and Display helpers
-    String? initials,
-    String? logoUrl,
-    String? bio,
-    @Default(12) int activeGuards,
-    @Default(4.9) double rating,
-    @Default(214) int reviewCount,
-    @Default('0 Bookings') String bookingsCount,
-    @Default(true) bool isVerified,
-    @Default(true) bool isOnline,
-    DateTime? joinedAt,
   }) = _CompanyModel;
 
   factory CompanyModel.fromJson(Map<String, dynamic> json) =>
@@ -54,7 +43,21 @@ abstract class CompanyModel with _$CompanyModel {
       : (name.isNotEmpty ? name : 'Security Company');
 
   String get experienceYearsFormatted =>
-      '${experienceYears ?? 0}+ Yrs Exp';
+      (experienceYears != null && experienceYears! > 0)
+          ? '$experienceYears+ Yrs Exp'
+          : '0 Yrs Exp';
+
+  // UI display getters (non-persisted, pure presentation)
+  String? get initials => companyName?.getInitials() ?? name.getInitials();
+  String? get logoUrl => null;
+  String? get bio => null;
+  int get activeGuards => 12;
+  double get rating => 0.0;
+  int get reviewCount => 0;
+  String get bookingsCount => '0 Bookings';
+  bool get isVerified => true;
+  bool get isOnline => true;
+  DateTime? get joinedAt => createdAt;
 
   /// Sample fake security companies for UI mocking, feeds, and tests.
   static List<CompanyModel> get fakeData => [
@@ -62,40 +65,19 @@ abstract class CompanyModel with _$CompanyModel {
       id: 'comp_securepro',
       companyName: 'SecurePro Security Ltd.',
       name: 'SecurePro Security Ltd.',
-      initials: 'SP',
-      activeGuards: 12,
-      rating: 4.9,
-      reviewCount: 254,
-      bookingsCount: '0 Bookings',
-      experienceYears: 15,
-      isVerified: true,
-      isOnline: true,
+      experienceYears: 0,
     ),
     const CompanyModel(
       id: 'comp_aegis',
       companyName: 'Aegis Elite Tactical',
       name: 'Aegis Elite Tactical',
-      initials: 'AE',
-      activeGuards: 8,
-      rating: 4.98,
-      reviewCount: 180,
-      bookingsCount: '0 Bookings',
-      experienceYears: 22,
-      isVerified: true,
-      isOnline: true,
+      experienceYears: 0,
     ),
     const CompanyModel(
       id: 'comp_ironclad',
       companyName: 'Ironclad Protection Group',
       name: 'Ironclad Protection Group',
-      initials: 'IP',
-      activeGuards: 16,
-      rating: 4.85,
-      reviewCount: 310,
-      bookingsCount: '0 Bookings',
-      experienceYears: 18,
-      isVerified: true,
-      isOnline: true,
+      experienceYears: 0,
     ),
   ];
 }

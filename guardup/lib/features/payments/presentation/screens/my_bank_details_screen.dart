@@ -51,7 +51,7 @@ class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
     super.initState();
     if (sl.isRegistered<AuthBloc>()) {
       final authState = sl<AuthBloc>().state;
-      final name = authState.displayName;
+      final name = authState.user?.name ?? '';
       if (name.isNotEmpty && name != 'User') {
         _accountHolderController.text = name;
       }

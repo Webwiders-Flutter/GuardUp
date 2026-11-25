@@ -277,7 +277,9 @@ class BookingCard extends StatelessWidget {
                   ),
                   Expanded(
                     child: Text(
-                      '${guard.experienceYears}+ yrs exp',
+                      guard.experienceYears > 0
+                          ? '${guard.experienceYears}+ yrs exp'
+                          : '0 yrs exp',
                       style: context.textTheme.labelSmall?.colour(
                         context.colors.onSurfaceVariant,
                       ),
@@ -346,7 +348,7 @@ class BookingCard extends StatelessWidget {
   }
 
   Widget _buildReviewAndRatingBox(BuildContext context) {
-    final rating = booking.customerRating ?? 4.0;
+    final rating = booking.customerRating ?? 0.0;
     final reviewText = booking.customerReviewText ?? '';
 
     return QuickContainer(

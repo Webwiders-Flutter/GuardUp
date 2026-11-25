@@ -525,7 +525,9 @@ class BodyGuardCard extends StatelessWidget {
                   ),
                   Expanded(
                     child: Text(
-                      '${bodyguard.experienceYears}+ yrs exp',
+                      bodyguard.experienceYears > 0
+                          ? '${bodyguard.experienceYears}+ yrs exp'
+                          : '0 yrs exp',
                       style: context.textTheme.labelMedium?.regular().colour(
                         context.colors.onSurfaceVariant,
                       ),

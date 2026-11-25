@@ -63,23 +63,24 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
   void initState() {
     super.initState();
     final state = sl<AuthBloc>().state;
-    _companyNameController.text = state.companyName;
-    _emailController.text = state.businessEmail;
-    _phoneController.text = state.companyPhoneNumber.isNotEmpty
-        ? state.companyPhoneNumber
-        : state.userPhoneNumber;
-    _phoneCode = state.companyPhoneCode.isNotEmpty
-        ? state.companyPhoneCode
-        : state.userPhoneCode;
-    _experienceController.text = state.experienceYears > 0
-        ? state.experienceYears.toString()
-        : '';
-    _existingLogoUrl = state.avatarUrl;
+    final user = state.user;
+    final company = user?.company;
 
-    if (state.companyType.isNotEmpty) {
-      _businessTypeController.select(
-        BusinessType.fromApiValue(state.companyType),
-      );
+    _companyNameController.text = company?.displayName ?? user?.name ?? '';
+    _emailController.text = company?.businessEmail ?? user?.email ?? state.email ?? '';
+    _phoneController.text = company?.companyPhoneNumber?.isNotEmpty == true
+        ? company!.companyPhoneNumber!
+        : (user?.phoneNumber ?? state.phoneNumber ?? '');
+    _phoneCode = company?.companyPhoneCode.isNotEmpty == true
+        ? company!.companyPhoneCode
+        : (user?.phoneCode ?? state.phoneCode ?? '+91');
+    _experienceController.text = (company?.experienceYears ?? 0) > 0
+        ? company!.experienceYears.toString()
+        : '';
+    _existingLogoUrl = user?.profileImageUrl;
+
+    if (company?.companyType != null) {
+      _businessTypeController.select(company!.companyType!);
     }
   }
 
