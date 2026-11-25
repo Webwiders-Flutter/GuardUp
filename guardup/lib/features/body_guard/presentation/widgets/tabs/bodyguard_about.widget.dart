@@ -23,6 +23,7 @@ class BodyguardAboutWidget extends StatefulWidget {
   final String? location;
   final String? languages;
   final String? certifications;
+  final String? qualifications;
   final List<ServiceItemModel>? services;
   final VoidCallback? onEditBio;
   final VoidCallback? onEditKeyDetails;
@@ -37,6 +38,7 @@ class BodyguardAboutWidget extends StatefulWidget {
     this.location,
     this.languages,
     this.certifications,
+    this.qualifications,
     this.services,
     this.onEditBio,
     this.onEditKeyDetails,
@@ -262,6 +264,17 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
                 value: widget.certifications?.isNotEmpty == true
                     ? widget.certifications!
                     : 'Not specified',
+              ),
+              AppSpacing.md.h,
+              _buildDetailRow(
+                context: context,
+                icon: Assets.svg.certificate,
+                label: 'Qualifications',
+                value: widget.qualifications?.isNotEmpty == true
+                    ? widget.qualifications!
+                    : (widget.bodyguard?.qualifications?.isNotEmpty == true
+                        ? widget.bodyguard!.qualifications!
+                        : 'Not specified'),
               ),
             ],
           ),

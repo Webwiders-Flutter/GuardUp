@@ -120,6 +120,12 @@ extension DateTimeX on DateTime {
     return shortDate;
   }
 
+  bool isSameDay(DateTime other) {
+    final a = toLocal();
+    final b = other.toLocal();
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
   bool get isToday {
     final now = DateTime.now();
 

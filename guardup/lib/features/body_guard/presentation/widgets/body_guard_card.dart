@@ -16,6 +16,7 @@ import '/shared/widgets/misc/app_rich_text.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 import '../../data/enum/body_guard_status.enum.dart';
+import '../../data/enum/bodyguard_availability_status.enum.dart';
 import '../../data/enum/guard_service.enum.dart';
 import '../../data/model/body_guard.model.dart';
 
@@ -46,7 +47,10 @@ class BodyGuardCard extends StatelessWidget {
   /// Optional status override. Defaults to [BodyGuardModel.status].
   final BodyGuardStatus? status;
 
-  /// Optional specialization override. Defaults to [BodyGuardModel.clearanceLevel]
+  /// Optional availability status override. Defaults to [BodyGuardModel.availabilityStatus].
+  final BodyguardAvailabilityStatus? availabilityStatus;
+
+  /// Optional specialization override. Defaults to [BodyGuardModel.bio]
   /// or curated service type labels.
   final String? specialization;
 
@@ -76,6 +80,7 @@ class BodyGuardCard extends StatelessWidget {
     this.isSelected,
     this.onSelectedChanged,
     this.status,
+    this.availabilityStatus,
     this.specialization,
     this.tags,
     this.isCompact = false,
@@ -186,8 +191,9 @@ class BodyGuardCard extends StatelessWidget {
     final isVerified = bodyguard.isVerified;
     final resolvedSpecialization =
         specialization ??
-        bodyguard.clearanceLevel ??
-        'Licensed armed, Corporate visits';
+        (bodyguard.bio.isNotEmpty
+            ? bodyguard.bio
+            : (bodyguard.qualifications ?? 'Licensed armed, Corporate visits'));
     final rateInt = bodyguard.hourlyRate.toInt();
 
     return Row(
@@ -397,10 +403,11 @@ class BodyGuardCard extends StatelessWidget {
 
     final resolvedSpecialization =
         specialization ??
-        bodyguard.clearanceLevel ??
-        (bodyguard.serviceTypes.isNotEmpty
-            ? bodyguard.serviceTypes.map((s) => s.label).take(2).join(', ')
-            : 'Licensed armed, Corporate visits');
+        (bodyguard.bio.isNotEmpty
+            ? bodyguard.bio
+            : (bodyguard.serviceTypes.isNotEmpty
+                ? bodyguard.serviceTypes.map((s) => s.label).take(2).join(', ')
+                : (bodyguard.qualifications ?? 'Licensed armed, Corporate visits')));
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -616,10 +623,10 @@ class BodyGuardCard extends StatelessWidget {
   }
 
   Widget _buildStatusBadge(BuildContext context) {
-    final effectiveStatus = status ?? bodyguard.status;
-    final color = effectiveStatus.badgeColor(context);
-    final bgColor = effectiveStatus.badgeBackgroundColor(context);
-    final borderColor = effectiveStatus.badgeBorderColor(context);
+    final effectiveAvailability = availabilityStatus ?? bodyguard.availabilityStatus;
+    final color = effectiveAvailability.badgeColor(context);
+    final bgColor = effectiveAvailability.badgeBackgroundColor(context);
+    final borderColor = effectiveAvailability.badgeBorderColor(context);
 
     return QuickContainer(
       radius: AppRadius.sm,
@@ -630,7 +637,7 @@ class BodyGuardCard extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (effectiveStatus.hasDot) ...[
+          if (effectiveAvailability.hasDot) ...[
             QuickContainer(
               shape: QuickContainerShape.circle,
               color: color,
@@ -640,7 +647,7 @@ class BodyGuardCard extends StatelessWidget {
             AppSpacing.xs.w,
           ],
           Text(
-            effectiveStatus.label,
+            effectiveAvailability.label,
             style: context.textTheme.labelSmall
                 ?.semiBold()
                 .colour(color)

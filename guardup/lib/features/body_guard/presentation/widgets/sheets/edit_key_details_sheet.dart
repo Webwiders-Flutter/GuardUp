@@ -22,6 +22,7 @@ typedef KeyDetailsUpdatedCallback = void Function({
   num? hourlyRate,
   String? languages,
   String? certifications,
+  String? qualifications,
   String? address,
   double? latitude,
   double? longitude,
@@ -37,6 +38,7 @@ class EditKeyDetailsSheet extends StatefulWidget {
   final double? longitude;
   final String languages;
   final String certifications;
+  final String qualifications;
   final KeyDetailsUpdatedCallback? onKeyDetailsUpdated;
 
   const EditKeyDetailsSheet({
@@ -49,6 +51,7 @@ class EditKeyDetailsSheet extends StatefulWidget {
     required this.longitude,
     required this.languages,
     required this.certifications,
+    this.qualifications = '',
     this.onKeyDetailsUpdated,
   });
 
@@ -62,6 +65,7 @@ class EditKeyDetailsSheet extends StatefulWidget {
     required double? longitude,
     required String languages,
     required String certifications,
+    String qualifications = '',
     KeyDetailsUpdatedCallback? onKeyDetailsUpdated,
   }) {
     return showModalBottomSheet<void>(
@@ -80,6 +84,7 @@ class EditKeyDetailsSheet extends StatefulWidget {
         longitude: longitude,
         languages: languages,
         certifications: certifications,
+        qualifications: qualifications,
         onKeyDetailsUpdated: onKeyDetailsUpdated,
       ),
     );
@@ -95,6 +100,7 @@ class _EditKeyDetailsSheetState extends State<EditKeyDetailsSheet> {
   late final TextEditingController _addressController;
   late final TextEditingController _languagesController;
   late final TextEditingController _certificationsController;
+  late final TextEditingController _qualificationsController;
 
   double? _selectedLat;
   double? _selectedLng;
@@ -114,6 +120,9 @@ class _EditKeyDetailsSheetState extends State<EditKeyDetailsSheet> {
     _certificationsController = TextEditingController(
       text: widget.certifications,
     );
+    _qualificationsController = TextEditingController(
+      text: widget.qualifications,
+    );
     _selectedLat = widget.latitude;
     _selectedLng = widget.longitude;
   }
@@ -125,6 +134,7 @@ class _EditKeyDetailsSheetState extends State<EditKeyDetailsSheet> {
     _addressController.dispose();
     _languagesController.dispose();
     _certificationsController.dispose();
+    _qualificationsController.dispose();
     super.dispose();
   }
 
@@ -138,6 +148,7 @@ class _EditKeyDetailsSheetState extends State<EditKeyDetailsSheet> {
       final addr = _addressController.text.trim();
       final langs = _languagesController.text.trim();
       final certs = _certificationsController.text.trim();
+      final quals = _qualificationsController.text.trim();
 
       if (widget.bodyguardId != null && widget.bodyguardId!.isNotEmpty) {
         await Supabase.instance.client
@@ -147,6 +158,7 @@ class _EditKeyDetailsSheetState extends State<EditKeyDetailsSheet> {
               'hourly_rate': rate,
               'languages': langs,
               'certifications': certs,
+              'qualifications': quals,
               'address': addr,
               if (_selectedLat != null) 'latitude': _selectedLat,
               if (_selectedLng != null) 'longitude': _selectedLng,
@@ -167,6 +179,7 @@ class _EditKeyDetailsSheetState extends State<EditKeyDetailsSheet> {
                 if (_selectedLng != null) 'longitude': _selectedLng,
                 'languages': langs,
                 'certifications': certs,
+                'qualifications': quals,
               },
             );
           } catch (_) {
@@ -177,6 +190,7 @@ class _EditKeyDetailsSheetState extends State<EditKeyDetailsSheet> {
                 : <String, dynamic>{};
             meta['languages'] = langs;
             meta['certifications'] = certs;
+            meta['qualifications'] = quals;
             await sl<UserRepository>().updateProfileFields(
               userId: userId,
               data: {
@@ -199,6 +213,7 @@ class _EditKeyDetailsSheetState extends State<EditKeyDetailsSheet> {
         hourlyRate: rate,
         languages: langs,
         certifications: certs,
+        qualifications: quals,
         address: addr,
         latitude: _selectedLat,
         longitude: _selectedLng,
@@ -335,6 +350,20 @@ class _EditKeyDetailsSheetState extends State<EditKeyDetailsSheet> {
               controller: _certificationsController,
               decoration: const InputDecoration(
                 hintText: 'e.g. CPR, First Aid, Close Protection',
+              ),
+            ),
+            AppSpacing.md.h,
+
+            // 6. Qualifications
+            Text(
+              'Qualifications',
+              style: context.textTheme.labelMedium?.semiBold(),
+            ),
+            AppSpacing.xs.h,
+            AppTextField(
+              controller: _qualificationsController,
+              decoration: const InputDecoration(
+                hintText: 'e.g. Certified Close Protection, Ex-Military',
               ),
             ),
             AppSpacing.xl.h,

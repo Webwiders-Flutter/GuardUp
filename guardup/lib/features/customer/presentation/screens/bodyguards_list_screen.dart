@@ -104,12 +104,14 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
     // Filter Bodyguards
     final filteredGuards = _allBodyguards.where((guard) {
       final name = guard.user.name.toLowerCase();
-      final clearance = (guard.clearanceLevel ?? '').toLowerCase();
+      final bio = guard.bio.toLowerCase();
+      final qualifications = (guard.qualifications ?? '').toLowerCase();
       final services = guard.serviceTypes
           .map((s) => s.label.toLowerCase())
           .join(' ');
       return name.contains(query) ||
-          clearance.contains(query) ||
+          bio.contains(query) ||
+          qualifications.contains(query) ||
           services.contains(query);
     }).toList();
 

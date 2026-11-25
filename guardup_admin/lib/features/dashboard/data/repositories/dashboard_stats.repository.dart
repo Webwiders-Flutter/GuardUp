@@ -73,10 +73,48 @@ final class DashboardStatsRepository implements IDashboardStatsRepository {
         query = query.lte(JsonKeys.createdAt, end.toIso8601String());
       }
 
-      final response = await query;
-      final rows = response as List<dynamic>;
+      // Company bodyguards query from public.bodyguards
+      // (company-managed bodyguards have user_id IS NULL and company_id IS NOT NULL)
+      var companyGuardsQuery = _client
+          .from(DatabaseTables.bodyguards)
+          .select('${JsonKeys.registrationStatus}, ${JsonKeys.createdAt}')
+          .isFilter(JsonKeys.userId, null)
+          .neq(JsonKeys.registrationStatus, UserStatus.deleted.apiValue)
+          .neq(JsonKeys.registrationStatus, UserStatus.incomplete.apiValue);
 
-      if (rows.isEmpty) {
+      if (status != null) {
+        companyGuardsQuery = companyGuardsQuery.eq(
+          JsonKeys.registrationStatus,
+          status.apiValue,
+        );
+      }
+      if (start != null) {
+        companyGuardsQuery = companyGuardsQuery.gte(
+          JsonKeys.createdAt,
+          start.toIso8601String(),
+        );
+      }
+      if (end != null) {
+        companyGuardsQuery = companyGuardsQuery.lte(
+          JsonKeys.createdAt,
+          end.toIso8601String(),
+        );
+      }
+
+      final List<dynamic> rows;
+      final List<dynamic> companyGuardRows;
+
+      if (role == null) {
+        final results = await Future.wait([query, companyGuardsQuery]);
+        rows = results[0] as List<dynamic>;
+        companyGuardRows = results[1] as List<dynamic>;
+      } else {
+        final response = await query;
+        rows = response as List<dynamic>;
+        companyGuardRows = const [];
+      }
+
+      if (rows.isEmpty && companyGuardRows.isEmpty) {
         return const DashboardUserStats.zero();
       }
 
@@ -90,6 +128,7 @@ final class DashboardStatsRepository implements IDashboardStatsRepository {
       var customers = 0;
       var guards = 0;
       var companies = 0;
+      var companyGuards = 0;
 
       for (final row in rows) {
         final map = row as Map<String, dynamic>;
@@ -143,7 +182,36 @@ final class DashboardStatsRepository implements IDashboardStatsRepository {
         }
       }
 
-      final totalPlatformUsers = customers + guards + companies;
+      for (final row in companyGuardRows) {
+        final map = row as Map<String, dynamic>;
+        final rawStatus = map[JsonKeys.registrationStatus]?.toString();
+        final parsedStatus = UserStatus.fromApi(rawStatus);
+        switch (parsedStatus) {
+          case UserStatus.active:
+            active++;
+            break;
+          case UserStatus.approvalPending:
+            approvalPending++;
+            break;
+          case UserStatus.rejected:
+            rejected++;
+            break;
+          case UserStatus.incomplete:
+            pending++;
+            break;
+          case UserStatus.blocked:
+            blocked++;
+            break;
+          case UserStatus.deleted:
+            deleted++;
+            break;
+          case null:
+            break;
+        }
+        companyGuards++;
+      }
+
+      final totalPlatformUsers = customers + guards + companies + companyGuards;
 
       return DashboardUserStats(
         totalUsers: totalPlatformUsers,
@@ -156,6 +224,7 @@ final class DashboardStatsRepository implements IDashboardStatsRepository {
         customerCount: customers,
         guardCount: guards,
         companyCount: companies,
+        companyGuardCount: companyGuards,
         adminCount: 0,
         activeTrend: 0.0,
         pendingTrend: 0.0,

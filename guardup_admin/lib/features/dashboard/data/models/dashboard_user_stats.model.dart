@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
+import '/features/company_bodyguards/presentation/screens/company_bodyguards_management.screen.dart';
 import '/features/users/data/enums/user_role.enum.dart';
 import '/features/users/data/enums/user_status.enum.dart';
 import '/shared/widgets/dashboard/models/dashboard_stats_models.dart';
@@ -19,6 +21,7 @@ class DashboardUserStats {
   final int customerCount;
   final int guardCount;
   final int companyCount;
+  final int companyGuardCount;
   final int adminCount;
 
   final double activeTrend;
@@ -36,6 +39,7 @@ class DashboardUserStats {
     required this.customerCount,
     required this.guardCount,
     required this.companyCount,
+    this.companyGuardCount = 0,
     required this.adminCount,
     this.activeTrend = 8.4,
     this.pendingTrend = -2.1,
@@ -54,6 +58,7 @@ class DashboardUserStats {
       customerCount = 0,
       guardCount = 0,
       companyCount = 0,
+      companyGuardCount = 0,
       adminCount = 0,
       activeTrend = 0.0,
       pendingTrend = 0.0,
@@ -141,20 +146,36 @@ class DashboardUserStats {
   }) {
     final l10n = context.l10n;
 
-    final allItems =
-        [UserRoleType.customer, UserRoleType.guard, UserRoleType.company].map((
-          role,
-        ) {
-          return StatMetricItem(
-            id: role.apiValue,
-            title: role.label(l10n),
-            value: countForRole(role).toDouble(),
-            color: role.color(context),
-            icon: role.icon,
-            subtitle: role.description(l10n),
-            onTap: () => context.push(role.redirectionRoute(statusFilter)),
-          );
-        }).toList();
+    final allItems = [
+      ...[UserRoleType.customer, UserRoleType.guard, UserRoleType.company].map((
+        role,
+      ) {
+        return StatMetricItem(
+          id: role.apiValue,
+          title: role.label(l10n),
+          value: countForRole(role).toDouble(),
+          color: role.color(context),
+          icon: role.icon,
+          subtitle: role.description(l10n),
+          onTap: () => context.push(role.redirectionRoute(statusFilter)),
+        );
+      }),
+      StatMetricItem(
+        id: 'company_guard',
+        title: 'Company Bodyguards',
+        value: companyGuardCount.toDouble(),
+        color: context.colors.info,
+        icon: Icons.groups_outlined,
+        subtitle: 'Bodyguards managed by security companies',
+        onTap: () {
+          final targetLocation = (statusFilter != null &&
+                  CompanyBodyguardsManagementScreen.statuses.contains(statusFilter))
+              ? CompanyBodyguardsManagementScreen.location(statusFilter)
+              : CompanyBodyguardsManagementScreen.defaultLocation;
+          context.push(targetLocation);
+        },
+      ),
+    ];
 
     final filteredItems = roleFilter != null
         ? allItems.where((x) => x.id == roleFilter.apiValue).toList()
@@ -162,7 +183,7 @@ class DashboardUserStats {
 
     final subtitle = statusFilter != null
         ? 'Filtered by ${statusFilter.label(l10n)} status'
-        : 'Breakdown of Customers, Bodyguards and Security Companies';
+        : 'Breakdown of Customers, Bodyguards, Companies and Company Bodyguards';
 
     return DashboardChartData(
       title: 'Users by Platform Role',

@@ -91,7 +91,16 @@ class AuthState extends Equatable {
   bool get isUnknown => sessionStatus == AuthSessionStatus.unknown;
 
   UserModel? get user => operationState.dataOrNull;
-  BodyGuardModel? get guardProfile => user?.bodyguard;
+  BodyGuardModel? get guardProfile {
+    final bg = user?.bodyguard;
+    if (bg == null) return null;
+    if ((bg.userAvailabilities == null || bg.userAvailabilities!.isEmpty) &&
+        user?.availabilities != null &&
+        user!.availabilities!.isNotEmpty) {
+      return bg.copyWith(userAvailabilities: user!.availabilities);
+    }
+    return bg;
+  }
   CompanyModel? get companyProfile => user?.company;
 
   UserRole get sessionRole => user?.role ?? UserRole.customer;
@@ -202,6 +211,7 @@ class AuthState extends Equatable {
 
   String get languages => guardProfile?.languages ?? '';
   String get certifications => guardProfile?.certifications ?? '';
+  String get qualifications => guardProfile?.qualifications ?? '';
 
   // ── Role Helpers ────────────────────────────────────────────────────────────
   bool get isCustomer => sessionRole == UserRole.customer;

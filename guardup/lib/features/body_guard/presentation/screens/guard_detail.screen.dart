@@ -14,6 +14,7 @@ import '/core/extensions/textstyle_extension.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/navigation/app_tab_bar.dart';
 import '/shared/widgets/sections/app_appbar.dart';
+import '../../data/enum/bodyguard_availability_status.enum.dart';
 import '../../data/model/body_guard.model.dart';
 import '../../data/repositories/bodyguard.repository.dart';
 import '../widgets/guard_metrics_row.widget.dart';
@@ -369,8 +370,11 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
                     GuardProfileHeaderWidget(
                       name: guardName,
                       specialization:
-                          _guard?.clearanceLevel ??
-                          'Licensed armed, Corporate visits',
+                          (_guard?.qualifications?.isNotEmpty == true)
+                              ? _guard!.qualifications!
+                              : (_guard?.bio.isNotEmpty == true
+                                  ? _guard!.bio
+                                  : 'Licensed armed, Corporate visits'),
                       hourlyRate: _hourlyRate,
                       imagePath: photoPath,
                       isVerified: isVerified,
@@ -402,8 +406,13 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
                     GuardMetricsRowWidget(
                       experience: '${_guard?.experienceYears ?? 5}+ yrs',
                       qualifications:
-                          _guard?.clearanceLevel ?? 'Certified Spec',
-                      status: _guard?.verificationStatus ?? UserStatus.active,
+                          (_guard?.qualifications?.isNotEmpty == true)
+                              ? _guard!.qualifications!
+                              : (_guard?.bio.isNotEmpty == true
+                                  ? _guard!.bio
+                                  : 'Certified Spec'),
+                      status: _guard?.availabilityStatus ??
+                          BodyguardAvailabilityStatus.notSet,
                     ),
 
                     AppSpacing.md.h,
@@ -483,7 +492,9 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
       CustomerGuardExperienceTabWidget(
         yearsExperience: '${currentGuard.experienceYears}+ Years',
         specializationTitle:
-            currentGuard.clearanceLevel ?? 'Licensed armed, Corporate visits',
+            (currentGuard.bio.isNotEmpty)
+                ? currentGuard.bio
+                : (currentGuard.qualifications ?? 'Licensed armed, Corporate visits'),
         services: currentGuard.serviceTypes.isNotEmpty
             ? currentGuard.serviceTypes
                   .map((s) => s.apiValue.replaceAll('_', ' '))

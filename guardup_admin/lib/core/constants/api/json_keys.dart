@@ -80,6 +80,7 @@ final class JsonKeys {
   static const String experienceYears = 'experience_years';
   static const String languages = 'languages';
   static const String certifications = 'certifications';
+  static const String qualifications = 'qualifications';
 
   /// Embedded role profiles in the user details query (see UsersRepository).
   static const String company = 'company';

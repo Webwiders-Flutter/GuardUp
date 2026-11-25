@@ -12,10 +12,9 @@ import '/features/company/company.dart';
 import '../enum/document_status.enum.dart';
 import '../enum/guard_doc_type.enum.dart';
 import '../enum/guard_service.enum.dart';
-import '../enum/week_day.enum.dart';
-import '../model/availability.model.dart';
 import '../model/body_guard.model.dart';
 import '../model/document.model.dart';
+import '../model/user_availability.model.dart';
 
 /// Bodyguards managed by the signed-in company (`public.bodyguards` rows with
 /// `user_id = NULL` and `company_id` = the caller's company).
@@ -104,7 +103,7 @@ class BodyguardRepository {
 
     var query = _supabase
         .from(DatabaseTables.bodyguards)
-        .select()
+        .select(_detailsSelect)
         .eq(JsonKeys.companyId, companyId)
         .isFilter(JsonKeys.userId, null);
 
@@ -127,7 +126,7 @@ class BodyguardRepository {
 
     final rows = response.data;
     return (
-      data: rows.map(_toModel).toList(),
+      data: rows.map(_toDetailedModel).toList(),
       total: response.count,
     );
   }
@@ -136,7 +135,7 @@ class BodyguardRepository {
   Future<BodyGuardModel?> getBodyguard(String bodyguardId) async {
     final row = await _supabase
         .from(DatabaseTables.bodyguards)
-        .select()
+        .select(_detailsSelect)
         .eq(JsonKeys.id, bodyguardId)
         .maybeSingle();
     return row == null ? null : _toModel(row);
@@ -162,6 +161,17 @@ class BodyguardRepository {
             model = model.copyWith(serviceTypes: userServices);
           }
         }
+        // Self-registered bodyguard or missing availability: fetch by user_id or bodyguard_id
+        if (model.userAvailabilities == null || model.userAvailabilities!.isEmpty) {
+          final targetUserId = model.user.id.isNotEmpty ? model.user.id : (row['user_id']?.toString() ?? '');
+          final availabilities = await _fetchAvailabilities(
+            bodyguardId: bodyguardId,
+            userId: targetUserId.isNotEmpty ? targetUserId : null,
+          );
+          if (availabilities.isNotEmpty) {
+            model = model.copyWith(userAvailabilities: availabilities);
+          }
+        }
         return model;
       }
     } catch (e, st) {
@@ -182,6 +192,16 @@ class BodyguardRepository {
           final userServices = await _fetchServicesByUserId(model.user.id);
           if (userServices.isNotEmpty) {
             model = model.copyWith(serviceTypes: userServices);
+          }
+        }
+        if (model.userAvailabilities == null || model.userAvailabilities!.isEmpty) {
+          final targetUserId = model.user.id.isNotEmpty ? model.user.id : (baseRow['user_id']?.toString() ?? '');
+          final availabilities = await _fetchAvailabilities(
+            bodyguardId: bodyguardId,
+            userId: targetUserId.isNotEmpty ? targetUserId : null,
+          );
+          if (availabilities.isNotEmpty) {
+            model = model.copyWith(userAvailabilities: availabilities);
           }
         }
         return model;
@@ -213,6 +233,27 @@ class BodyguardRepository {
     }
   }
 
+  /// Fetches availability rows linked directly to a login account's user_id or bodyguard_id.
+  Future<List<UserAvailabilityModel>> _fetchAvailabilities({
+    required String bodyguardId,
+    String? userId,
+  }) async {
+    try {
+      final query = _supabase.from(DatabaseTables.userAvailabilities).select();
+      final rows = (userId != null && userId.isNotEmpty)
+          ? await query.or('bodyguard_id.eq.$bodyguardId,user_id.eq.$userId')
+          : await query.eq('bodyguard_id', bodyguardId);
+
+      final list = [
+        for (final r in rows) UserAvailabilityModel.fromJson(r),
+      ];
+      return list;
+    } catch (e) {
+      AppLogger.w('Error fetching availabilities: $e', tag: 'BodyguardRepository');
+      return const [];
+    }
+  }
+
   /// Creates ([bodyguardId] null) or updates a company-managed bodyguard.
   Future<BodyGuardModel> saveCompanyBodyguard({
     String? bodyguardId,
@@ -222,6 +263,7 @@ class BodyguardRepository {
     int? experienceYears,
     String? languages,
     String? certifications,
+    String? qualifications,
     String? address,
     double? latitude,
     double? longitude,
@@ -234,6 +276,7 @@ class BodyguardRepository {
       JsonKeys.experienceYears: ?experienceYears,
       JsonKeys.languages: ?languages,
       JsonKeys.certifications: ?certifications,
+      JsonKeys.qualifications: ?qualifications,
       JsonKeys.address: ?address,
       JsonKeys.latitude: ?latitude,
       JsonKeys.longitude: ?longitude,
@@ -350,6 +393,18 @@ class BodyguardRepository {
     }
   }
 
+  List<UserAvailabilityModel>? _parseUserAvailabilities(Map<String, dynamic> row) {
+    final rawAvail = row['availabilities'] ?? row['user_availabilities'];
+    if (rawAvail is! List || rawAvail.isEmpty) return null;
+    final list = <UserAvailabilityModel>[];
+    for (final item in rawAvail) {
+      if (item is Map<String, dynamic>) {
+        list.add(UserAvailabilityModel.fromJson(item));
+      }
+    }
+    return list.isNotEmpty ? list : null;
+  }
+
   /// Maps a `bodyguards` row to the UI model. A company-managed bodyguard has
   /// no login, so its [UserModel.id] is empty.
   BodyGuardModel _toModel(Map<String, dynamic> row) {
@@ -366,6 +421,7 @@ class BodyguardRepository {
       bio: (row[JsonKeys.bio] as String?) ?? '',
       languages: row[JsonKeys.languages] as String?,
       certifications: row[JsonKeys.certifications] as String?,
+      qualifications: row[JsonKeys.qualifications] as String?,
       address: row[JsonKeys.address] as String?,
       latitude: _toDoubleNullable(row[JsonKeys.latitude]),
       longitude: _toDoubleNullable(row[JsonKeys.longitude]),
@@ -373,6 +429,7 @@ class BodyguardRepository {
       rating: _toDouble(row[JsonKeys.rating]),
       verificationStatus: UserStatus.fromApiValue(row[JsonKeys.status] as String?),
       rejectionReason: (row[JsonKeys.rejectionReason] as String?)?.trim(),
+      userAvailabilities: _parseUserAvailabilities(row),
       createdAt: row[JsonKeys.createdAt] != null
           ? DateTime.tryParse(row[JsonKeys.createdAt].toString())
           : null,
@@ -431,40 +488,13 @@ class BodyguardRepository {
       }
     }
 
-    // 3. Availabilities join mapping
-    final availabilities = <AvailabilityModel>[];
-    final rawAvail = row['availabilities'];
+    // 3. User Availabilities join mapping
+    final userAvailabilities = <UserAvailabilityModel>[];
+    final rawAvail = row['availabilities'] ?? row['user_availabilities'];
     if (rawAvail is List) {
       for (final item in rawAvail) {
         if (item is Map<String, dynamic>) {
-          final dayIdx = (item['day_of_week'] is num) ? (item['day_of_week'] as num).toInt() : 0;
-          final fromStr = item['from_time']?.toString() ?? '09:00';
-          final toStr = item['to_time']?.toString() ?? '18:00';
-          final fromParts = fromStr.split(':');
-          final toParts = toStr.split(':');
-          final now = DateTime.now();
-          final fromDt = DateTime(
-            now.year, now.month, now.day,
-            int.tryParse(fromParts.first) ?? 9,
-            fromParts.length > 1 ? int.tryParse(fromParts[1]) ?? 0 : 0,
-          );
-          final toDt = DateTime(
-            now.year, now.month, now.day,
-            int.tryParse(toParts.first) ?? 18,
-            toParts.length > 1 ? int.tryParse(toParts[1]) ?? 0 : 0,
-          );
-          final weekDay = (dayIdx >= 0 && dayIdx < WeekDay.values.length)
-              ? WeekDay.values[dayIdx]
-              : WeekDay.monday;
-          availabilities.add(
-            AvailabilityModel(
-              id: (item['id'] ?? '').toString(),
-              weekDay: weekDay,
-              fromDateTime: fromDt,
-              toDateTime: toDt,
-              isAvailable: (item['is_available'] ?? true) as bool,
-            ),
-          );
+          userAvailabilities.add(UserAvailabilityModel.fromJson(item));
         }
       }
     }
@@ -472,7 +502,10 @@ class BodyguardRepository {
     return baseModel.copyWith(
       company: company ?? baseModel.company,
       documents: documents.isNotEmpty ? documents : baseModel.documents,
-      availabilities: availabilities.isNotEmpty ? availabilities : baseModel.availabilities,
+      userAvailabilities: userAvailabilities.isNotEmpty
+          ? userAvailabilities
+          : baseModel.userAvailabilities,
+      qualifications: row['qualifications']?.toString() ?? baseModel.qualifications,
       serviceTypes: _parseServices(row['services']),
     );
   }

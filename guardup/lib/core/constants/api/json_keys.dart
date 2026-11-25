@@ -46,6 +46,7 @@ final class JsonKeys {
   static const String bio = 'bio';
   static const String languages = 'languages';
   static const String certifications = 'certifications';
+  static const String qualifications = 'qualifications';
 
   // Profile child tables
   static const String serviceId = 'service_id';

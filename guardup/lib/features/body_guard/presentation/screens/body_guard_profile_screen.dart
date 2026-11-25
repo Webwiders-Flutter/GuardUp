@@ -61,13 +61,11 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
       }
     }
     _loadUserServices();
-    if (widget.bodyguard != null) {
-      _reloadBodyguard();
-    }
+    _reloadBodyguard();
   }
 
   Future<void> _reloadBodyguard() async {
-    final id = _currentBodyguard?.id ?? widget.bodyguard?.id;
+    final id = _currentBodyguard?.id ?? widget.bodyguard?.id ?? sl<AuthBloc>().state.guardBodyguardId;
     if (id != null && id.isNotEmpty) {
       try {
         final reloaded = await sl<BodyguardRepository>().getDetails(id);
@@ -158,6 +156,7 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
     required double? longitude,
     required String languages,
     required String certifications,
+    required String qualifications,
   }) {
     EditKeyDetailsSheet.show(
       context,
@@ -169,11 +168,13 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
       longitude: longitude,
       languages: languages,
       certifications: certifications,
+      qualifications: qualifications,
       onKeyDetailsUpdated: ({
         experienceYears,
         hourlyRate,
         languages,
         certifications,
+        qualifications,
         address,
         latitude,
         longitude,
@@ -188,6 +189,8 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
               languages: languages ?? _currentBodyguard!.languages,
               certifications:
                   certifications ?? _currentBodyguard!.certifications,
+              qualifications:
+                  qualifications ?? _currentBodyguard!.qualifications,
               address: address ?? _currentBodyguard!.address,
               latitude: latitude ?? _currentBodyguard!.latitude,
               longitude: longitude ?? _currentBodyguard!.longitude,
@@ -254,6 +257,9 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
         final certifications = (guard?.certifications?.isNotEmpty == true)
             ? guard!.certifications!
             : state.certifications;
+        final qualifications = (guard?.qualifications?.isNotEmpty == true)
+            ? guard!.qualifications!
+            : state.qualifications;
 
         return ValueListenableBuilder<List<ServiceItemModel>>(
           valueListenable: _servicesNotifier,
@@ -266,8 +272,8 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
             final specialization = effectiveServices.isNotEmpty
                 ? effectiveServices.map((s) => s.name).join(', ')
                 : (isCompanyGuard
-                    ? (guard?.clearanceLevel ?? 'Security Operative')
-                    : (guard?.clearanceLevel ?? state.specializationText));
+                    ? (guard?.bio.isNotEmpty == true ? guard!.bio : 'Security Operative')
+                    : (guard?.bio.isNotEmpty == true ? guard!.bio : state.specializationText));
 
             return Scaffold(
               appBar: const AppAppBar.transparent(
@@ -297,7 +303,7 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
 
                     // Underline Navigation Tab Bar
                     AppTabBar.underline(
-                      controller: _tabController,
+                       controller: _tabController,
                       tabNames: _tabNames,
                       isScrollable: true,
                       padding: context.horizontalEdgeInsets,
@@ -321,6 +327,7 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
                               location: location,
                               languages: languages,
                               certifications: certifications,
+                              qualifications: qualifications,
                               services: effectiveServices,
                               onEditBio: () =>
                                   _showEditBioSheet(context, bio ?? ''),
@@ -341,6 +348,7 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
                                         : state.guardLongitude),
                                 languages: languages,
                                 certifications: certifications,
+                                qualifications: qualifications,
                               ),
                               onEditServices: () => _showEditServicesSheet(
                                 context,

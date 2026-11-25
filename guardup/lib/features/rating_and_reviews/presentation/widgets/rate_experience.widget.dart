@@ -176,8 +176,9 @@ class _RateExperienceWidgetState extends State<RateExperienceWidget> {
     final guardName = guard.user.name;
     final guardSpecialization =
         widget.booking?.bodyguardSpecialization ??
-        guard.clearanceLevel ??
-        'VIP Protection Specialist, Level IV Tier';
+        (guard.bio.isNotEmpty
+            ? guard.bio
+            : 'VIP Protection Specialist, Level IV Tier');
 
     return QuickContainer(
       radius: widget.isDialog ? AppRadius.round : AppRadius.xl,

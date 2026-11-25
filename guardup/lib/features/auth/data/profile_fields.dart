@@ -14,6 +14,7 @@ abstract final class ProfileFields {
     JsonKeys.experienceYears,
     JsonKeys.languages,
     JsonKeys.certifications,
+    JsonKeys.qualifications,
     JsonKeys.address,
     JsonKeys.latitude,
     JsonKeys.longitude,

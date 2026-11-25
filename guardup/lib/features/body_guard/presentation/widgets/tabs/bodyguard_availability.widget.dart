@@ -12,6 +12,7 @@ import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/features/auth/bloc/auth_bloc.dart';
+import '/features/auth/bloc/auth_event.dart';
 import '/features/auth/domain/repositories/auth_repository.dart';
 import '/features/auth/domain/repositories/user_repository.dart';
 import '/features/body_guard/data/model/body_guard.model.dart';
@@ -278,6 +279,10 @@ class _BodyguardAvailabilityWidgetState
               data: {'metadata': existingMeta},
             );
           } catch (_) {}
+        }
+
+        if (sl.isRegistered<AuthBloc>()) {
+          sl<AuthBloc>().add(const AuthCheckStatusRequested());
         }
       }
 

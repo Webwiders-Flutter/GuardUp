@@ -328,13 +328,21 @@ class _NotificationsScreenState extends State<NotificationsScreen>
 
                     itemBuilder: (context, notification, index) {
                       final items = _paginationController.value.items;
-                      final isFirstOfToday =
-                          index == 0 && notification.createdAt.isToday;
-                      final isFirstOfYesterday =
-                          (index == 0 && !notification.createdAt.isToday) ||
-                          (index > 0 &&
-                              items[index - 1].createdAt.isToday &&
-                              !notification.createdAt.isToday);
+                      final notificationDate = notification.createdAt.toLocal();
+                      final isFirstOfDay = index == 0 ||
+                          !notificationDate.isSameDay(items[index - 1].createdAt);
+
+                      String? sectionHeader;
+                      if (isFirstOfDay) {
+                        if (notificationDate.isToday) {
+                          sectionHeader = context.l10n.todaySection;
+                        } else if (notificationDate.isYesterday) {
+                          sectionHeader = context.l10n.yesterdaySection;
+                        } else {
+                          sectionHeader = notificationDate.ddMMMMyyyy.toUpperCase();
+                        }
+                      }
+
                       final isSelected = _selectedIds.contains(notification.id);
 
                       final cardWidget = Row(
@@ -395,18 +403,10 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (isFirstOfToday) ...[
+                          if (sectionHeader != null) ...[
+                            if (index > 0) AppSpacing.lg.h,
                             Text(
-                              context.l10n.todaySection,
-                              style: context.textTheme.labelMedium?.colour(
-                                context.colors.primary,
-                              ),
-                            ),
-                            AppSpacing.sm.h,
-                          ] else if (isFirstOfYesterday) ...[
-                            AppSpacing.lg.h,
-                            Text(
-                              context.l10n.yesterdaySection,
+                              sectionHeader,
                               style: context.textTheme.labelMedium?.colour(
                                 context.colors.primary,
                               ),

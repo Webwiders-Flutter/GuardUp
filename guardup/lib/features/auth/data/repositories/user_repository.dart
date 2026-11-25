@@ -139,7 +139,12 @@ class SupabaseUserRepository extends UserRepository {
   Future<Map<String, dynamic>?> _fetchProfileRow(String userId) {
     return _supabase
         .from(DatabaseTables.users)
-        .select('*, bodyguard:bodyguards!bodyguards_user_id_fkey(*), company:companies!companies_user_id_fkey(*)')
+        .select('''
+          *,
+          bodyguard:bodyguards!bodyguards_user_id_fkey(*),
+          company:companies!companies_user_id_fkey(*),
+          availabilities:user_availabilities(*)
+        ''')
         .eq(JsonKeys.id, userId)
         .maybeSingle();
   }

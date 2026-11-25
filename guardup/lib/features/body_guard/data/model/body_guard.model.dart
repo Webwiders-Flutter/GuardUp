@@ -3,7 +3,9 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import '/features/auth/auth.dart';
 import '/features/company/company.dart';
 import '../enum/body_guard_status.enum.dart';
+import '../enum/bodyguard_availability_status.enum.dart';
 import '../enum/guard_service.enum.dart';
+import '../enum/week_day.enum.dart';
 import 'availability.model.dart';
 import 'document.model.dart';
 import 'license_and_badge.model.dart';
@@ -32,6 +34,17 @@ UserModel _userFromJson(dynamic json) {
   return const UserModel(id: '', name: '');
 }
 
+List<UserAvailabilityModel>? _userAvailabilitiesFromJson(dynamic json) {
+  if (json is! List) return null;
+  return [
+    for (final item in json)
+      if (item is UserAvailabilityModel)
+        item
+      else if (item is Map<String, dynamic>)
+        UserAvailabilityModel.fromJson(item),
+  ];
+}
+
 @freezed
 abstract class BodyGuardModel with _$BodyGuardModel {
   const BodyGuardModel._();
@@ -52,6 +65,7 @@ abstract class BodyGuardModel with _$BodyGuardModel {
     @Default('') String bio,
     String? languages,
     String? certifications,
+    String? qualifications,
     String? serviceArea,
     String? address,
     double? latitude,
@@ -71,7 +85,8 @@ abstract class BodyGuardModel with _$BodyGuardModel {
     @JsonKey(fromJson: _servicesFromJson, includeToJson: false)
     List<ServiceItemModel>? services,
     @JsonKey(includeToJson: false) List<UserDocumentModel>? userDocuments,
-    @JsonKey(includeToJson: false) List<UserAvailabilityModel>? userAvailabilities,
+    @JsonKey(name: 'user_availabilities', fromJson: _userAvailabilitiesFromJson, includeToJson: false)
+    List<UserAvailabilityModel>? userAvailabilities,
 
     // Backwards-compatibility fields for UI components
     @JsonKey(includeToJson: false)
@@ -84,7 +99,6 @@ abstract class BodyGuardModel with _$BodyGuardModel {
     @JsonKey(includeToJson: false)
     @Default([]) List<GuardService> serviceTypes,
     @Default(0) int reviewCount,
-    String? clearanceLevel,
     @Default(false) bool isVerified,
     @Default(0) int totalCompletedMissions,
     @Default(BodyGuardStatus.availableToday)
@@ -99,6 +113,39 @@ abstract class BodyGuardModel with _$BodyGuardModel {
   String get displayAvatar => profileImageUrl ?? user.profileImageUrl ?? '';
   String get location => (address?.isNotEmpty == true) ? address! : 'Location not set';
 
+  /// Evaluates dynamic operational availability from [userAvailabilities].
+  BodyguardAvailabilityStatus get availabilityStatus {
+    final slots = userAvailabilities;
+    if (slots == null || slots.isEmpty) {
+      return BodyguardAvailabilityStatus.notSet;
+    }
+
+    final now = DateTime.now();
+    final todaySlot = slots
+        .where((s) => s.dayOfWeek?.weekdayNumber == now.weekday)
+        .firstOrNull;
+
+    if (todaySlot == null || !todaySlot.isAvailable) {
+      return BodyguardAvailabilityStatus.notAvailable;
+    }
+
+    return todaySlot.isAvailableAt(now)
+        ? BodyguardAvailabilityStatus.available
+        : BodyguardAvailabilityStatus.notAvailable;
+  }
+
+  /// Default 7-day schedule for previews and fake models.
+  static List<UserAvailabilityModel> get defaultUserAvailabilities => [
+    for (final day in WeekDay.values)
+      UserAvailabilityModel(
+        id: 'avail_${day.name}',
+        dayOfWeek: day,
+        isAvailable: true,
+        fromTime: '08:00 AM',
+        toTime: '10:00 PM',
+      ),
+  ];
+
   /// Curated fake bodyguard profiles for lists, search, and rosters.
   static List<BodyGuardModel> get fakeData => [
     BodyGuardModel(
@@ -112,6 +159,7 @@ abstract class BodyGuardModel with _$BodyGuardModel {
       company: CompanyModel.fakeData.first,
       licensesAndBadges: LicenseAndBadgeModel.fakeData,
       availabilities: AvailabilityModel.fakeData,
+      userAvailabilities: defaultUserAvailabilities,
       documents: DocumentModel.fakeData,
       hourlyRate: 60.0,
       currency: 'USD',
@@ -124,7 +172,7 @@ abstract class BodyGuardModel with _$BodyGuardModel {
       experienceYears: 5,
       rating: 4.9,
       reviewCount: 128,
-      clearanceLevel: 'Licensed armed, Corporate visits',
+      qualifications: 'Certified Close Protection Spec',
       isVerified: true,
       totalCompletedMissions: 318,
       status: BodyGuardStatus.availableToday,
@@ -141,6 +189,7 @@ abstract class BodyGuardModel with _$BodyGuardModel {
       company: CompanyModel.fakeData[1],
       licensesAndBadges: LicenseAndBadgeModel.fakeData.take(2).toList(),
       availabilities: AvailabilityModel.fakeData,
+      userAvailabilities: defaultUserAvailabilities,
       documents: DocumentModel.fakeData.take(2).toList(),
       hourlyRate: 85.0,
       currency: 'USD',
@@ -149,7 +198,7 @@ abstract class BodyGuardModel with _$BodyGuardModel {
       experienceYears: 8,
       rating: 4.95,
       reviewCount: 214,
-      clearanceLevel: 'Licensed armed, Corporate visits',
+      qualifications: 'Tactical Defensive Driving Spec',
       isVerified: true,
       totalCompletedMissions: 210,
       status: BodyGuardStatus.availableToday,
@@ -166,6 +215,7 @@ abstract class BodyGuardModel with _$BodyGuardModel {
       company: CompanyModel.fakeData[2],
       licensesAndBadges: LicenseAndBadgeModel.fakeData,
       availabilities: AvailabilityModel.fakeData,
+      userAvailabilities: defaultUserAvailabilities,
       documents: DocumentModel.fakeData,
       hourlyRate: 75.0,
       currency: 'USD',
@@ -177,7 +227,7 @@ abstract class BodyGuardModel with _$BodyGuardModel {
       experienceYears: 6,
       rating: 4.88,
       reviewCount: 176,
-      clearanceLevel: 'Licensed armed, Corporate visits',
+      qualifications: 'Executive Protection & Threat Recon',
       isVerified: true,
       totalCompletedMissions: 195,
       status: BodyGuardStatus.availableToday,

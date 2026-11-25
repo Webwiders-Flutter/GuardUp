@@ -233,8 +233,9 @@ class BookingCard extends StatelessWidget {
               AppSpacing.xxs.h,
               Text(
                 booking.bodyguardSpecialization ??
-                    booking.bodyguard.clearanceLevel ??
-                    'Licensed armed, Corporate visits',
+                    (booking.bodyguard.bio.isNotEmpty
+                        ? booking.bodyguard.bio
+                        : 'Licensed armed, Corporate visits'),
                 style: context.textTheme.bodySmall?.colour(
                   context.colors.primary,
                 ),

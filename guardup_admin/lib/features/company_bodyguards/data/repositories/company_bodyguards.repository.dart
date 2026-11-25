@@ -6,6 +6,7 @@ import '/core/error/api_exception.dart';
 import '/core/repositories/base.repository.dart';
 import '/features/users/data/enums/user_status.enum.dart';
 import '/features/users/data/models/bodyguard.model.dart';
+import '/features/users/data/models/user_availability.model.dart';
 
 /// Company-managed bodyguards (`public.bodyguards` with `user_id = NULL`):
 /// the admin listing per status, one bodyguard's details, and its review.
@@ -121,7 +122,22 @@ final class CompanyBodyguardsRepository
     if (row == null) {
       throw ApiException('Bodyguard not found. It may have been removed.');
     }
-    return fromJson(row);
+    var model = fromJson(row);
+    if (model.availabilities == null || model.availabilities!.isEmpty) {
+      try {
+        final availRows = await client
+            .from(DatabaseTables.userAvailabilities)
+            .select()
+            .or('bodyguard_id.eq.$id,user_id.eq.${model.userId ?? id}');
+        if (availRows.isNotEmpty) {
+          final list = availRows
+              .map((r) => UserAvailabilityModel.fromJson(r))
+              .toList();
+          model = model.copyWith(availabilities: list);
+        }
+      } catch (_) {}
+    }
+    return model;
   }
 
   /// Bodyguards added by the company [companyId] (`companies.id`), awaiting
@@ -135,6 +151,37 @@ final class CompanyBodyguardsRepository
         .order(JsonKeys.createdAt, ascending: false);
 
     final bodyguards = rows.map(fromJson).toList();
+    final missingIds = bodyguards
+        .where((b) => b.availabilities == null || b.availabilities!.isEmpty)
+        .map((b) => b.id)
+        .toList();
+    if (missingIds.isNotEmpty) {
+      try {
+        final filter = missingIds.map((id) => 'bodyguard_id.eq.$id').join(',');
+        final availRows = await client
+            .from(DatabaseTables.userAvailabilities)
+            .select()
+            .or(filter);
+        if (availRows.isNotEmpty) {
+          final byId = <String, List<UserAvailabilityModel>>{};
+          for (final r in availRows) {
+            final bgId = r['bodyguard_id']?.toString();
+            if (bgId != null) {
+              byId.putIfAbsent(bgId, () => []).add(
+                    UserAvailabilityModel.fromJson(r),
+                  );
+            }
+          }
+          for (var i = 0; i < bodyguards.length; i++) {
+            final b = bodyguards[i];
+            if (byId.containsKey(b.id)) {
+              bodyguards[i] = b.copyWith(availabilities: byId[b.id]);
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
     // Stable sort keeps newest-first inside each group.
     bodyguards.sort(
       (a, b) => _reviewRank(a.status).compareTo(_reviewRank(b.status)),

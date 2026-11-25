@@ -1,5 +1,6 @@
 // Enums
 export 'data/enum/body_guard_status.enum.dart';
+export 'data/enum/bodyguard_availability_status.enum.dart';
 export 'data/enum/document_status.enum.dart';
 export 'data/enum/guard_doc_type.enum.dart';
 export 'data/enum/guard_service.enum.dart';

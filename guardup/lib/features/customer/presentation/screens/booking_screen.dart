@@ -326,13 +326,14 @@ class _BookingScreenState extends State<BookingScreen> {
                   final filteredGuards = allGuards.where((guard) {
                     if (query.isEmpty) return true;
                     final name = guard.user.name.toLowerCase();
-                    final clearance = (guard.clearanceLevel ?? '')
-                        .toLowerCase();
+                    final bio = guard.bio.toLowerCase();
+                    final qualifications = (guard.qualifications ?? '').toLowerCase();
                     final services = guard.serviceTypes
                         .map((s) => s.label.toLowerCase())
                         .join(' ');
                     return name.contains(query) ||
-                        clearance.contains(query) ||
+                        bio.contains(query) ||
+                        qualifications.contains(query) ||
                         services.contains(query);
                   }).toList();
 

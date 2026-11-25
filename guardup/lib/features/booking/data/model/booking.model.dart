@@ -57,7 +57,6 @@ abstract class BookingModel with _$BookingModel {
         rating: 4.9,
         reviewCount: 128,
         experienceYears: 5,
-        clearanceLevel: 'Licensed armed, Corporate visits',
         isVerified: true,
       ),
       customer: const UserModel(
@@ -90,7 +89,6 @@ abstract class BookingModel with _$BookingModel {
         rating: 4.9,
         reviewCount: 128,
         experienceYears: 5,
-        clearanceLevel: 'Licensed armed, Corporate visits',
         isVerified: true,
       ),
       customer: const UserModel(
@@ -123,7 +121,6 @@ abstract class BookingModel with _$BookingModel {
         rating: 4.9,
         reviewCount: 128,
         experienceYears: 7,
-        clearanceLevel: 'Licensed armed, Corporate visits',
         isVerified: true,
       ),
       customer: const UserModel(
@@ -159,7 +156,6 @@ abstract class BookingModel with _$BookingModel {
         rating: 4.85,
         reviewCount: 94,
         experienceYears: 6,
-        clearanceLevel: 'Licensed armed, Corporate visits',
         isVerified: true,
       ),
       customer: const UserModel(id: 'usr_me', name: 'Client Account'),
@@ -188,7 +184,6 @@ abstract class BookingModel with _$BookingModel {
         rating: 4.92,
         reviewCount: 110,
         experienceYears: 8,
-        clearanceLevel: 'Licensed armed, Corporate visits',
         isVerified: true,
       ),
       customer: const UserModel(id: 'usr_me', name: 'Client Account'),
