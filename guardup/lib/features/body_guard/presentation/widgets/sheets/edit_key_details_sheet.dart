@@ -1,21 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '/core/constants/api/database_tables.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
-import '/core/di/injection_container.dart';
+import '/core/extensions/api_error.extension.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
-import '/features/auth/bloc/auth_bloc.dart';
-import '/features/auth/bloc/auth_event.dart';
-import '/features/auth/domain/repositories/user_repository.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_address_picker_sheet.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
+import '../../../bloc/guard_profile/guard_profile_bloc.dart';
 
 typedef KeyDetailsUpdatedCallback = void Function({
   int? experienceYears,
@@ -30,7 +27,6 @@ typedef KeyDetailsUpdatedCallback = void Function({
 
 /// Modal bottom sheet for viewing and updating key bodyguard operational details.
 class EditKeyDetailsSheet extends StatefulWidget {
-  final String? bodyguardId;
   final int experienceYears;
   final num hourlyRate;
   final String address;
@@ -43,7 +39,6 @@ class EditKeyDetailsSheet extends StatefulWidget {
 
   const EditKeyDetailsSheet({
     super.key,
-    this.bodyguardId,
     required this.experienceYears,
     required this.hourlyRate,
     required this.address,
@@ -57,7 +52,7 @@ class EditKeyDetailsSheet extends StatefulWidget {
 
   static Future<void> show(
     BuildContext context, {
-    String? bodyguardId,
+    GuardProfileBloc? bloc,
     required int experienceYears,
     required num hourlyRate,
     required String address,
@@ -68,6 +63,7 @@ class EditKeyDetailsSheet extends StatefulWidget {
     String qualifications = '',
     KeyDetailsUpdatedCallback? onKeyDetailsUpdated,
   }) {
+    final profileBloc = bloc ?? context.read<GuardProfileBloc>();
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -75,17 +71,19 @@ class EditKeyDetailsSheet extends StatefulWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
-      builder: (_) => EditKeyDetailsSheet(
-        bodyguardId: bodyguardId,
-        experienceYears: experienceYears,
-        hourlyRate: hourlyRate,
-        address: address,
-        latitude: latitude,
-        longitude: longitude,
-        languages: languages,
-        certifications: certifications,
-        qualifications: qualifications,
-        onKeyDetailsUpdated: onKeyDetailsUpdated,
+      builder: (_) => BlocProvider.value(
+        value: profileBloc,
+        child: EditKeyDetailsSheet(
+          experienceYears: experienceYears,
+          hourlyRate: hourlyRate,
+          address: address,
+          latitude: latitude,
+          longitude: longitude,
+          languages: languages,
+          certifications: certifications,
+          qualifications: qualifications,
+          onKeyDetailsUpdated: onKeyDetailsUpdated,
+        ),
       ),
     );
   }
@@ -104,7 +102,6 @@ class _EditKeyDetailsSheetState extends State<EditKeyDetailsSheet> {
 
   double? _selectedLat;
   double? _selectedLng;
-  bool _isSaving = false;
 
   @override
   void initState() {
@@ -138,247 +135,204 @@ class _EditKeyDetailsSheetState extends State<EditKeyDetailsSheet> {
     super.dispose();
   }
 
-  Future<void> _handleSave() async {
-    if (_isSaving) return;
-    setState(() => _isSaving = true);
-
-    try {
-      final exp = int.tryParse(_expController.text.trim()) ?? 0;
-      final rate = num.tryParse(_rateController.text.trim()) ?? 0;
-      final addr = _addressController.text.trim();
-      final langs = _languagesController.text.trim();
-      final certs = _certificationsController.text.trim();
-      final quals = _qualificationsController.text.trim();
-
-      if (widget.bodyguardId != null && widget.bodyguardId!.isNotEmpty) {
-        await Supabase.instance.client
-            .from(DatabaseTables.bodyguards)
-            .update({
-              'experience_years': exp,
-              'hourly_rate': rate,
-              'languages': langs,
-              'certifications': certs,
-              'qualifications': quals,
-              'address': addr,
-              if (_selectedLat != null) 'latitude': _selectedLat,
-              if (_selectedLng != null) 'longitude': _selectedLng,
-            })
-            .eq('id', widget.bodyguardId!);
-      } else {
-        final authState = sl<AuthBloc>().state;
-        final userId = authState.user?.id ?? '';
-        if (userId.isNotEmpty) {
-          try {
-            await sl<UserRepository>().updateProfileFields(
-              userId: userId,
-              data: {
-                'experience_years': exp,
-                'hourly_rate': rate,
-                'address': addr,
-                if (_selectedLat != null) 'latitude': _selectedLat,
-                if (_selectedLng != null) 'longitude': _selectedLng,
-                'languages': langs,
-                'certifications': certs,
-                'qualifications': quals,
-              },
-            );
-          } catch (_) {
-            // Fallback if migration is still pending on remote DB
-            final userRow = await sl<UserRepository>().getUserData(userId);
-            final meta = (userRow?['metadata'] is Map)
-                ? Map<String, dynamic>.from(userRow!['metadata'] as Map)
-                : <String, dynamic>{};
-            meta['languages'] = langs;
-            meta['certifications'] = certs;
-            meta['qualifications'] = quals;
-            await sl<UserRepository>().updateProfileFields(
-              userId: userId,
-              data: {
-                'experience_years': exp,
-                'hourly_rate': rate,
-                'address': addr,
-                if (_selectedLat != null) 'latitude': _selectedLat,
-                if (_selectedLng != null) 'longitude': _selectedLng,
-                'metadata': meta,
-              },
-            );
-          }
-
-          sl<AuthBloc>().add(const AuthCheckStatusRequested());
-        }
-      }
-
-      widget.onKeyDetailsUpdated?.call(
+  void _handleSave() {
+    final exp = int.tryParse(_expController.text.trim()) ?? 0;
+    final rate = num.tryParse(_rateController.text.trim()) ?? 0;
+    context.read<GuardProfileBloc>().add(
+      GuardProfileKeyDetailsSaved(
         experienceYears: exp,
         hourlyRate: rate,
-        languages: langs,
-        certifications: certs,
-        qualifications: quals,
-        address: addr,
+        address: _addressController.text.trim(),
         latitude: _selectedLat,
         longitude: _selectedLng,
-      );
-
-      if (mounted) {
-        Navigator.pop(context);
-        AppSnackbar.success('Key details updated successfully');
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isSaving = false);
-        AppSnackbar.error('Failed to update details: $e');
-      }
-    }
+        languages: _languagesController.text.trim(),
+        certifications: _certificationsController.text.trim(),
+        qualifications: _qualificationsController.text.trim(),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: AppSpacing.lg,
-        right: AppSpacing.lg,
-        top: AppSpacing.lg,
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: context.colors.outlineVariant,
-                  borderRadius: BorderRadius.circular(AppRadius.full),
+    return BlocConsumer<GuardProfileBloc, GuardProfileState>(
+      listenWhen: (prev, curr) => prev.editStatus != curr.editStatus,
+      listener: (context, state) {
+        if (state.editStatus.isSuccess &&
+            state.editStatus.dataOrNull == GuardProfileEditKind.keyDetails) {
+          widget.onKeyDetailsUpdated?.call(
+            experienceYears: int.tryParse(_expController.text.trim()) ?? 0,
+            hourlyRate: num.tryParse(_rateController.text.trim()) ?? 0,
+            languages: _languagesController.text.trim(),
+            certifications: _certificationsController.text.trim(),
+            qualifications: _qualificationsController.text.trim(),
+            address: _addressController.text.trim(),
+            latitude: _selectedLat,
+            longitude: _selectedLng,
+          );
+          Navigator.pop(context);
+          AppSnackbar.success('Key details updated successfully');
+        } else if (state.editStatus.isFailure) {
+          AppSnackbar.error(
+            context.apiErrorText(
+              state.editStatus.errorOrNull,
+              fallback: 'Failed to update details',
+            ),
+          );
+        }
+      },
+      buildWhen: (prev, curr) => prev.editStatus != curr.editStatus,
+      builder: (context, state) {
+        final isSaving = state.editStatus.isLoading;
+        return Padding(
+          padding: EdgeInsets.only(
+            left: AppSpacing.lg,
+            right: AppSpacing.lg,
+            top: AppSpacing.lg,
+            bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: context.colors.outlineVariant,
+                      borderRadius: BorderRadius.circular(AppRadius.full),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            AppSpacing.md.h,
-            Text(
-              'Edit Key Details',
-              style: context.textTheme.titleMedium?.bold().colour(
-                context.colors.onSurface,
-              ),
-            ),
-            AppSpacing.xs.h,
-            Text(
-              'Update your operational rates, experience, location, and credentials.',
-              style: context.textTheme.bodySmall?.colour(
-                context.colors.onSurfaceVariant,
-              ),
-            ),
-            AppSpacing.lg.h,
-
-            // 1. Experience Years
-            Text(
-              'Experience (Years)',
-              style: context.textTheme.labelMedium?.semiBold(),
-            ),
-            AppSpacing.xs.h,
-            AppTextField(
-              controller: _expController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(hintText: 'e.g. 5'),
-            ),
-            AppSpacing.md.h,
-
-            // 2. Hourly Rate
-            Text(
-              'Hourly Rate (\$/hr)',
-              style: context.textTheme.labelMedium?.semiBold(),
-            ),
-            AppSpacing.xs.h,
-            AppTextField(
-              controller: _rateController,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: const InputDecoration(hintText: 'e.g. 60'),
-            ),
-            AppSpacing.md.h,
-
-            // 3. Service Area Location (Google Places API)
-            Text(
-              'Service Area / Location',
-              style: context.textTheme.labelMedium?.semiBold(),
-            ),
-            AppSpacing.xs.h,
-            AppTextField(
-              controller: _addressController,
-              readOnly: true,
-              onTap: () async {
-                final place = await AppAddressPickerSheet.show(context);
-                if (place != null && mounted) {
-                  setState(() {
-                    _addressController.text = place.description;
-                    _selectedLat = place.latitude;
-                    _selectedLng = place.longitude;
-                  });
-                }
-              },
-              decoration: InputDecoration(
-                hintText: 'Search preferred service area...',
-                suffixIcon: Icon(
-                  Icons.location_searching_rounded,
-                  color: context.colors.primary,
-                  size: AppSizes.iconSm,
+                AppSpacing.md.h,
+                Text(
+                  'Edit Key Details',
+                  style: context.textTheme.titleMedium?.bold().colour(
+                    context.colors.onSurface,
+                  ),
                 ),
-              ),
-            ),
-            AppSpacing.md.h,
+                AppSpacing.xs.h,
+                Text(
+                  'Update your operational rates, experience, location, and credentials.',
+                  style: context.textTheme.bodySmall?.colour(
+                    context.colors.onSurfaceVariant,
+                  ),
+                ),
+                AppSpacing.lg.h,
 
-            // 4. Languages
-            Text('Languages', style: context.textTheme.labelMedium?.semiBold()),
-            AppSpacing.xs.h,
-            AppTextField(
-              controller: _languagesController,
-              decoration: const InputDecoration(
-                hintText: 'e.g. English, French, Spanish',
-              ),
-            ),
-            AppSpacing.md.h,
+                // 1. Experience Years
+                Text(
+                  'Experience (Years)',
+                  style: context.textTheme.labelMedium?.semiBold(),
+                ),
+                AppSpacing.xs.h,
+                AppTextField(
+                  controller: _expController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(hintText: 'e.g. 5'),
+                ),
+                AppSpacing.md.h,
 
-            // 5. Certifications
-            Text(
-              'Certifications',
-              style: context.textTheme.labelMedium?.semiBold(),
-            ),
-            AppSpacing.xs.h,
-            AppTextField(
-              controller: _certificationsController,
-              decoration: const InputDecoration(
-                hintText: 'e.g. CPR, First Aid, Close Protection',
-              ),
-            ),
-            AppSpacing.md.h,
+                // 2. Hourly Rate
+                Text(
+                  'Hourly Rate (\$/hr)',
+                  style: context.textTheme.labelMedium?.semiBold(),
+                ),
+                AppSpacing.xs.h,
+                AppTextField(
+                  controller: _rateController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(hintText: 'e.g. 60'),
+                ),
+                AppSpacing.md.h,
 
-            // 6. Qualifications
-            Text(
-              'Qualifications',
-              style: context.textTheme.labelMedium?.semiBold(),
-            ),
-            AppSpacing.xs.h,
-            AppTextField(
-              controller: _qualificationsController,
-              decoration: const InputDecoration(
-                hintText: 'e.g. Certified Close Protection, Ex-Military',
-              ),
-            ),
-            AppSpacing.xl.h,
+                // 3. Service Area Location (Google Places API)
+                Text(
+                  'Service Area / Location',
+                  style: context.textTheme.labelMedium?.semiBold(),
+                ),
+                AppSpacing.xs.h,
+                AppTextField(
+                  controller: _addressController,
+                  readOnly: true,
+                  onTap: () async {
+                    final place = await AppAddressPickerSheet.show(context);
+                    if (place != null && mounted) {
+                      setState(() {
+                        _addressController.text = place.description;
+                        _selectedLat = place.latitude;
+                        _selectedLng = place.longitude;
+                      });
+                    }
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Search preferred service area...',
+                    suffixIcon: Icon(
+                      Icons.location_searching_rounded,
+                      color: context.colors.primary,
+                      size: AppSizes.iconSm,
+                    ),
+                  ),
+                ),
+                AppSpacing.md.h,
 
-            // Save Button
-            AppButton(
-              text: _isSaving ? 'Saving...' : 'Save Details',
-              isLoading: _isSaving,
-              onPressed: _isSaving ? null : _handleSave,
+                // 4. Languages
+                Text(
+                  'Languages',
+                  style: context.textTheme.labelMedium?.semiBold(),
+                ),
+                AppSpacing.xs.h,
+                AppTextField(
+                  controller: _languagesController,
+                  decoration: const InputDecoration(
+                    hintText: 'e.g. English, French, Spanish',
+                  ),
+                ),
+                AppSpacing.md.h,
+
+                // 5. Certifications
+                Text(
+                  'Certifications',
+                  style: context.textTheme.labelMedium?.semiBold(),
+                ),
+                AppSpacing.xs.h,
+                AppTextField(
+                  controller: _certificationsController,
+                  decoration: const InputDecoration(
+                    hintText: 'e.g. CPR, First Aid, Close Protection',
+                  ),
+                ),
+                AppSpacing.md.h,
+
+                // 6. Qualifications
+                Text(
+                  'Qualifications',
+                  style: context.textTheme.labelMedium?.semiBold(),
+                ),
+                AppSpacing.xs.h,
+                AppTextField(
+                  controller: _qualificationsController,
+                  decoration: const InputDecoration(
+                    hintText: 'e.g. Certified Close Protection, Ex-Military',
+                  ),
+                ),
+                AppSpacing.xl.h,
+
+                // Save Button
+                AppButton(
+                  text: isSaving ? 'Saving...' : 'Save Details',
+                  isLoading: isSaving,
+                  onPressed: isSaving ? null : _handleSave,
+                ),
+                AppSpacing.md.h,
+              ],
             ),
-            AppSpacing.md.h,
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
-

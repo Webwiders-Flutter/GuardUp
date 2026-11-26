@@ -9,7 +9,7 @@ import '../models/service.model.dart';
 
 /// `public.services` (admin-managed catalogue) and the owner links in
 /// `public.user_services`. See documentation/services.md.
-final class ServicesRepository extends BaseSupabaseRepository<ServiceModel> {
+class ServicesRepository extends BaseSupabaseRepository<ServiceModel> {
   ServicesRepository(SupabaseClient client)
     : super(
         client: client,

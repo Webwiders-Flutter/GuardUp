@@ -243,6 +243,44 @@ class BodyguardRepository extends BaseSupabaseRepository<BodyGuardModel> {
     }, onConflict: JsonKeys.userId);
   }
 
+  /// Updates a subset of columns on the `bodyguards` row identified by [owner].
+  Future<void> updateForOwner(
+    RecordOwner owner,
+    Map<String, dynamic> fields,
+  ) async {
+    final column = switch (owner) {
+      AccountOwner() => JsonKeys.userId,
+      ManagedBodyguardOwner() => JsonKeys.id,
+    };
+    await client.from(tableName).update(fields).eq(column, owner.id);
+  }
+
+  /// Updates only `bio` for [owner]'s `bodyguards` row.
+  Future<void> updateBio(RecordOwner owner, String bio) =>
+      updateForOwner(owner, {JsonKeys.bio: bio.trim()});
+
+  /// Updates operational key details for [owner]'s `bodyguards` row.
+  Future<void> updateKeyDetails(
+    RecordOwner owner, {
+    required int experienceYears,
+    required num hourlyRate,
+    required String address,
+    double? latitude,
+    double? longitude,
+    required String languages,
+    required String certifications,
+    required String qualifications,
+  }) => updateForOwner(owner, {
+    JsonKeys.experienceYears: experienceYears,
+    JsonKeys.hourlyRate: hourlyRate,
+    JsonKeys.languages: languages.trim(),
+    JsonKeys.certifications: certifications.trim(),
+    JsonKeys.qualifications: qualifications.trim(),
+    JsonKeys.address: address.trim(),
+    JsonKeys.latitude: ?latitude,
+    JsonKeys.longitude: ?longitude,
+  });
+
   /// Creates ([bodyguardId] null) or updates a company-managed bodyguard.
   @Deprecated('Use saveManaged instead')
   Future<BodyGuardModel> saveCompanyBodyguard({

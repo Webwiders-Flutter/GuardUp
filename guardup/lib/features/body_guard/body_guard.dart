@@ -26,6 +26,7 @@ export 'bloc/availability/availability_bloc.dart';
 export 'bloc/bodyguard_details/bodyguard_details_bloc.dart';
 export 'bloc/bodyguards/bodyguards_bloc.dart';
 export 'bloc/company_bodyguards/company_bodyguards_bloc.dart';
+export 'bloc/guard_profile/guard_profile_bloc.dart';
 
 // Widgets
 export 'presentation/widgets/body_guard_header_card.dart';

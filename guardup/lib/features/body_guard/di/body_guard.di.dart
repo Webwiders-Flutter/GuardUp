@@ -1,12 +1,19 @@
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/core/services/file_storage/file_storage.service.dart';
+import '/features/auth/bloc/auth_bloc.dart';
+import '/features/auth/bloc/auth_event.dart';
 import '/features/auth/data/enum/user_status.enum.dart';
+import '/features/auth/domain/repositories/auth_repository.dart';
+import '/features/auth/domain/repositories/user_repository.dart';
+import '/features/services/data/repositories/services.repository.dart';
 import '/shared/models/record_owner.model.dart';
 import '../bloc/availability/availability_bloc.dart';
 import '../bloc/bodyguard_details/bodyguard_details_bloc.dart';
 import '../bloc/bodyguards/bodyguards_bloc.dart';
 import '../bloc/company_bodyguards/company_bodyguards_bloc.dart';
+import '../bloc/guard_profile/guard_profile_bloc.dart';
 import '../data/model/body_guard.model.dart';
 import '../data/model/bodyguard_filters.model.dart';
 import '../data/repositories/availability.repository.dart';
@@ -44,6 +51,24 @@ void registerBodyguardDependencies(GetIt sl) {
     (owner, _) => AvailabilityBloc(
       sl<AvailabilityRepository>(),
       owner: owner,
+    ),
+  );
+  sl.registerFactoryParam<GuardProfileBloc, RecordOwner, BodyGuardModel?>(
+    (owner, preview) => GuardProfileBloc(
+      bodyguardRepository: sl<BodyguardRepository>(),
+      userRepository: sl<UserRepository>(),
+      servicesRepository: sl<ServicesRepository>(),
+      availabilityRepository: sl<AvailabilityRepository>(),
+      fileStorageService: sl<FileStorageService>(),
+      owner: owner,
+      preview: preview,
+      getCurrentUserId: () => sl<AuthRepository>().currentUserId,
+      onAccountUpdated: () {
+        if (sl.isRegistered<AuthBloc>()) {
+          sl<AuthBloc>().add(const AuthCheckStatusRequested());
+          sl<AuthBloc>().add(const AuthReloadRoleDataRequested());
+        }
+      },
     ),
   );
 }

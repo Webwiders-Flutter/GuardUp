@@ -1,39 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '/core/constants/api/database_tables.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
-import '/core/di/injection_container.dart';
+import '/core/extensions/api_error.extension.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
-import '/features/auth/bloc/auth_bloc.dart';
-import '/features/auth/bloc/auth_event.dart';
-import '/features/auth/domain/repositories/user_repository.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
+import '../../../bloc/guard_profile/guard_profile_bloc.dart';
 
 /// Modal bottom sheet for viewing and updating the bodyguard bio.
 class EditBioSheet extends StatefulWidget {
   final String currentBio;
-  final String? bodyguardId;
   final ValueChanged<String>? onBioUpdated;
 
   const EditBioSheet({
     super.key,
     required this.currentBio,
-    this.bodyguardId,
     this.onBioUpdated,
   });
 
   static Future<void> show(
     BuildContext context, {
     required String currentBio,
-    String? bodyguardId,
+    GuardProfileBloc? bloc,
     ValueChanged<String>? onBioUpdated,
   }) {
+    final profileBloc = bloc ?? context.read<GuardProfileBloc>();
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -41,10 +37,12 @@ class EditBioSheet extends StatefulWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
-      builder: (_) => EditBioSheet(
-        currentBio: currentBio,
-        bodyguardId: bodyguardId,
-        onBioUpdated: onBioUpdated,
+      builder: (_) => BlocProvider.value(
+        value: profileBloc,
+        child: EditBioSheet(
+          currentBio: currentBio,
+          onBioUpdated: onBioUpdated,
+        ),
       ),
     );
   }
@@ -55,7 +53,6 @@ class EditBioSheet extends StatefulWidget {
 
 class _EditBioSheetState extends State<EditBioSheet> {
   late final TextEditingController _controller;
-  bool _isSaving = false;
 
   @override
   void initState() {
@@ -69,95 +66,87 @@ class _EditBioSheetState extends State<EditBioSheet> {
     super.dispose();
   }
 
-  Future<void> _handleSave() async {
-    if (_isSaving) return;
-    setState(() => _isSaving = true);
-
-    try {
-      final newBio = _controller.text.trim();
-      if (widget.bodyguardId != null && widget.bodyguardId!.isNotEmpty) {
-        await Supabase.instance.client
-            .from(DatabaseTables.bodyguards)
-            .update({'bio': newBio})
-            .eq('id', widget.bodyguardId!);
-      } else {
-        final authState = sl<AuthBloc>().state;
-        final userId = authState.user?.id ?? '';
-        if (userId.isNotEmpty) {
-          await sl<UserRepository>().updateProfileFields(
-            userId: userId,
-            data: {'bio': newBio},
-          );
-          sl<AuthBloc>().add(const AuthCheckStatusRequested());
-        }
-      }
-      widget.onBioUpdated?.call(newBio);
-      if (mounted) {
-        Navigator.pop(context);
-        AppSnackbar.success('Bio updated successfully');
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isSaving = false);
-        AppSnackbar.error('Failed to update bio: $e');
-      }
-    }
+  void _handleSave() {
+    context.read<GuardProfileBloc>().add(
+      GuardProfileBioSaved(_controller.text.trim()),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: AppSpacing.lg,
-        right: AppSpacing.lg,
-        top: AppSpacing.lg,
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: context.colors.outlineVariant,
-                borderRadius: BorderRadius.circular(AppRadius.full),
+    return BlocConsumer<GuardProfileBloc, GuardProfileState>(
+      listenWhen: (prev, curr) => prev.editStatus != curr.editStatus,
+      listener: (context, state) {
+        if (state.editStatus.isSuccess &&
+            state.editStatus.dataOrNull == GuardProfileEditKind.bio) {
+          widget.onBioUpdated?.call(_controller.text.trim());
+          Navigator.pop(context);
+          AppSnackbar.success('Bio updated successfully');
+        } else if (state.editStatus.isFailure) {
+          AppSnackbar.error(
+            context.apiErrorText(
+              state.editStatus.errorOrNull,
+              fallback: 'Failed to update bio',
+            ),
+          );
+        }
+      },
+      buildWhen: (prev, curr) => prev.editStatus != curr.editStatus,
+      builder: (context, state) {
+        final isSaving = state.editStatus.isLoading;
+        return Padding(
+          padding: EdgeInsets.only(
+            left: AppSpacing.lg,
+            right: AppSpacing.lg,
+            top: AppSpacing.lg,
+            bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: context.colors.outlineVariant,
+                    borderRadius: BorderRadius.circular(AppRadius.full),
+                  ),
+                ),
               ),
-            ),
+              AppSpacing.md.h,
+              Text(
+                'Edit Bio',
+                style: context.textTheme.titleMedium?.bold().colour(
+                  context.colors.onSurface,
+                ),
+              ),
+              AppSpacing.xs.h,
+              Text(
+                'Provide details about your background, clearances, and security specialties.',
+                style: context.textTheme.bodySmall?.colour(
+                  context.colors.onSurfaceVariant,
+                ),
+              ),
+              AppSpacing.md.h,
+              AppTextField(
+                controller: _controller,
+                maxLines: 5,
+                decoration: const InputDecoration(
+                  hintText: 'Enter your professional bio...',
+                ),
+              ),
+              AppSpacing.lg.h,
+              AppButton(
+                text: isSaving ? 'Saving...' : 'Save Bio',
+                isLoading: isSaving,
+                onPressed: isSaving ? null : _handleSave,
+              ),
+            ],
           ),
-          AppSpacing.md.h,
-          Text(
-            'Edit Bio',
-            style: context.textTheme.titleMedium?.bold().colour(
-              context.colors.onSurface,
-            ),
-          ),
-          AppSpacing.xs.h,
-          Text(
-            'Provide details about your background, clearances, and security specialties.',
-            style: context.textTheme.bodySmall?.colour(
-              context.colors.onSurfaceVariant,
-            ),
-          ),
-          AppSpacing.md.h,
-          AppTextField(
-            controller: _controller,
-            maxLines: 5,
-            decoration: const InputDecoration(
-              hintText: 'Enter your professional bio...',
-            ),
-          ),
-          AppSpacing.lg.h,
-          AppButton(
-            text: _isSaving ? 'Saving...' : 'Save Bio',
-            isLoading: _isSaving,
-            onPressed: _isSaving ? null : _handleSave,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
-
