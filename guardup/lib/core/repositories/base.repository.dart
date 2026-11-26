@@ -77,19 +77,18 @@ abstract class BaseSupabaseRepository<T> implements BaseRepository<T> {
     String? selectColumnsOverride,
     CustomQueryBuilder? customQuery,
   }) async {
-    var query = client.from(tableName).select(selectColumnsOverride ?? selectColumns);
+    var query = client
+        .from(tableName)
+        .select(selectColumnsOverride ?? selectColumns);
 
     if (isActive != null) {
       query = query.eq(JsonKeys.isActive, isActive);
     }
 
     if (search != null && search.trim().isNotEmpty) {
-      final queryStr = search.trim();
-      final searchFilters = searchFields
-          .map((field) => '$field.ilike.%$queryStr%')
-          .join(',');
-      if (searchFilters.isNotEmpty) {
-        query = query.or(searchFilters);
+      final searchFilter = buildSearchFilter(search.trim());
+      if (searchFilter != null && searchFilter.isNotEmpty) {
+        query = query.or(searchFilter);
       }
     }
 
@@ -128,15 +127,33 @@ abstract class BaseSupabaseRepository<T> implements BaseRepository<T> {
     );
   }
 
+  /// Builds the PostgREST `or()` filter for [queryStr].
+  ///
+  /// The pattern is quoted and `"` is stripped so commas or parentheses typed
+  /// in a search box cannot break the `or()` expression. Subclasses can
+  /// override this for domain-specific search.
+  String? buildSearchFilter(String queryStr) {
+    final sanitized = queryStr.replaceAll('"', '');
+    final searchFilters = searchFields
+        .map((field) => '$field.ilike."%$sanitized%"')
+        .join(',');
+    return searchFilters.isNotEmpty ? searchFilters : null;
+  }
+
   @override
   Future<T> getDetails(String id) async {
-    final response = await client.from(tableName).select().eq(JsonKeys.id, id);
-    if (response.isEmpty) {
+    final response = await client
+        .from(tableName)
+        .select(selectColumns)
+        .eq(JsonKeys.id, id)
+        .maybeSingle();
+    if (response == null) {
       throw ApiException(
         "Unable to get $entityName details. Please try again later.",
+        type: ApiErrorType.notFound,
       );
     }
-    return fromJson(response.first);
+    return fromJson(response);
   }
 
   @override
