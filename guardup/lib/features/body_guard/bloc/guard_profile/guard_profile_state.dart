@@ -117,3 +117,4 @@ final class GuardProfileState extends Equatable {
     editStatus,
   ];
 }
+

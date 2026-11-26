@@ -33,3 +33,4 @@ class MembershipPlansState extends Equatable {
   @override
   List<Object?> get props => [plans, selectedPlan, activePlanId, loadStatus];
 }
+

@@ -22,4 +22,14 @@ void registerAuthDependencies(GetIt sl) {
       userRepository: sl<UserRepository>(),
     ),
   );
+  sl.registerFactory<AuthFormBloc>(
+    () => AuthFormBloc(
+      authRepository: sl<AuthRepository>(),
+      userRepository: sl<UserRepository>(),
+      onAuthenticated: () =>
+          sl<AuthBloc>().add(const AuthProfileRefreshRequested()),
+      onPendingSignUp: (role, _) =>
+          sl<AuthBloc>().add(AuthRoleSelected(role)),
+    ),
+  );
 }

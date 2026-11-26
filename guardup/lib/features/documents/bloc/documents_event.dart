@@ -43,3 +43,4 @@ final class DocumentsSubmitted extends DocumentsEvent {
   @override
   List<Object?> get props => [submitApplication];
 }
+

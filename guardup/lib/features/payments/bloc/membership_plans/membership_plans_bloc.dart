@@ -74,3 +74,4 @@ class MembershipPlansBloc
     return plans.firstWhereOrNull((p) => p.isPopular) ?? plans.first;
   }
 }
+

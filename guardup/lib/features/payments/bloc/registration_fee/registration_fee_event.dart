@@ -17,3 +17,4 @@ final class RegistrationFeeSubmitted extends RegistrationFeeEvent {
   @override
   List<Object?> get props => [discountNote];
 }
+

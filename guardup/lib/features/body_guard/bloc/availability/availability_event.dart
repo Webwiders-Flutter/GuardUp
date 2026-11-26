@@ -44,3 +44,4 @@ final class AvailabilityTimeChanged extends AvailabilityEvent {
 final class AvailabilitySaved extends AvailabilityEvent {
   const AvailabilitySaved();
 }
+

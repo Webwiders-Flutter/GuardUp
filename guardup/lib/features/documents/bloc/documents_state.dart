@@ -60,3 +60,4 @@ class DocumentsState extends Equatable {
   @override
   List<Object?> get props => [loadStatus, submitStatus, types, uploaded, picked];
 }
+

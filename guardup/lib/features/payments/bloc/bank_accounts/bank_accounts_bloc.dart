@@ -226,3 +226,4 @@ class BankAccountsBloc extends Bloc<BankAccountsEvent, BankAccountsState> {
     }
   }
 }
+

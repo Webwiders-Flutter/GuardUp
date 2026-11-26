@@ -48,3 +48,4 @@ WHERE u.metadata ? 'availability'
     WHERE ua.user_id = u.id
   )
 ON CONFLICT (user_id, day_of_week) DO NOTHING;
+

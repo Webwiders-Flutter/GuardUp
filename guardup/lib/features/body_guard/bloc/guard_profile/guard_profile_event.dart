@@ -109,3 +109,4 @@ final class GuardProfileServicesSaved extends GuardProfileEvent {
   @override
   List<Object?> get props => [serviceIds];
 }
+

@@ -50,3 +50,4 @@ class BodyguardsBloc extends PaginatedBloc<BodyGuardModel, BodyguardFilters> {
     );
   }
 }
+

@@ -28,3 +28,4 @@ final class MembershipPlanSelected extends MembershipPlansEvent {
   @override
   List<Object?> get props => [plan];
 }
+

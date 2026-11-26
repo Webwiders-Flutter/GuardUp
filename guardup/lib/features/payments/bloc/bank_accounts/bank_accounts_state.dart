@@ -35,3 +35,4 @@ class BankAccountsState extends Equatable {
   @override
   List<Object?> get props => [accounts, loadStatus, actionStatus, lastAction];
 }
+

@@ -22,3 +22,4 @@ final class RegistrationFeeState extends Equatable {
   @override
   List<Object?> get props => [paymentStatus];
 }
+

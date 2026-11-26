@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '/core/constants/app_spacing.dart';
-import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
@@ -40,7 +40,7 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
 
   void _handleContinue() {
     final selectedRole = _roleController.selectedItem ?? UserRole.customer;
-    sl<AuthBloc>().add(AuthSetSessionRoleRequested(selectedRole));
+    context.read<AuthBloc>().add(AuthRoleSelected(selectedRole));
     context.push(SignUpScreen.route, extra: selectedRole);
   }
 

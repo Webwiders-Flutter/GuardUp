@@ -54,3 +54,4 @@ final class BankAccountPrimarySet extends BankAccountsEvent {
   @override
   List<Object?> get props => [id];
 }
+

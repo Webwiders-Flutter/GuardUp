@@ -47,3 +47,4 @@ final class CompanyProfileState extends Equatable {
     resubmittedForReview,
   ];
 }
+
