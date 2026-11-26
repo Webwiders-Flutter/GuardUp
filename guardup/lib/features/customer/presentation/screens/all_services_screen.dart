@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -11,13 +12,15 @@ import '/core/extensions/textstyle_extension.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '../widgets/customer_services_row.widget.dart';
+import '/features/services/services.dart';
+import '/core/state/api_state.dart';
 
 /// Full screen presenting all service categories in a responsive grid layout.
 /// Allows searching through categories and selecting a service to view bodyguards.
 class AllServicesScreen extends StatefulWidget {
   static const route = '/services';
 
-  final ValueChanged<ServiceItemModel?>? onServiceSelected;
+  final ValueChanged<ServiceModel?>? onServiceSelected;
 
   const AllServicesScreen({
     super.key,
@@ -47,7 +50,7 @@ class _AllServicesScreenState extends State<AllServicesScreen> {
     super.dispose();
   }
 
-  void _onCategoryTapped(ServiceItemModel? service) {
+  void _onCategoryTapped(ServiceModel? service) {
     if (widget.onServiceSelected != null) {
       widget.onServiceSelected!(service);
       context.pop();
@@ -87,11 +90,13 @@ class _AllServicesScreenState extends State<AllServicesScreen> {
 
             // 2. Grid of Services
             Expanded(
-              child: BlocBuilder<ServicesCubit, List<ServiceItemModel>>(
-                builder: (context, services) {
+              child: BlocBuilder<ServicesCatalogCubit, ApiState<List<ServiceModel>>>(
+                builder: (context, servicesState) {
+                  final services =
+                      servicesState.dataOrNull ?? const <ServiceModel>[];
                   // Trigger load if empty
                   if (services.isEmpty) {
-                    context.read<ServicesCubit>().loadServices();
+                    unawaited(context.read<ServicesCatalogCubit>().load());
                     return Center(
                       child: CircularProgressIndicator.adaptive(
                         valueColor: AlwaysStoppedAnimation<Color>(
@@ -154,8 +159,8 @@ class _AllServicesScreenState extends State<AllServicesScreen> {
 
                       return RefreshIndicator(
                         onRefresh: () =>
-                            context.read<ServicesCubit>().loadServices(
-                                  forceRefresh: true,
+                            context.read<ServicesCatalogCubit>().load(
+                                  force: true,
                                 ),
                         color: context.colors.primary,
                         child: GridView.builder(

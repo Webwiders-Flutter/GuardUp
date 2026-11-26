@@ -6,7 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState, OtpType;
 import '/core/constants/api/database_tables.dart';
 import '/core/logger/app_logger.dart';
 import '/core/state/api_state.dart';
-import '/features/body_guard/data/model/service_item.model.dart';
+import '/features/services/data/models/service.model.dart';
 import '/features/body_guard/data/model/user_document.model.dart';
 import '../data/enum/user_role.enum.dart';
 import '../data/enum/user_status.enum.dart';
@@ -134,7 +134,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           final status = profile.status;
           final role = profile.role;
 
-          List<ServiceItemModel> userServices = profile.serviceListData ?? const [];
+          List<ServiceModel> userServices = profile.serviceListData ?? const [];
           List<UserDocumentModel> userDocuments = profile.documents ?? const [];
 
           if ((userServices.isEmpty || userDocuments.isEmpty) && (role == UserRole.guard || role == UserRole.company)) {
@@ -143,7 +143,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
                 if (userServices.isEmpty) _fetchUserServices(currentUid) else Future.value(userServices),
                 if (userDocuments.isEmpty) _fetchUserDocuments(currentUid) else Future.value(userDocuments),
               ]);
-              userServices = results[0] as List<ServiceItemModel>;
+              userServices = results[0] as List<ServiceModel>;
               userDocuments = results[1] as List<UserDocumentModel>;
             } catch (e) {
               AppLogger.w('Error preloading role data: $e', tag: 'AuthBloc');
@@ -206,7 +206,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         final status = profile.status;
         final role = profile.role;
 
-        List<ServiceItemModel> userServices = profile.serviceListData ?? const [];
+        List<ServiceModel> userServices = profile.serviceListData ?? const [];
         List<UserDocumentModel> userDocuments = profile.documents ?? const [];
 
         if ((userServices.isEmpty || userDocuments.isEmpty) && (role == UserRole.guard || role == UserRole.company)) {
@@ -215,7 +215,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
               if (userServices.isEmpty) _fetchUserServices(event.userId!) else Future.value(userServices),
               if (userDocuments.isEmpty) _fetchUserDocuments(event.userId!) else Future.value(userDocuments),
             ]);
-            userServices = results[0] as List<ServiceItemModel>;
+            userServices = results[0] as List<ServiceModel>;
             userDocuments = results[1] as List<UserDocumentModel>;
           } catch (e) {
             AppLogger.w('Error preloading role data on user changed: $e', tag: 'AuthBloc');
@@ -727,7 +727,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       ]);
       emit(
         state.copyWith(
-          userServices: results[0] as List<ServiceItemModel>,
+          userServices: results[0] as List<ServiceModel>,
           userDocuments: results[1] as List<UserDocumentModel>,
         ),
       );
@@ -750,7 +750,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(state.copyWith(userDocuments: event.documents));
   }
 
-  Future<List<ServiceItemModel>> _fetchUserServices(String userId) async {
+  Future<List<ServiceModel>> _fetchUserServices(String userId) async {
     try {
       final userServicesRows = await Supabase.instance.client
           .from(DatabaseTables.userServices)
@@ -770,7 +770,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           .order('display_order', ascending: true);
 
       return (serviceRows as List<dynamic>)
-          .map((r) => ServiceItemModel.fromJson(r as Map<String, dynamic>))
+          .map((r) => ServiceModel.fromJson(r as Map<String, dynamic>))
           .where((s) => serviceIds.contains(s.id))
           .toList();
     } catch (e) {

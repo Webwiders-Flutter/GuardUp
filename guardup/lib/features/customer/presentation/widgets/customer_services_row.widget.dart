@@ -1,7 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:guardup/features/body_guard/body_guard.dart';
 import 'package:guardup/shared/widgets/sections/app_image.dart';
 import 'package:quick_container/quick_container.dart';
 
@@ -11,12 +11,14 @@ import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/gen/assets.gen.dart';
 import '../screens/all_services_screen.dart';
+import '/features/services/services.dart';
+import '/core/state/api_state.dart';
 
 /// Reusable icon widget for a service category.
 /// Renders network SVG, network raster images, or fallback icon.
 class ServiceIconWidget extends StatelessWidget {
   final String? iconUrl;
-  final ServiceItemModel? service;
+  final ServiceModel? service;
   final bool isSelected;
   final double size;
 
@@ -93,7 +95,7 @@ class CustomerServicesRowWidget extends StatelessWidget {
     required String title,
     required bool isSelected,
     String? iconUrl,
-    ServiceItemModel? service,
+    ServiceModel? service,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
@@ -189,11 +191,12 @@ class CustomerServicesRowWidget extends StatelessWidget {
         AppSpacing.sm.h,
 
         // Dynamic Services List (horizontally scrollable, up to 10 items)
-        BlocBuilder<ServicesCubit, List<ServiceItemModel>>(
-          builder: (context, services) {
+        BlocBuilder<ServicesCatalogCubit, ApiState<List<ServiceModel>>>(
+          builder: (context, servicesState) {
+            final services = servicesState.dataOrNull ?? const <ServiceModel>[];
             // Trigger load if empty
             if (services.isEmpty) {
-              context.read<ServicesCubit>().loadServices();
+              unawaited(context.read<ServicesCatalogCubit>().load());
             }
 
             // Show at most 10 service categories on the home screen row

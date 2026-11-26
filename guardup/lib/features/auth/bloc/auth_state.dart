@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 import '/core/state/api_state.dart';
 import '/features/body_guard/data/enum/document_status.enum.dart';
 import '/features/body_guard/data/model/body_guard.model.dart';
-import '/features/body_guard/data/model/service_item.model.dart';
+import '/features/services/data/models/service.model.dart';
 import '/features/body_guard/data/model/user_document.model.dart';
 import '/features/company/data/model/company.model.dart';
 import '../data/enum/user_role.enum.dart';
@@ -24,7 +24,7 @@ class AuthState extends Equatable {
   final String? email;
   final String? phoneCode;
   final String? phoneNumber;
-  final List<ServiceItemModel> userServices;
+  final List<ServiceModel> userServices;
   final List<UserDocumentModel> userDocuments;
 
   const AuthState({
@@ -51,7 +51,7 @@ class AuthState extends Equatable {
     String? email,
     String? phoneCode,
     String? phoneNumber,
-    List<ServiceItemModel> userServices = const [],
+    List<ServiceModel> userServices = const [],
     List<UserDocumentModel> userDocuments = const [],
   }) : this(
          sessionStatus: AuthSessionStatus.unauthenticated,
@@ -71,7 +71,7 @@ class AuthState extends Equatable {
     String? email,
     String? phoneCode,
     String? phoneNumber,
-    List<ServiceItemModel> userServices = const [],
+    List<ServiceModel> userServices = const [],
     List<UserDocumentModel> userDocuments = const [],
   }) : this(
          sessionStatus: AuthSessionStatus.authenticated,
@@ -171,7 +171,7 @@ class AuthState extends Equatable {
     String? email,
     String? phoneCode,
     String? phoneNumber,
-    List<ServiceItemModel>? userServices,
+    List<ServiceModel>? userServices,
     List<UserDocumentModel>? userDocuments,
   }) {
     return AuthState(

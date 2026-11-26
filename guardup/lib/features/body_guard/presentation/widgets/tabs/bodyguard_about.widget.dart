@@ -4,7 +4,7 @@ import 'package:guardup/gen/assets.gen.dart';
 import 'package:quick_container/quick_container.dart';
 
 import '../../../data/model/body_guard.model.dart';
-import '../../../data/model/service_item.model.dart';
+import '/features/services/data/models/service.model.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
@@ -24,7 +24,7 @@ class BodyguardAboutWidget extends StatefulWidget {
   final String? languages;
   final String? certifications;
   final String? qualifications;
-  final List<ServiceItemModel>? services;
+  final List<ServiceModel>? services;
   final VoidCallback? onEditBio;
   final VoidCallback? onEditKeyDetails;
   final VoidCallback? onEditServices;

@@ -11,9 +11,7 @@ import '/core/logger/app_logger.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/navigation/app_tab_bar.dart';
 import '/shared/widgets/sections/app_appbar.dart';
-import '../../bloc/services/services_cubit.dart';
 import '../../data/model/body_guard.model.dart';
-import '../../data/model/service_item.model.dart';
 import '../../data/repositories/bodyguard.repository.dart';
 import '../widgets/body_guard_header_card.dart';
 import '../widgets/sheets/sheets.dart';
@@ -21,6 +19,7 @@ import '../widgets/tabs/bodyguard_about.widget.dart';
 import '../widgets/tabs/bodyguard_availability.widget.dart';
 import '../widgets/tabs/bodyguard_documents.widget.dart';
 import '../widgets/tabs/bodyguard_reviews.widget.dart';
+import '/features/services/services.dart';
 
 /// Bodyguard operational profile screen featuring the profile header card,
 /// underline tabs navigation, and modular tab widgets.
@@ -38,8 +37,8 @@ class BodyGuardProfileScreen extends StatefulWidget {
 class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
-  final ValueNotifier<List<ServiceItemModel>> _servicesNotifier =
-      ValueNotifier<List<ServiceItemModel>>([]);
+  final ValueNotifier<List<ServiceModel>> _servicesNotifier =
+      ValueNotifier<List<ServiceModel>>([]);
   BodyGuardModel? _currentBodyguard;
 
   static const List<String> _tabNames = [
@@ -115,8 +114,10 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
         return;
       }
 
-      // 2. Fetch active services via global ServicesCubit cache
-      final services = await sl<ServicesCubit>().loadServices();
+      // 2. Fetch active services via the global ServicesCatalogCubit cache
+      final catalog = sl<ServicesCatalogCubit>();
+      await catalog.load();
+      final services = catalog.state.dataOrNull ?? const <ServiceModel>[];
 
       final loaded = services.where((s) => serviceIds.contains(s.id)).toList();
 
@@ -204,7 +205,7 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
 
   void _showEditServicesSheet(
     BuildContext context, {
-    required List<ServiceItemModel> currentServices,
+    required List<ServiceModel> currentServices,
   }) {
     EditServicesSheet.show(
       context,
@@ -251,7 +252,7 @@ class _BodyGuardProfileScreenState extends State<BodyGuardProfileScreen>
         final certifications = guard?.certifications ?? '';
         final qualifications = guard?.qualifications ?? '';
 
-        return ValueListenableBuilder<List<ServiceItemModel>>(
+        return ValueListenableBuilder<List<ServiceModel>>(
           valueListenable: _servicesNotifier,
           builder: (context, userServices, _) {
             final effectiveServices = isCompanyGuard

@@ -11,13 +11,13 @@ import '/core/config/admin_settings/admin_settings.dart';
 import '/core/config/config.dart';
 import '/core/di/injection_container.dart';
 import '/features/auth/auth.dart';
-import '/features/body_guard/body_guard.dart';
 import '/features/notifications/notifications.dart';
 import '/gen/app_localizations.dart';
 import '/gen/assets.gen.dart';
 import '/shared/functionalities/connectivity/connectivity.dart';
 import '/shared/functionalities/language/language.dart';
 import '/shared/widgets/feedbacks/feedback.service.dart';
+import '/features/services/services.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -41,8 +41,8 @@ class App extends StatelessWidget {
         BlocProvider<AppGateCubit>.value(
           value: sl<AppGateCubit>(),
         ),
-        BlocProvider<ServicesCubit>.value(
-          value: sl<ServicesCubit>(),
+        BlocProvider<ServicesCatalogCubit>(
+          create: (_) => sl<ServicesCatalogCubit>()..load(),
         ),
       ],
       child: BlocBuilder<LanguageCubit, LanguageState>(

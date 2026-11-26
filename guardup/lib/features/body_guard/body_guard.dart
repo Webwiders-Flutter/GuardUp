@@ -8,7 +8,6 @@ export 'data/enum/week_day.enum.dart';
 
 // Models
 export 'data/model/body_guard.model.dart';
-export 'data/model/service_item.model.dart';
 export 'data/model/user_availability.model.dart';
 export 'data/model/user_document.model.dart';
 
@@ -21,7 +20,6 @@ export 'data/repositories/bodyguard.repository.dart';
 // BloC / Cubit
 export 'bloc/bodyguards/bodyguards_cubit.dart';
 export 'bloc/company_bodyguards/company_bodyguards_cubit.dart';
-export 'bloc/services/services_cubit.dart';
 
 // Widgets
 export 'presentation/widgets/body_guard_header_card.dart';

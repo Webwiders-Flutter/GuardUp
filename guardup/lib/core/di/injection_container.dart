@@ -16,6 +16,7 @@ import '/features/company/company.dart';
 import '/features/notifications/notifications.dart';
 import '/shared/functionalities/connectivity/connectivity.dart';
 import '/shared/functionalities/language/language.dart';
+import '/features/services/di/services.di.dart';
 
 /// Global service locator instance.
 final sl = GetIt.instance;
@@ -25,6 +26,7 @@ Future<void> initDependencies() async {
   // ------------------------------------------------------------
   // Storage & Core Services
   // ------------------------------------------------------------
+  sl.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
   sl.registerLazySingleton<LocalStorage>(() => PrefsStorageService.instance);
   sl.registerLazySingleton<AdminSettingsRepository>(
     () => AdminSettingsRepository(Supabase.instance.client),
@@ -82,11 +84,13 @@ Future<void> initDependencies() async {
   );
 
   // ------------------------------------------------------------
+  // Services catalogue
+  // ------------------------------------------------------------
+  registerServicesDependencies(sl);
+
+  // ------------------------------------------------------------
   // Notifications & User Devices
   // ------------------------------------------------------------
-  sl.registerLazySingleton<ServicesCubit>(
-    () => ServicesCubit(),
-  );
 
   // Company-managed bodyguards (bodyguards rows without a login)
   sl.registerLazySingleton<BodyguardRepository>(() => BodyguardRepository());
@@ -146,7 +150,4 @@ Future<void> initDependencies() async {
   sl<UserDeviceCubit>().listenToTokenRefresh(
     () => sl<AuthBloc>().state.user?.id ?? '',
   );
-
-  // Preload global active services once on app start
-  unawaited(sl<ServicesCubit>().loadServices());
 }

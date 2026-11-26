@@ -6,22 +6,22 @@ import '../enum/bodyguard_availability_status.enum.dart';
 import '../enum/guard_service.enum.dart';
 import '../enum/week_day.enum.dart';
 import '../../domain/helpers/bodyguard_availability.helper.dart';
-import 'service_item.model.dart';
+import '/features/services/data/models/service.model.dart';
 import 'user_availability.model.dart';
 import 'user_document.model.dart';
 
 part 'body_guard.model.freezed.dart';
 part 'body_guard.model.g.dart';
 
-List<ServiceItemModel>? _servicesFromJson(dynamic json) {
+List<ServiceModel>? _servicesFromJson(dynamic json) {
   if (json is! List) return null;
   return [
     for (final row in json)
       if (row is Map<String, dynamic>)
         if (row['service'] is Map<String, dynamic>)
-          ServiceItemModel.fromJson(row['service'] as Map<String, dynamic>)
+          ServiceModel.fromJson(row['service'] as Map<String, dynamic>)
         else
-          ServiceItemModel.fromJson(row),
+          ServiceModel.fromJson(row),
   ];
 }
 
@@ -93,7 +93,7 @@ abstract class BodyGuardModel with _$BodyGuardModel {
 
     // Embedded relations
     @JsonKey(fromJson: _servicesFromJson, includeToJson: false)
-    List<ServiceItemModel>? services,
+    List<ServiceModel>? services,
     @JsonKey(fromJson: _userDocumentsFromJson, includeToJson: false)
     List<UserDocumentModel>? documents,
     @JsonKey(name: 'user_availabilities', fromJson: _userAvailabilitiesFromJson, includeToJson: false)

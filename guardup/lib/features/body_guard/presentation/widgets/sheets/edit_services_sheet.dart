@@ -16,15 +16,14 @@ import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_dropdown.dart';
 import '/shared/widgets/selection/app_removable_chip.dart';
 import '/shared/widgets/selection/selection.controller.dart';
-import '../../../bloc/services/services_cubit.dart';
-import '../../../data/model/service_item.model.dart';
 import '../../../data/repositories/bodyguard.repository.dart';
+import '/features/services/services.dart';
 
 /// Modal bottom sheet for viewing, adding, and removing bodyguard services in-place.
 class EditServicesSheet extends StatefulWidget {
-  final List<ServiceItemModel> currentServices;
+  final List<ServiceModel> currentServices;
   final String? bodyguardId;
-  final ValueChanged<List<ServiceItemModel>>? onServicesUpdated;
+  final ValueChanged<List<ServiceModel>>? onServicesUpdated;
 
   const EditServicesSheet({
     super.key,
@@ -35,9 +34,9 @@ class EditServicesSheet extends StatefulWidget {
 
   static Future<void> show(
     BuildContext context, {
-    required List<ServiceItemModel> currentServices,
+    required List<ServiceModel> currentServices,
     String? bodyguardId,
-    ValueChanged<List<ServiceItemModel>>? onServicesUpdated,
+    ValueChanged<List<ServiceModel>>? onServicesUpdated,
   }) {
     return showModalBottomSheet<void>(
       context: context,
@@ -59,16 +58,16 @@ class EditServicesSheet extends StatefulWidget {
 }
 
 class _EditServicesSheetState extends State<EditServicesSheet> {
-  late final List<ServiceItemModel> _selectedServices;
-  List<ServiceItemModel> _activeServices = [];
-  late final SelectionController<ServiceItemModel> _dropdownController;
+  late final List<ServiceModel> _selectedServices;
+  List<ServiceModel> _activeServices = [];
+  late final SelectionController<ServiceModel> _dropdownController;
   bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
     _selectedServices = List.from(widget.currentServices);
-    _dropdownController = SelectionController<ServiceItemModel>.multi(
+    _dropdownController = SelectionController<ServiceModel>.multi(
       initial: _selectedServices,
       onChanged: (selected) {
         setState(() {
@@ -83,7 +82,9 @@ class _EditServicesSheetState extends State<EditServicesSheet> {
 
   Future<void> _loadActiveServices() async {
     try {
-      final services = await sl<ServicesCubit>().loadServices();
+      final catalog = sl<ServicesCatalogCubit>();
+      await catalog.load();
+      final services = catalog.state.dataOrNull ?? const <ServiceModel>[];
 
       if (mounted) {
         setState(() {
@@ -244,13 +245,13 @@ class _EditServicesSheetState extends State<EditServicesSheet> {
 
           // Multi-select dropdown for services
           if (_activeServices.isNotEmpty)
-            AppDropdown<ServiceItemModel>(
+            AppDropdown<ServiceModel>(
               controller: _dropdownController,
               hintText: 'Select services...',
               okButtonText: 'OK',
               items: _activeServices
                   .map(
-                    (s) => SelectableItem<ServiceItemModel, String>(
+                    (s) => SelectableItem<ServiceModel, String>(
                       id: s,
                       data: s.name,
                       // icon: Icon(

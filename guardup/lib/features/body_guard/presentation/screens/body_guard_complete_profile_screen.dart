@@ -36,11 +36,10 @@ import '/shared/widgets/misc/app_input_label.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/selection/selection.dart';
-import '../../bloc/services/services_cubit.dart';
 import '../../data/model/body_guard.model.dart';
 import '../../data/repositories/bodyguard.repository.dart';
-import '../../data/model/service_item.model.dart';
 import '/features/body_guard/presentation/screens/body_guard_upload_documents_screen.dart';
+import '/features/services/services.dart';
 
 /// Screen for bodyguard profile setup / entering professional details.
 ///
@@ -74,8 +73,8 @@ class _BodyGuardCompleteProfileScreenState
       ValueNotifier<List<String>>([]);
 
   /// Available active services dynamically fetched from DatabaseTables.services.
-  final ValueNotifier<List<ServiceItemModel>> _availableServicesNotifier =
-      ValueNotifier<List<ServiceItemModel>>([]);
+  final ValueNotifier<List<ServiceModel>> _availableServicesNotifier =
+      ValueNotifier<List<ServiceModel>>([]);
   final ValueNotifier<bool> _isServicesLoadingNotifier = ValueNotifier<bool>(
     true,
   );
@@ -162,7 +161,9 @@ class _BodyGuardCompleteProfileScreenState
 
   Future<void> _loadServices() async {
     try {
-      final services = await sl<ServicesCubit>().loadServices();
+      final catalog = sl<ServicesCatalogCubit>();
+      await catalog.load();
+      final services = catalog.state.dataOrNull ?? const <ServiceModel>[];
 
       if (mounted) {
         _availableServicesNotifier.value = services;
@@ -912,7 +913,7 @@ class _BodyGuardCompleteProfileScreenState
                           AppSpacing.xxl.h,
 
                           // 4. Services Offered Section (Dynamically loaded from DatabaseTables.services)
-                          ValueListenableBuilder<List<ServiceItemModel>>(
+                          ValueListenableBuilder<List<ServiceModel>>(
                             valueListenable: _availableServicesNotifier,
                             builder: (context, availableServices, _) {
                               final activeServices = availableServices
@@ -958,9 +959,8 @@ class _BodyGuardCompleteProfileScreenState
                                                 .firstWhere(
                                                   (s) => s.id == serviceId,
                                                   orElse: () =>
-                                                      ServiceItemModel(
+                                                      ServiceModel(
                                                         id: serviceId,
-                                                        code: '',
                                                         name: 'Service',
                                                       ),
                                                 );

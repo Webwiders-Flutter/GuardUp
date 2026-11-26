@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-import '/features/body_guard/data/model/service_item.model.dart';
+import '/features/services/data/models/service.model.dart';
 import '/features/body_guard/data/model/user_document.model.dart';
 import '../data/enum/otp_type.enum.dart';
 import '../data/enum/user_role.enum.dart';
@@ -186,7 +186,7 @@ class AuthReloadRoleDataRequested extends AuthEvent {
 
 /// Dispatched to update user services in the global auth state.
 class AuthUpdateUserServices extends AuthEvent {
-  final List<ServiceItemModel> services;
+  final List<ServiceModel> services;
 
   const AuthUpdateUserServices(this.services);
 

@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '/features/body_guard/data/model/body_guard.model.dart';
-import '/features/body_guard/data/model/service_item.model.dart';
+import '/features/services/data/models/service.model.dart';
 import '/features/body_guard/data/model/user_availability.model.dart';
 import '/features/body_guard/data/model/user_document.model.dart';
 import '/features/company/data/model/company.model.dart';
@@ -14,15 +14,15 @@ part 'user.model.freezed.dart';
 part 'user.model.g.dart';
 
 /// Embedded `user_services(id, service:services(...))` rows as services.
-List<ServiceItemModel>? _servicesFromJson(dynamic json) {
+List<ServiceModel>? _servicesFromJson(dynamic json) {
   if (json is! List) return null;
   return [
     for (final row in json)
       if (row is Map<String, dynamic>)
         if (row['service'] is Map<String, dynamic>)
-          ServiceItemModel.fromJson(row['service'] as Map<String, dynamic>)
+          ServiceModel.fromJson(row['service'] as Map<String, dynamic>)
         else
-          ServiceItemModel.fromJson(row),
+          ServiceModel.fromJson(row),
   ];
 }
 
@@ -82,7 +82,7 @@ abstract class UserModel with _$UserModel {
       fromJson: _servicesFromJson,
       includeToJson: false,
     )
-    List<ServiceItemModel>? serviceListData,
+    List<ServiceModel>? serviceListData,
     @JsonKey(includeToJson: false) List<UserDocumentModel>? documents,
     @JsonKey(includeToJson: false) List<BankAccount>? bankAccounts,
     @JsonKey(includeToJson: false) List<UserAvailabilityModel>? availabilities,
