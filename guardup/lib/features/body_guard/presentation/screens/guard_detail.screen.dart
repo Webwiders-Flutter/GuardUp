@@ -513,10 +513,7 @@ class _GuardDetailViewState extends State<_GuardDetailView>
         yearsExperience: currentGuard.experienceYears > 0
             ? '${currentGuard.experienceYears}+ Years'
             : '0 Years',
-        specializationTitle: (currentGuard.bio.isNotEmpty)
-            ? currentGuard.bio
-            : (currentGuard.qualifications ??
-                  'Licensed armed, Corporate visits'),
+       
         services: (currentGuard.services?.isNotEmpty == true)
             ? currentGuard.services!.map((s) => s.name).toList()
             : currentGuard.serviceTypes

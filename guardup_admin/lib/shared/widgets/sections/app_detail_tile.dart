@@ -7,6 +7,7 @@ import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
+import '/shared/widgets/misc/app_show_more_text.dart';
 
 typedef DetailItem = ({String label, String? value, IconData icon});
 
@@ -19,6 +20,9 @@ class AppDetailTile extends StatelessWidget {
     this.trailing,
     this.isCopyable = false,
     this.expanded = true,
+    this.showMore = false,
+    this.maxLines = 2,
+    this.showMoreDialogTitle,
     this.onTap,
   });
 
@@ -28,6 +32,9 @@ class AppDetailTile extends StatelessWidget {
     Widget? trailing,
     bool isCopyable = false,
     bool expanded = true,
+    bool showMore = false,
+    int maxLines = 2,
+    String? showMoreDialogTitle,
     VoidCallback? onTap,
   }) {
     return AppDetailTile(
@@ -38,6 +45,9 @@ class AppDetailTile extends StatelessWidget {
       trailing: trailing,
       isCopyable: isCopyable,
       expanded: expanded,
+      showMore: showMore,
+      maxLines: maxLines,
+      showMoreDialogTitle: showMoreDialogTitle,
       onTap: onTap,
     );
   }
@@ -48,6 +58,9 @@ class AppDetailTile extends StatelessWidget {
   final Widget? trailing;
   final bool isCopyable;
   final bool expanded;
+  final bool showMore;
+  final int maxLines;
+  final String? showMoreDialogTitle;
   final VoidCallback? onTap;
 
   @override
@@ -66,14 +79,24 @@ class AppDetailTile extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
         (AppSpacing.xs / 2).h,
-        Text(
-          value,
-          style: context.textTheme.bodyMedium?.semiBold().colour(
-            colors.onSurface,
+        if (showMore && expanded)
+          AppShowMoreText(
+            text: value,
+            maxLines: maxLines,
+            style: context.textTheme.bodyMedium?.semiBold().colour(
+              colors.onSurface,
+            ),
+            dialogTitle: showMoreDialogTitle ?? label,
+          )
+        else
+          Text(
+            value,
+            style: context.textTheme.bodyMedium?.semiBold().colour(
+              colors.onSurface,
+            ),
+            maxLines: maxLines,
+            overflow: TextOverflow.ellipsis,
           ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
       ],
     );
 

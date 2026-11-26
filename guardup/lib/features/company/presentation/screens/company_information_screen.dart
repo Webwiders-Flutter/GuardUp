@@ -13,6 +13,7 @@ import '/features/auth/bloc/auth_bloc.dart';
 import '/features/company/data/enum/business_type.enum.dart';
 import '/features/company/presentation/screens/company_edit_profile_screen.dart';
 import '/shared/widgets/buttons/app_button.dart';
+import '/shared/widgets/misc/app_expandable_text.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 import '../../bloc/company_profile/company_profile_bloc.dart';
@@ -91,77 +92,84 @@ class _CompanyInformationView extends StatelessWidget {
         final experienceFormatted = expYears > 0
             ? '$expYears+ Yrs Exp'
             : '0 Yrs Exp';
+        final bio = company?.bio?.trim() ?? '';
 
         return Scaffold(
           appBar: AppAppBar.transparent(
             title: context.l10n.companyInformation,
             fontSize: 14,
           ),
-          body: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                padding: context.horizontalEdgeInsets,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: IntrinsicHeight(
-                    child: Column(
-                      children: [
-                        AppSpacing.xl.h,
+          body: SafeArea(
+            child: Padding(
+              padding: context.horizontalEdgeInsets,
+              child: Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          AppSpacing.xl.h,
 
-                        // 1. Company Name Card
-                        _InfoCard(
-                          label: context.l10n.companyName,
-                          value: effectiveCompanyName,
-                        ),
+                          // 1. Company Name Card
+                          _InfoCard(
+                            label: context.l10n.companyName,
+                            value: effectiveCompanyName,
+                          ),
 
-                        // 2. Email Card
-                        _InfoCard(
-                          label: context.l10n.email,
-                          value: effectiveEmail,
-                        ),
+                          // 2. Email Card
+                          _InfoCard(
+                            label: context.l10n.email,
+                            value: effectiveEmail,
+                          ),
 
-                        // 3. Phone Card
-                        _InfoCard(
-                          label: context.l10n.phone,
-                          value: effectivePhone,
-                        ),
+                          // 3. Phone Card
+                          _InfoCard(
+                            label: context.l10n.phone,
+                            value: effectivePhone,
+                          ),
 
-                        // 4. Company Type Card
-                        _InfoCard(
-                          label: context.l10n.companyType,
-                          value: effectiveCompanyType,
-                        ),
+                          // 4. Company Type Card
+                          _InfoCard(
+                            label: context.l10n.companyType,
+                            value: effectiveCompanyType,
+                          ),
 
-                        // 6. Experience Card
-                        _InfoCard(
-                          label: 'Experience',
-                          value: experienceFormatted,
-                        ),
+                          // 6. Experience Card
+                          _InfoCard(
+                            label: 'Experience',
+                            value: experienceFormatted,
+                          ),
 
-                        const Spacer(),
-                        AppSpacing.xl.h,
-
-                        // Edit Information Button
-                        AppButton(
-                          text: context.l10n.update,
-                          onPressed: () async {
-                            final updated = await context.push<bool>(
-                              CompanyEditProfileScreen.route,
-                            );
-                            if (updated == true && context.mounted) {
-                              context.read<CompanyProfileBloc>().add(
-                                const CompanyProfileStarted(),
-                              );
-                            }
-                          },
-                        ),
-                        AppSpacing.huge.h,
-                      ],
+                          // 7. Bio Card
+                          _InfoCard(
+                            label: 'Bio',
+                            value: bio.isNotEmpty ? bio : 'Not set',
+                            isExpandable: true,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
+                  AppSpacing.md.h,
+
+                  // Edit Information Button
+                  AppButton(
+                    text: context.l10n.update,
+                    onPressed: () async {
+                      final updated = await context.push<bool>(
+                        CompanyEditProfileScreen.route,
+                      );
+                      if (updated == true && context.mounted) {
+                        context.read<CompanyProfileBloc>().add(
+                          const CompanyProfileStarted(),
+                        );
+                      }
+                    },
+                  ),
+                  AppSpacing.xl.h,
+                ],
+              ),
+            ),
           ),
         );
       },
@@ -173,8 +181,13 @@ class _CompanyInformationView extends StatelessWidget {
 class _InfoCard extends StatelessWidget {
   final String label;
   final String value;
+  final bool isExpandable;
 
-  const _InfoCard({required this.label, required this.value});
+  const _InfoCard({
+    required this.label,
+    required this.value,
+    this.isExpandable = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -195,7 +208,14 @@ class _InfoCard extends StatelessWidget {
             ),
           ),
           AppSpacing.xs.h,
-          Text(value, style: context.textTheme.bodyLarge),
+          if (isExpandable)
+            AppExpandableText(
+              text: value,
+              maxLines: 4,
+              style: context.textTheme.bodyLarge,
+            )
+          else
+            Text(value, style: context.textTheme.bodyLarge),
         ],
       ),
     );

@@ -65,211 +65,221 @@ class ProfileScreen extends StatelessWidget {
           builder: (context, state) {
             final role = state.sessionRole;
 
-        return Scaffold(
-          appBar: AppAppBar.transparent(
-            title: role.profileTitle(context.l10n),
-            fontSize: 16,
-            showBackIcon: false,
-            alignTitle: .left,
-            showNotificationIcon: true,
-          ),
-          body: SingleChildScrollView(
-            padding: context.horizontalEdgeInsets,
-            child: Column(
-              children: [
-                // 1. Dynamic Profile Header Card
-                if (role == UserRole.company)
-                  _buildCompanyCard(context, state)
-                else if (role == UserRole.guard)
-                  _buildGuardCard(context, state)
-                else
-                  _buildCustomerCard(context, state),
-                AppSpacing.xl.h,
+            return Scaffold(
+              appBar: AppAppBar.transparent(
+                title: role.profileTitle(context.l10n),
+                fontSize: 16,
+                showBackIcon: false,
+                alignTitle: .left,
+                showNotificationIcon: true,
+              ),
+              body: SingleChildScrollView(
+                padding: context.horizontalEdgeInsets,
+                child: Column(
+                  children: [
+                    // 1. Dynamic Profile Header Card
+                    if (role == UserRole.company)
+                      _buildCompanyCard(context, state)
+                    else if (role == UserRole.guard)
+                      _buildGuardCard(context, state)
+                    else
+                      _buildCustomerCard(context, state),
+                    AppSpacing.xl.h,
 
-                // 2. Edit Profile Menu Card
-                // if (role != UserRole.guard)
-                _ProfileMenuCard(
-                  title: context.l10n.editProfile,
-                  icon: Icons.person_outline_rounded,
-                  onTap: () {
-                    context.push(EditProfileScreen.route);
-                    // switch (role) {
-                    //   case UserRole.customer:
-                    //     context.push(EditProfileScreen.route);
-                    //     break;
-                    //   case UserRole.company:
-                    //     context.push(EditProfileScreen.route);
-                    //     break;
-                    //   default:
-                    // }
-                  },
-                ),
-                // 4. Common Settings Menu Cards
-                _ProfileMenuCard(
-                  title: context.l10n.changePassword,
-                  icon: Icons.lock_outline_rounded,
-                  onTap: () {
-                    context.push(ChangePasswordScreen.route);
-                  },
-                ),
-                // 3. Role-Specific Menu Cards
-                if (role == UserRole.guard) ...[
-                  _ProfileMenuCard(
-                    title: context.l10n.personalInformation.toUpperCase(),
-                    icon: Icons.person,
-                    onTap: () {
-                      context.push(BodyGuardProfileScreen.route);
-                    },
-                  ),
-                  _ProfileMenuCard(
-                    title: context.l10n.myWallet,
-                    icon: Icons.account_balance_wallet_outlined,
-                    onTap: () {
-                      context.push(MyWalletScreen.route);
-                    },
-                  ),
-                  _ProfileMenuCard(
-                    title: context.l10n.myBankDetails,
-                    icon: Icons.account_balance_outlined,
-                    onTap: () {
-                      context.push(MyBankDetailsScreen.route);
-                    },
-                  ),
-                  _ProfileMenuCard(
-                    title: context.l10n.reviewAndRatings,
-                    icon: Icons.star_outline_rounded,
-                    onTap: () {
-                      context.push(BodyGuardProfileScreen.route);
-                    },
-                  ),
-                ] else if (role == UserRole.company) ...[
-                  _ProfileMenuCard(
-                    title: context.l10n.companyInformation.toUpperCase(),
-                    icon: Icons.person_outline_rounded,
-                    onTap: () {
-                      context.push(CompanyInformationScreen.route);
-                    },
-                  ),
-                  _ProfileMenuCard(
-                    title: context.l10n.myWallet,
-                    icon: Icons.account_balance_wallet_outlined,
-                    onTap: () {
-                      context.push(MyWalletScreen.route);
-                    },
-                  ),
-                  _ProfileMenuCard(
-                    title: context.l10n.myBank,
-                    icon: Icons.account_balance_outlined,
-                    onTap: () {
-                      context.push(MyBankDetailsScreen.route);
-                    },
-                  ),
-                  _ProfileMenuCard(
-                    title: context.l10n.businessDocuments,
-                    icon: Icons.folder_shared_outlined,
-                    onTap: () {
-                      context.push(CompanyDocumentsScreen.route);
-                    },
-                  ),
-                ] else
-                  _ProfileMenuCard(
-                    title: 'Membership Plan'.toUpperCase(),
-                    icon: Icons.card_membership_outlined,
-                    onTap: () {
-                      context.push(
-                        MembershipPlansScreen.route,
-                        extra: (
-                          mode: MembershipPlanMode.profile,
-                          bookingAmount: null,
-                          operativeName: null,
-                          activePlanId: state.membershipPlanId,
-                        ),
-                      );
-                    },
-                  ),
+                    // 2. Edit Profile Menu Card
+                    // if (role != UserRole.guard)
+                    _ProfileMenuCard(
+                      title: context.l10n.editProfile,
+                      icon: Icons.person_outline_rounded,
+                      onTap: () {
+                        context.push(EditProfileScreen.route);
+                        // switch (role) {
+                        //   case UserRole.customer:
+                        //     context.push(EditProfileScreen.route);
+                        //     break;
+                        //   case UserRole.company:
+                        //     context.push(EditProfileScreen.route);
+                        //     break;
+                        //   default:
+                        // }
+                      },
+                    ),
+                    // 4. Common Settings Menu Cards
+                    _ProfileMenuCard(
+                      title: context.l10n.changePassword,
+                      icon: Icons.lock_outline_rounded,
+                      onTap: () {
+                        context.push(ChangePasswordScreen.route);
+                      },
+                    ),
+                    // 3. Role-Specific Menu Cards
+                    if (role == UserRole.guard) ...[
+                      _ProfileMenuCard(
+                        title: context.l10n.personalInformation.toUpperCase(),
+                        icon: Icons.person,
+                        onTap: () {
+                          context.push(BodyGuardProfileScreen.route);
+                        },
+                      ),
+                      _ProfileMenuCard(
+                        title: context.l10n.myWallet,
+                        icon: Icons.account_balance_wallet_outlined,
+                        onTap: () {
+                          context.push(MyWalletScreen.route);
+                        },
+                      ),
+                      _ProfileMenuCard(
+                        title: context.l10n.myBankDetails,
+                        icon: Icons.account_balance_outlined,
+                        onTap: () {
+                          context.push(MyBankDetailsScreen.route);
+                        },
+                      ),
+                      _ProfileMenuCard(
+                        title: context.l10n.reviewAndRatings,
+                        icon: Icons.star_outline_rounded,
+                        onTap: () {
+                          context.push(BodyGuardProfileScreen.route);
+                        },
+                      ),
+                    ] else if (role == UserRole.company) ...[
+                      _ProfileMenuCard(
+                        title: context.l10n.companyInformation.toUpperCase(),
+                        icon: Icons.person_outline_rounded,
+                        onTap: () {
+                          context.push(CompanyInformationScreen.route);
+                        },
+                      ),
+                      _ProfileMenuCard(
+                        title: context.l10n.myWallet,
+                        icon: Icons.account_balance_wallet_outlined,
+                        onTap: () {
+                          context.push(MyWalletScreen.route);
+                        },
+                      ),
+                      _ProfileMenuCard(
+                        title: context.l10n.myBank,
+                        icon: Icons.account_balance_outlined,
+                        onTap: () {
+                          context.push(MyBankDetailsScreen.route);
+                        },
+                      ),
+                      _ProfileMenuCard(
+                        title: context.l10n.businessDocuments,
+                        icon: Icons.folder_shared_outlined,
+                        onTap: () {
+                          context.push(CompanyDocumentsScreen.route);
+                        },
+                      ),
+                    ] else
+                      _ProfileMenuCard(
+                        title: 'Membership Plan'.toUpperCase(),
+                        icon: Icons.card_membership_outlined,
+                        onTap: () {
+                          context.push(
+                            MembershipPlansScreen.route,
+                            extra: (
+                              mode: MembershipPlanMode.profile,
+                              bookingAmount: null,
+                              operativeName: null,
+                              activePlanId: state.membershipPlanId,
+                            ),
+                          );
+                        },
+                      ),
 
-                // _ProfileMenuCard(
-                //   title: context.l10n.notifications.toUpperCase(),
-                //   icon: Icons.notifications_none_rounded,
-                //   onTap: () {
-                //     context.push(NotificationsScreen.route);
-                //   },
-                // ),
-                _ProfileMenuCard(
-                  title: context.l10n.privacyPolicy,
-                  icon: Icons.privacy_tip_outlined,
-                  onTap: () {
-                    context.push(
-                      LegalContentScreen.privacyPolicyRoute,
-                      extra: role,
-                    );
-                  },
+                    // _ProfileMenuCard(
+                    //   title: context.l10n.notifications.toUpperCase(),
+                    //   icon: Icons.notifications_none_rounded,
+                    //   onTap: () {
+                    //     context.push(NotificationsScreen.route);
+                    //   },
+                    // ),
+                    _ProfileMenuCard(
+                      title: context.l10n.privacyPolicy,
+                      icon: Icons.privacy_tip_outlined,
+                      onTap: () {
+                        context.push(
+                          LegalContentScreen.privacyPolicyRoute,
+                          extra: role,
+                        );
+                      },
+                    ),
+                    _ProfileMenuCard(
+                      title: context.l10n.termsAndConditions,
+                      icon: Icons.gavel_outlined,
+                      onTap: () {
+                        context.push(
+                          LegalContentScreen.termsRoute,
+                          extra: role,
+                        );
+                      },
+                    ),
+                    _ProfileMenuCard(
+                      title: context.l10n.contactUs.toUpperCase(),
+                      icon: Icons.support_agent_outlined,
+                      onTap: () {
+                        context.push(ContactUsScreen.route);
+                      },
+                    ),
+                    _ProfileMenuCard(
+                      title: context.l10n.logOut.toUpperCase(),
+                      textColor: context.colors.error,
+                      icon: Icons.logout_rounded,
+                      onTap: () async {
+                        final result = await AppPopup.showLogoutConfirmation(
+                          context,
+                        );
+                        if (result?.action == PopupAction.confirm &&
+                            context.mounted) {
+                          context.read<AuthBloc>().add(
+                            const AuthSignOutRequested(),
+                          );
+                          context.go(LoginScreen.route);
+                        }
+                      },
+                    ),
+                    _ProfileMenuCard(
+                      title: context.l10n.deleteAccount,
+                      textColor: context.colors.error,
+                      icon: Icons.delete_forever_rounded,
+                      onTap: () async {
+                        final result =
+                            await AppPopup.showDeleteAccountConfirmation(
+                              context,
+                            );
+                        if (result?.action == PopupAction.confirm &&
+                            context.mounted) {
+                          context.read<AccountBloc>().add(
+                            const AccountDeleteRequested(),
+                          );
+                        }
+                      },
+                    ),
+                    AppSpacing.xxl.h,
+                  ],
                 ),
-                _ProfileMenuCard(
-                  title: context.l10n.termsAndConditions,
-                  icon: Icons.gavel_outlined,
-                  onTap: () {
-                    context.push(LegalContentScreen.termsRoute, extra: role);
-                  },
-                ),
-                _ProfileMenuCard(
-                  title: context.l10n.contactUs.toUpperCase(),
-                  icon: Icons.support_agent_outlined,
-                  onTap: () {
-                    context.push(ContactUsScreen.route);
-                  },
-                ),
-                _ProfileMenuCard(
-                  title: context.l10n.logOut.toUpperCase(),
-                  textColor: context.colors.error,
-                  icon: Icons.logout_rounded,
-                  onTap: () async {
-                    final result = await AppPopup.showLogoutConfirmation(
-                      context,
-                    );
-                    if (result?.action == PopupAction.confirm &&
-                        context.mounted) {
-                      context.read<AuthBloc>().add(const AuthSignOutRequested());
-                      context.go(LoginScreen.route);
-                    }
-                  },
-                ),
-                _ProfileMenuCard(
-                  title: context.l10n.deleteAccount,
-                  textColor: context.colors.error,
-                  icon: Icons.delete_forever_rounded,
-                  onTap: () async {
-                    final result = await AppPopup.showDeleteAccountConfirmation(
-                      context,
-                    );
-                    if (result?.action == PopupAction.confirm &&
-                        context.mounted) {
-                      context.read<AccountBloc>().add(
-                        const AccountDeleteRequested(),
-                      );
-                    }
-                  },
-                ),
-                AppSpacing.xxl.h,
-              ],
-            ),
-          ),
-        );
-      },
-    ),
-    ),
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 
   Widget _buildCompanyCard(BuildContext context, AuthState state) {
     final company = state.user?.company;
-    final companyName = company?.displayName ?? state.user?.name ?? 'Security Company';
+    final companyName =
+        company?.displayName ?? state.user?.name ?? 'Security Company';
     final logoUrl = state.user?.profileImageUrl;
 
     final dynamicCompany = CompanyModel(
       id: company?.id ?? state.user?.id ?? '',
       companyName: companyName,
       experienceYears: company?.experienceYears ?? 0,
+      activeGuards: context.select<AuthBloc, int>(
+        (bloc) => bloc.state.user?.company?.activeGuards ?? 0,
+      ),
     );
 
     return CompanyCard(
@@ -291,21 +301,21 @@ class ProfileScreen extends StatelessWidget {
     final guardName = (guard?.name.isNotEmpty == true)
         ? guard!.name
         : (state.user?.name.isNotEmpty == true
-            ? state.user!.name
-            : 'Operative Guard');
+              ? state.user!.name
+              : 'Operative Guard');
     final hourlyRate = (guard?.hourlyRate ?? 0) > 0 ? guard!.hourlyRate : 45.0;
     final rating = guard?.rating ?? 5.0;
     final avatar = (guard?.profileImageUrl?.isNotEmpty == true)
         ? guard!.profileImageUrl!
         : ((state.user?.profileImageUrl?.isNotEmpty == true)
-            ? state.user!.profileImageUrl!
-            : Assets.images.dummyAvatar.path);
+              ? state.user!.profileImageUrl!
+              : Assets.images.dummyAvatar.path);
 
     final specialization = (guard?.bio.isNotEmpty == true)
         ? guard!.bio
         : (state.userServices.isNotEmpty
-            ? state.userServices.map((s) => s.name).join(', ')
-            : 'Executive & VIP Protection');
+              ? state.userServices.map((s) => s.name).join(', ')
+              : 'Executive & VIP Protection');
     final location = (guard?.address?.isNotEmpty == true)
         ? guard!.address!
         : 'Location not set';

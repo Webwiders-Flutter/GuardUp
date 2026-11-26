@@ -8,6 +8,7 @@ import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/features/body_guard/data/model/body_guard.model.dart';
+import '/shared/widgets/misc/app_expandable_text.dart';
 
 /// Company View "Overview" Tab: Displays comprehensive operative operational statistics,
 /// onboarding tenure, tactical clearance, bio, and assigned services.
@@ -71,8 +72,11 @@ class CompanyGuardOverviewTabWidget extends StatelessWidget {
                       .colour(context.colors.onSurfaceVariant),
                 ),
                 AppSpacing.sm.h,
-                Text(
-                  bodyguard.bio.isNotEmpty ? bodyguard.bio : 'Specialized operative deployed for high-threat dignitary protection, tactical escort, and private perimeter security.',
+                AppExpandableText(
+                  text: bodyguard.bio.isNotEmpty
+                      ? bodyguard.bio
+                      : 'Specialized operative deployed for high-threat dignitary protection, tactical escort, and private perimeter security.',
+                  maxLines: 4,
                   style: context.textTheme.bodyMedium?.copyWith(
                     height: 1.5,
                     color: context.colors.onSurface.withValues(alpha: 0.85),

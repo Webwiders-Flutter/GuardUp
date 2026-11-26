@@ -7,6 +7,7 @@ import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
+import '/shared/widgets/misc/app_expandable_text.dart';
 
 /// Customer View "About" Tab: Displays operative biography and interactive booking duration selector.
 class CustomerGuardAboutTabWidget extends StatelessWidget {
@@ -89,8 +90,11 @@ class CustomerGuardAboutTabWidget extends StatelessWidget {
                       .colour(context.colors.onSurfaceVariant),
                 ),
                 AppSpacing.sm.h,
-                Text(
-                  bio.isNotEmpty ? bio : 'Professional bodyguard with certified tactical protection, executive transport, and close perimeter security experience.',
+                AppExpandableText(
+                  text: bio.isNotEmpty
+                      ? bio
+                      : 'Professional bodyguard with certified tactical protection, executive transport, and close perimeter security experience.',
+                  maxLines: 4,
                   style: context.textTheme.bodyMedium?.copyWith(
                     height: 1.5,
                     color: context.colors.onSurface.withValues(alpha: 0.85),

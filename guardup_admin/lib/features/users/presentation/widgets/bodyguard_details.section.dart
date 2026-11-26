@@ -5,6 +5,7 @@ import '/core/extensions/number.extension.dart';
 import '/core/extensions/string.extension.dart';
 import '/features/users/data/models/bodyguard.model.dart';
 import '/shared/widgets/sections/app_detail_section.dart';
+import '/shared/widgets/sections/app_detail_tile.dart';
 import 'review.widgets.dart';
 
 /// Rates, experience, skills and bio of a bodyguard (self-registered or
@@ -25,6 +26,8 @@ class BodyguardDetailsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final address = bodyguard.address?.trim();
+    final qualifications = bodyguard.qualifications?.trim();
     final bio = bodyguard.bio?.trim();
     final languages = bodyguard.languages?.toCommaSeparatedList ?? const [];
     final certifications =
@@ -32,6 +35,10 @@ class BodyguardDetailsSection extends StatelessWidget {
     final experienceYears = bodyguard.experienceYears ?? 0;
     final hourlyRate = bodyguard.hourlyRate ?? 0;
     final rating = bodyguard.rating ?? 0;
+    final hasLongTiles =
+        (address != null && address.isNotEmpty) ||
+        (qualifications != null && qualifications.isNotEmpty) ||
+        (bio != null && bio.isNotEmpty);
     final hasChips =
         services.isNotEmpty ||
         languages.isNotEmpty ||
@@ -59,19 +66,32 @@ class BodyguardDetailsSection extends StatelessWidget {
               : 'Less than a year',
           icon: Icons.workspace_premium_outlined,
         ),
-        if (bodyguard.address != null && bodyguard.address!.isNotEmpty)
-          (
-            label: 'Service Area',
-            value: bodyguard.address!,
-            icon: Icons.location_on_outlined,
-          ),
-        if (bio != null && bio.isNotEmpty)
-          (label: 'Bio', value: bio, icon: Icons.description_outlined),
       ],
-      child: hasChips
+      child: (hasLongTiles || hasChips)
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (address != null && address.isNotEmpty)
+                  AppDetailTile(
+                    label: 'Service Area',
+                    value: address,
+                    icon: Icons.location_on_outlined,
+                    showMore: true,
+                  ),
+                if (qualifications != null && qualifications.isNotEmpty)
+                  AppDetailTile(
+                    label: 'Qualifications',
+                    value: qualifications,
+                    icon: Icons.school_outlined,
+                    showMore: true,
+                  ),
+                if (bio != null && bio.isNotEmpty)
+                  AppDetailTile(
+                    label: 'Bio',
+                    value: bio,
+                    icon: Icons.description_outlined,
+                    showMore: true,
+                  ),
                 if (services.isNotEmpty)
                   ProfileChipGroup(
                     title: 'Services & Specializations',

@@ -108,7 +108,7 @@ class _CompanyDetailsViewState extends State<_CompanyDetailsView>
                   padding: context.horizontalEdgeInsets,
                   child: CompanyCard(
                     company: effectiveCompany,
-                    onBookNow: () => _handleBookNow(effectiveCompany),
+                    // onBookNow: () => _handleBookNow(effectiveCompany),
                   ),
                 ),
                 AppSpacing.md.h,

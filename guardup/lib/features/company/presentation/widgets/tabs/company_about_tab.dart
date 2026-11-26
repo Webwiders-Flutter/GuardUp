@@ -9,6 +9,7 @@ import '/core/extensions/textstyle_extension.dart';
 import '/features/body_guard/data/enum/document_status.enum.dart';
 import '/features/documents/data/models/user_document.model.dart';
 import '/shared/widgets/inputs/document_upload_card.dart';
+import '/shared/widgets/misc/app_expandable_text.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 import '../../../data/model/company.model.dart';
 
@@ -86,13 +87,16 @@ class CompanyAboutTab extends StatelessWidget {
           // -------------------------------------------------------------------
           // 2. Company Biography Paragraph
           // -------------------------------------------------------------------
-          Text(
-            bioText,
-            style: context.textTheme.bodySmall
-                ?.lineHeight(1.5)
-                .colour(context.colors.onSurfaceVariant),
-          ),
-          AppSpacing.xxxl.h,
+          if (bioText.isNotEmpty) ...[
+            AppExpandableText(
+              text: bioText,
+              maxLines: 4,
+              style: context.textTheme.bodySmall
+                  ?.lineHeight(1.5)
+                  .colour(context.colors.onSurfaceVariant),
+            ),
+            AppSpacing.xxxl.h,
+          ],
 
           // -------------------------------------------------------------------
           // 3. Verified Documentation Section Header

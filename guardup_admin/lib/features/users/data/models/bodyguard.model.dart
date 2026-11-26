@@ -45,6 +45,7 @@ abstract class BodyguardModel with _$BodyguardModel {
 
     /// Free text, comma separated (e.g. "CPR, First Aid").
     String? certifications,
+    String? qualifications,
     String? address,
     double? latitude,
     double? longitude,

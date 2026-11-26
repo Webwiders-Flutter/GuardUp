@@ -11,13 +11,11 @@ import '/core/extensions/textstyle_extension.dart';
 /// Customer View "Experience" Tab: Highlights operative tenure, service specializations, and tactical credentials.
 class CustomerGuardExperienceTabWidget extends StatelessWidget {
   final String yearsExperience;
-  final String specializationTitle;
   final List<String> services;
 
   const CustomerGuardExperienceTabWidget({
     super.key,
     this.yearsExperience = '5+ Years',
-    this.specializationTitle = 'Licensed Armed, Corporate Visits',
     this.services = const [
       'VIP Close Protection',
       'Armed Escort',
@@ -69,13 +67,7 @@ class CustomerGuardExperienceTabWidget extends StatelessWidget {
                     context.colors.onSurface,
                   ),
                 ),
-                AppSpacing.xxs.h,
-                Text(
-                  specializationTitle,
-                  style: context.textTheme.bodySmall?.colour(
-                    context.colors.onSurfaceVariant,
-                  ),
-                ),
+             
               ],
             ),
           ),
