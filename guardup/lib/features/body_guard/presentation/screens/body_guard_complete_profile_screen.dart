@@ -181,7 +181,7 @@ class _BodyGuardCompleteProfileScreenState
     try {
       final repository = sl<BodyguardRepository>();
       final results = await Future.wait([
-        repository.getBodyguard(bodyguardId),
+        repository.getDetails(bodyguardId),
         repository.getServiceIds(bodyguardId),
       ]);
       if (!mounted) return;
@@ -189,15 +189,13 @@ class _BodyGuardCompleteProfileScreenState
       final saved = results[0] as BodyGuardModel?;
       if (saved != null) {
         _managedRejectionNotifier.value = _rejectionReasonOf(saved);
-        _fullNameController.text = saved.user.name;
+        _fullNameController.text = saved.displayName;
         _hourlyRateController.text = saved.hourlyRate > 0
             ? saved.hourlyRate.toInt().toString()
             : '';
         _bioController.text = saved.bio;
-        final avatar = saved.user.profileImageUrl;
-        if (avatar != null &&
-            avatar.isNotEmpty &&
-            _profileImageNotifier.value == null) {
+        final avatar = saved.displayAvatar;
+        if (avatar.isNotEmpty && _profileImageNotifier.value == null) {
           _networkImageUrlNotifier.value = avatar;
         }
       }

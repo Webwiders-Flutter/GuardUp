@@ -1,38 +1,104 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 
+import '/core/constants/app_durations.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
+import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/number.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
-import '/core/state/api_state.dart';
 import '/features/auth/auth.dart';
 import '/features/body_guard/body_guard.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/pagination/app_pagination.dart';
-import '/shared/widgets/pagination/pagination.state.dart';
+import '/shared/widgets/pagination/pagination.controller.dart';
 
-/// Tab content rendering the list of active bodyguard operatives deployed by the company.
-class CompanyBodyguardsTab extends StatelessWidget {
-  final List<BodyGuardModel>? bodyguards;
+/// Tab content rendering the paginated list of active bodyguard operatives deployed by the company.
+class CompanyBodyguardsTab extends StatefulWidget {
+  final String? companyId;
   final UserRole role;
+
+  const CompanyBodyguardsTab({
+    super.key,
+    this.companyId,
+    required this.role,
+  });
+
+  @override
+  State<CompanyBodyguardsTab> createState() => _CompanyBodyguardsTabState();
+}
+
+class _CompanyBodyguardsTabState extends State<CompanyBodyguardsTab> {
   final _searchController = TextEditingController();
-  CompanyBodyguardsTab({super.key, this.bodyguards, required this.role});
+  late final BodyguardsCubit _cubit;
+  StreamSubscription<BodyguardsState>? _cubitSubscription;
+  Timer? _searchDebounce;
+  late final PaginationController<BodyGuardModel> _paginationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _cubit = sl<BodyguardsCubit>();
+    _paginationController = PaginationController<BodyGuardModel>(
+      initialState: _cubit.state.pagination,
+      onRefresh: () => _cubit.refresh(
+        companyId: widget.companyId,
+        updateCompanyId: true,
+        status: UserStatus.active,
+        updateStatus: true,
+        search: _searchController.text.trim(),
+      ),
+      onLoadMore: _cubit.loadMore,
+    );
+
+    _cubitSubscription = _cubit.stream.listen((state) {
+      if (!mounted) return;
+      _paginationController.updateState(state.pagination);
+    });
+
+    _cubit.refresh(
+      companyId: widget.companyId,
+      updateCompanyId: true,
+      status: UserStatus.active,
+      updateStatus: true,
+    );
+
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  void _onSearchChanged() {
+    final query = _searchController.text.trim();
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(AppDurations.slow, () {
+      if (!mounted) return;
+      _cubit.refresh(
+        companyId: widget.companyId,
+        status: UserStatus.active,
+        search: query,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchDebounce?.cancel();
+    _cubitSubscription?.cancel();
+    _cubit.close();
+    _searchController.dispose();
+    _paginationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final effectiveGuards = bodyguards ?? BodyGuardModel.fakeData;
-
     return AppPagination<BodyGuardModel>.list(
-      state: PaginationState<BodyGuardModel>(
-        items: effectiveGuards,
-        total: effectiveGuards.length,
-        status: const ApiState.success(null),
-      ),
+      controller: _paginationController,
       header: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -74,12 +140,12 @@ class CompanyBodyguardsTab extends StatelessWidget {
       ),
       padding: context.horizontalEdgeInsets + AppSpacing.md.yPadding,
       separatorBuilder: (context, index) => AppSpacing.md.h,
-      initialLoaderBuilder: (context) => BodyGuardListSkeleton(),
+      initialLoaderBuilder: (context) => const BodyGuardListSkeleton(itemCount: 4),
       emptyBuilder: (context) => Padding(
         padding: AppSpacing.xxl.allPadding,
         child: Center(
           child: Text(
-            'No bodyguards found for this company.',
+            'No active bodyguards found for this company.',
             style: context.textTheme.bodyMedium?.colour(
               context.colors.onSurfaceVariant,
             ),
@@ -89,10 +155,9 @@ class CompanyBodyguardsTab extends StatelessWidget {
       itemBuilder: (context, guard, index) {
         return BodyGuardCard(
           bodyguard: guard,
-          role: role,
-          onTap: () =>
-              context.push(GuardDetailScreen.route, extra: guard),
-          onBookNow: () => context.push(CustomerBookingDetailsScreen.route),
+          role: widget.role,
+          onTap: () => context.push(GuardDetailScreen.route, extra: guard),
+          onBookNow: () => context.push(CustomerBookingDetailsScreen.route, extra: guard),
         );
       },
     );

@@ -59,6 +59,9 @@ class AppPagination<T> extends StatefulWidget {
   /// Whether pull-to-refresh is enabled. Defaults to `true`.
   final bool enablePullToRefresh;
 
+  /// Whether the parent or builder requests shrinkWrap.
+  final bool shrinkWrap;
+
   const AppPagination({
     super.key,
     this.controller,
@@ -73,6 +76,7 @@ class AppPagination<T> extends StatefulWidget {
     this.errorBuilder,
     this.loadMoreErrorBuilder,
     this.enablePullToRefresh = true,
+    this.shrinkWrap = false,
   }) : assert(
          controller != null || state != null,
          'Either controller or state must be provided to AppPagination.',
@@ -112,6 +116,7 @@ class AppPagination<T> extends StatefulWidget {
       errorBuilder: errorBuilder,
       loadMoreErrorBuilder: loadMoreErrorBuilder,
       enablePullToRefresh: enablePullToRefresh,
+      shrinkWrap: shrinkWrap,
       builder: (scrollController, internalItemBuilder, itemCount) {
         if (separatorBuilder != null) {
           return ListView.separated(
@@ -174,6 +179,7 @@ class AppPagination<T> extends StatefulWidget {
     Widget Function(BuildContext context, VoidCallback onRetry)?
     loadMoreErrorBuilder,
     bool enablePullToRefresh = true,
+    bool shrinkWrap = false,
   }) {
     return AppPagination<T>(
       key: key,
@@ -188,6 +194,7 @@ class AppPagination<T> extends StatefulWidget {
       errorBuilder: errorBuilder,  
       loadMoreErrorBuilder: loadMoreErrorBuilder,
       enablePullToRefresh: enablePullToRefresh,
+      shrinkWrap: shrinkWrap,
       builder: (scrollController, internalItemBuilder, itemCount) {
         return GridView.builder(
           controller: scrollController,
@@ -245,8 +252,8 @@ class _AppPaginationState<T> extends State<AppPagination<T>> {
     super.dispose();
   }
 
-  Widget _buildRefreshable({required Widget child}) {
-    if (!widget.enablePullToRefresh) return child;
+  Widget _buildRefreshable({required Widget child, bool shrinkWrap = false}) {
+    if (!widget.enablePullToRefresh || shrinkWrap) return child;
     return RefreshIndicator(
       color: context.colors.primary,
       backgroundColor: context.colors.surface,
@@ -337,6 +344,16 @@ class _AppPaginationState<T> extends State<AppPagination<T>> {
       builder: (context, state, _) {
         /// 1. Initial Loading (Empty List + Actively Loading)
         if (state.items.isEmpty && state.isLoading) {
+          if (widget.shrinkWrap) {
+            return widget.initialLoaderBuilder?.call(context) ??
+                Padding(
+                  padding: AppSpacing.xl.allPadding,
+                  child: Center(
+                    child: CircularProgressIndicator(color: context.colors.primary),
+                  ),
+                );
+          }
+
           if (widget.header != null) {
             return ListView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -396,15 +413,30 @@ class _AppPaginationState<T> extends State<AppPagination<T>> {
                 ),
               );
 
+          if (widget.shrinkWrap) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (widget.header != null) widget.header!,
+                errorWidget,
+              ],
+            );
+          }
+
           return _buildRefreshable(
+            shrinkWrap: widget.shrinkWrap,
             child: LayoutBuilder(
               builder: (context, constraints) {
+                final availableHeight = constraints.hasBoundedHeight
+                    ? constraints.maxHeight - AppSpacing.colossal * 2
+                    : 300.0;
                 return ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   children: [
                     if (widget.header != null) widget.header!,
                     SizedBox(
-                      height: constraints.maxHeight - AppSpacing.colossal * 2,
+                      height: availableHeight > 0 ? availableHeight : 300.0,
                       child: Center(child: errorWidget),
                     ),
                   ],
@@ -419,15 +451,30 @@ class _AppPaginationState<T> extends State<AppPagination<T>> {
           final emptyWidget =
               widget.emptyBuilder?.call(context) ?? AppStateView.empty();
 
+          if (widget.shrinkWrap) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (widget.header != null) widget.header!,
+                emptyWidget,
+              ],
+            );
+          }
+
           return _buildRefreshable(
+            shrinkWrap: widget.shrinkWrap,
             child: LayoutBuilder(
               builder: (context, constraints) {
+                final availableHeight = constraints.hasBoundedHeight
+                    ? constraints.maxHeight - AppSpacing.colossal * 2
+                    : 300.0;
                 return ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   children: [
                     if (widget.header != null) widget.header!,
                     SizedBox(
-                      height: constraints.maxHeight - AppSpacing.colossal * 2,
+                      height: availableHeight > 0 ? availableHeight : 300.0,
                       child: Center(child: emptyWidget),
                     ),
                   ],
@@ -444,6 +491,7 @@ class _AppPaginationState<T> extends State<AppPagination<T>> {
             state.items.length + headerCount + footerCount;
 
         return _buildRefreshable(
+          shrinkWrap: widget.shrinkWrap,
           child: widget.builder(
             _effectiveController.scrollController,
             (ctx, idx) => _itemBuilder(ctx, state, idx),

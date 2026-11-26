@@ -19,6 +19,7 @@ export 'domain/helpers/bodyguard_availability.helper.dart';
 export 'data/repositories/bodyguard.repository.dart';
 
 // BloC / Cubit
+export 'bloc/bodyguards/bodyguards_cubit.dart';
 export 'bloc/company_bodyguards/company_bodyguards_cubit.dart';
 export 'bloc/services/services_cubit.dart';
 

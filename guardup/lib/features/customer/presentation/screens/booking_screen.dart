@@ -1,19 +1,26 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:quick_container/quick_container.dart';
 
+import '/core/constants/app_durations.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
+import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/number.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
+import '/features/auth/auth.dart';
 import '/features/body_guard/body_guard.dart';
 import '/features/company/company.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
+import '/shared/widgets/pagination/app_pagination.dart';
+import '/shared/widgets/pagination/pagination.controller.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 import '/features/customer/presentation/screens/customer_home_screen.dart';
@@ -59,23 +66,67 @@ class _BookingScreenState extends State<BookingScreen> {
   late final ValueNotifier<Set<String>> _selectedGuardIdsNotifier;
   final ValueNotifier<String> _searchQueryNotifier = ValueNotifier('');
 
+  late final BodyguardsCubit _cubit;
+  StreamSubscription<BodyguardsState>? _cubitSubscription;
+  Timer? _searchDebounce;
+  late final PaginationController<BodyGuardModel> _paginationController;
+
   @override
   void initState() {
     super.initState();
     _selectedGuardIdsNotifier = ValueNotifier<Set<String>>({
       if (widget.initialBodyguard != null)
-        widget.initialBodyguard!.id
-      else
-        'guard_marcus_sterling',
+        widget.initialBodyguard!.id,
     });
 
-    _searchController.addListener(() {
-      _searchQueryNotifier.value = _searchController.text.trim().toLowerCase();
+    _cubit = sl<BodyguardsCubit>();
+    _paginationController = PaginationController<BodyGuardModel>(
+      initialState: _cubit.state.pagination,
+      onRefresh: () => _cubit.refresh(
+        companyId: widget.company?.id,
+        updateCompanyId: true,
+        status: UserStatus.active,
+        updateStatus: true,
+        search: _searchController.text.trim(),
+      ),
+      onLoadMore: _cubit.loadMore,
+    );
+
+    _cubitSubscription = _cubit.stream.listen((state) {
+      if (!mounted) return;
+      _paginationController.updateState(state.pagination);
+    });
+
+    _cubit.refresh(
+      companyId: widget.company?.id,
+      updateCompanyId: true,
+      status: UserStatus.active,
+      updateStatus: true,
+    );
+
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  void _onSearchChanged() {
+    final term = _searchController.text.trim();
+    _searchQueryNotifier.value = term.toLowerCase();
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(AppDurations.slow, () {
+      if (!mounted) return;
+      _cubit.refresh(
+        companyId: widget.company?.id,
+        status: UserStatus.active,
+        search: term,
+      );
     });
   }
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
+    _cubitSubscription?.cancel();
+    _cubit.close();
+    _paginationController.dispose();
     _searchController.dispose();
     _startDateNotifier.dispose();
     _startTimeNotifier.dispose();
@@ -169,9 +220,6 @@ class _BookingScreenState extends State<BookingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveCompany = widget.company ?? CompanyModel.fakeData.first;
-    final allGuards = BodyGuardModel.fakeData;
-
     return Scaffold(
       appBar: const AppAppBar.transparent(
         title: 'Company Profile',
@@ -206,8 +254,10 @@ class _BookingScreenState extends State<BookingScreen> {
               // ---------------------------------------------------------------
               // 1. Company Profile Header Card
               // ---------------------------------------------------------------
-              CompanyCard(company: effectiveCompany, onBookNow: () {}),
-              AppSpacing.xl.h,
+              if (widget.company != null) ...[
+                CompanyCard(company: widget.company!, onBookNow: () {}),
+                AppSpacing.xl.h,
+              ],
 
               // ---------------------------------------------------------------
               // 2. Date & Time Selection Section
@@ -310,86 +360,99 @@ class _BookingScreenState extends State<BookingScreen> {
               // ---------------------------------------------------------------
               // 4. Selectable Bodyguards Operative List & 5. Payment Summary
               // ---------------------------------------------------------------
+              AppPagination<BodyGuardModel>.list(
+                controller: _paginationController,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                enablePullToRefresh: false,
+                separatorBuilder: (context, index) => AppSpacing.md.h,
+                itemBuilder: (context, guard, index) {
+                  return ListenableBuilder(
+                    listenable: _selectedGuardIdsNotifier,
+                    builder: (context, _) {
+                      final isSelected =
+                          _selectedGuardIdsNotifier.value.contains(guard.id);
+                      return BodyGuardCard(
+                        bodyguard: guard,
+                        isSelected: isSelected,
+                        onSelectedChanged: (selected) {
+                          final updated = Set<String>.from(
+                            _selectedGuardIdsNotifier.value,
+                          );
+                          if (selected == true) {
+                            updated.add(guard.id);
+                          } else {
+                            updated.remove(guard.id);
+                          }
+                          _selectedGuardIdsNotifier.value = updated;
+                        },
+                        onTap: () {
+                          final updated = Set<String>.from(
+                            _selectedGuardIdsNotifier.value,
+                          );
+                          if (updated.contains(guard.id)) {
+                            updated.remove(guard.id);
+                          } else {
+                            updated.add(guard.id);
+                          }
+                          _selectedGuardIdsNotifier.value = updated;
+                        },
+                      );
+                    },
+                  );
+                },
+                emptyBuilder: (context) => Padding(
+                  padding: AppSpacing.lg.yPadding,
+                  child: Center(
+                    child: Text(
+                      'No active bodyguards found.',
+                      style: context.textTheme.bodyMedium?.colour(
+                        context.colors.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              AppSpacing.md.h,
+
               ListenableBuilder(
                 listenable: Listenable.merge([
                   _selectedGuardIdsNotifier,
-                  _searchQueryNotifier,
+                  _paginationController,
                   _startDateNotifier,
                   _startTimeNotifier,
                   _endDateNotifier,
                   _endTimeNotifier,
                 ]),
                 builder: (context, _) {
-                  final query = _searchQueryNotifier.value;
                   final selectedIds = _selectedGuardIdsNotifier.value;
-
-                  final filteredGuards = allGuards.where((guard) {
-                    if (query.isEmpty) return true;
-                    final name = guard.user.name.toLowerCase();
-                    final bio = guard.bio.toLowerCase();
-                    final qualifications = (guard.qualifications ?? '').toLowerCase();
-                    final services = guard.serviceTypes
-                        .map((s) => s.label.toLowerCase())
-                        .join(' ');
-                    return name.contains(query) ||
-                        bio.contains(query) ||
-                        qualifications.contains(query) ||
-                        services.contains(query);
-                  }).toList();
-
-                  final selectedGuardsList = allGuards
+                  final loadedGuards = _paginationController.value.items;
+                  final allKnownGuards = [
+                    if (widget.initialBodyguard != null)
+                      widget.initialBodyguard!,
+                    ...loadedGuards,
+                  ];
+                  final selectedGuardsList = allKnownGuards
                       .where((g) => selectedIds.contains(g.id))
                       .toList();
                   final double primaryRate = selectedGuardsList.isNotEmpty
                       ? selectedGuardsList.first.hourlyRate
-                      : 60.0;
+                      : (widget.initialBodyguard?.hourlyRate ?? 60.0);
                   final int hours = _calculatedHours;
                   final double operativeCost = primaryRate * hours;
                   const double discountAmount = 15.0;
                   final double totalAmount =
                       (operativeCost - discountAmount) > 0
-                      ? (operativeCost - discountAmount)
-                      : operativeCost;
+                          ? (operativeCost - discountAmount)
+                          : operativeCost;
 
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (final guard in filteredGuards) ...[
-                        BodyGuardCard(
-                          bodyguard: guard,
-                          isSelected: selectedIds.contains(guard.id),
-                          onSelectedChanged: (selected) {
-                            final updated = Set<String>.from(selectedIds);
-                            if (selected == true) {
-                              updated.add(guard.id);
-                            } else {
-                              updated.remove(guard.id);
-                            }
-                            _selectedGuardIdsNotifier.value = updated;
-                          },
-                          onTap: () {
-                            final updated = Set<String>.from(selectedIds);
-                            if (updated.contains(guard.id)) {
-                              updated.remove(guard.id);
-                            } else {
-                              updated.add(guard.id);
-                            }
-                            _selectedGuardIdsNotifier.value = updated;
-                          },
-                        ),
-                        AppSpacing.md.h,
-                      ],
-                      AppSpacing.md.h,
-
-                      _buildPaymentSummaryCard(
-                        context: context,
-                        primaryRate: primaryRate,
-                        hours: hours,
-                        operativeCost: operativeCost,
-                        discountAmount: discountAmount,
-                        totalAmount: totalAmount,
-                      ),
-                    ],
+                  return _buildPaymentSummaryCard(
+                    context: context,
+                    primaryRate: primaryRate,
+                    hours: hours,
+                    operativeCost: operativeCost,
+                    discountAmount: discountAmount,
+                    totalAmount: totalAmount,
                   );
                 },
               ),

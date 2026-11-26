@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -16,13 +18,15 @@ import '/features/body_guard/body_guard.dart';
 import '/features/company/company.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/navigation/app_tab_bar.dart';
+import '/shared/widgets/pagination/app_pagination.dart';
+import '/shared/widgets/pagination/pagination.controller.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '../widgets/customer_header.widget.dart';
 import '../widgets/customer_promo_banner.widget.dart';
 import '../widgets/customer_services_row.widget.dart';
 import 'all_services_screen.dart';
+import 'bodyguards_list_screen.dart';
 import '/features/customer/presentation/screens/booking_screen.dart';
-import '/features/customer/presentation/screens/search_bodyguards_screen.dart';
 
 /// Screen 1: Primary Customer Home Screen displaying greeting, search bar,
 /// quick filters, elite promo banner, services, top security companies,
@@ -47,6 +51,15 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
 
   static const List<String> _quickFilters = ['Near By', 'Rated', 'Available'];
 
+  late final BodyguardsCubit _bodyguardsCubit;
+  StreamSubscription<BodyguardsState>? _bodyguardsSubscription;
+  late final PaginationController<BodyGuardModel>
+  _bodyguardsPaginationController;
+
+  late final CompaniesCubit _companiesCubit;
+  StreamSubscription<CompaniesState>? _companiesSubscription;
+  late final PaginationController<CompanyModel> _companiesPaginationController;
+
   @override
   void initState() {
     super.initState();
@@ -54,17 +67,57 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
       length: _quickFilters.length,
       vsync: this,
     );
+
+    _bodyguardsCubit = sl<BodyguardsCubit>();
+    _bodyguardsPaginationController = PaginationController<BodyGuardModel>(
+      initialState: _bodyguardsCubit.state.pagination,
+      onRefresh: () => _bodyguardsCubit.refresh(
+        status: UserStatus.active,
+        updateStatus: true,
+      ),
+      onLoadMore: _bodyguardsCubit.loadMore,
+    );
+
+    _bodyguardsSubscription = _bodyguardsCubit.stream.listen((state) {
+      if (!mounted) return;
+      _bodyguardsPaginationController.updateState(state.pagination);
+    });
+
+    _bodyguardsCubit.refresh(status: UserStatus.active, updateStatus: true);
+
+    _companiesCubit = sl<CompaniesCubit>();
+    _companiesPaginationController = PaginationController<CompanyModel>(
+      initialState: _companiesCubit.state.pagination,
+      onRefresh: () => _companiesCubit.refresh(
+        status: UserStatus.active,
+        updateStatus: true,
+      ),
+      onLoadMore: _companiesCubit.loadMore,
+    );
+
+    _companiesSubscription = _companiesCubit.stream.listen((state) {
+      if (!mounted) return;
+      _companiesPaginationController.updateState(state.pagination);
+    });
+
+    _companiesCubit.refresh(status: UserStatus.active, updateStatus: true);
   }
 
   @override
   void dispose() {
     _quickFilterTabController.dispose();
     _serviceCategoryNotifier.dispose();
+    _bodyguardsSubscription?.cancel();
+    _bodyguardsCubit.close();
+    _bodyguardsPaginationController.dispose();
+    _companiesSubscription?.cancel();
+    _companiesCubit.close();
+    _companiesPaginationController.dispose();
     super.dispose();
   }
 
   void _navigateToSearch() {
-    context.push(SearchBodyguardsScreen.route);
+    context.push(BodyguardsListScreen.route);
   }
 
   void _navigateToAllServices() {
@@ -72,14 +125,15 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
   }
 
   void _navigateToAllBodyguards() {
-    context.push(CompanyBodyguardsScreen.route);
+    context.push(BodyguardsListScreen.route);
+  }
+
+  void _navigateToAllCompanies() {
+    context.push(BodyguardsListScreen.route, extra: {'initialTab': 1});
   }
 
   @override
   Widget build(BuildContext context) {
-    final companies = CompanyModel.fakeData;
-    final topBodyguard = BodyGuardModel.fakeData.first;
-
     return Scaffold(
       backgroundColor: context.colors.transparent,
       appBar: AppAppBar(
@@ -182,9 +236,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
                     ),
                   ),
                   GestureDetector(
-                    onTap: () {
-                      context.push(CompanyInformationScreen.route);
-                    },
+                    onTap: _navigateToAllCompanies,
                     behavior: HitTestBehavior.opaque,
                     child: Text(
                       'View All >',
@@ -197,11 +249,15 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
               ),
               AppSpacing.sm.h,
 
-              // Company Cards
-              ...companies.map((company) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                  child: CompanyCard(
+              // Dynamic Company Cards
+              AppPagination<CompanyModel>.list(
+                controller: _companiesPaginationController,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                enablePullToRefresh: false,
+                separatorBuilder: (context, index) => AppSpacing.md.h,
+                itemBuilder: (context, company, index) {
+                  return CompanyCard(
                     company: company,
                     onTap: () {
                       context.push(CompanyDetailsScreen.route, extra: company);
@@ -209,9 +265,20 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
                     onBookNow: () {
                       context.push(BookingScreen.route, extra: company);
                     },
+                  );
+                },
+                emptyBuilder: (context) => Padding(
+                  padding: AppSpacing.md.yPadding,
+                  child: Center(
+                    child: Text(
+                      'No security companies available right now.',
+                      style: context.textTheme.bodyMedium?.colour(
+                        context.colors.onSurfaceVariant,
+                      ),
+                    ),
                   ),
-                );
-              }),
+                ),
+              ),
               AppSpacing.sm.h,
 
               // 7. TOP BODYGUARDS Section
@@ -238,23 +305,37 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
               ),
               AppSpacing.sm.h,
 
-              // Top Bodyguard Card (Home Spotlight)
-              BodyGuardCard(
-                bodyguard: topBodyguard,
-                isCompact: true,
-                role: UserRole.customer,
-                onTap: () {
-                  context.push(
-                    GuardDetailScreen.route,
-                    extra: topBodyguard,
+              // Dynamic Bodyguards Roster (Home Spotlight)
+              AppPagination<BodyGuardModel>.list(
+                controller: _bodyguardsPaginationController,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                enablePullToRefresh: false,
+                separatorBuilder: (context, index) => AppSpacing.sm.h,
+                itemBuilder: (context, guard, index) {
+                  return BodyGuardCard(
+                    bodyguard: guard,
+                    isCompact: true,
+                    role: UserRole.customer,
+                    onTap: () {
+                      context.push(GuardDetailScreen.route, extra: guard);
+                    },
+                    onBookNow: () {
+                      context.push(GuardDetailScreen.route, extra: guard);
+                    },
                   );
                 },
-                onBookNow: () {
-                  context.push(
-                    GuardDetailScreen.route,
-                    extra: topBodyguard,
-                  );
-                },
+                emptyBuilder: (context) => Padding(
+                  padding: AppSpacing.md.yPadding,
+                  child: Center(
+                    child: Text(
+                      'No active bodyguards available right now.',
+                      style: context.textTheme.bodyMedium?.colour(
+                        context.colors.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ),
               ),
 
               AppSpacing.xxl.h,

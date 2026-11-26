@@ -75,7 +75,7 @@ class CompanyCard extends StatelessWidget {
 
                 // Company Name
                 Text(
-                  company.name,
+                  company.displayName,
                   style: context.textTheme.titleSmall,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -124,7 +124,7 @@ class CompanyCard extends StatelessWidget {
                     ),
             )
           : Text(
-              company.initials ?? company.name.getInitials(),
+              company.initials ?? company.displayName.getInitials(),
               style: context.textTheme.titleMedium?.bold().colour(
                 context.colors.primary,
               ),

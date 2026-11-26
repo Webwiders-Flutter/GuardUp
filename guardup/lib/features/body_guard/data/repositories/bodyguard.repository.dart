@@ -3,35 +3,41 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '/core/constants/api/database_functions.dart';
 import '/core/constants/api/database_tables.dart';
 import '/core/constants/api/json_keys.dart';
+import '/core/constants/app_regx.dart';
 import '/core/error/api_exception.dart';
 import '/core/logger/app_logger.dart';
-import '/features/auth/data/enum/user_role.enum.dart';
+import '/core/repositories/base.repository.dart';
 import '/features/auth/data/enum/user_status.enum.dart';
-import '/features/auth/data/model/user.model.dart';
-import '/features/company/company.dart';
+import '../enum/bodyguard_availability_status.enum.dart';
+import '../enum/week_day.enum.dart';
 import '../model/body_guard.model.dart';
-import '../model/service_item.model.dart';
 import '../model/user_availability.model.dart';
-import '../model/user_document.model.dart';
 
-/// Bodyguards managed by the signed-in company (`public.bodyguards` rows with
-/// `user_id = NULL` and `company_id` = the caller's company).
+/// Company-managed bodyguards (`public.bodyguards` with `user_id = NULL`):
+/// listings, single operative details, creation, update, and service management.
+/// See documentation/user_profiles.md.
 ///
-/// Self-registered bodyguards (GUARD accounts) keep using [UserRepository]:
-/// their profile is read from `user_profiles` and written through
-/// `updateProfileFields`. Their child rows (services, documents,
-/// availability) are keyed by `user_id`; company-managed ones by
-/// `bodyguard_id`. See documentation/user_profiles.md.
-class BodyguardRepository {
-  final SupabaseClient? _client;
+/// Inherits [BaseSupabaseRepository] for standard CRUD, pagination, and sorting.
+final class BodyguardRepository
+    extends BaseSupabaseRepository<BodyGuardModel> {
+  BodyguardRepository([SupabaseClient? client])
+    : super(
+        client: client ?? Supabase.instance.client,
+        tableName: DatabaseTables.bodyguards,
+        fromJson: BodyGuardModel.fromJson,
+        entityName: 'bodyguard',
+        searchFields: const [JsonKeys.name],
+        selectColumns: _detailsSelect,
+        primarySortColumn: JsonKeys.createdAt,
+        primarySortAscending: false,
+      );
 
-  BodyguardRepository([this._client]);
-
-  SupabaseClient get _supabase => _client ?? Supabase.instance.client;
+  static const String _companySelect =
+      'company:companies!bodyguards_company_id_fkey(id, user_id, company_name, company_phone_code, company_phone_number)';
 
   static const String _detailsSelect = '''
     *,
-    company:companies(*),
+    $_companySelect,
     services:user_services!user_services_bodyguard_id_fkey(
       id,
       service:services(id, name, description, icon_name, is_active, display_order)
@@ -52,7 +58,7 @@ class BodyguardRepository {
         id, name, description, target_role, is_required, is_active, display_order
       )
     ),
-    availabilities:user_availabilities!user_availabilities_bodyguard_id_fkey(
+    user_availabilities:user_availabilities!user_availabilities_bodyguard_id_fkey(
       id,
       user_id,
       bodyguard_id,
@@ -66,7 +72,7 @@ class BodyguardRepository {
   ''';
 
   String get _currentUserId {
-    final uid = _supabase.auth.currentUser?.id;
+    final uid = client.auth.currentUser?.id;
     if (uid == null) {
       throw ApiException('Your session has expired. Please sign in again.');
     }
@@ -75,7 +81,7 @@ class BodyguardRepository {
 
   /// The `companies.id` of the signed-in COMPANY account.
   Future<String> getMyCompanyId() async {
-    final row = await _supabase
+    final row = await client
         .from(DatabaseTables.companies)
         .select(JsonKeys.id)
         .eq(JsonKeys.userId, _currentUserId)
@@ -83,173 +89,147 @@ class BodyguardRepository {
 
     final id = row?[JsonKeys.id] as String?;
     if (id == null || id.isEmpty) {
-      throw ApiException('Company profile not found. Please complete your company profile.');
+      throw ApiException(
+        'Company profile not found. Please complete your company profile.',
+      );
     }
     return id;
   }
 
-  /// One page of the company's bodyguards, newest first.
-  /// Optionally filters by a single [status] or a list of [statuses].
+  /// Standard paginated listing supporting search, status, availability status,
+  /// and company filtering directly within the single Supabase query.
+  @override
+  Future<({List<BodyGuardModel> data, int total})> getPaginated({
+    required int page,
+    required int pageSize,
+    bool? isActive,
+    String? search,
+    String? selectColumnsOverride,
+    String? companyId,
+    UserStatus? status,
+    List<UserStatus>? statuses,
+    BodyguardAvailabilityStatus? availabilityStatus,
+    CustomQueryBuilder? customQuery,
+  }) {
+    // If a companyId is supplied but is not a valid UUID, querying PostgREST directly
+    // causes a PostgreSQL syntax error (code 22P02: invalid input syntax for type uuid).
+    // Safely return an empty list because no rows in the DB can match a non-UUID.
+    if (companyId != null &&
+        companyId.isNotEmpty &&
+        !AppRegex.uuid.hasMatch(companyId)) {
+      return Future.value((data: <BodyGuardModel>[], total: 0));
+    }
+
+    // When availabilityStatus is requested, embed an !inner join on the current day's
+    // availability row so the database filter and count pagination stay fully synchronized.
+    final now = DateTime.now();
+    final currentDay = WeekDay.fromDateTime(now).apiValue.toLowerCase();
+
+    final selectQuery = availabilityStatus != null
+        ? '''
+          $_detailsSelect,
+          availability_filter:user_availabilities!user_availabilities_bodyguard_id_fkey!inner(
+            id,
+            day_of_week,
+            is_available
+          )
+        '''
+        : _detailsSelect;
+
+    return super.getPaginated(
+      page: page,
+      pageSize: pageSize,
+      isActive: isActive,
+      search: search,
+      selectColumnsOverride: selectQuery,
+      customQuery: (query) {
+        query = query.isFilter(JsonKeys.userId, null);
+
+        if (companyId != null && companyId.isNotEmpty) {
+          query = query.eq(JsonKeys.companyId, companyId);
+        }
+
+        if (statuses != null && statuses.isNotEmpty) {
+          final values = statuses.map((s) => s.apiValue).toList();
+          query = query.inFilter(JsonKeys.status, values);
+        } else if (status != null) {
+          query = query.eq(JsonKeys.status, status.apiValue);
+        }
+
+        // Inner join filter on current day slot
+        if (availabilityStatus != null) {
+          query = query.eq(
+            'availability_filter.day_of_week',
+            currentDay,
+          );
+          if (availabilityStatus == BodyguardAvailabilityStatus.available) {
+            query = query.eq(
+              'availability_filter.is_available',
+              true,
+            );
+          } else if (availabilityStatus ==
+              BodyguardAvailabilityStatus.notAvailable) {
+            query = query.eq(
+              'availability_filter.is_available',
+              false,
+            );
+          }
+        }
+
+        return customQuery?.call(query) ?? query;
+      },
+    );
+  }
+
+  /// One page of the signed-in company's bodyguards using [getPaginated].
   Future<({List<BodyGuardModel> data, int total})> getCompanyBodyguards({
     required int page,
     required int pageSize,
     String? search,
     UserStatus? status,
     List<UserStatus>? statuses,
+    BodyguardAvailabilityStatus? availabilityStatus,
   }) async {
     final companyId = await getMyCompanyId();
-
-    var query = _supabase
-        .from(DatabaseTables.bodyguards)
-        .select(_detailsSelect)
-        .eq(JsonKeys.companyId, companyId)
-        .isFilter(JsonKeys.userId, null);
-
-    if (statuses != null && statuses.isNotEmpty) {
-      final values = statuses.map((s) => s.apiValue).toList();
-      query = query.inFilter(JsonKeys.status, values);
-    } else if (status != null) {
-      query = query.eq(JsonKeys.status, status.apiValue);
-    }
-
-    final term = search?.trim().replaceAll(RegExp(r'[%,()"]'), '') ?? '';
-    if (term.isNotEmpty) {
-      query = query.ilike(JsonKeys.name, '%$term%');
-    }
-
-    final response = await query
-        .order(JsonKeys.createdAt, ascending: false)
-        .range((page - 1) * pageSize, page * pageSize - 1)
-        .count(CountOption.exact);
-
-    final rows = response.data;
-    return (
-      data: rows.map(_toDetailedModel).toList(),
-      total: response.count,
+    return getPaginated(
+      page: page,
+      pageSize: pageSize,
+      search: search,
+      companyId: companyId,
+      status: status,
+      statuses: statuses,
+      availabilityStatus: availabilityStatus,
     );
   }
 
-  /// A single bodyguard row the caller can read, or `null`.
-  Future<BodyGuardModel?> getBodyguard(String bodyguardId) async {
-    final row = await _supabase
-        .from(DatabaseTables.bodyguards)
+  /// One company-managed bodyguard with its company, services, documents,
+  /// and availability.
+  @override
+  Future<BodyGuardModel> getDetails(String id) async {
+    final row = await client
+        .from(tableName)
         .select(_detailsSelect)
-        .eq(JsonKeys.id, bodyguardId)
+        .eq(JsonKeys.id, id)
         .maybeSingle();
-    return row == null ? null : _toModel(row);
-  }
 
-  /// Comprehensive details of a bodyguard including joined company, documents,
-  /// services, and availability.
-  Future<BodyGuardModel> getDetails(String bodyguardId) async {
-    try {
-      final row = await _supabase
-          .from(DatabaseTables.bodyguards)
-          .select(_detailsSelect)
-          .eq(JsonKeys.id, bodyguardId)
-          .maybeSingle();
+    if (row == null) {
+      throw ApiException('Bodyguard not found. It may have been removed.');
+    }
 
-      if (row != null) {
-        var model = _toDetailedModel(row);
-        // Self-registered bodyguard: user_services are linked via user_id,
-        // so bodyguard_id relation may be empty. Fetch by user_id if needed.
-        if ((model.services == null || model.services!.isEmpty) && model.user.id.isNotEmpty) {
-          final userServices = await _fetchServicesByUserId(model.user.id);
-          if (userServices.isNotEmpty) {
-            model = model.copyWith(services: userServices);
-          }
-        }
-        // Self-registered bodyguard or missing availability: fetch by user_id or bodyguard_id
-        if (model.userAvailabilities == null || model.userAvailabilities!.isEmpty) {
-          final targetUserId = model.user.id.isNotEmpty ? model.user.id : (row['user_id']?.toString() ?? '');
-          final availabilities = await _fetchAvailabilities(
-            bodyguardId: bodyguardId,
-            userId: targetUserId.isNotEmpty ? targetUserId : null,
-          );
-          if (availabilities.isNotEmpty) {
-            model = model.copyWith(userAvailabilities: availabilities);
-          }
-        }
-        return model;
+    var model = fromJson(row);
+
+    // Fallback if user_availabilities relation returned empty
+    if (model.userAvailabilities == null || model.userAvailabilities!.isEmpty) {
+      final availabilities = await _fetchAvailabilities(
+        bodyguardId: id,
+        userId: model.userId,
+      );
+      if (availabilities.isNotEmpty) {
+        model = model.copyWith(userAvailabilities: availabilities);
       }
-    } catch (e, st) {
-      AppLogger.e('BodyguardRepository.getDetails (join)', tag: 'BodyguardRepository', error: e, stackTrace: st);
     }
 
-    // Fallback: basic bodyguard fetch with company embed
-    try {
-      final baseRow = await _supabase
-          .from(DatabaseTables.bodyguards)
-          .select('*, company:companies(*)')
-          .eq(JsonKeys.id, bodyguardId)
-          .maybeSingle();
-
-      if (baseRow != null) {
-        var model = _toDetailedModel(baseRow);
-        if ((model.services == null || model.services!.isEmpty) && model.user.id.isNotEmpty) {
-          final userServices = await _fetchServicesByUserId(model.user.id);
-          if (userServices.isNotEmpty) {
-            model = model.copyWith(services: userServices);
-          }
-        }
-        if (model.userAvailabilities == null || model.userAvailabilities!.isEmpty) {
-          final targetUserId = model.user.id.isNotEmpty ? model.user.id : (baseRow['user_id']?.toString() ?? '');
-          final availabilities = await _fetchAvailabilities(
-            bodyguardId: bodyguardId,
-            userId: targetUserId.isNotEmpty ? targetUserId : null,
-          );
-          if (availabilities.isNotEmpty) {
-            model = model.copyWith(userAvailabilities: availabilities);
-          }
-        }
-        return model;
-      }
-    } catch (e, st) {
-      AppLogger.e('BodyguardRepository.getDetails (fallback)', tag: 'BodyguardRepository', error: e, stackTrace: st);
-    }
-
-    // Fallback to fake data if ID matches
-    final mockMatch = BodyGuardModel.fakeData
-        .where((b) => b.id == bodyguardId)
-        .firstOrNull;
-    if (mockMatch != null) return mockMatch;
-
-    throw ApiException('Bodyguard details not found.');
-  }
-
-  /// Fetches services linked directly to a login account's user_id.
-  Future<List<ServiceItemModel>> _fetchServicesByUserId(String userId) async {
-    try {
-      final rows = await _supabase
-          .from(DatabaseTables.userServices)
-          .select('id, service:services(id, name, description, icon_name, is_active, display_order)')
-          .eq(JsonKeys.userId, userId);
-      return _parseServiceItems(rows) ?? const [];
-    } catch (e) {
-      AppLogger.w('Error fetching user services for userId=$userId: $e', tag: 'BodyguardRepository');
-      return const [];
-    }
-  }
-
-  /// Fetches availability rows linked directly to a login account's user_id or bodyguard_id.
-  Future<List<UserAvailabilityModel>> _fetchAvailabilities({
-    required String bodyguardId,
-    String? userId,
-  }) async {
-    try {
-      final query = _supabase.from(DatabaseTables.userAvailabilities).select();
-      final rows = (userId != null && userId.isNotEmpty)
-          ? await query.or('bodyguard_id.eq.$bodyguardId,user_id.eq.$userId')
-          : await query.eq('bodyguard_id', bodyguardId);
-
-      final list = [
-        for (final r in rows) UserAvailabilityModel.fromJson(r),
-      ];
-      return list;
-    } catch (e) {
-      AppLogger.w('Error fetching availabilities: $e', tag: 'BodyguardRepository');
-      return const [];
-    }
+    return model;
   }
 
   /// Creates ([bodyguardId] null) or updates a company-managed bodyguard.
@@ -281,51 +261,21 @@ class BodyguardRepository {
       JsonKeys.profileImageUrl: ?profileImageUrl,
     };
 
-    AppLogger.d('saveCompanyBodyguard: id=$bodyguardId', tag: 'BodyguardRepository');
-
-    final Map<String, dynamic> row;
     if (bodyguardId == null) {
-      row = await _supabase
-          .from(DatabaseTables.bodyguards)
-          .insert({JsonKeys.companyId: await getMyCompanyId(), ...payload})
-          .select()
-          .single();
-    } else {
-      final rows = await _supabase
-          .from(DatabaseTables.bodyguards)
-          .update(payload)
-          .eq(JsonKeys.id, bodyguardId)
-          .select();
-      if (rows.isEmpty) {
-        throw ApiException('This bodyguard could not be updated. It may have been removed.');
-      }
-      row = rows.first;
+      payload[JsonKeys.companyId] = await getMyCompanyId();
     }
 
-    AppLogger.d('saveCompanyBodyguard success: id=${row[JsonKeys.id]}', tag: 'BodyguardRepository');
-    return _toModel(row);
+    return addOrUpdate(payload, id: bodyguardId);
   }
 
-  /// Removes a company-managed bodyguard. Its services, documents and
-  /// availability are removed with it (ON DELETE CASCADE).
-  Future<void> deleteCompanyBodyguard(String bodyguardId) async {
-    final rows = await _supabase
-        .from(DatabaseTables.bodyguards)
-        .delete()
-        .eq(JsonKeys.id, bodyguardId)
-        .select(JsonKeys.id);
-    if (rows.isEmpty) {
-      throw ApiException('This bodyguard could not be removed.');
-    }
-  }
+  /// Removes a company-managed bodyguard. Cascades related child records.
+  Future<void> deleteCompanyBodyguard(String bodyguardId) => delete(bodyguardId);
 
   /// Sends a company-managed bodyguard to admin review (INCOMPLETE /
-  /// REJECTED -> PENDING_APPROVAL). Does nothing in any other state, e.g. an
-  /// already approved bodyguard, or one a re-uploaded document already moved
-  /// back to review.
+  /// REJECTED -> PENDING_APPROVAL).
   Future<void> submitForReview(String bodyguardId) async {
-    await _supabase
-        .from(DatabaseTables.bodyguards)
+    await client
+        .from(tableName)
         .update({JsonKeys.status: UserStatus.pendingApproval.apiValue})
         .eq(JsonKeys.id, bodyguardId)
         .inFilter(JsonKeys.status, [
@@ -336,7 +286,7 @@ class BodyguardRepository {
 
   /// Service ids of a company-managed bodyguard.
   Future<List<String>> getServiceIds(String bodyguardId) async {
-    final rows = await _supabase
+    final rows = await client
         .from(DatabaseTables.userServices)
         .select(JsonKeys.serviceId)
         .eq(JsonKeys.bodyguardId, bodyguardId);
@@ -348,7 +298,7 @@ class BodyguardRepository {
 
   /// Replaces the services of a company-managed bodyguard atomically.
   Future<void> setServices(String bodyguardId, List<String> serviceIds) {
-    return _supabase.rpc(
+    return client.rpc(
       DatabaseFunctions.setBodyguardServices,
       params: {
         JsonKeys.pBodyguardId: bodyguardId,
@@ -357,19 +307,32 @@ class BodyguardRepository {
     );
   }
 
-  /// Seeds default weekly availability (Monday-Friday 09:00 AM - 05:00 PM) for
-  /// a company-managed bodyguard if none has been set yet.
+  /// Seeds default weekly availability for a company-managed bodyguard if not set.
   Future<void> initDefaultAvailability(String bodyguardId) async {
     try {
-      final existing = await _supabase
+      final existing = await client
           .from(DatabaseTables.userAvailabilities)
           .select('id')
           .eq('bodyguard_id', bodyguardId)
           .limit(1);
       if (existing.isNotEmpty) return;
 
-      const workingDays = {'monday', 'tuesday', 'wednesday', 'thursday', 'friday'};
-      const allDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      const workingDays = {
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+      };
+      const allDays = [
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+        'sunday',
+      ];
       final now = DateTime.now().toIso8601String();
       final rows = [
         for (final day in allDays)
@@ -383,140 +346,37 @@ class BodyguardRepository {
             'updated_at': now,
           },
       ];
-      await _supabase
+      await client
           .from(DatabaseTables.userAvailabilities)
           .upsert(rows, onConflict: 'bodyguard_id, day_of_week');
     } catch (e) {
-      AppLogger.e('initDefaultAvailability failed', tag: 'BodyguardRepository', error: e);
-    }
-  }
-
-  List<UserAvailabilityModel>? _parseUserAvailabilities(Map<String, dynamic> row) {
-    final rawAvail = row['availabilities'] ?? row['user_availabilities'];
-    if (rawAvail is! List || rawAvail.isEmpty) return null;
-    final list = <UserAvailabilityModel>[];
-    for (final item in rawAvail) {
-      if (item is Map<String, dynamic>) {
-        list.add(UserAvailabilityModel.fromJson(item));
-      }
-    }
-    return list.isNotEmpty ? list : null;
-  }
-
-  /// Maps a `bodyguards` row to the UI model. A company-managed bodyguard has
-  /// no login, so its [UserModel.id] is empty.
-  BodyGuardModel _toModel(Map<String, dynamic> row) {
-    final imageUrl = (row[JsonKeys.profileImageUrl] as String?)?.trim();
-    return BodyGuardModel(
-      id: row[JsonKeys.id] as String,
-      user: UserModel(
-        id: (row[JsonKeys.userId] as String?) ?? '',
-        name: (row[JsonKeys.name] as String?) ?? '',
-        profileImageUrl: (imageUrl == null || imageUrl.isEmpty) ? null : imageUrl,
-        role: UserRole.guard,
-      ),
-      hourlyRate: _toDouble(row[JsonKeys.hourlyRate]),
-      bio: (row[JsonKeys.bio] as String?) ?? '',
-      languages: row[JsonKeys.languages] as String?,
-      certifications: row[JsonKeys.certifications] as String?,
-      qualifications: row[JsonKeys.qualifications] as String?,
-      address: row[JsonKeys.address] as String?,
-      latitude: _toDoubleNullable(row[JsonKeys.latitude]),
-      longitude: _toDoubleNullable(row[JsonKeys.longitude]),
-      experienceYears: _toDouble(row[JsonKeys.experienceYears]).toInt(),
-      rating: _toDouble(row[JsonKeys.rating]),
-      status: UserStatus.fromApiValue(row[JsonKeys.status] as String?),
-      rejectionReason: (row[JsonKeys.rejectionReason] as String?)?.trim(),
-      userAvailabilities: _parseUserAvailabilities(row),
-      createdAt: row[JsonKeys.createdAt] != null
-          ? DateTime.tryParse(row[JsonKeys.createdAt].toString())
-          : null,
-      updatedAt: row[JsonKeys.updatedAt] != null
-          ? DateTime.tryParse(row[JsonKeys.updatedAt].toString())
-          : null,
-    );
-  }
-
-  /// Maps a joined `bodyguards` row including company, documents, and availability.
-  BodyGuardModel _toDetailedModel(Map<String, dynamic> row) {
-    final baseModel = _toModel(row);
-
-    // 1. Company join mapping
-    CompanyModel? company;
-    final rawCompany = row['company'];
-    final compMap = switch (rawCompany) {
-      Map<String, dynamic> m => m,
-      List<dynamic> l when l.isNotEmpty && l.first is Map<String, dynamic> =>
-        l.first as Map<String, dynamic>,
-      _ => null,
-    };
-    if (compMap != null) {
-      company = CompanyModel(
-        id: (compMap['id'] ?? '').toString(),
-        userId: compMap['user_id']?.toString(),
-        companyName: compMap['company_name']?.toString(),
-        name: (compMap['company_name'] ?? compMap['name'] ?? 'Security Partner').toString(),
-        businessEmail: compMap['business_email']?.toString(),
-        companyPhoneNumber: compMap['company_phone_number']?.toString(),
-        experienceYears: _toDouble(compMap['experience_years']).toInt(),
+      AppLogger.e(
+        'initDefaultAvailability failed',
+        tag: 'BodyguardRepository',
+        error: e,
       );
     }
-
-    // 2. Documents join mapping
-    final documents = <UserDocumentModel>[];
-    final rawDocs = row['documents'] ?? row['user_documents'];
-    if (rawDocs is List) {
-      for (final item in rawDocs) {
-        if (item is Map<String, dynamic>) {
-          documents.add(UserDocumentModel.fromJson(item));
-        }
-      }
-    }
-
-    // 3. User Availabilities join mapping
-    final userAvailabilities = <UserAvailabilityModel>[];
-    final rawAvail = row['availabilities'] ?? row['user_availabilities'];
-    if (rawAvail is List) {
-      for (final item in rawAvail) {
-        if (item is Map<String, dynamic>) {
-          userAvailabilities.add(UserAvailabilityModel.fromJson(item));
-        }
-      }
-    }
-
-    return baseModel.copyWith(
-      company: company ?? baseModel.company,
-      documents: documents.isNotEmpty ? documents : baseModel.documents,
-      userAvailabilities: userAvailabilities.isNotEmpty
-          ? userAvailabilities
-          : baseModel.userAvailabilities,
-      qualifications: row['qualifications']?.toString() ?? baseModel.qualifications,
-      services: _parseServiceItems(row['services']) ?? baseModel.services,
-    );
   }
 
-  /// Maps `user_services(service:services(name, ...))` rows to [ServiceItemModel] items.
-  static List<ServiceItemModel>? _parseServiceItems(Object? raw) {
-    if (raw is! List) return null;
-    return [
-      for (final item in raw)
-        if (item is Map<String, dynamic>)
-          if (item['service'] is Map<String, dynamic>)
-            ServiceItemModel.fromJson(item['service'] as Map<String, dynamic>)
-          else
-            ServiceItemModel.fromJson(item),
-    ];
+  /// Fetches availability rows linked directly to a login account's user_id or bodyguard_id.
+  Future<List<UserAvailabilityModel>> _fetchAvailabilities({
+    required String bodyguardId,
+    String? userId,
+  }) async {
+    try {
+      final query = client.from(DatabaseTables.userAvailabilities).select();
+      final rows =
+          (userId != null && userId.isNotEmpty)
+              ? await query.or('bodyguard_id.eq.$bodyguardId,user_id.eq.$userId')
+              : await query.eq('bodyguard_id', bodyguardId);
+
+      return [for (final r in rows) UserAvailabilityModel.fromJson(r)];
+    } catch (e) {
+      AppLogger.w(
+        'Error fetching availabilities: $e',
+        tag: 'BodyguardRepository',
+      );
+      return const [];
+    }
   }
-
-  static double _toDouble(Object? value) => switch (value) {
-    num n => n.toDouble(),
-    String s => double.tryParse(s) ?? 0,
-    _ => 0,
-  };
-
-  static double? _toDoubleNullable(Object? value) => switch (value) {
-    num n => n.toDouble(),
-    String s => double.tryParse(s),
-    _ => null,
-  };
 }

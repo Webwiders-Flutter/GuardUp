@@ -33,6 +33,7 @@ final class NotificationRepository
     required int pageSize,
     NotificationFilters? filters,
     String? search,
+    String? selectColumnsOverride,
     bool? isActive,
     CustomQueryBuilder? customQuery,
   }) {

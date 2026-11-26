@@ -1,15 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:guardup/features/customer/customer.dart';
 import 'package:quick_container/quick_container.dart';
 
+import '/core/constants/app_durations.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
+import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/number.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
-import '/core/state/api_state.dart';
 import '/features/auth/auth.dart';
 import '/features/body_guard/body_guard.dart';
 import '/features/company/company.dart';
@@ -17,16 +21,16 @@ import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/navigation/app_tab_bar.dart';
 import '/shared/widgets/pagination/app_pagination.dart';
 import '/shared/widgets/pagination/pagination.controller.dart';
-import '/shared/widgets/pagination/pagination.state.dart';
 import '/shared/widgets/sections/app_appbar.dart';
-import '/features/customer/presentation/screens/booking_screen.dart';
 
 /// All Bodyguards & Security Roster listing screen featuring live search,
 /// Solo vs Company mode toggling with [AppTabBar.pill], and paginated feeds using [AppPagination].
 class BodyguardsListScreen extends StatefulWidget {
   static const route = '/customer-body-guard';
 
-  const BodyguardsListScreen({super.key});
+  final int initialTabIndex;
+
+  const BodyguardsListScreen({super.key, this.initialTabIndex = 0});
 
   @override
   State<BodyguardsListScreen> createState() => _BodyguardsListScreenState();
@@ -39,8 +43,12 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
 
   static const List<String> _quickFilters = ['Solo', 'Company'];
 
-  static final List<BodyGuardModel> _allBodyguards = BodyGuardModel.fakeData;
-  static final List<CompanyModel> _allCompanies = CompanyModel.fakeData;
+  late final BodyguardsCubit _guardsCubit;
+  StreamSubscription<BodyguardsState>? _guardsSubscription;
+  Timer? _searchDebounce;
+
+  late final CompaniesCubit _companiesCubit;
+  StreamSubscription<CompaniesState>? _companiesSubscription;
 
   late final PaginationController<BodyGuardModel> _guardsPaginationController;
   late final PaginationController<CompanyModel> _companiesPaginationController;
@@ -51,22 +59,45 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
     _quickFilterTabController = TabController(
       length: _quickFilters.length,
       vsync: this,
+      initialIndex: widget.initialTabIndex.clamp(0, _quickFilters.length - 1),
     );
 
+    _guardsCubit = sl<BodyguardsCubit>();
     _guardsPaginationController = PaginationController<BodyGuardModel>(
-      initialState: PaginationState<BodyGuardModel>(
-        items: _allBodyguards,
-        total: _allBodyguards.length,
-        status: const ApiState.success(null),
+      initialState: _guardsCubit.state.pagination,
+      onRefresh: () => _guardsCubit.refresh(
+        status: UserStatus.active,
+        search: _searchController.text.trim(),
       ),
+      onLoadMore: _guardsCubit.loadMore,
     );
 
+    _guardsSubscription = _guardsCubit.stream.listen((state) {
+      if (!mounted) return;
+      _guardsPaginationController.updateState(state.pagination);
+    });
+
+    _guardsCubit.refresh(status: UserStatus.active);
+
+    _companiesCubit = sl<CompaniesCubit>();
     _companiesPaginationController = PaginationController<CompanyModel>(
-      initialState: PaginationState<CompanyModel>(
-        items: _allCompanies,
-        total: _allCompanies.length,
-        status: const ApiState.success(null),
+      initialState: _companiesCubit.state.pagination,
+      onRefresh: () => _companiesCubit.refresh(
+        status: UserStatus.active,
+        updateStatus: true,
+        search: _searchController.text.trim(),
       ),
+      onLoadMore: _companiesCubit.loadMore,
+    );
+
+    _companiesSubscription = _companiesCubit.stream.listen((state) {
+      if (!mounted) return;
+      _companiesPaginationController.updateState(state.pagination);
+    });
+
+    _companiesCubit.refresh(
+      status: UserStatus.active,
+      updateStatus: true,
     );
 
     _searchController.addListener(_handleSearch);
@@ -74,6 +105,11 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
+    _guardsSubscription?.cancel();
+    _guardsCubit.close();
+    _companiesSubscription?.cancel();
+    _companiesCubit.close();
     _searchController.removeListener(_handleSearch);
     _searchController.dispose();
     _quickFilterTabController.dispose();
@@ -83,58 +119,20 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
   }
 
   void _handleSearch() {
-    final query = _searchController.text.trim().toLowerCase();
+    final query = _searchController.text.trim();
 
-    if (query.isEmpty) {
-      _guardsPaginationController.updateState(
-        _guardsPaginationController.value.copyWith(
-          items: _allBodyguards,
-          total: _allBodyguards.length,
-        ),
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(AppDurations.slow, () {
+      if (!mounted) return;
+      _guardsCubit.refresh(
+        search: query,
+        status: UserStatus.active,
       );
-      _companiesPaginationController.updateState(
-        _companiesPaginationController.value.copyWith(
-          items: _allCompanies,
-          total: _allCompanies.length,
-        ),
+      _companiesCubit.refresh(
+        search: query,
+        status: UserStatus.active,
       );
-      return;
-    }
-
-    // Filter Bodyguards
-    final filteredGuards = _allBodyguards.where((guard) {
-      final name = guard.user.name.toLowerCase();
-      final bio = guard.bio.toLowerCase();
-      final qualifications = (guard.qualifications ?? '').toLowerCase();
-      final services = guard.serviceTypes
-          .map((s) => s.label.toLowerCase())
-          .join(' ');
-      return name.contains(query) ||
-          bio.contains(query) ||
-          qualifications.contains(query) ||
-          services.contains(query);
-    }).toList();
-
-    _guardsPaginationController.updateState(
-      _guardsPaginationController.value.copyWith(
-        items: filteredGuards,
-        total: filteredGuards.length,
-      ),
-    );
-
-    // Filter Companies
-    final filteredCompanies = _allCompanies.where((company) {
-      final name = company.name.toLowerCase();
-      final bookings = company.bookingsCount.toLowerCase();
-      return name.contains(query) || bookings.contains(query);
-    }).toList();
-
-    _companiesPaginationController.updateState(
-      _companiesPaginationController.value.copyWith(
-        items: filteredCompanies,
-        total: filteredCompanies.length,
-      ),
-    );
+    });
   }
 
   @override
@@ -165,6 +163,9 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
                     suffixIcon: Padding(
                       padding: AppSpacing.sm.allPadding,
                       child: QuickContainer(
+                        onTap: () {
+                          context.push(SearchBodyguardsScreen.route);
+                        },
                         w: 36,
                         h: 36,
                         radius: AppRadius.md,
@@ -229,11 +230,12 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
         const EdgeInsets.only(bottom: AppSpacing.xxl),
       ),
       separatorBuilder: (context, index) => AppSpacing.md.h,
+      initialLoaderBuilder: (context) => const BodyGuardListSkeleton(itemCount: 4),
       emptyBuilder: (context) => Center(
         child: Padding(
           padding: AppSpacing.xl.allPadding,
           child: Text(
-            'No bodyguards found.',
+            'No active bodyguards found.',
             style: context.textTheme.bodyMedium?.colour(
               context.colors.onSurfaceVariant,
             ),

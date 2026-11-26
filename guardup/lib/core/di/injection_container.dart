@@ -11,6 +11,7 @@ import '/core/services/local_storage/storage.dart';
 import '/core/services/location/address_search_service.dart';
 import '/features/auth/auth.dart';
 import '/features/body_guard/body_guard.dart';
+import '/features/company/company.dart';
 import '/features/notifications/notifications.dart';
 import '/shared/functionalities/connectivity/connectivity.dart';
 import '/shared/functionalities/language/language.dart';
@@ -90,6 +91,15 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<BodyguardRepository>(() => BodyguardRepository());
   sl.registerFactory<CompanyBodyguardsCubit>(
     () => CompanyBodyguardsCubit(sl<BodyguardRepository>()),
+  );
+  sl.registerFactory<BodyguardsCubit>(
+    () => BodyguardsCubit(sl<BodyguardRepository>()),
+  );
+
+  // Security Companies (public.companies)
+  sl.registerLazySingleton<CompanyRepository>(() => CompanyRepository());
+  sl.registerFactory<CompaniesCubit>(
+    () => CompaniesCubit(sl<CompanyRepository>()),
   );
 
   sl.registerLazySingleton<NotificationRepository>(

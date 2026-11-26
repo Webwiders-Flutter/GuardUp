@@ -110,7 +110,10 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen>
                   CompanyAboutTab(company: effectiveCompany),
 
                   // Tab 2: Company bodyguard operatives
-                  CompanyBodyguardsTab(role: sl<AuthBloc>().state.sessionRole),
+                  CompanyBodyguardsTab(
+                    companyId: effectiveCompany.id,
+                    role: sl<AuthBloc>().state.sessionRole,
+                  ),
 
                   // Tab 3: Customer reviews and ratings
                   const CompanyReviewsTab(),

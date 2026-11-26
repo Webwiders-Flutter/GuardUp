@@ -19,6 +19,7 @@ abstract interface class BaseRepository<T> {
     required int pageSize,
     bool? isActive,
     String? search,
+    String? selectColumnsOverride,
     CustomQueryBuilder? customQuery,
   });
 
@@ -73,9 +74,10 @@ abstract class BaseSupabaseRepository<T> implements BaseRepository<T> {
     required int pageSize,
     bool? isActive,
     String? search,
+    String? selectColumnsOverride,
     CustomQueryBuilder? customQuery,
   }) async {
-    var query = client.from(tableName).select(selectColumns);
+    var query = client.from(tableName).select(selectColumnsOverride ?? selectColumns);
 
     if (isActive != null) {
       query = query.eq(JsonKeys.isActive, isActive);

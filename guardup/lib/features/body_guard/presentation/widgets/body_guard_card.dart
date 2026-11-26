@@ -186,8 +186,8 @@ class BodyGuardCard extends StatelessWidget {
   // ===========================================================================
 
   Widget _buildCompactCard(BuildContext context) {
-    final avatarUrl = bodyguard.user.profileImageUrl;
-    final isNetworkAvatar = avatarUrl != null && avatarUrl.startsWith('http');
+    final avatarUrl = bodyguard.displayAvatar;
+    final isNetworkAvatar = avatarUrl.startsWith('http');
     final isVerified = bodyguard.isVerified;
     final resolvedSpecialization =
         specialization ??
@@ -218,7 +218,9 @@ class BodyGuardCard extends StatelessWidget {
                       borderRadius: .circular(10),
                     )
                   : AppImage.asset(
-                      assetPath: avatarUrl ?? Assets.images.profilePicture.path,
+                      assetPath: avatarUrl.isNotEmpty
+                          ? avatarUrl
+                          : Assets.images.profilePicture.path,
                       fit: BoxFit.cover,
                       borderRadius: .circular(10),
                     ),
@@ -248,7 +250,7 @@ class BodyGuardCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      bodyguard.user.name,
+                      bodyguard.displayName,
                       style: context.textTheme.titleMedium?.bold(),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -397,8 +399,8 @@ class BodyGuardCard extends StatelessWidget {
   // ===========================================================================
 
   Widget _buildHeader(BuildContext context) {
-    final avatarUrl = bodyguard.user.profileImageUrl;
-    final isNetworkAvatar = avatarUrl != null && avatarUrl.startsWith('http');
+    final avatarUrl = bodyguard.displayAvatar;
+    final isNetworkAvatar = avatarUrl.startsWith('http');
     final isVerified = bodyguard.isVerified;
 
     final resolvedSpecialization =
@@ -435,7 +437,9 @@ class BodyGuardCard extends StatelessWidget {
                       borderRadius: AppRadius.sm.toBorderRadius,
                     )
                   : AppImage.asset(
-                      assetPath: avatarUrl ?? Assets.images.profilePicture.path,
+                      assetPath: avatarUrl.isNotEmpty
+                          ? avatarUrl
+                          : Assets.images.profilePicture.path,
                       width: 22.wPercent(context),
                       height: 11.hPercent(context),
                       fit: BoxFit.cover,
@@ -481,7 +485,7 @@ class BodyGuardCard extends StatelessWidget {
               ),
               AppSpacing.ssm.h,
               Text(
-                bodyguard.user.name,
+                bodyguard.displayName,
                 style: context.textTheme.titleMedium?.bold(),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

@@ -48,7 +48,7 @@ class CustomerCompanyCardWidget extends StatelessWidget {
               ),
               child: Center(
                 child: Text(
-                  'SP',
+                  company.initials ?? 'CP',
                   style: context.textTheme.titleMedium?.bold().colour(
                     context.colors.primary,
                   ),
@@ -116,7 +116,7 @@ class CustomerCompanyCardWidget extends StatelessWidget {
                   // 02.h,
 
                   Text(
-                    company.name,
+                    company.displayName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: context.textTheme.titleSmall?.bold().colour(

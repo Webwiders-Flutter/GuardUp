@@ -100,8 +100,23 @@ abstract class BodyGuardModel with _$BodyGuardModel {
     List<UserAvailabilityModel>? userAvailabilities,
   }) = _BodyGuardModel;
 
-  factory BodyGuardModel.fromJson(Map<String, dynamic> json) =>
-      _$BodyGuardModelFromJson(json);
+  factory BodyGuardModel.fromJson(Map<String, dynamic> json) {
+    final model = _$BodyGuardModelFromJson(json);
+    // If it's a company-managed bodyguard with no separate user account,
+    // populate model.user with the row's name and photo so callers of
+    // bodyguard.user.name or bodyguard.user.profileImageUrl transparently work.
+    if (model.user.name.isEmpty && model.name.isNotEmpty) {
+      return model.copyWith(
+        user: UserModel(
+          id: model.userId ?? model.id,
+          name: model.name,
+          profileImageUrl: model.profileImageUrl,
+          role: UserRole.guard,
+        ),
+      );
+    }
+    return model;
+  }
 
   String get displayName =>
       name.isNotEmpty ? name : (user.name.isNotEmpty ? user.name : 'Bodyguard');

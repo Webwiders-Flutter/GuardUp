@@ -516,7 +516,16 @@ final class AppRouter {
       ),
       GoRoute(
         path: BodyguardsListScreen.route,
-        builder: (context, state) => const BodyguardsListScreen(),
+        builder: (context, state) {
+          final extra = state.extra;
+          int initialTab = 0;
+          if (extra is int) {
+            initialTab = extra;
+          } else if (extra is Map && extra['initialTab'] is int) {
+            initialTab = extra['initialTab'] as int;
+          }
+          return BodyguardsListScreen(initialTabIndex: initialTab);
+        },
       ),
       GoRoute(
         path: CompanyDetailsScreen.route,

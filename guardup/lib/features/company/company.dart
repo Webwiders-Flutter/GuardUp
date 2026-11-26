@@ -5,6 +5,12 @@ export 'data/enum/company_doc_type.enum.dart';
 // Models
 export 'data/model/company.model.dart';
 
+// Repositories
+export 'data/repositories/company.repository.dart';
+
+// Bloc / Cubit
+export 'bloc/companies/companies_cubit.dart';
+
 // Widgets
 export 'presentation/widgets/company_card.dart';
 export 'presentation/widgets/tabs/company_about_tab.dart';

@@ -35,8 +35,22 @@ abstract class CompanyModel with _$CompanyModel {
     DateTime? updatedAt,
   }) = _CompanyModel;
 
-  factory CompanyModel.fromJson(Map<String, dynamic> json) =>
-      _$CompanyModelFromJson(json);
+  factory CompanyModel.fromJson(Map<String, dynamic> json) {
+    final model = _$CompanyModelFromJson(json);
+    // If name is empty, fallback to company_name
+    final resolvedName = model.name.isNotEmpty
+        ? model.name
+        : (model.companyName?.trim().isNotEmpty == true
+            ? model.companyName!.trim()
+            : (json['company_name'] as String? ?? ''));
+    if (resolvedName.isNotEmpty && model.name != resolvedName) {
+      return model.copyWith(
+        name: resolvedName,
+        companyName: model.companyName ?? resolvedName,
+      );
+    }
+    return model;
+  }
 
   String get displayName => companyName?.trim().isNotEmpty == true
       ? companyName!
@@ -62,19 +76,19 @@ abstract class CompanyModel with _$CompanyModel {
   /// Sample fake security companies for UI mocking, feeds, and tests.
   static List<CompanyModel> get fakeData => [
     const CompanyModel(
-      id: 'comp_securepro',
+      id: '00000000-0000-0000-0000-000000000001',
       companyName: 'SecurePro Security Ltd.',
       name: 'SecurePro Security Ltd.',
       experienceYears: 0,
     ),
     const CompanyModel(
-      id: 'comp_aegis',
+      id: '00000000-0000-0000-0000-000000000002',
       companyName: 'Aegis Elite Tactical',
       name: 'Aegis Elite Tactical',
       experienceYears: 0,
     ),
     const CompanyModel(
-      id: 'comp_ironclad',
+      id: '00000000-0000-0000-0000-000000000003',
       companyName: 'Ironclad Protection Group',
       name: 'Ironclad Protection Group',
       experienceYears: 0,
