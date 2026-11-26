@@ -74,7 +74,7 @@ class _BodyguardAvailabilityViewState
 
   final Map<WeekDay, TextEditingController> _toControllers = {
     for (final day in WeekDay.values)
-      day: TextEditingController(text: '12:00 PM'),
+      day: TextEditingController(text: '08:00 PM'),
   };
 
   @override

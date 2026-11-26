@@ -354,12 +354,28 @@ final class AppRouter {
         builder: (context, state) {
           final extra = state.extra;
           int initialTab = 0;
+          BodyguardFilters? initialFilters;
+          bool focusSearch = false;
           if (extra is int) {
             initialTab = extra;
-          } else if (extra is Map && extra['initialTab'] is int) {
-            initialTab = extra['initialTab'] as int;
+          } else if (extra is BodyguardFilters) {
+            initialFilters = extra;
+          } else if (extra is Map) {
+            if (extra['initialTab'] is int) {
+              initialTab = extra['initialTab'] as int;
+            }
+            if (extra['initialFilters'] is BodyguardFilters) {
+              initialFilters = extra['initialFilters'] as BodyguardFilters;
+            }
+            if (extra['focusSearch'] is bool) {
+              focusSearch = extra['focusSearch'] as bool;
+            }
           }
-          return BodyguardsListScreen(initialTabIndex: initialTab);
+          return BodyguardsListScreen(
+            initialTabIndex: initialTab,
+            initialFilters: initialFilters,
+            focusSearch: focusSearch,
+          );
         },
       ),
       GoRoute(
@@ -430,7 +446,30 @@ final class AppRouter {
       ),
       GoRoute(
         path: SearchBodyguardsScreen.route,
-        builder: (context, state) => const SearchBodyguardsScreen(),
+        builder: (context, state) {
+          final extra = state.extra;
+          BodyguardFilters? initialFilters;
+          bool returnResult = false;
+          bool lockCompany = false;
+          if (extra is BodyguardFilters) {
+            initialFilters = extra;
+          } else if (extra is Map) {
+            if (extra['initialFilters'] is BodyguardFilters) {
+              initialFilters = extra['initialFilters'] as BodyguardFilters;
+            }
+            if (extra['returnResult'] is bool) {
+              returnResult = extra['returnResult'] as bool;
+            }
+            if (extra['lockCompany'] is bool) {
+              lockCompany = extra['lockCompany'] as bool;
+            }
+          }
+          return SearchBodyguardsScreen(
+            initialFilters: initialFilters,
+            returnResult: returnResult,
+            lockCompany: lockCompany,
+          );
+        },
       ),
       GoRoute(
         path: CompanyBodyguardsScreen.route,

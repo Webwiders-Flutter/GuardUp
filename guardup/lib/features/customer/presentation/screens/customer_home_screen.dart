@@ -17,7 +17,6 @@ import '/features/body_guard/body_guard.dart';
 import '/features/company/company.dart';
 import '/shared/bloc/pagination/pagination_event.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
-import '/shared/widgets/navigation/app_tab_bar.dart';
 import '/shared/widgets/pagination/app_pagination.dart';
 import '/shared/widgets/pagination/pagination.controller.dart';
 import '/shared/widgets/sections/app_appbar.dart';
@@ -118,7 +117,10 @@ class _CustomerHomeViewState extends State<_CustomerHomeView>
   }
 
   void _navigateToSearch() {
-    context.push(BodyguardsListScreen.route);
+    context.push(
+      BodyguardsListScreen.route,
+      extra: const {'focusSearch': true},
+    );
   }
 
   void _navigateToAllServices() {
@@ -214,32 +216,40 @@ class _CustomerHomeViewState extends State<_CustomerHomeView>
                 AppSpacing.md.h,
 
                 // 3. Quick Filter Tabs (Near By, Rated, Available)
-                AppTabBar.pill(
-                  controller: _quickFilterTabController,
-                  tabNames: _quickFilters,
-                  radius: AppRadius.sm,
-                  height: 38,
-                  onTap: (index) {
-                    // Handle filter selection
-                  },
-                ),
-                AppSpacing.lg.h,
+                // AppTabBar.pill(
+                //   controller: _quickFilterTabController,
+                //   tabNames: _quickFilters,
+                //   radius: AppRadius.sm,
+                //   height: 38,
+                //   onTap: (index) {
+                //     // Handle filter selection
+                //   },
+                // ),
+                // AppSpacing.lg.h,
 
                 // 4. GUARDUP ELITE Promo Banner
                 CustomerPromoBannerWidget(
                   // onBookNow: _navigateToAllBodyguards
                 ),
-                AppSpacing.xl.h,
+                AppSpacing.xxl.h,
 
                 // 5. SERVICES Row (Shows up to 10 items with 'View all' opening AllServicesScreen)
                 CustomerServicesRowWidget(
                   selectedCategoryIdNotifier: _serviceCategoryNotifier,
                   onViewAll: _navigateToAllServices,
                   onCategorySelected: (catId) {
-                    _navigateToAllBodyguards();
+                    final filters = catId == 'all'
+                        ? BodyguardFilters.customerDefault.copyWith(
+                            ownership: BodyguardOwnership.solo,
+                          )
+                        : BodyguardFilters.customerDefault.copyWith(
+                            ownership: BodyguardOwnership.solo,
+                            serviceIds: [catId],
+                          );
+                    context.push(BodyguardsListScreen.route, extra: filters);
                   },
                 ),
-                AppSpacing.xl.h,
+                AppSpacing.xxl.h,
 
                 // 6. TOP COMPANY Section
                 Row(
@@ -283,7 +293,7 @@ class _CustomerHomeViewState extends State<_CustomerHomeView>
                       },
                       onBookNow: () {
                         AppSnackbar.show(message: "Coming soon");
-    return;
+                        return;
                         context.push(BookingScreen.route, extra: company);
                       },
                     );
@@ -300,7 +310,7 @@ class _CustomerHomeViewState extends State<_CustomerHomeView>
                     ),
                   ),
                 ),
-                AppSpacing.sm.h,
+                AppSpacing.xxl.h,
 
                 // 7. TOP BODYGUARDS Section
                 Row(
@@ -343,7 +353,7 @@ class _CustomerHomeViewState extends State<_CustomerHomeView>
                       },
                       onBookNow: () {
                         AppSnackbar.show(message: "Coming soon");
-    return;
+                        return;
                         context.push(GuardDetailScreen.route, extra: guard);
                       },
                     );

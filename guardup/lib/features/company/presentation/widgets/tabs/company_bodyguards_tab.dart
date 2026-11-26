@@ -17,6 +17,7 @@ import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/features/auth/auth.dart';
 import '/features/body_guard/body_guard.dart';
+import '/features/customer/presentation/screens/search_bodyguards_screen.dart';
 import '/shared/bloc/pagination/pagination_event.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/pagination/app_pagination.dart';
@@ -106,24 +107,77 @@ class _CompanyBodyguardsTabViewState extends State<_CompanyBodyguardsTabView> {
               size: AppInputSize.small,
               decoration: InputDecoration(
                 hintText: 'Search by name, clearance, or skill...',
-                suffixIcon: Padding(
-                  padding: AppSpacing.sm.allPadding,
-                  child: QuickContainer(
-                    w: 36,
-                    h: 36,
-                    radius: AppRadius.md,
-                    color: context.colors.primary.withValues(alpha: 0.12),
-                    border: Border.all(
-                      color: context.colors.primary.withValues(alpha: 0.35),
-                      width: 1.0,
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      Icons.tune_rounded,
-                      color: context.colors.primary,
-                      size: AppSizes.iconSm,
-                    ),
-                  ),
+                suffixIcon: Builder(
+                  builder: (context) {
+                    final hasFilters = context.select<BodyguardsBloc, bool>(
+                      (bloc) => bloc.state.filters.hasUserFilters(
+                        ignoreCompany: true,
+                        baselineAvailability:
+                            BodyguardAvailabilityStatus.available,
+                      ),
+                    );
+                    return Padding(
+                      padding: AppSpacing.sm.allPadding,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          QuickContainer(
+                            onTap: () async {
+                              final currentFilters = context
+                                  .read<BodyguardsBloc>()
+                                  .state
+                                  .filters;
+                              final updatedFilters = await context
+                                  .push<BodyguardFilters>(
+                                    SearchBodyguardsScreen.route,
+                                    extra: <String, dynamic>{
+                                      'initialFilters': currentFilters,
+                                      'returnResult': true,
+                                      'lockCompany': true,
+                                    },
+                                  );
+                              if (updatedFilters != null && context.mounted) {
+                                context.read<BodyguardsBloc>().add(
+                                  BodyguardsFiltersChanged(updatedFilters),
+                                );
+                              }
+                            },
+                            w: 36,
+                            h: 36,
+                            radius: AppRadius.md,
+                            color: context.colors.primary.withValues(
+                              alpha: 0.12,
+                            ),
+                            border: Border.all(
+                              color: context.colors.primary.withValues(
+                                alpha: 0.35,
+                              ),
+                              width: 1.0,
+                            ),
+                            alignment: Alignment.center,
+                            child: Icon(
+                              Icons.tune_rounded,
+                              color: context.colors.primary,
+                              size: AppSizes.iconSm,
+                            ),
+                          ),
+                          if (hasFilters)
+                            Positioned(
+                              top: -2,
+                              right: -2,
+                              child: Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: context.colors.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: AppRadius.xl.toBorderRadius,

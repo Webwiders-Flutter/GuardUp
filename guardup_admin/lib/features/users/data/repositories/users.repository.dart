@@ -175,7 +175,7 @@ final class UsersRepository extends BaseSupabaseRepository<UserModel> {
     *,
     company:companies!companies_user_id_fkey(
       id, user_id, company_name, business_email, company_type,
-      company_phone_code, company_phone_number, experience_years,
+      company_phone_code, company_phone_number, experience_years, bio,
       created_at, updated_at
     ),
     bodyguard:bodyguards!bodyguards_user_id_fkey(

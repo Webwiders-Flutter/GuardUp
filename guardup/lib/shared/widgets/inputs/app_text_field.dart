@@ -773,7 +773,6 @@ class _AppTextFieldState extends State<AppTextField> {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          ?customSuffix,
           IconButton(
             onPressed: () {
               _effectiveController.clear();
@@ -787,6 +786,7 @@ class _AppTextFieldState extends State<AppTextField> {
             ),
             tooltip: 'Clear',
           ),
+          ?customSuffix,
         ],
       );
     }

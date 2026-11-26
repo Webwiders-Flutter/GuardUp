@@ -220,7 +220,6 @@ class CustomerServicesRowWidget extends StatelessWidget {
                         title: 'All',
                         isSelected: isAllSelected,
                         onTap: () {
-                          selectedCategoryIdNotifier.value = 'all';
                           onCategorySelected?.call('all');
                         },
                       ),
@@ -239,7 +238,6 @@ class CustomerServicesRowWidget extends StatelessWidget {
                             service: service,
                             isSelected: isSelected,
                             onTap: () {
-                              selectedCategoryIdNotifier.value = service.id;
                               onCategorySelected?.call(service.id);
                             },
                           ),

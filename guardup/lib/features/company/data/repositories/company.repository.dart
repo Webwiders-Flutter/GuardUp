@@ -33,6 +33,7 @@ class CompanyRepository extends BaseSupabaseRepository<CompanyModel> {
       '''
     *,
     ${JsonKeys.accountStatus},
+    ${JsonKeys.activeGuards},
     user:users!companies_user_id_fkey(
       id,
       name,
@@ -47,6 +48,7 @@ class CompanyRepository extends BaseSupabaseRepository<CompanyModel> {
       '''
     *,
     ${JsonKeys.accountStatus},
+    ${JsonKeys.activeGuards},
     user:users!companies_user_id_fkey(
       id,
       name,

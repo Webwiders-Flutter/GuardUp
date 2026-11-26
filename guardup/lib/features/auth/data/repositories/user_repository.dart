@@ -32,7 +32,7 @@ class UserRepository extends BaseSupabaseRepository<UserModel> {
   static const String _profileSelect = '''
     *,
     bodyguard:bodyguards!bodyguards_user_id_fkey(*),
-    company:companies!companies_user_id_fkey(*),
+    company:companies!companies_user_id_fkey(*, ${JsonKeys.activeGuards}),
     availabilities:user_availabilities!user_availabilities_user_id_fkey(*),
     user_services!user_services_user_id_fkey(
       id,

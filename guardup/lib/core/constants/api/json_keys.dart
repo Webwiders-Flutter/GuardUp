@@ -42,6 +42,10 @@ final class JsonKeys {
   /// company account (migration 20261126000002_listing_computed_fields.sql).
   static const String accountStatus = 'account_status';
 
+  /// Computed field `active_guards(companies)`: count of ACTIVE guards
+  /// belonging to this company (migration 20261126000006_company_active_guards_count.sql).
+  static const String activeGuards = 'active_guards';
+
   // Bodyguard profile (bodyguards) Keys
   static const String bodyguardId = 'bodyguard_id';
   static const String hourlyRate = 'hourly_rate';

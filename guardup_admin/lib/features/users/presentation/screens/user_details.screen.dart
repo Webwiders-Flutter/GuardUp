@@ -887,6 +887,12 @@ class _CompanyDetailsSection extends StatelessWidget {
           value: contactPhone.isNotEmpty ? contactPhone : '—',
           icon: Icons.phone_outlined,
         ),
+        if (company?.bio?.trim().isNotEmpty == true)
+          (
+            label: 'Bio',
+            value: company!.bio!.trim(),
+            icon: Icons.description_outlined,
+          ),
       ],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

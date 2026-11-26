@@ -32,7 +32,6 @@ import '../widgets/tabs/customer_guard_reviews_tab.widget.dart';
 import 'body_guard_complete_profile_screen.dart';
 import 'body_guard_profile_screen.dart';
 import '/features/body_guard/data/fixtures/bodyguard.fixtures.dart';
-import '/features/company/data/fixtures/company.fixtures.dart';
 
 /// Consolidated, role-adaptive bodyguard detail screen.
 ///
@@ -311,7 +310,7 @@ class _GuardDetailViewState extends State<_GuardDetailView>
         final photoPath =
             guard?.profileImageUrl ?? Assets.images.onboardingImage01.path;
         final isVerified = guard?.isVerified ?? true;
-        final company = guard?.company ?? companyPlaceholders.first;
+        final company = guard?.company;
         final hourlyRate = _hourlyRate(guard);
 
         return Scaffold(
@@ -387,30 +386,31 @@ class _GuardDetailViewState extends State<_GuardDetailView>
                           },
                         ),
 
-                        AppSpacing.md.h,
-
-                        // 2. Affiliated Security Company Card
-                        CompanyCard(
-                          company: company,
-                          onTap: _isCompany
-                              ? null
-                              : () {
-                                  context.push(
-                                    CompanyDetailsScreen.route,
-                                    extra: company,
-                                  );
-                                },
-                          onBookNow: _isCompany
-                              ? null
-                              : () {
-                                AppSnackbar.show(message: "Coming soon");
-    return;
-                                  context.push(
-                                    BookingScreen.route,
-                                    extra: company,
-                                  );
-                                },
-                        ),
+                        // 2. Affiliated Security Company Card (only if guard belongs to a company)
+                        if (company != null) ...[
+                          AppSpacing.md.h,
+                          CompanyCard(
+                            company: company,
+                            onTap: _isCompany
+                                ? null
+                                : () {
+                                    context.push(
+                                      CompanyDetailsScreen.route,
+                                      extra: company,
+                                    );
+                                  },
+                            onBookNow: _isCompany
+                                ? null
+                                : () {
+                                    AppSnackbar.show(message: "Coming soon");
+                                    return;
+                                    context.push(
+                                      BookingScreen.route,
+                                      extra: company,
+                                    );
+                                  },
+                          ),
+                        ],
 
                         AppSpacing.md.h,
 
@@ -517,16 +517,11 @@ class _GuardDetailViewState extends State<_GuardDetailView>
             ? currentGuard.bio
             : (currentGuard.qualifications ??
                   'Licensed armed, Corporate visits'),
-        services: currentGuard.serviceTypes.isNotEmpty
-            ? currentGuard.serviceTypes
+        services: (currentGuard.services?.isNotEmpty == true)
+            ? currentGuard.services!.map((s) => s.name).toList()
+            : currentGuard.serviceTypes
                   .map((s) => s.apiValue.replaceAll('_', ' '))
-                  .toList()
-            : const [
-                'VIP Close Protection',
-                'Armed Escort',
-                'Tactical Driver',
-                'Asset Protection',
-              ],
+                  .toList(),
       ),
       CustomerGuardReviewsTabWidget(
         averageRating: currentGuard.rating,

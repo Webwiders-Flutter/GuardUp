@@ -130,11 +130,42 @@ class CompanyGuardOverviewTabWidget extends StatelessWidget {
                 _buildMetricRow(
                   context,
                   title: 'Services Offered',
-                  value: bodyguard.serviceTypes.isNotEmpty
-                      ? bodyguard.serviceTypes.map((x) => x.label).join(', ')
-                      : 'Standard Protection',
+                  value: bodyguard.services?.isNotEmpty == true
+                      ? bodyguard.services!.map((x) => x.name).join(', ')
+                      : (bodyguard.serviceTypes.isNotEmpty
+                            ? bodyguard.serviceTypes
+                                  .map((x) => x.label)
+                                  .join(', ')
+                            : 'Not specified'),
                   valueColor: context.colors.onSurface,
                 ),
+                if (bodyguard.languages?.trim().isNotEmpty == true) ...[
+                  AppSpacing.sm.h,
+                  _buildMetricRow(
+                    context,
+                    title: 'Languages',
+                    value: bodyguard.languages!,
+                    valueColor: context.colors.onSurface,
+                  ),
+                ],
+                if (bodyguard.certifications?.trim().isNotEmpty == true) ...[
+                  AppSpacing.sm.h,
+                  _buildMetricRow(
+                    context,
+                    title: 'Certifications',
+                    value: bodyguard.certifications!,
+                    valueColor: context.colors.onSurface,
+                  ),
+                ],
+                if (bodyguard.address?.trim().isNotEmpty == true) ...[
+                  AppSpacing.sm.h,
+                  _buildMetricRow(
+                    context,
+                    title: 'Location',
+                    value: bodyguard.address!,
+                    valueColor: context.colors.onSurface,
+                  ),
+                ],
               ],
             ),
           ),

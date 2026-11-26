@@ -81,9 +81,7 @@ class AvailabilityBloc extends Bloc<AvailabilityEvent, AvailabilityState> {
   Map<WeekDay, AvailabilityDraft> _defaultSchedule() {
     return {
       for (final day in WeekDay.values)
-        day: AvailabilityDraft(
-          isAvailable: day != WeekDay.saturday && day != WeekDay.sunday,
-        ),
+        day: const AvailabilityDraft(isAvailable: false),
     };
   }
 
@@ -124,7 +122,7 @@ class AvailabilityBloc extends Bloc<AvailabilityEvent, AvailabilityState> {
           dayOfWeek: day,
           isAvailable: state.schedule[day]?.isAvailable ?? false,
           fromTime: state.schedule[day]?.fromTime ?? '09:00 AM',
-          toTime: state.schedule[day]?.toTime ?? '12:00 PM',
+          toTime: state.schedule[day]?.toTime ?? '08:00 PM',
         ),
     ];
 

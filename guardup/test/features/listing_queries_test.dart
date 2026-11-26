@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guardup/features/auth/data/enum/gender_type.enum.dart';
 import 'package:guardup/features/auth/data/enum/user_status.enum.dart';
 import 'package:guardup/features/body_guard/data/enum/bodyguard_availability_status.enum.dart';
 import 'package:guardup/features/body_guard/data/enum/bodyguard_ownership.enum.dart';
@@ -57,6 +58,7 @@ void main() {
             'user_id': 'u1',
             'company_name': 'Shield',
             'account_status': 'ACTIVE',
+            'active_guards': 5,
             'user': null, // customers cannot read users
           },
         ]);
@@ -69,12 +71,14 @@ void main() {
         final uri = c.requests.single;
         expect(uri.path, '/rest/v1/companies');
         expect(_select(uri), contains('account_status'));
+        expect(_select(uri), contains('active_guards'));
         expect(_select(uri), isNot(contains('!inner')));
         expect(_params(uri)['account_status'], 'in.("ACTIVE")');
         expect(_params(uri).keys, isNot(contains('user.status')));
 
         expect(result.total, 1);
         expect(result.data.single.accountStatus, UserStatus.active);
+        expect(result.data.single.activeGuards, 5);
         expect(result.data.single.user, isNull);
       },
     );
@@ -289,6 +293,18 @@ void main() {
 
       final params = _params(c.requests.single);
       expect(params['address'], 'ilike.%Mumbai%');
+    });
+
+    test('BodyguardRepository.getPaginated filters by gender', () async {
+      final c = _capturingClient([]);
+      await BodyguardRepository(c.client).getPaginated(
+        page: 1,
+        pageSize: 10,
+        filters: const BodyguardFilters(gender: GenderType.male),
+      );
+
+      final params = _params(c.requests.single);
+      expect(params['gender'], 'eq.MALE');
     });
   });
 }

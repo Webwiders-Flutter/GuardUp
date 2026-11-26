@@ -36,7 +36,10 @@ class BodyguardRepository extends BaseSupabaseRepository<BodyGuardModel> {
       );
 
   static const String _companySelect =
-      'company:companies!bodyguards_company_id_fkey(id, user_id, company_name, company_phone_code, company_phone_number)';
+      'company:companies!bodyguards_company_id_fkey('
+      'id, user_id, company_name, company_phone_code, company_phone_number, '
+      'experience_years, bio, created_at, ${JsonKeys.accountStatus}, ${JsonKeys.activeGuards}'
+      ')';
 
   static const String _detailsSelect =
       '''
@@ -183,6 +186,10 @@ class BodyguardRepository extends BaseSupabaseRepository<BodyGuardModel> {
         final address = filters.address?.trim();
         if (address != null && address.isNotEmpty) {
           query = query.ilike(JsonKeys.address, '%$address%');
+        }
+
+        if (filters.gender != null) {
+          query = query.eq(JsonKeys.gender, filters.gender!.apiValue);
         }
 
         if (filterByServices) {

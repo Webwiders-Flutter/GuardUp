@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '/features/auth/data/enum/gender_type.enum.dart';
 import '/features/auth/data/enum/user_status.enum.dart';
 import '../enum/bodyguard_availability_status.enum.dart';
 import '../enum/bodyguard_ownership.enum.dart';
@@ -10,9 +11,6 @@ const _sentinel = Object();
 ///
 /// Every field is optional; `null` (or an empty list) means "no filter".
 /// `copyWith` uses a sentinel so a filter can be cleared back to `null`.
-///
-// TODO(migration): gender filter. `bodyguards.gender` was dropped
-// (20261124000024) and `users.gender` is not readable by customers.
 class BodyguardFilters extends Equatable {
   const BodyguardFilters({
     this.statuses,
@@ -24,6 +22,7 @@ class BodyguardFilters extends Equatable {
     this.minRating,
     this.serviceIds,
     this.address,
+    this.gender,
   });
 
   /// What customers browse: ACTIVE solo guards (registered without a company).
@@ -60,6 +59,9 @@ class BodyguardFilters extends Equatable {
   /// Bodyguards whose address contains this string (`bodyguards.address ILIKE %address%`).
   final String? address;
 
+  /// Bodyguards matching this gender (via `gender(public.bodyguards)` computed field).
+  final GenderType? gender;
+
   bool get hasActiveFilters =>
       (statuses?.isNotEmpty ?? false) ||
       ownership != null ||
@@ -69,7 +71,23 @@ class BodyguardFilters extends Equatable {
       maxHourlyRate != null ||
       minRating != null ||
       (serviceIds?.isNotEmpty ?? false) ||
-      (address?.trim().isNotEmpty ?? false);
+      (address?.trim().isNotEmpty ?? false) ||
+      gender != null;
+
+  /// Whether the user has applied any search/filter criteria beyond the
+  /// screen's baseline defaults (used to show the active filter dot).
+  bool hasUserFilters({
+    bool ignoreCompany = false,
+    BodyguardAvailabilityStatus? baselineAvailability,
+  }) =>
+      (!ignoreCompany && companyId != null) ||
+      (availability != null && availability != baselineAvailability) ||
+      minHourlyRate != null ||
+      maxHourlyRate != null ||
+      minRating != null ||
+      (serviceIds?.isNotEmpty ?? false) ||
+      (address?.trim().isNotEmpty ?? false) ||
+      gender != null;
 
   BodyguardFilters copyWith({
     Object? statuses = _sentinel,
@@ -81,6 +99,7 @@ class BodyguardFilters extends Equatable {
     Object? minRating = _sentinel,
     Object? serviceIds = _sentinel,
     Object? address = _sentinel,
+    Object? gender = _sentinel,
   }) {
     return BodyguardFilters(
       statuses: identical(statuses, _sentinel)
@@ -110,6 +129,9 @@ class BodyguardFilters extends Equatable {
       address: identical(address, _sentinel)
           ? this.address
           : address as String?,
+      gender: identical(gender, _sentinel)
+          ? this.gender
+          : gender as GenderType?,
     );
   }
 
@@ -124,5 +146,6 @@ class BodyguardFilters extends Equatable {
     minRating,
     serviceIds,
     address,
+    gender,
   ];
 }

@@ -22,12 +22,7 @@ extension CompanyModelX on CompanyModel {
   // they keep today's values until the data exists.
   // ---------------------------------------------------------------------------
 
-  // TODO(migration): logo is synced to the company account's
-  // profile_image_url (user?.profileImageUrl); today cards show initials.
-  String? get logoUrl => null;
-
-  // TODO(migration): count of the company's ACTIVE bodyguards; hard-coded today.
-  int get activeGuards => 12;
+  String? get logoUrl => user?.profileImageUrl;
 
   // TODO(migration): no reviews table.
   double get rating => 0.0;

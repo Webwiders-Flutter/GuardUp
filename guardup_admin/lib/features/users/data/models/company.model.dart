@@ -21,6 +21,7 @@ abstract class CompanyModel with _$CompanyModel {
 
     /// Years in operation.
     int? experienceYears,
+    String? bio,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) = _CompanyModel;

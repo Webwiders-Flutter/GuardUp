@@ -49,6 +49,12 @@ abstract class CompanyModel with _$CompanyModel {
     )
     UserStatus? accountStatus,
 
+    /// Computed field `active_guards`: count of ACTIVE company-managed bodyguards.
+    @IntConverter()
+    @Default(0)
+    @JsonKey(includeToJson: false)
+    int activeGuards,
+
     /// `user:users!companies_user_id_fkey(...)` embed (see CompanyRepository).
     @JsonKey(fromJson: _userFromJson, includeToJson: false)
     CompanyUserSummary? user,

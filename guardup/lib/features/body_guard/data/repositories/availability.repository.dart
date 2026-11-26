@@ -44,13 +44,13 @@ class AvailabilityRepository {
         .toList();
   }
 
-  /// Seeds default schedule (Mon-Fri 09:00 AM - 05:00 PM available, Sat-Sun unavailable).
+  /// Seeds default schedule (all days unavailable by default).
   Future<void> seedDefaults(RecordOwner owner) async {
     final defaultRequests = [
       for (final day in WeekDay.values)
         AvailabilityRequest(
           dayOfWeek: day,
-          isAvailable: day != WeekDay.saturday && day != WeekDay.sunday,
+          isAvailable: false,
           fromTime: '09:00 AM',
           toTime: '05:00 PM',
         ),

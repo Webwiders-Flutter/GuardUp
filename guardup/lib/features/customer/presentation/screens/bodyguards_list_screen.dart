@@ -32,37 +32,54 @@ class BodyguardsListScreen extends StatelessWidget {
   static const route = '/customer-body-guard';
 
   final int initialTabIndex;
+  final BodyguardFilters? initialFilters;
+  final bool focusSearch;
 
-  const BodyguardsListScreen({super.key, this.initialTabIndex = 0});
+  const BodyguardsListScreen({
+    super.key,
+    this.initialTabIndex = 0,
+    this.initialFilters,
+    this.focusSearch = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveFilters =
+        initialFilters ??
+        BodyguardFilters.customerDefault.copyWith(
+          ownership: BodyguardOwnership.solo,
+        );
+
     return MultiBlocProvider(
       providers: [
         BlocProvider(
           create: (_) =>
-              // Solo guards only (no company); company-managed guards are
-              // listed through their company.
-              sl<BodyguardsBloc>(
-                param1: BodyguardFilters.customerDefault.copyWith(
-                  ownership: BodyguardOwnership.solo,
-                ),
-              )..add(const PaginationLoadRequested()),
+              // Solo guards only (no company) by default; custom filters can
+              // specify a companyId.
+              sl<BodyguardsBloc>(param1: effectiveFilters)
+                ..add(const PaginationLoadRequested()),
         ),
         BlocProvider(
           create: (_) =>
               sl<CompaniesBloc>()..add(const PaginationLoadRequested()),
         ),
       ],
-      child: _BodyguardsListView(initialTabIndex: initialTabIndex),
+      child: _BodyguardsListView(
+        initialTabIndex: initialTabIndex,
+        focusSearch: focusSearch,
+      ),
     );
   }
 }
 
 class _BodyguardsListView extends StatefulWidget {
   final int initialTabIndex;
+  final bool focusSearch;
 
-  const _BodyguardsListView({required this.initialTabIndex});
+  const _BodyguardsListView({
+    required this.initialTabIndex,
+    this.focusSearch = false,
+  });
 
   @override
   State<_BodyguardsListView> createState() => _BodyguardsListViewState();
@@ -164,45 +181,109 @@ class _BodyguardsListViewState extends State<_BodyguardsListView>
                 children: [
                   AppSpacing.sm.h,
 
-                  // Search Input with Luxury Tune/Filter Prefix
-                  AppTextField.search(
-                    controller: _searchController,
-                    size: AppInputSize.small,
-                    decoration: InputDecoration(
-                      hintText: 'Search by name, clearance, or skill...',
-                      suffixIcon: Padding(
-                        padding: AppSpacing.sm.allPadding,
-                        child: QuickContainer(
-                          onTap: () {
-                            context.push(SearchBodyguardsScreen.route);
-                          },
-                          w: 36,
-                          h: 36,
-                          radius: AppRadius.md,
-                          color: context.colors.primary.withValues(alpha: 0.12),
-                          border: Border.all(
-                            color: context.colors.primary.withValues(
-                              alpha: 0.35,
+                  // Search Input with Luxury Tune/Filter Suffix (Solo tab only)
+                  ListenableBuilder(
+                    listenable: _quickFilterTabController,
+                    builder: (context, _) {
+                      return AppTextField.search(
+                        controller: _searchController,
+                        autofocus: widget.focusSearch,
+                        size: AppInputSize.small,
+                        decoration: InputDecoration(
+                          hintText: 'Search by name, clearance, or skill...',
+                          suffixIcon: _quickFilterTabController.index == 0
+                              ? Builder(
+                                  builder: (context) {
+                                    final hasFilters = context
+                                        .select<BodyguardsBloc, bool>(
+                                          (bloc) => bloc.state.filters
+                                              .hasUserFilters(),
+                                        );
+                                    return Padding(
+                                      padding: AppSpacing.sm.allPadding,
+                                      child: Stack(
+                                        clipBehavior: Clip.none,
+                                        children: [
+                                          QuickContainer(
+                                            onTap: () async {
+                                              final currentFilters = context
+                                                  .read<BodyguardsBloc>()
+                                                  .state
+                                                  .filters;
+                                              final updatedFilters = await context
+                                                  .push<BodyguardFilters>(
+                                                    SearchBodyguardsScreen
+                                                        .route,
+                                                    extra: <String, dynamic>{
+                                                      'initialFilters':
+                                                          currentFilters,
+                                                      'returnResult': true,
+                                                    },
+                                                  );
+                                              if (updatedFilters != null &&
+                                                  context.mounted) {
+                                                context
+                                                    .read<BodyguardsBloc>()
+                                                    .add(
+                                                      BodyguardsFiltersChanged(
+                                                        updatedFilters,
+                                                      ),
+                                                    );
+                                                if (_quickFilterTabController
+                                                        .index !=
+                                                    0) {
+                                                  _quickFilterTabController
+                                                      .animateTo(0);
+                                                }
+                                              }
+                                            },
+                                            w: 36,
+                                            h: 36,
+                                            radius: AppRadius.md,
+                                            color: context.colors.primary
+                                                .withValues(alpha: 0.12),
+                                            border: Border.all(
+                                              color: context.colors.primary
+                                                  .withValues(alpha: 0.35),
+                                              width: 1.0,
+                                            ),
+                                            alignment: Alignment.center,
+                                            child: Icon(
+                                              Icons.tune_rounded,
+                                              color: context.colors.primary,
+                                              size: AppSizes.iconSm,
+                                            ),
+                                          ),
+                                          if (hasFilters)
+                                            Positioned(
+                                              top: -2,
+                                              right: -2,
+                                              child: Container(
+                                                width: 8,
+                                                height: 8,
+                                                decoration: BoxDecoration(
+                                                  color: context.colors.primary,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                )
+                              : null,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: AppRadius.xl.toBorderRadius,
+                            borderSide: BorderSide(
+                              color: context.colors.outlineVariant,
                             ),
-                            width: 1.0,
                           ),
-                          alignment: Alignment.center,
-                          child: Icon(
-                            Icons.tune_rounded,
-                            color: context.colors.primary,
-                            size: AppSizes.iconSm,
-                          ),
+                          fillColor: context.colors.onPrimary,
                         ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: AppRadius.xl.toBorderRadius,
-                        borderSide: BorderSide(
-                          color: context.colors.outlineVariant,
-                        ),
-                      ),
-                      fillColor: context.colors.onPrimary,
-                    ),
-                    style: TextStyle(color: context.colors.onSurface),
+                        style: TextStyle(color: context.colors.onSurface),
+                      );
+                    },
                   ),
                   Divider(color: context.colors.outlineVariant, height: 25),
 
@@ -266,7 +347,7 @@ class _BodyguardsListViewState extends State<_BodyguardsListView>
           },
           onBookNow: () {
             AppSnackbar.show(message: "Coming soon");
-    return;
+            return;
             context.push(CustomerBookingDetailsScreen.route, extra: guard);
           },
         );
@@ -302,7 +383,7 @@ class _BodyguardsListViewState extends State<_BodyguardsListView>
           },
           onBookNow: () {
             AppSnackbar.show(message: "Coming soon");
-    return;
+            return;
             context.push(BookingScreen.route, extra: comp);
           },
         );

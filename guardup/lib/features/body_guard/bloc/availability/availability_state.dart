@@ -7,7 +7,7 @@ class AvailabilityDraft extends Equatable {
   const AvailabilityDraft({
     this.isAvailable = false,
     this.fromTime = '09:00 AM',
-    this.toTime = '12:00 PM',
+    this.toTime = '08:00 PM',
   });
 
   final bool isAvailable;

@@ -7,7 +7,7 @@
 --   1. Bodyguard listings filtered by availability should only return guards who
 --      are available RIGHT NOW (their scheduled slot for today covers the current time).
 --      Filtering only on day_of_week and is_available=true at the day level returned
---      guards whose working hours (e.g. 09:00 AM - 12:00 PM) had already ended.
+--      guards whose working hours (e.g. 09:00 AM - 08:00 PM) had already ended.
 --   2. A computed field `is_available_now(public.bodyguards)` allows PostgREST to
 --      filter `is_available_now=eq.true` cleanly on the server, guaranteeing that
 --      pagination and exact count match the operational availability status.
@@ -78,8 +78,7 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION public.is_available_now(public.bodyguards) IS
-  'Computed field: whether the bodyguard is active and within an open availability slot right now.';
+COMMENT ON FUNCTION public.is_available_now (public.bodyguards) IS 'Computed field: whether the bodyguard is active and within an open availability slot right now.';
 
 -- 3. Ensure listing_availabilities is SECURITY DEFINER -------------------------
 CREATE OR REPLACE FUNCTION public.listing_availabilities(public.bodyguards)
@@ -95,17 +94,29 @@ AS $$
      OR ($1.user_id IS NOT NULL AND ua.user_id = $1.user_id);
 $$;
 
-COMMENT ON FUNCTION public.listing_availabilities(public.bodyguards) IS
-  'Computed relationship: weekly availability of a bodyguard. Runs as SECURITY DEFINER.';
+COMMENT ON FUNCTION public.listing_availabilities (public.bodyguards) IS 'Computed relationship: weekly availability of a bodyguard. Runs as SECURITY DEFINER.';
 
 -- 4. Grants -------------------------------------------------------------------
-REVOKE ALL ON FUNCTION public.slot_covers_time(boolean, text, text, time) FROM public, anon;
-REVOKE ALL ON FUNCTION public.is_available_now(public.bodyguards) FROM public, anon;
-REVOKE ALL ON FUNCTION public.listing_availabilities(public.bodyguards) FROM public, anon;
+REVOKE ALL ON FUNCTION public.slot_covers_time (boolean, text, text, time)
+FROM public, anon;
 
-GRANT EXECUTE ON FUNCTION public.slot_covers_time(boolean, text, text, time) TO authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.is_available_now(public.bodyguards) TO authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.listing_availabilities(public.bodyguards) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.is_available_now (public.bodyguards)
+FROM public, anon;
+
+REVOKE ALL ON FUNCTION public.listing_availabilities (public.bodyguards)
+FROM public, anon;
+
+GRANT
+EXECUTE ON FUNCTION public.slot_covers_time (boolean, text, text, time) TO authenticated,
+service_role;
+
+GRANT
+EXECUTE ON FUNCTION public.is_available_now (public.bodyguards) TO authenticated,
+service_role;
+
+GRANT
+EXECUTE ON FUNCTION public.listing_availabilities (public.bodyguards) TO authenticated,
+service_role;
 
 -- 5. Notify PostgREST to reload schema -----------------------------------------
 NOTIFY pgrst, 'reload schema';

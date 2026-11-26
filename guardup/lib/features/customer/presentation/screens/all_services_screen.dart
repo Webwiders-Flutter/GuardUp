@@ -11,6 +11,7 @@ import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/sections/app_appbar.dart';
+import '../screens/bodyguards_list_screen.dart';
 import '../widgets/customer_services_row.widget.dart';
 import '/features/services/services.dart';
 import '/core/state/api_state.dart';
@@ -57,8 +58,15 @@ class _AllServicesScreenState extends State<AllServicesScreen> {
       return;
     }
 
-    // Default action: navigate to company/platform bodyguards listing
-    context.push(CompanyBodyguardsScreen.route);
+    final filters = service == null
+        ? BodyguardFilters.customerDefault.copyWith(
+            ownership: BodyguardOwnership.solo,
+          )
+        : BodyguardFilters.customerDefault.copyWith(
+            ownership: BodyguardOwnership.solo,
+            serviceIds: [service.id],
+          );
+    context.push(BodyguardsListScreen.route, extra: filters);
   }
 
   @override

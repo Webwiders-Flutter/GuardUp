@@ -34,7 +34,8 @@ class CompanyDetailsBloc
   final String companyId;
 
   Future<void> _load(Emitter<CompanyDetailsState> emit) async {
-    if (companyId.isEmpty) {
+    if (companyId.isEmpty ||
+        companyId.startsWith('00000000-0000-0000-0000-')) {
       if (state.company == null) {
         emit(
           state.copyWith(

@@ -353,21 +353,6 @@ class GuardProfileBloc extends Bloc<GuardProfileEvent, GuardProfileState> {
             ),
           );
 
-          if (existingId == null) {
-            try {
-              await availabilityRepository.seedDefaults(
-                ManagedBodyguardOwner(saved.id),
-              );
-            } catch (e, stack) {
-              AppLogger.e(
-                'seedDefaults failed',
-                tag: _tag,
-                error: e,
-                stackTrace: stack,
-              );
-            }
-          }
-
           emit(
             state.copyWith(
               profile: saved,

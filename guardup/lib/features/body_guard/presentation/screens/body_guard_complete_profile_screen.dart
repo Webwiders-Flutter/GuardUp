@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -93,7 +94,9 @@ class _BodyGuardCompleteProfileViewState
     super.initState();
     String initialName = '';
     String initialRate = '';
-    String initialBio = '';
+    String initialBio = kDebugMode
+        ? 'A highly disciplined and reliable bodyguard with strong security awareness and vigilance. Skilled in threat assessment, risk prevention, and ensuring personal safety. Dedicated to maintaining confidentiality, professionalism, and protection at all times.'
+        : '';
 
     if (widget.isGuard) {
       final authUser = context.read<AuthBloc>().state.user;

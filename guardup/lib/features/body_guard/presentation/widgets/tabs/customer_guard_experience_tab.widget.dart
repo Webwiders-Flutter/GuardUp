@@ -92,39 +92,47 @@ class CustomerGuardExperienceTabWidget extends StatelessWidget {
           ),
           AppSpacing.sm.h,
 
-          Wrap(
-            spacing: AppSpacing.xs,
-            runSpacing: AppSpacing.xs,
-            children: services.map((service) {
-              return QuickContainer(
-                px: 12,
-                py: 8,
-                borderRadius: BorderRadius.circular(AppRadius.md),
-                color: context.colors.surfaceContainer,
-                border: Border.all(
-                  color: context.colors.primary.withValues(alpha: 0.25),
-                  width: 0.8,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.shield_outlined,
-                      size: 13,
-                      color: context.colors.primary,
-                    ),
-                    AppSpacing.xs.w,
-                    Text(
-                      service,
-                      style: context.textTheme.bodySmall?.bold().colour(
-                        context.colors.onSurface,
+          if (services.isEmpty)
+            Text(
+              'No specialized services listed.',
+              style: context.textTheme.bodySmall?.colour(
+                context.colors.onSurfaceVariant,
+              ),
+            )
+          else
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              children: services.map((service) {
+                return QuickContainer(
+                  px: 12,
+                  py: 8,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  color: context.colors.surfaceContainer,
+                  border: Border.all(
+                    color: context.colors.primary.withValues(alpha: 0.25),
+                    width: 0.8,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.shield_outlined,
+                        size: 13,
+                        color: context.colors.primary,
                       ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
+                      AppSpacing.xs.w,
+                      Text(
+                        service,
+                        style: context.textTheme.bodySmall?.bold().colour(
+                          context.colors.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
 
           AppSpacing.xxl.h,
         ],

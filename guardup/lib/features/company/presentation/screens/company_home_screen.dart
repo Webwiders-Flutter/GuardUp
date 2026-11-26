@@ -525,11 +525,18 @@ class _CompanyHomeViewState extends State<_CompanyHomeView> {
                     style: context.textTheme.titleMedium?.semiBold(),
                   ),
                   AppSpacing.xs.h,
-                  Text(
-                    '12 Active Operatives',
-                    style: context.textTheme.labelSmall?.regular().colour(
-                      context.colors.onSurfaceVariant,
-                    ),
+                  Builder(
+                    builder: (context) {
+                      final activeGuards = context.select<AuthBloc, int>(
+                        (bloc) => bloc.state.user?.company?.activeGuards ?? 0,
+                      );
+                      return Text(
+                        '$activeGuards Active Operatives',
+                        style: context.textTheme.labelSmall?.regular().colour(
+                          context.colors.onSurfaceVariant,
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
