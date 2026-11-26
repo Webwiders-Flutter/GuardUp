@@ -20,9 +20,9 @@ import '../model/user_availability.model.dart';
 /// Inherits [BaseSupabaseRepository] for standard CRUD, pagination, and sorting.
 final class BodyguardRepository
     extends BaseSupabaseRepository<BodyGuardModel> {
-  BodyguardRepository([SupabaseClient? client])
+  BodyguardRepository(SupabaseClient client)
     : super(
-        client: client ?? Supabase.instance.client,
+        client: client,
         tableName: DatabaseTables.bodyguards,
         fromJson: BodyGuardModel.fromJson,
         entityName: 'bodyguard',

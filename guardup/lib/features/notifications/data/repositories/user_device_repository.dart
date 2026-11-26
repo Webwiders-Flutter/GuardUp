@@ -10,9 +10,9 @@ import '../models/user_device.model.dart';
 /// Extends [BaseSupabaseRepository] to follow consistent data access architecture.
 final class UserDeviceRepository
     extends BaseSupabaseRepository<UserDeviceModel> {
-  UserDeviceRepository([SupabaseClient? client])
+  UserDeviceRepository(SupabaseClient client)
     : super(
-        client: client ?? Supabase.instance.client,
+        client: client,
         tableName: DatabaseTables.userDevices,
         fromJson: UserDeviceModel.fromJson,
         entityName: 'user device',

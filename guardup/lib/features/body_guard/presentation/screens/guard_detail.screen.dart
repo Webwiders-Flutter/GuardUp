@@ -148,9 +148,7 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
     }
 
     try {
-      final repository = sl.isRegistered<BodyguardRepository>()
-          ? sl<BodyguardRepository>()
-          : BodyguardRepository();
+      final repository = sl<BodyguardRepository>();
 
       final detailed = await repository.getDetails(targetId);
       if (mounted) {

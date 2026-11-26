@@ -11,9 +11,9 @@ import '../models/notification_filters.model.dart';
 /// Extends [BaseSupabaseRepository] to provide standardized CRUD and pagination.
 final class NotificationRepository
     extends BaseSupabaseRepository<NotificationModel> {
-  NotificationRepository([SupabaseClient? client])
+  NotificationRepository(SupabaseClient client)
     : super(
-        client: client ?? Supabase.instance.client,
+        client: client,
         tableName: DatabaseTables.notifications,
         fromJson: NotificationModel.fromJson,
         entityName: 'notification',

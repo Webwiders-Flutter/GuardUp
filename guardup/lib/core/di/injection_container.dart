@@ -2,8 +2,7 @@ import 'dart:async';
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide LocalStorage;
 
-import '/app/gate/gate.dart';
-import '/core/config/admin_settings/admin_settings.dart';
+import '/core/config/admin_settings/di/admin_settings.di.dart';
 import '/core/services/document_submission/document_submission_service.dart';
 import '/core/services/file_storage/file_storage.service.dart';
 import '/core/services/file_storage/supabase_file_storage.service.dart';
@@ -11,12 +10,14 @@ import '/core/services/local_storage/local_storage.service.dart';
 import '/core/services/local_storage/storage.dart';
 import '/core/services/location/address_search_service.dart';
 import '/features/auth/auth.dart';
-import '/features/body_guard/body_guard.dart';
-import '/features/company/company.dart';
+import '/features/auth/di/auth.di.dart';
+import '/features/body_guard/di/body_guard.di.dart';
+import '/features/company/di/company.di.dart';
+import '/features/notifications/di/notifications.di.dart';
 import '/features/notifications/notifications.dart';
+import '/features/services/di/services.di.dart';
 import '/shared/functionalities/connectivity/connectivity.dart';
 import '/shared/functionalities/language/language.dart';
-import '/features/services/di/services.di.dart';
 
 /// Global service locator instance.
 final sl = GetIt.instance;
@@ -27,16 +28,8 @@ Future<void> initDependencies() async {
   // Storage & Core Services
   // ------------------------------------------------------------
   sl.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
+  sl.registerLazySingleton<GoTrueClient>(() => sl<SupabaseClient>().auth);
   sl.registerLazySingleton<LocalStorage>(() => PrefsStorageService.instance);
-  sl.registerLazySingleton<AdminSettingsRepository>(
-    () => AdminSettingsRepository(Supabase.instance.client),
-  );
-  sl.registerLazySingleton<AdminSettingsCubit>(
-    () => AdminSettingsCubit(sl<AdminSettingsRepository>()),
-  );
-  sl.registerLazySingleton<AppGateCubit>(
-    () => AppGateCubit(sl<AdminSettingsCubit>()),
-  );
   sl.registerLazySingleton<FileStorageService>(
     () => SupabaseFileStorageService(),
   );
@@ -51,88 +44,27 @@ Future<void> initDependencies() async {
   );
 
   // ------------------------------------------------------------
-  // Auth & User Repositories
-  // ------------------------------------------------------------
-  sl.registerLazySingleton<AuthRepository>(() => SupabaseAuthRepository());
-  sl.registerLazySingleton<UserRepository>(
-    () => SupabaseUserRepository(sl<FileStorageService>()),
-  );
-
-  sl.registerLazySingleton<AuthBloc>(
-    () => AuthBloc(
-      authRepository: sl<AuthRepository>(),
-      userRepository: sl<UserRepository>(),
-    ),
-  );
-
-  // ------------------------------------------------------------
-  // Connectivity
+  // Connectivity & Language
   // ------------------------------------------------------------
   sl.registerLazySingleton<ConnectivityService>(
     () => ConnectivityServiceImpl(),
   );
-
   sl.registerFactory<ConnectivityCubit>(
     () => ConnectivityCubit(service: sl<ConnectivityService>()),
   );
-
-  // ------------------------------------------------------------
-  // Language
-  // ------------------------------------------------------------
   sl.registerFactory<LanguageCubit>(
     () => LanguageCubit(storage: sl<LocalStorage>()),
   );
 
   // ------------------------------------------------------------
-  // Services catalogue
+  // Feature dependencies
   // ------------------------------------------------------------
+  registerAdminSettingsDependencies(sl);
+  registerAuthDependencies(sl);
   registerServicesDependencies(sl);
-
-  // ------------------------------------------------------------
-  // Notifications & User Devices
-  // ------------------------------------------------------------
-
-  // Company-managed bodyguards (bodyguards rows without a login)
-  sl.registerLazySingleton<BodyguardRepository>(() => BodyguardRepository());
-  sl.registerFactory<CompanyBodyguardsCubit>(
-    () => CompanyBodyguardsCubit(sl<BodyguardRepository>()),
-  );
-  sl.registerFactory<BodyguardsCubit>(
-    () => BodyguardsCubit(sl<BodyguardRepository>()),
-  );
-
-  // Security Companies (public.companies)
-  sl.registerLazySingleton<CompanyRepository>(() => CompanyRepository());
-  sl.registerFactory<CompaniesCubit>(
-    () => CompaniesCubit(sl<CompanyRepository>()),
-  );
-
-  sl.registerLazySingleton<NotificationRepository>(
-    () => NotificationRepository(),
-  );
-  sl.registerLazySingleton<UserDeviceRepository>(
-    () => UserDeviceRepository(),
-  );
-
-  sl.registerLazySingleton<UnreadNotificationCountCubit>(
-    () => UnreadNotificationCountCubit(
-      repository: sl<NotificationRepository>(),
-    ),
-  );
-
-  sl.registerLazySingleton<UserDeviceCubit>(
-    () => UserDeviceCubit(
-      repository: sl<UserDeviceRepository>(),
-    ),
-  );
-
-  sl.registerFactory<NotificationsBloc>(
-    () => NotificationsBloc(
-      repository: sl<NotificationRepository>(),
-      getUserId: () => sl<AuthBloc>().state.user?.id ?? '',
-      unreadCountCubit: sl<UnreadNotificationCountCubit>(),
-    ),
-  );
+  registerBodyguardDependencies(sl);
+  registerCompanyDependencies(sl);
+  registerNotificationsDependencies(sl);
 
   // Synchronize notifications & devices on auth state changes
   sl<AuthBloc>().stream.listen((authState) {

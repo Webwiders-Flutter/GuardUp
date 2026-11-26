@@ -8,9 +8,9 @@ import '../model/company.model.dart';
 
 /// Repository for querying security company profiles (`public.companies`).
 final class CompanyRepository extends BaseSupabaseRepository<CompanyModel> {
-  CompanyRepository([SupabaseClient? client])
+  CompanyRepository(SupabaseClient client)
       : super(
-          client: client ?? Supabase.instance.client,
+          client: client,
           tableName: DatabaseTables.companies,
           fromJson: CompanyModel.fromJson,
           entityName: 'company',

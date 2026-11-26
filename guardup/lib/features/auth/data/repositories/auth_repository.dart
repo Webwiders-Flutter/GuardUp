@@ -7,13 +7,11 @@ import '../../domain/repositories/auth_repository.dart';
 
 /// Concrete Supabase implementation of [AuthRepository] with full logging.
 class SupabaseAuthRepository implements AuthRepository {
-  final supa.SupabaseClient? client;
+  final supa.SupabaseClient client;
 
-  SupabaseAuthRepository({this.client});
+  SupabaseAuthRepository({required this.client});
 
-  supa.SupabaseClient get _supabase {
-    return client ?? supa.Supabase.instance.client;
-  }
+  supa.SupabaseClient get _supabase => client;
 
   static const String _tag = 'AuthRepository';
 
