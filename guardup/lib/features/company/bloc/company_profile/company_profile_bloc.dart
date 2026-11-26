@@ -60,11 +60,7 @@ class CompanyProfileBloc
         ),
       );
     } on ApiException catch (e) {
-      emit(
-        state.copyWith(
-          loadStatus: ApiState.failure(e.message, error: e),
-        ),
-      );
+      emit(state.copyWith(loadStatus: ApiState.failure(e.message, error: e)));
     }
   }
 
@@ -148,12 +144,7 @@ class CompanyProfileBloc
         ),
       );
     } on ApiException catch (e) {
-      emit(
-        state.copyWith(
-          submitStatus: ApiState.failure(e.message, error: e),
-        ),
-      );
+      emit(state.copyWith(submitStatus: ApiState.failure(e.message, error: e)));
     }
   }
 }
-

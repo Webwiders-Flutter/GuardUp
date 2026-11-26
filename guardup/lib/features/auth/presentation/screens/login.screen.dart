@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -16,6 +17,7 @@ import '/features/company/presentation/screens/company_complete_profile_screen.d
 import '/features/customer/presentation/screens/customer_home_screen.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/buttons/app_button.dart';
+import '/shared/widgets/feedbacks/widgets/app_sheet.dart';
 import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/misc/app_rich_text.dart';
@@ -63,6 +65,76 @@ class _LoginViewState extends State<_LoginView> {
         email: _emailController.text.trim().toLowerCase(),
         password: _passwordController.text,
       ),
+    );
+  }
+
+  void _showDebugAutofillPicker() {
+    AppSheet.show<void>(
+      context: context,
+      title: 'Debug Autofill',
+      subtitle: 'Select role to autofill test credentials',
+      action: AppSheetHeaderAction.close,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildDebugRoleTile(
+            role: 'Customer',
+            email: 'amanm.webwiders+customer@gmail.com',
+            icon: Icons.person_outline,
+          ),
+          AppSpacing.sm.h,
+          _buildDebugRoleTile(
+            role: 'Guard',
+            email: 'amanm.webwiders+guard@gmail.com',
+            icon: Icons.security,
+          ),
+          AppSpacing.sm.h,
+          _buildDebugRoleTile(
+            role: 'Company',
+            email: 'amanm.webwiders+company@gmail.com',
+            icon: Icons.business_outlined,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDebugRoleTile({
+    required String role,
+    required String email,
+    required IconData icon,
+  }) {
+    return ListTile(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: context.colors.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      leading: CircleAvatar(
+        backgroundColor: context.colors.primary.withValues(alpha: 0.1),
+        foregroundColor: context.colors.primary,
+        child: Icon(icon, size: 20),
+      ),
+      title: Text(
+        role,
+        style: context.textTheme.titleSmall?.bold(),
+      ),
+      subtitle: Text(
+        email,
+        style: context.textTheme.bodySmall?.colour(
+          context.colors.onSurfaceVariant,
+        ),
+      ),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+      onTap: () {
+        context.pop();
+        setState(() {
+          _emailController.text = email;
+          _passwordController.text = '123456';
+        });
+        _formKey.currentState?.validate();
+      },
     );
   }
 
@@ -212,6 +284,34 @@ class _LoginViewState extends State<_LoginView> {
                               isLoading: isLoading,
                               onPressed: () => _handleLogin(state),
                             ),
+
+                            if (kDebugMode) ...[
+                              AppSpacing.md.h,
+                              Center(
+                                child: OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: context.colors.primary,
+                                    side: BorderSide(
+                                      color: context.colors.primary
+                                          .withValues(alpha: 0.4),
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 10,
+                                    ),
+                                  ),
+                                  icon: const Icon(
+                                    Icons.bug_report_outlined,
+                                    size: 18,
+                                  ),
+                                  label: const Text('Debug Autofill'),
+                                  onPressed: _showDebugAutofillPicker,
+                                ),
+                              ),
+                            ],
 
                             const Spacer(),
                             AppSpacing.xl.h,

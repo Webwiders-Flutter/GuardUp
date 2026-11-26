@@ -133,7 +133,9 @@ class _CompanyHomeViewState extends State<_CompanyHomeView> {
       );
     }
     if (mounted) {
-      context.read<CompanyBodyguardsBloc>().add(const PaginationLoadRequested());
+      context.read<CompanyBodyguardsBloc>().add(
+        const PaginationLoadRequested(),
+      );
     }
   }
 
@@ -141,7 +143,9 @@ class _CompanyHomeViewState extends State<_CompanyHomeView> {
     await context.push(CompanyBodyguardsScreen.route);
     // Bodyguards may have been added, edited or removed there.
     if (mounted) {
-      context.read<CompanyBodyguardsBloc>().add(const PaginationLoadRequested());
+      context.read<CompanyBodyguardsBloc>().add(
+        const PaginationLoadRequested(),
+      );
     }
   }
 
@@ -194,172 +198,175 @@ class _CompanyHomeViewState extends State<_CompanyHomeView> {
         ),
       ],
       child: Scaffold(
-      appBar: AppAppBar.transparent(
-        automaticallyImplyLeading: false,
-        alignTitle: .left,
-        titleWidget: _buildAppBarTitle(context),
-        showNotificationIcon: true,
-        showBackIcon: false,
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AppSpacing.xlg.h,
+        appBar: AppAppBar.transparent(
+          automaticallyImplyLeading: false,
+          alignTitle: .left,
+          titleWidget: _buildAppBarTitle(context),
+          showNotificationIcon: true,
+          showBackIcon: false,
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AppSpacing.xlg.h,
 
-              // ---------------------------------------------------------------
-              // 1. Upper Overview Cards (Bodyguard & Bookings) in WrapperCard
-              // ---------------------------------------------------------------
-              _buildUpperOverviewCards(context),
-              AppSpacing.xl.h,
+                // ---------------------------------------------------------------
+                // 1. Upper Overview Cards (Bodyguard & Bookings) in WrapperCard
+                // ---------------------------------------------------------------
+                _buildUpperOverviewCards(context),
+                AppSpacing.xl.h,
 
-              // ---------------------------------------------------------------
-              // 2. Latest Booking Section Header
-              // ---------------------------------------------------------------
-              Padding(
-                padding: context.horizontalEdgeInsets,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'LATEST BOOKING',
-                      style: context.textTheme.labelMedium
-                          ?.bold()
-                          .copyWith(letterSpacing: 1.2)
-                          .colour(context.colors.onSurfaceVariant),
-                    ),
-                    AppButton(
-                      text: 'View All >',
-                      type: ButtonType.text,
-                      size: ButtonSize.small,
-                      onPressed: () => context.jumpToNavTab(1),
-                    ),
-                  ],
-                ),
-              ),
-              AppSpacing.xs.h,
-
-              // ---------------------------------------------------------------
-              // 3. Search Bar (referencing Booking Screen)
-              // ---------------------------------------------------------------
-              Padding(
-                padding: context.horizontalEdgeInsets,
-                child: AppTextField.search(
-                  controller: _bookingSearchController,
-                  size: AppInputSize.small,
-                  decoration: InputDecoration(
-                    hintText: 'Search by name, clearance, or skill...',
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: AppRadius.xl.toBorderRadius,
-                      borderSide: BorderSide(
-                        color: context.colors.outlineVariant,
+                // ---------------------------------------------------------------
+                // 2. Latest Booking Section Header
+                // ---------------------------------------------------------------
+                Padding(
+                  padding: context.horizontalEdgeInsets,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'LATEST BOOKING',
+                        style: context.textTheme.labelMedium
+                            ?.bold()
+                            .copyWith(letterSpacing: 1.2)
+                            .colour(context.colors.onSurfaceVariant),
                       ),
-                    ),
-                    fillColor: context.colors.onPrimary,
-                  ),
-                  style: TextStyle(color: context.colors.onSurface),
-                ),
-              ),
-              AppSpacing.md.h,
-
-              // ---------------------------------------------------------------
-              // 4. Latest Bookings Feed using AppPagination.list
-              // ---------------------------------------------------------------
-              AppPagination<BookingModel>.list(
-                controller: _bookingsPaginationController,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: context.horizontalEdgeInsets,
-                separatorBuilder: (context, index) => AppSpacing.md.h,
-                emptyBuilder: (context) => Center(
-                  child: Padding(
-                    padding: AppSpacing.lg.allPadding,
-                    child: Text(
-                      'No matching bookings found.',
-                      style: context.textTheme.bodySmall?.colour(
-                        context.colors.onSurfaceVariant,
+                      AppButton(
+                        text: 'View All >',
+                        type: ButtonType.text,
+                        size: ButtonSize.small,
+                        onPressed: () => context.jumpToNavTab(1),
                       ),
-                    ),
+                    ],
                   ),
                 ),
-                itemBuilder: (context, booking, index) {
-                  return BookingCard(
-                    booking: booking,
-                    role: UserRole.company,
-                    onAccept: () => _handleAcceptBooking(booking),
-                    onReject: () => _handleRejectBooking(booking),
-                    onChat: () => _handleChatBooking(booking),
-                    onShareLocation: () => _handleShareLocation(booking),
-                  );
-                },
-              ),
-              AppSpacing.xl.h,
+                AppSpacing.xs.h,
 
-              // ---------------------------------------------------------------
-              // 5. My Bodyguards Section Header
-              // ---------------------------------------------------------------
-              Padding(
-                padding: context.horizontalEdgeInsets,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'MY BODYGUARDS',
-                      style: context.textTheme.labelMedium
-                          ?.bold()
-                          .copyWith(letterSpacing: 1.2)
-                          .colour(context.colors.onSurfaceVariant),
+                // ---------------------------------------------------------------
+                // 3. Search Bar (referencing Booking Screen)
+                // ---------------------------------------------------------------
+                Padding(
+                  padding: context.horizontalEdgeInsets,
+                  child: AppTextField.search(
+                    controller: _bookingSearchController,
+                    size: AppInputSize.small,
+                    decoration: InputDecoration(
+                      hintText: 'Search by name, clearance, or skill...',
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: AppRadius.xl.toBorderRadius,
+                        borderSide: BorderSide(
+                          color: context.colors.outlineVariant,
+                        ),
+                      ),
+                      fillColor: context.colors.onPrimary,
                     ),
-                    AppButton(
-                      text: 'View All >',
-                      type: ButtonType.text,
-                      size: ButtonSize.small,
-                      onPressed: _handleViewAllBodyguards,
-                    ),
-                  ],
+                    style: TextStyle(color: context.colors.onSurface),
+                  ),
                 ),
-              ),
-              AppSpacing.sm.h,
+                AppSpacing.md.h,
 
-              // ---------------------------------------------------------------
-              // 6. My Bodyguards Feed using AppPagination.list
-              // ---------------------------------------------------------------
-              AppPagination<BodyGuardModel>.list(
-                controller: _bodyguardsPaginationController,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: context.horizontalEdgeInsets + AppSpacing.xxl.bPadding,
-                separatorBuilder: (context, index) => AppSpacing.md.h,
-                initialLoaderBuilder: (context) =>
-                    const BodyGuardListSkeleton(itemCount: _rosterPreviewCount),
-                emptyBuilder: (context) => Center(
-                  child: Padding(
-                    padding: AppSpacing.lg.allPadding,
-                    child: Text(
-                      'No bodyguards found.',
-                      style: context.textTheme.bodySmall?.colour(
-                        context.colors.onSurfaceVariant,
+                // ---------------------------------------------------------------
+                // 4. Latest Bookings Feed using AppPagination.list
+                // ---------------------------------------------------------------
+                AppPagination<BookingModel>.list(
+                  controller: _bookingsPaginationController,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: context.horizontalEdgeInsets,
+                  separatorBuilder: (context, index) => AppSpacing.md.h,
+                  emptyBuilder: (context) => Center(
+                    child: Padding(
+                      padding: AppSpacing.lg.allPadding,
+                      child: Text(
+                        'No matching bookings found.',
+                        style: context.textTheme.bodySmall?.colour(
+                          context.colors.onSurfaceVariant,
+                        ),
                       ),
                     ),
                   ),
+                  itemBuilder: (context, booking, index) {
+                    return BookingCard(
+                      booking: booking,
+                      role: UserRole.company,
+                      onAccept: () => _handleAcceptBooking(booking),
+                      onReject: () => _handleRejectBooking(booking),
+                      onChat: () => _handleChatBooking(booking),
+                      onShareLocation: () => _handleShareLocation(booking),
+                    );
+                  },
                 ),
-                itemBuilder: (context, guard, index) {
-                  return BodyGuardCard(
-                    bodyguard: guard,
-                    onTap: () {
-                      context.push(GuardDetailScreen.route, extra: guard);
-                    },
-                    onEdit: () => _handleEditBodyguard(guard),
-                    onDelete: () => _handleDeleteBodyguard(guard),
-                  );
-                },
-              ),
-            ],
+                AppSpacing.xl.h,
+
+                // ---------------------------------------------------------------
+                // 5. My Bodyguards Section Header
+                // ---------------------------------------------------------------
+                Padding(
+                  padding: context.horizontalEdgeInsets,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'MY BODYGUARDS',
+                        style: context.textTheme.labelMedium
+                            ?.bold()
+                            .copyWith(letterSpacing: 1.2)
+                            .colour(context.colors.onSurfaceVariant),
+                      ),
+                      AppButton(
+                        text: 'View All >',
+                        type: ButtonType.text,
+                        size: ButtonSize.small,
+                        onPressed: _handleViewAllBodyguards,
+                      ),
+                    ],
+                  ),
+                ),
+                AppSpacing.sm.h,
+
+                // ---------------------------------------------------------------
+                // 6. My Bodyguards Feed using AppPagination.list
+                // ---------------------------------------------------------------
+                AppPagination<BodyGuardModel>.list(
+                  controller: _bodyguardsPaginationController,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding:
+                      context.horizontalEdgeInsets + AppSpacing.xxl.bPadding,
+                  separatorBuilder: (context, index) => AppSpacing.md.h,
+                  initialLoaderBuilder: (context) =>
+                      const BodyGuardListSkeleton(
+                        itemCount: _rosterPreviewCount,
+                      ),
+                  emptyBuilder: (context) => Center(
+                    child: Padding(
+                      padding: AppSpacing.lg.allPadding,
+                      child: Text(
+                        'No bodyguards found.',
+                        style: context.textTheme.bodySmall?.colour(
+                          context.colors.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ),
+                  itemBuilder: (context, guard, index) {
+                    return BodyGuardCard(
+                      bodyguard: guard,
+                      onTap: () {
+                        context.push(GuardDetailScreen.route, extra: guard);
+                      },
+                      onEdit: () => _handleEditBodyguard(guard),
+                      onDelete: () => _handleDeleteBodyguard(guard),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
     );
   }
 

@@ -17,11 +17,7 @@ class EditBioSheet extends StatefulWidget {
   final String currentBio;
   final ValueChanged<String>? onBioUpdated;
 
-  const EditBioSheet({
-    super.key,
-    required this.currentBio,
-    this.onBioUpdated,
-  });
+  const EditBioSheet({super.key, required this.currentBio, this.onBioUpdated});
 
   static Future<void> show(
     BuildContext context, {
@@ -39,10 +35,7 @@ class EditBioSheet extends StatefulWidget {
       ),
       builder: (_) => BlocProvider.value(
         value: profileBloc,
-        child: EditBioSheet(
-          currentBio: currentBio,
-          onBioUpdated: onBioUpdated,
-        ),
+        child: EditBioSheet(currentBio: currentBio, onBioUpdated: onBioUpdated),
       ),
     );
   }

@@ -16,11 +16,8 @@ class MockBodyguardRepository extends Mock implements BodyguardRepository {}
 
 class FakeBodyguardFilters extends Fake implements BodyguardFilters {}
 
-BodyGuardModel _makeGuard(String id) => BodyGuardModel(
-  id: id,
-  name: 'Guard $id',
-  hourlyRate: 50.0,
-);
+BodyGuardModel _makeGuard(String id) =>
+    BodyGuardModel(id: id, name: 'Guard $id', hourlyRate: 50.0);
 
 void main() {
   setUpAll(() {
@@ -34,12 +31,9 @@ void main() {
       mockRepo = MockBodyguardRepository();
     });
 
-    test('initial state defaults to active statuses', () {
+    test('initial state defaults to ACTIVE solo guards', () {
       final bloc = BodyguardsBloc(mockRepo);
-      expect(
-        bloc.state.filters,
-        const BodyguardFilters(statuses: [UserStatus.active]),
-      );
+      expect(bloc.state.filters, BodyguardFilters.customerDefault);
       bloc.close();
     });
 
@@ -64,8 +58,11 @@ void main() {
       },
       act: (bloc) => bloc.add(const PaginationLoadRequested()),
       expect: () => [
-        isA<BodyguardsState>()
-            .having((s) => s.pagination.isLoading, 'isLoading', true),
+        isA<BodyguardsState>().having(
+          (s) => s.pagination.isLoading,
+          'isLoading',
+          true,
+        ),
         isA<BodyguardsState>()
             .having((s) => s.pagination.status.isSuccess, 'isSuccess', true)
             .having((s) => s.pagination.items.length, 'items length', 1)
@@ -113,10 +110,16 @@ void main() {
           'availability',
           BodyguardAvailabilityStatus.available,
         ),
-        isA<BodyguardsState>()
-            .having((s) => s.pagination.isLoading, 'isLoading', true),
-        isA<BodyguardsState>()
-            .having((s) => s.pagination.status.isSuccess, 'isSuccess', true),
+        isA<BodyguardsState>().having(
+          (s) => s.pagination.isLoading,
+          'isLoading',
+          true,
+        ),
+        isA<BodyguardsState>().having(
+          (s) => s.pagination.status.isSuccess,
+          'isSuccess',
+          true,
+        ),
       ],
       verify: (_) {
         verify(
@@ -152,7 +155,7 @@ void main() {
           () => mockRepo.getPaginated(
             page: 1,
             pageSize: AppConstants.paginationLimit,
-            filters: const BodyguardFilters(statuses: [UserStatus.active]),
+            filters: BodyguardFilters.customerDefault,
             search: 'john',
           ),
         ).called(1);
@@ -174,8 +177,11 @@ void main() {
       },
       act: (bloc) => bloc.add(const PaginationLoadRequested()),
       expect: () => [
-        isA<BodyguardsState>()
-            .having((s) => s.pagination.isLoading, 'isLoading', true),
+        isA<BodyguardsState>().having(
+          (s) => s.pagination.isLoading,
+          'isLoading',
+          true,
+        ),
         isA<BodyguardsState>().having(
           (s) => s.pagination.status,
           'status',

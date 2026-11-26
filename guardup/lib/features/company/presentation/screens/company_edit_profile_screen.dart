@@ -60,6 +60,7 @@ class _CompanyEditProfileViewState extends State<_CompanyEditProfileView> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _experienceController = TextEditingController();
+  final _bioController = TextEditingController();
   final _businessTypeController = SelectionController<BusinessType>.single(
     initial: BusinessType.pvtLtd,
     allowDeselect: false,
@@ -87,6 +88,7 @@ class _CompanyEditProfileViewState extends State<_CompanyEditProfileView> {
     _experienceController.text = (company?.experienceYears ?? 0) > 0
         ? company!.experienceYears.toString()
         : '';
+    _bioController.text = company?.bio ?? '';
     _existingLogoUrl = user?.profileImageUrl;
 
     if (company?.companyType != null) {
@@ -100,6 +102,7 @@ class _CompanyEditProfileViewState extends State<_CompanyEditProfileView> {
     _emailController.dispose();
     _phoneController.dispose();
     _experienceController.dispose();
+    _bioController.dispose();
     _businessTypeController.dispose();
     super.dispose();
   }
@@ -139,6 +142,7 @@ class _CompanyEditProfileViewState extends State<_CompanyEditProfileView> {
           companyPhoneCode: _phoneCode,
           companyPhoneNumber: _phoneController.text.trim(),
           experienceYears: expYears,
+          bio: _bioController.text.trim(),
         ),
         refreshAccount: true,
       ),
@@ -436,6 +440,18 @@ class _CompanyEditProfileViewState extends State<_CompanyEditProfileView> {
                                           null
                                       ? context.l10n.selectCompanyType
                                       : null,
+                                ),
+                                AppSpacing.md.h,
+
+                                // Company Bio Field (multiline)
+                                AppTextField.multiline(
+                                  controller: _bioController,
+                                  minLines: 3,
+                                  maxLines: 5,
+                                  decoration: const InputDecoration(
+                                    hintText: 'Company Bio / Overview',
+                                    alignLabelWithHint: true,
+                                  ),
                                 ),
                               ],
                             ),

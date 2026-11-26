@@ -12,6 +12,7 @@ class CompanyProfileRequest {
     this.companyPhoneCode = '+91',
     required this.companyPhoneNumber,
     this.experienceYears,
+    this.bio,
   });
 
   final String companyName;
@@ -20,6 +21,7 @@ class CompanyProfileRequest {
   final String companyPhoneCode;
   final String companyPhoneNumber;
   final int? experienceYears;
+  final String? bio;
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
@@ -29,6 +31,7 @@ class CompanyProfileRequest {
       JsonKeys.companyPhoneCode: companyPhoneCode.trim(),
       JsonKeys.companyPhoneNumber: companyPhoneNumber.trim(),
       JsonKeys.experienceYears: ?experienceYears,
+      if (bio != null) JsonKeys.bio: bio!.trim(),
     };
   }
 }

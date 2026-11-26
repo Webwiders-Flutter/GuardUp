@@ -43,10 +43,7 @@ final class GuardProfileServicesChanged extends GuardProfileEvent {
 
 /// Submits the full bodyguard profile form (self-guard or managed guard).
 final class GuardProfileSubmitted extends GuardProfileEvent {
-  const GuardProfileSubmitted(
-    this.request, {
-    this.resubmitForReview = false,
-  });
+  const GuardProfileSubmitted(this.request, {this.resubmitForReview = false});
 
   final BodyguardProfileRequest request;
   final bool resubmitForReview;
@@ -109,4 +106,3 @@ final class GuardProfileServicesSaved extends GuardProfileEvent {
   @override
   List<Object?> get props => [serviceIds];
 }
-

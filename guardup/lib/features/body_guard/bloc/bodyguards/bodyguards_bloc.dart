@@ -1,6 +1,5 @@
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 
-import '/features/auth/data/enum/user_status.enum.dart';
 import '/shared/bloc/pagination/paginated_bloc.dart';
 import '../../data/model/body_guard.model.dart';
 import '../../data/model/bodyguard_filters.model.dart';
@@ -18,13 +17,15 @@ final class BodyguardsFiltersChanged extends PaginationEvent {
   List<Object?> get props => [filters];
 }
 
-/// Paginated bloc for browsing and searching bodyguards.
+/// Paginated bloc for browsing, searching and filtering bodyguards.
+///
+/// Defaults to [BodyguardFilters.customerDefault] (ACTIVE solo guards); pass
+/// other `initialFilters` (e.g. a company's roster) or dispatch
+/// [BodyguardsFiltersChanged].
 class BodyguardsBloc extends PaginatedBloc<BodyGuardModel, BodyguardFilters> {
   BodyguardsBloc(
     this._repository, {
-    super.initialFilters = const BodyguardFilters(
-      statuses: [UserStatus.active],
-    ),
+    super.initialFilters = BodyguardFilters.customerDefault,
     super.pageSize,
   }) {
     on<BodyguardsFiltersChanged>(
@@ -50,4 +51,3 @@ class BodyguardsBloc extends PaginatedBloc<BodyGuardModel, BodyguardFilters> {
     );
   }
 }
-

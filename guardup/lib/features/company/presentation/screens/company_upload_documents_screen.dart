@@ -279,12 +279,15 @@ class _CompanyUploadDocumentsView extends StatelessWidget {
                                         : null,
                                     rejectionReason:
                                         (isResubmitted || localFile != null)
-                                            ? null
-                                            : rejectionReason,
+                                        ? null
+                                        : rejectionReason,
                                     onPick: isVerified
                                         ? null
-                                        : () =>
-                                              _pickDocument(context, doc, state),
+                                        : () => _pickDocument(
+                                            context,
+                                            doc,
+                                            state,
+                                          ),
                                   ),
                                   AppSpacing.md.h,
                                 ],

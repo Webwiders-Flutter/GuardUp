@@ -299,8 +299,8 @@ class _BodyguardAboutWidgetState extends State<BodyguardAboutWidget> {
                 value: widget.qualifications?.isNotEmpty == true
                     ? widget.qualifications!
                     : (widget.bodyguard?.qualifications?.isNotEmpty == true
-                        ? widget.bodyguard!.qualifications!
-                        : 'Not specified'),
+                          ? widget.bodyguard!.qualifications!
+                          : 'Not specified'),
               ),
             ],
           ),

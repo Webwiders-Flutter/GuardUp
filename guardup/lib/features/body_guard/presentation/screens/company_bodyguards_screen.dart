@@ -129,13 +129,10 @@ class _CompanyBodyguardsViewState extends State<_CompanyBodyguardsView>
     final bloc = context.read<CompanyBodyguardsBloc>();
     if (term == bloc.state.search) return;
     _searchDebounce?.cancel();
-    _searchDebounce = Timer(
-      AppDurations.slow,
-      () {
-        if (!mounted) return;
-        bloc.add(PaginationSearchChanged(term));
-      },
-    );
+    _searchDebounce = Timer(AppDurations.slow, () {
+      if (!mounted) return;
+      bloc.add(PaginationSearchChanged(term));
+    });
   }
 
   @override
@@ -154,7 +151,9 @@ class _CompanyBodyguardsViewState extends State<_CompanyBodyguardsView>
     await context.push(BodyGuardCompleteProfileScreen.route);
     // A bodyguard may have been created even if the flow was not finished.
     if (mounted && widget.isCompany) {
-      context.read<CompanyBodyguardsBloc>().add(const PaginationLoadRequested());
+      context.read<CompanyBodyguardsBloc>().add(
+        const PaginationLoadRequested(),
+      );
     }
   }
 
@@ -168,7 +167,9 @@ class _CompanyBodyguardsViewState extends State<_CompanyBodyguardsView>
       );
     }
     if (mounted && widget.isCompany) {
-      context.read<CompanyBodyguardsBloc>().add(const PaginationLoadRequested());
+      context.read<CompanyBodyguardsBloc>().add(
+        const PaginationLoadRequested(),
+      );
     }
   }
 

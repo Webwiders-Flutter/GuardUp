@@ -32,4 +32,17 @@ final class DatabaseFunctions {
 
   /// Replaces the services of a company-managed bodyguard atomically.
   static const String setBodyguardServices = 'set_bodyguard_services';
+
+  // Computed relationships embedded in `select` (not called with rpc).
+  // See supabase/migrations/20261126000002_listing_computed_fields.sql.
+  // The `companies` computed field is JsonKeys.accountStatus.
+
+  /// `bodyguards` -> `user_services`, for managed and self-registered guards.
+  static const String listingServices = 'listing_services';
+
+  /// `bodyguards` -> `user_availabilities`, for managed and self-registered guards.
+  static const String listingAvailabilities = 'listing_availabilities';
+
+  /// `companies` -> `user_documents`, for company account documents.
+  static const String listingDocuments = 'listing_documents';
 }

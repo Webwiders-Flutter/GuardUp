@@ -32,16 +32,14 @@ class BodyguardDocumentsWidget extends StatelessWidget {
         ? (sl<AuthRepository>().currentUserId ?? '')
         : (context.read<AuthBloc>().state.user?.id ?? '');
 
-    final RecordOwner owner =
-        (bodyguard != null && bodyguard!.id.isNotEmpty)
-            ? ManagedBodyguardOwner(bodyguard!.id)
-            : AccountOwner(currentUserId);
+    final RecordOwner owner = (bodyguard != null && bodyguard!.id.isNotEmpty)
+        ? ManagedBodyguardOwner(bodyguard!.id)
+        : AccountOwner(currentUserId);
 
     return BlocProvider(
-      create: (_) => sl<DocumentsBloc>(
-        param1: owner,
-        param2: UserRole.guard,
-      )..add(const DocumentsStarted()),
+      create: (_) =>
+          sl<DocumentsBloc>(param1: owner, param2: UserRole.guard)
+            ..add(const DocumentsStarted()),
       child: const _BodyguardDocumentsView(),
     );
   }
@@ -96,9 +94,7 @@ class _BodyguardDocumentsView extends StatelessWidget {
           return Center(
             child: Padding(
               padding: AppSpacing.xxl.allPadding,
-              child: CircularProgressIndicator(
-                color: context.colors.primary,
-              ),
+              child: CircularProgressIndicator(color: context.colors.primary),
             ),
           );
         }
@@ -137,15 +133,16 @@ class _BodyguardDocumentsView extends StatelessWidget {
             if (uploadedTypes.isNotEmpty) ...[
               Text(
                 'Uploaded Documents',
-                style: context.textTheme.titleSmall
-                    ?.semiBold()
-                    .colour(context.colors.onSurface),
+                style: context.textTheme.titleSmall?.semiBold().colour(
+                  context.colors.onSurface,
+                ),
               ),
               AppSpacing.xxs.h,
               Text(
                 'Review status of your submitted credentials. Tap Re-upload if rejected.',
-                style: context.textTheme.bodySmall
-                    ?.colour(context.colors.onSurfaceVariant),
+                style: context.textTheme.bodySmall?.colour(
+                  context.colors.onSurfaceVariant,
+                ),
               ),
               AppSpacing.md.h,
               ...uploadedTypes.map((doc) {
@@ -173,12 +170,14 @@ class _BodyguardDocumentsView extends StatelessWidget {
                       size: AppSizes.iconLg,
                     ),
                     isRequired: doc.isRequired,
-                    isReadOnly: status == DocumentStatus.approved ||
+                    isReadOnly:
+                        status == DocumentStatus.approved ||
                         status != DocumentStatus.rejected,
                     initialUrl: localFile == null ? remote.fileUrl : null,
                     selectedFilePath: localFile?.path,
-                    fileName:
-                        localFile != null ? localFile.name : remote.fileName,
+                    fileName: localFile != null
+                        ? localFile.name
+                        : remote.fileName,
                     status: isResubmitted || localFile != null
                         ? DocumentStatus.pending
                         : status,
@@ -200,15 +199,16 @@ class _BodyguardDocumentsView extends StatelessWidget {
             if (pendingTypes.isNotEmpty) ...[
               Text(
                 'Add New Documents',
-                style: context.textTheme.titleSmall
-                    ?.semiBold()
-                    .colour(context.colors.onSurface),
+                style: context.textTheme.titleSmall?.semiBold().colour(
+                  context.colors.onSurface,
+                ),
               ),
               AppSpacing.xxs.h,
               Text(
                 'Upload any optional or pending credentials.',
-                style: context.textTheme.bodySmall
-                    ?.colour(context.colors.onSurfaceVariant),
+                style: context.textTheme.bodySmall?.colour(
+                  context.colors.onSurfaceVariant,
+                ),
               ),
               AppSpacing.md.h,
               ...pendingTypes.map((doc) {

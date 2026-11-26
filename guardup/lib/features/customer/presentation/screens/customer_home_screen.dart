@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 
+import '../../../../shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
@@ -43,7 +44,13 @@ class CustomerHomeScreen extends StatelessWidget {
       providers: [
         BlocProvider(
           create: (_) =>
-              sl<BodyguardsBloc>()..add(const PaginationLoadRequested()),
+              // Solo guards only (no company); company-managed guards are
+              // listed through their company.
+              sl<BodyguardsBloc>(
+                param1: BodyguardFilters.customerDefault.copyWith(
+                  ownership: BodyguardOwnership.solo,
+                ),
+              )..add(const PaginationLoadRequested()),
         ),
         BlocProvider(
           create: (_) =>
@@ -95,8 +102,7 @@ class _CustomerHomeViewState extends State<_CustomerHomeView>
     final companiesBloc = context.read<CompaniesBloc>();
     _companiesPaginationController = PaginationController<CompanyModel>(
       initialState: companiesBloc.state.pagination,
-      onRefresh: () async =>
-          companiesBloc.add(const PaginationLoadRequested()),
+      onRefresh: () async => companiesBloc.add(const PaginationLoadRequested()),
       onLoadMore: () async =>
           companiesBloc.add(const PaginationNextPageRequested()),
     );
@@ -145,215 +151,222 @@ class _CustomerHomeViewState extends State<_CustomerHomeView>
         ),
       ],
       child: Scaffold(
-      backgroundColor: context.colors.transparent,
-      appBar: AppAppBar(
-        titleWidget: BlocBuilder<AuthBloc, AuthState>(
-          bloc: sl<AuthBloc>(),
-          builder: (context, state) {
-            final name = state.user?.name ?? '';
-            return CustomerHeaderWidget(
-              userName: name.isNotEmpty ? name : 'Member',
-              avatarUrl: state.user?.profileImageUrl ?? '',
-            );
-          },
+        backgroundColor: context.colors.transparent,
+        appBar: AppAppBar(
+          titleWidget: BlocBuilder<AuthBloc, AuthState>(
+            bloc: sl<AuthBloc>(),
+            builder: (context, state) {
+              final name = state.user?.name ?? '';
+              return CustomerHeaderWidget(
+                userName: name.isNotEmpty ? name : 'Member',
+                avatarUrl: state.user?.profileImageUrl ?? '',
+              );
+            },
+          ),
+          alignTitle: .left,
+          showBackIcon: false,
+          showNotificationIcon: true,
         ),
-        alignTitle: .left,
-        showBackIcon: false,
-        showNotificationIcon: true,
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: context.horizontalEdgeInsets,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppSpacing.lg.h,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: context.horizontalEdgeInsets,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppSpacing.lg.h,
 
-              // 2. Search Input Bar (Tapping navigates to Search Bodyguards)
-              AppTextField.search(
-                size: AppInputSize.small,
-                readOnly: true,
-                onTap: _navigateToSearch,
-                decoration: InputDecoration(
-                  hintText: 'Search bodyguards near you...',
-                  suffixIcon: Padding(
-                    padding: AppSpacing.sm.allPadding,
-                    child: QuickContainer(
-                      w: 36,
-                      h: 36,
-                      radius: AppRadius.md,
-                      color: context.colors.primary.withValues(alpha: 0.12),
-                      border: Border.all(
-                        color: context.colors.primary.withValues(alpha: 0.35),
-                        width: 1.0,
-                      ),
-                      alignment: Alignment.center,
-                      child: Icon(
-                        Icons.tune_rounded,
-                        color: context.colors.primary,
-                        size: AppSizes.iconSm,
+                // 2. Search Input Bar (Tapping navigates to Search Bodyguards)
+                AppTextField.search(
+                  size: AppInputSize.small,
+                  readOnly: true,
+                  onTap: _navigateToSearch,
+                  decoration: InputDecoration(
+                    hintText: 'Search bodyguards near you...',
+                    suffixIcon: Padding(
+                      padding: AppSpacing.sm.allPadding,
+                      child: QuickContainer(
+                        w: 36,
+                        h: 36,
+                        radius: AppRadius.md,
+                        color: context.colors.primary.withValues(alpha: 0.12),
+                        border: Border.all(
+                          color: context.colors.primary.withValues(alpha: 0.35),
+                          width: 1.0,
+                        ),
+                        alignment: Alignment.center,
+                        child: Icon(
+                          Icons.tune_rounded,
+                          color: context.colors.primary,
+                          size: AppSizes.iconSm,
+                        ),
                       ),
                     ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: AppRadius.xl.toBorderRadius,
-                    borderSide: BorderSide(
-                      color: context.colors.outlineVariant,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: AppRadius.xl.toBorderRadius,
+                      borderSide: BorderSide(
+                        color: context.colors.outlineVariant,
+                      ),
                     ),
+                    fillColor: context.colors.onPrimary,
                   ),
-                  fillColor: context.colors.onPrimary,
+                  style: TextStyle(color: context.colors.onSurface),
                 ),
-                style: TextStyle(color: context.colors.onSurface),
-              ),
-              AppSpacing.md.h,
+                AppSpacing.md.h,
 
-              // 3. Quick Filter Tabs (Near By, Rated, Available)
-              AppTabBar.pill(
-                controller: _quickFilterTabController,
-                tabNames: _quickFilters,
-                radius: AppRadius.sm,
-                height: 38,
-                onTap: (index) {
-                  // Handle filter selection
-                },
-              ),
-              AppSpacing.lg.h,
-
-              // 4. GUARDUP ELITE Promo Banner
-              CustomerPromoBannerWidget(
-                // onBookNow: _navigateToAllBodyguards
-              ),
-              AppSpacing.xl.h,
-
-              // 5. SERVICES Row (Shows up to 10 items with 'View all' opening AllServicesScreen)
-              CustomerServicesRowWidget(
-                selectedCategoryIdNotifier: _serviceCategoryNotifier,
-                onViewAll: _navigateToAllServices,
-                onCategorySelected: (catId) {
-                  _navigateToAllBodyguards();
-                },
-              ),
-              AppSpacing.xl.h,
-
-              // 6. TOP COMPANY Section
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'TOP COMPANY',
-                    style: context.textTheme.labelMedium?.copyWith(
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: _navigateToAllCompanies,
-                    behavior: HitTestBehavior.opaque,
-                    child: Text(
-                      'View All >',
-                      style: context.textTheme.labelSmall?.colour(
-                        context.colors.primary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              AppSpacing.sm.h,
-
-              // Dynamic Company Cards
-              AppPagination<CompanyModel>.list(
-                controller: _companiesPaginationController,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                enablePullToRefresh: false,
-                separatorBuilder: (context, index) => AppSpacing.md.h,
-                itemBuilder: (context, company, index) {
-                  return CompanyCard(
-                    company: company,
-                    onTap: () {
-                      context.push(CompanyDetailsScreen.route, extra: company);
-                    },
-                    onBookNow: () {
-                      context.push(BookingScreen.route, extra: company);
-                    },
-                  );
-                },
-                emptyBuilder: (context) => Padding(
-                  padding: AppSpacing.md.yPadding,
-                  child: Center(
-                    child: Text(
-                      'No security companies available right now.',
-                      style: context.textTheme.bodyMedium?.colour(
-                        context.colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
+                // 3. Quick Filter Tabs (Near By, Rated, Available)
+                AppTabBar.pill(
+                  controller: _quickFilterTabController,
+                  tabNames: _quickFilters,
+                  radius: AppRadius.sm,
+                  height: 38,
+                  onTap: (index) {
+                    // Handle filter selection
+                  },
                 ),
-              ),
-              AppSpacing.sm.h,
+                AppSpacing.lg.h,
 
-              // 7. TOP BODYGUARDS Section
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'TOP BODYGUARDS',
-                    style: context.textTheme.labelMedium?.copyWith(
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: _navigateToAllBodyguards,
-                    behavior: HitTestBehavior.opaque,
-                    child: Text(
-                      'View All >',
-                      style: context.textTheme.labelSmall?.colour(
-                        context.colors.primary,
+                // 4. GUARDUP ELITE Promo Banner
+                CustomerPromoBannerWidget(
+                  // onBookNow: _navigateToAllBodyguards
+                ),
+                AppSpacing.xl.h,
+
+                // 5. SERVICES Row (Shows up to 10 items with 'View all' opening AllServicesScreen)
+                CustomerServicesRowWidget(
+                  selectedCategoryIdNotifier: _serviceCategoryNotifier,
+                  onViewAll: _navigateToAllServices,
+                  onCategorySelected: (catId) {
+                    _navigateToAllBodyguards();
+                  },
+                ),
+                AppSpacing.xl.h,
+
+                // 6. TOP COMPANY Section
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'TOP COMPANY',
+                      style: context.textTheme.labelMedium?.copyWith(
+                        letterSpacing: 1.2,
                       ),
                     ),
-                  ),
-                ],
-              ),
-              AppSpacing.sm.h,
+                    GestureDetector(
+                      onTap: _navigateToAllCompanies,
+                      behavior: HitTestBehavior.opaque,
+                      child: Text(
+                        'View All >',
+                        style: context.textTheme.labelSmall?.colour(
+                          context.colors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                AppSpacing.sm.h,
 
-              // Dynamic Bodyguards Roster (Home Spotlight)
-              AppPagination<BodyGuardModel>.list(
-                controller: _bodyguardsPaginationController,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                enablePullToRefresh: false,
-                separatorBuilder: (context, index) => AppSpacing.sm.h,
-                itemBuilder: (context, guard, index) {
-                  return BodyGuardCard(
-                    bodyguard: guard,
-                    isCompact: true,
-                    role: UserRole.customer,
-                    onTap: () {
-                      context.push(GuardDetailScreen.route, extra: guard);
-                    },
-                    onBookNow: () {
-                      context.push(GuardDetailScreen.route, extra: guard);
-                    },
-                  );
-                },
-                emptyBuilder: (context) => Padding(
-                  padding: AppSpacing.md.yPadding,
-                  child: Center(
-                    child: Text(
-                      'No active bodyguards available right now.',
-                      style: context.textTheme.bodyMedium?.colour(
-                        context.colors.onSurfaceVariant,
+                // Dynamic Company Cards
+                AppPagination<CompanyModel>.list(
+                  controller: _companiesPaginationController,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  enablePullToRefresh: false,
+                  separatorBuilder: (context, index) => AppSpacing.md.h,
+                  itemBuilder: (context, company, index) {
+                    return CompanyCard(
+                      company: company,
+                      onTap: () {
+                        context.push(
+                          CompanyDetailsScreen.route,
+                          extra: company,
+                        );
+                      },
+                      onBookNow: () {
+                        AppSnackbar.show(message: "Coming soon");
+    return;
+                        context.push(BookingScreen.route, extra: company);
+                      },
+                    );
+                  },
+                  emptyBuilder: (context) => Padding(
+                    padding: AppSpacing.md.yPadding,
+                    child: Center(
+                      child: Text(
+                        'No security companies available right now.',
+                        style: context.textTheme.bodyMedium?.colour(
+                          context.colors.onSurfaceVariant,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
+                AppSpacing.sm.h,
 
-              AppSpacing.xxl.h,
-            ],
+                // 7. TOP BODYGUARDS Section
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'TOP BODYGUARDS',
+                      style: context.textTheme.labelMedium?.copyWith(
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: _navigateToAllBodyguards,
+                      behavior: HitTestBehavior.opaque,
+                      child: Text(
+                        'View All >',
+                        style: context.textTheme.labelSmall?.colour(
+                          context.colors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                AppSpacing.sm.h,
+
+                // Dynamic Bodyguards Roster (Home Spotlight)
+                AppPagination<BodyGuardModel>.list(
+                  controller: _bodyguardsPaginationController,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  enablePullToRefresh: false,
+                  separatorBuilder: (context, index) => AppSpacing.sm.h,
+                  itemBuilder: (context, guard, index) {
+                    return BodyGuardCard(
+                      bodyguard: guard,
+                      isCompact: true,
+                      role: UserRole.customer,
+                      onTap: () {
+                        context.push(GuardDetailScreen.route, extra: guard);
+                      },
+                      onBookNow: () {
+                        AppSnackbar.show(message: "Coming soon");
+    return;
+                        context.push(GuardDetailScreen.route, extra: guard);
+                      },
+                    );
+                  },
+                  emptyBuilder: (context) => Padding(
+                    padding: AppSpacing.md.yPadding,
+                    child: Center(
+                      child: Text(
+                        'No active bodyguards available right now.',
+                        style: context.textTheme.bodyMedium?.colour(
+                          context.colors.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                AppSpacing.xxl.h,
+              ],
+            ),
           ),
         ),
       ),
-    ),
     );
   }
 }

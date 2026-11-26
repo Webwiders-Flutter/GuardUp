@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '/core/utils/json_converters/json_converters.dart';
 import '/features/auth/data/enum/user_status.enum.dart';
+import '/features/documents/data/models/user_document.model.dart';
 import '../enum/business_type.enum.dart';
 
 export '/core/extensions/company.extension.dart';
@@ -11,6 +12,9 @@ part 'company.model.g.dart';
 
 CompanyUserSummary? _userFromJson(dynamic json) =>
     EmbeddedParser.parseObject(json, CompanyUserSummary.fromJson);
+
+List<UserDocumentModel>? _documentsFromJson(dynamic json) =>
+    EmbeddedParser.parseList(json, UserDocumentModel.fromJson);
 
 /// Company profile of a COMPANY account (`public.companies`, one per
 /// account), 1:1 with the table. Account data (name, status, photo) stays on
@@ -33,12 +37,25 @@ abstract class CompanyModel with _$CompanyModel {
 
     /// Years in operation.
     @NullableIntConverter() int? experienceYears,
+    String? bio,
     DateTime? createdAt,
     DateTime? updatedAt,
+
+    /// Computed field `account_status`: `users.status` of the company account.
+    /// Readable by every role (customers cannot read [user]).
+    @JsonKey(
+      unknownEnumValue: JsonKey.nullForUndefinedEnumValue,
+      includeToJson: false,
+    )
+    UserStatus? accountStatus,
 
     /// `user:users!companies_user_id_fkey(...)` embed (see CompanyRepository).
     @JsonKey(fromJson: _userFromJson, includeToJson: false)
     CompanyUserSummary? user,
+
+    /// `documents:listing_documents(...)` embed for company detail view.
+    @JsonKey(fromJson: _documentsFromJson, includeToJson: false)
+    List<UserDocumentModel>? documents,
   }) = _CompanyModel;
 
   factory CompanyModel.fromJson(Map<String, dynamic> json) =>

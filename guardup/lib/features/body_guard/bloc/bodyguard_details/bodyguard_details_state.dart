@@ -32,4 +32,3 @@ class BodyguardDetailsState extends Equatable {
   @override
   List<Object?> get props => [status, guard];
 }
-

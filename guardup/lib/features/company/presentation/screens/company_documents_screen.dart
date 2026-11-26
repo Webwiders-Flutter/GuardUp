@@ -128,8 +128,7 @@ class _CompanyDocumentsView extends StatelessWidget {
                   .toList();
 
               return SingleChildScrollView(
-                padding:
-                    context.horizontalEdgeInsets + AppSpacing.lg.yPadding,
+                padding: context.horizontalEdgeInsets + AppSpacing.lg.yPadding,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -175,8 +174,9 @@ class _CompanyDocumentsView extends StatelessWidget {
                             ),
                             isRequired: doc.isRequired,
                             isReadOnly: status != DocumentStatus.rejected,
-                            initialUrl:
-                                localFile == null ? remote.fileUrl : null,
+                            initialUrl: localFile == null
+                                ? remote.fileUrl
+                                : null,
                             selectedFilePath: localFile?.path,
                             fileName: localFile != null
                                 ? localFile.name
@@ -188,8 +188,8 @@ class _CompanyDocumentsView extends StatelessWidget {
                             statusLabel: isResubmitted ? 'Resubmitted' : null,
                             rejectionReason:
                                 (isResubmitted || localFile != null)
-                                    ? null
-                                    : rejectionReason,
+                                ? null
+                                : rejectionReason,
                             onPick: status == DocumentStatus.approved
                                 ? null
                                 : () => _pickDocument(context, doc, state),

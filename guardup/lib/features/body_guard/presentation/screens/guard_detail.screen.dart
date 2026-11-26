@@ -7,6 +7,7 @@ import 'package:guardup/features/customer/presentation/screens/booking_screen.da
 import 'package:guardup/features/body_guard/presentation/screens/customer_booking_details.screen.dart';
 import 'package:guardup/shared/widgets/buttons/app_button.dart';
 import 'package:guardup/shared/widgets/feedbacks/widgets/app_file_preview.dart';
+import 'package:guardup/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 
 import '/core/constants/app_spacing.dart';
 import '/core/di/injection_container.dart';
@@ -60,14 +61,10 @@ class GuardDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final targetId = id.isNotEmpty ? id : (bodyguard?.id ?? '');
     return BlocProvider(
-      create: (_) => sl<BodyguardDetailsBloc>(
-        param1: targetId,
-        param2: bodyguard,
-      )..add(const BodyguardDetailsStarted()),
-      child: _GuardDetailView(
-        id: id,
-        isCompanyView: isCompanyView,
-      ),
+      create: (_) =>
+          sl<BodyguardDetailsBloc>(param1: targetId, param2: bodyguard)
+            ..add(const BodyguardDetailsStarted()),
+      child: _GuardDetailView(id: id, isCompanyView: isCompanyView),
     );
   }
 }
@@ -76,10 +73,7 @@ class _GuardDetailView extends StatefulWidget {
   final String id;
   final bool? isCompanyView;
 
-  const _GuardDetailView({
-    required this.id,
-    this.isCompanyView,
-  });
+  const _GuardDetailView({required this.id, this.isCompanyView});
 
   @override
   State<_GuardDetailView> createState() => _GuardDetailViewState();
@@ -220,6 +214,8 @@ class _GuardDetailViewState extends State<_GuardDetailView>
   }
 
   void _onBookNowPressed(BodyGuardModel? guard) {
+    AppSnackbar.show(message: "Coming soon");
+    return;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => CustomerBookingDetailsScreen(
@@ -298,9 +294,9 @@ class _GuardDetailViewState extends State<_GuardDetailView>
                     AppSpacing.lg.h,
                     AppButton(
                       text: 'Retry',
-                      onPressed: () => context
-                          .read<BodyguardDetailsBloc>()
-                          .add(const BodyguardDetailsRefreshed()),
+                      onPressed: () => context.read<BodyguardDetailsBloc>().add(
+                        const BodyguardDetailsRefreshed(),
+                      ),
                     ),
                   ],
                 ),
@@ -373,10 +369,10 @@ class _GuardDetailViewState extends State<_GuardDetailView>
                           name: guardName,
                           specialization:
                               (guard?.qualifications?.isNotEmpty == true)
-                                  ? guard!.qualifications!
-                                  : (guard?.bio.isNotEmpty == true
-                                      ? guard!.bio
-                                      : 'Licensed armed, Corporate visits'),
+                              ? guard!.qualifications!
+                              : (guard?.bio.isNotEmpty == true
+                                    ? guard!.bio
+                                    : 'Licensed armed, Corporate visits'),
                           hourlyRate: hourlyRate,
                           imagePath: photoPath,
                           isVerified: isVerified,
@@ -407,6 +403,8 @@ class _GuardDetailViewState extends State<_GuardDetailView>
                           onBookNow: _isCompany
                               ? null
                               : () {
+                                AppSnackbar.show(message: "Coming soon");
+    return;
                                   context.push(
                                     BookingScreen.route,
                                     extra: company,
@@ -418,17 +416,19 @@ class _GuardDetailViewState extends State<_GuardDetailView>
 
                         // 3. Three Metrics Summary Row
                         GuardMetricsRowWidget(
-                          experience: (guard?.experienceYears != null &&
+                          experience:
+                              (guard?.experienceYears != null &&
                                   guard!.experienceYears > 0)
                               ? '${guard.experienceYears}+ yrs'
                               : '0 yrs',
                           qualifications:
                               (guard?.qualifications?.isNotEmpty == true)
-                                  ? guard!.qualifications!
-                                  : (guard?.bio.isNotEmpty == true
-                                      ? guard!.bio
-                                      : 'Not specified'),
-                          status: guard?.availabilityStatus ??
+                              ? guard!.qualifications!
+                              : (guard?.bio.isNotEmpty == true
+                                    ? guard!.bio
+                                    : 'Not specified'),
+                          status:
+                              guard?.availabilityStatus ??
                               BodyguardAvailabilityStatus.notSet,
                           verificationStatus: guard?.verificationStatus,
                         ),
@@ -513,10 +513,10 @@ class _GuardDetailViewState extends State<_GuardDetailView>
         yearsExperience: currentGuard.experienceYears > 0
             ? '${currentGuard.experienceYears}+ Years'
             : '0 Years',
-        specializationTitle:
-            (currentGuard.bio.isNotEmpty)
-                ? currentGuard.bio
-                : (currentGuard.qualifications ?? 'Licensed armed, Corporate visits'),
+        specializationTitle: (currentGuard.bio.isNotEmpty)
+            ? currentGuard.bio
+            : (currentGuard.qualifications ??
+                  'Licensed armed, Corporate visits'),
         services: currentGuard.serviceTypes.isNotEmpty
             ? currentGuard.serviceTypes
                   .map((s) => s.apiValue.replaceAll('_', ' '))

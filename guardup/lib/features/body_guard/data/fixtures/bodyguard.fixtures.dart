@@ -25,8 +25,7 @@ final List<BodyGuardModel> bodyguardPlaceholders = [
     company: companyPlaceholders[0],
     availabilities: placeholderAvailabilities,
     hourlyRate: 60.0,
-    bio:
-        'Former Special Forces operative with 5+ years of high-threat dignitary protection, tactical motorcade operations, and counter-surveillance across global metropolitan centers.',
+    bio: 'Former Special Forces operative with 5+ years of high-threat dignitary protection, tactical motorcade operations, and counter-surveillance across global metropolitan centers.',
     qualifications: 'Certified Close Protection Spec',
     status: UserStatus.active,
   ),
@@ -36,8 +35,7 @@ final List<BodyGuardModel> bodyguardPlaceholders = [
     company: companyPlaceholders[1],
     availabilities: placeholderAvailabilities,
     hourlyRate: 85.0,
-    bio:
-        'High-value bullion and luxury asset courier protection specialist with extensive urban combat and emergency route-clearing background.',
+    bio: 'High-value bullion and luxury asset courier protection specialist with extensive urban combat and emergency route-clearing background.',
     qualifications: 'Tactical Defensive Driving Spec',
     status: UserStatus.active,
   ),
@@ -47,8 +45,7 @@ final List<BodyGuardModel> bodyguardPlaceholders = [
     company: companyPlaceholders[2],
     availabilities: placeholderAvailabilities,
     hourlyRate: 75.0,
-    bio:
-        'Former intelligence tactical trainer specializing in high-profile celebrity, diplomat, and executive close-quarter protection details.',
+    bio: 'Former intelligence tactical trainer specializing in high-profile celebrity, diplomat, and executive close-quarter protection details.',
     qualifications: 'Executive Protection & Threat Recon',
     status: UserStatus.active,
   ),

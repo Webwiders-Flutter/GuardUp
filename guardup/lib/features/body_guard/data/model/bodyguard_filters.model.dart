@@ -2,47 +2,127 @@ import 'package:equatable/equatable.dart';
 
 import '/features/auth/data/enum/user_status.enum.dart';
 import '../enum/bodyguard_availability_status.enum.dart';
+import '../enum/bodyguard_ownership.enum.dart';
 
 const _sentinel = Object();
 
 /// Filters for bodyguard listings (`BodyguardRepository.getPaginated`).
 ///
+/// Every field is optional; `null` (or an empty list) means "no filter".
 /// `copyWith` uses a sentinel so a filter can be cleared back to `null`.
+///
+// TODO(migration): gender filter. `bodyguards.gender` was dropped
+// (20261124000024) and `users.gender` is not readable by customers.
 class BodyguardFilters extends Equatable {
-  const BodyguardFilters({this.companyId, this.statuses, this.availability});
+  const BodyguardFilters({
+    this.statuses,
+    this.ownership,
+    this.companyId,
+    this.availability,
+    this.minHourlyRate,
+    this.maxHourlyRate,
+    this.minRating,
+    this.serviceIds,
+    this.address,
+  });
 
-  /// Only bodyguards of this company (`bodyguards.company_id`).
-  final String? companyId;
+  /// What customers browse: ACTIVE solo guards (registered without a company).
+  /// Company-managed guards are reached through their company.
+  static const customerDefault = BodyguardFilters(
+    statuses: [UserStatus.active],
+    // availability: BodyguardAvailabilityStatus.available,
+  );
 
   /// Only these verification statuses (`bodyguards.status`).
   final List<UserStatus>? statuses;
 
-  /// Only bodyguards with this availability today.
+  /// Solo (`company_id IS NULL`) or company-managed (`user_id IS NULL`).
+  final BodyguardOwnership? ownership;
+
+  /// Only bodyguards of this company (`bodyguards.company_id`).
+  final String? companyId;
+
+  /// Only bodyguards with this availability today (`user_availabilities`).
   final BodyguardAvailabilityStatus? availability;
 
+  /// `bodyguards.hourly_rate >= minHourlyRate`.
+  final double? minHourlyRate;
+
+  /// `bodyguards.hourly_rate <= maxHourlyRate`.
+  final double? maxHourlyRate;
+
+  /// `bodyguards.rating >= minRating`.
+  final double? minRating;
+
+  /// Bodyguards offering at least one of these services (`services.id`).
+  final List<String>? serviceIds;
+
+  /// Bodyguards whose address contains this string (`bodyguards.address ILIKE %address%`).
+  final String? address;
+
   bool get hasActiveFilters =>
-      companyId != null ||
       (statuses?.isNotEmpty ?? false) ||
-      availability != null;
+      ownership != null ||
+      companyId != null ||
+      availability != null ||
+      minHourlyRate != null ||
+      maxHourlyRate != null ||
+      minRating != null ||
+      (serviceIds?.isNotEmpty ?? false) ||
+      (address?.trim().isNotEmpty ?? false);
 
   BodyguardFilters copyWith({
-    Object? companyId = _sentinel,
     Object? statuses = _sentinel,
+    Object? ownership = _sentinel,
+    Object? companyId = _sentinel,
     Object? availability = _sentinel,
+    Object? minHourlyRate = _sentinel,
+    Object? maxHourlyRate = _sentinel,
+    Object? minRating = _sentinel,
+    Object? serviceIds = _sentinel,
+    Object? address = _sentinel,
   }) {
     return BodyguardFilters(
-      companyId: identical(companyId, _sentinel)
-          ? this.companyId
-          : companyId as String?,
       statuses: identical(statuses, _sentinel)
           ? this.statuses
           : statuses as List<UserStatus>?,
+      ownership: identical(ownership, _sentinel)
+          ? this.ownership
+          : ownership as BodyguardOwnership?,
+      companyId: identical(companyId, _sentinel)
+          ? this.companyId
+          : companyId as String?,
       availability: identical(availability, _sentinel)
           ? this.availability
           : availability as BodyguardAvailabilityStatus?,
+      minHourlyRate: identical(minHourlyRate, _sentinel)
+          ? this.minHourlyRate
+          : minHourlyRate as double?,
+      maxHourlyRate: identical(maxHourlyRate, _sentinel)
+          ? this.maxHourlyRate
+          : maxHourlyRate as double?,
+      minRating: identical(minRating, _sentinel)
+          ? this.minRating
+          : minRating as double?,
+      serviceIds: identical(serviceIds, _sentinel)
+          ? this.serviceIds
+          : serviceIds as List<String>?,
+      address: identical(address, _sentinel)
+          ? this.address
+          : address as String?,
     );
   }
 
   @override
-  List<Object?> get props => [companyId, statuses, availability];
+  List<Object?> get props => [
+    statuses,
+    ownership,
+    companyId,
+    availability,
+    minHourlyRate,
+    maxHourlyRate,
+    minRating,
+    serviceIds,
+    address,
+  ];
 }

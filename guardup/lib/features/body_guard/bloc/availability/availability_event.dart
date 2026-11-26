@@ -26,11 +26,7 @@ final class AvailabilityDayToggled extends AvailabilityEvent {
 
 /// Updates the start/end time strings for [day].
 final class AvailabilityTimeChanged extends AvailabilityEvent {
-  const AvailabilityTimeChanged(
-    this.day, {
-    this.fromTime,
-    this.toTime,
-  });
+  const AvailabilityTimeChanged(this.day, {this.fromTime, this.toTime});
 
   final WeekDay day;
   final String? fromTime;
@@ -44,4 +40,3 @@ final class AvailabilityTimeChanged extends AvailabilityEvent {
 final class AvailabilitySaved extends AvailabilityEvent {
   const AvailabilitySaved();
 }
-

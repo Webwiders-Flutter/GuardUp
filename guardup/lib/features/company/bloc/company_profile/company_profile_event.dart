@@ -41,4 +41,3 @@ final class CompanyProfileSubmitted extends CompanyProfileEvent {
   @override
   List<Object?> get props => [request, resubmitForReview, refreshAccount];
 }
-

@@ -38,6 +38,10 @@ final class JsonKeys {
   static const String companyPhoneCode = 'company_phone_code';
   static const String companyPhoneNumber = 'company_phone_number';
 
+  /// Computed field `account_status(companies)`: `users.status` of the
+  /// company account (migration 20261126000002_listing_computed_fields.sql).
+  static const String accountStatus = 'account_status';
+
   // Bodyguard profile (bodyguards) Keys
   static const String bodyguardId = 'bodyguard_id';
   static const String hourlyRate = 'hourly_rate';
@@ -47,6 +51,10 @@ final class JsonKeys {
   static const String languages = 'languages';
   static const String certifications = 'certifications';
   static const String qualifications = 'qualifications';
+
+  /// Computed field `is_available_now(bodyguards)`: whether the bodyguard is
+  /// currently in an active availability window.
+  static const String isAvailableNow = 'is_available_now';
 
   // Availability Keys
   static const String dayOfWeek = 'day_of_week';

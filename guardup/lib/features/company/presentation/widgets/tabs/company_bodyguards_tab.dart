@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 
+import '../../../../../shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/core/constants/app_durations.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
@@ -26,19 +27,15 @@ class CompanyBodyguardsTab extends StatelessWidget {
   final String? companyId;
   final UserRole role;
 
-  const CompanyBodyguardsTab({
-    super.key,
-    this.companyId,
-    required this.role,
-  });
+  const CompanyBodyguardsTab({super.key, this.companyId, required this.role});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => sl<BodyguardsBloc>(
-        param1: BodyguardFilters(
+        param1: BodyguardFilters.customerDefault.copyWith(
           companyId: companyId,
-          statuses: const [UserStatus.active],
+          ownership: BodyguardOwnership.companyManaged,
         ),
       )..add(const PaginationLoadRequested()),
       child: _CompanyBodyguardsTabView(role: role),
@@ -147,7 +144,7 @@ class _CompanyBodyguardsTabViewState extends State<_CompanyBodyguardsTabView> {
           padding: AppSpacing.xxl.allPadding,
           child: Center(
             child: Text(
-              'No active bodyguards found for this company.',
+              'No available bodyguards found for this company.',
               style: context.textTheme.bodyMedium?.colour(
                 context.colors.onSurfaceVariant,
               ),
@@ -159,8 +156,11 @@ class _CompanyBodyguardsTabViewState extends State<_CompanyBodyguardsTabView> {
             bodyguard: guard,
             role: widget.role,
             onTap: () => context.push(GuardDetailScreen.route, extra: guard),
-            onBookNow: () =>
-                context.push(CustomerBookingDetailsScreen.route, extra: guard),
+            onBookNow: () {
+              AppSnackbar.show(message: "Coming soon");
+              return;
+              context.push(CustomerBookingDetailsScreen.route, extra: guard);
+            },
           );
         },
       ),

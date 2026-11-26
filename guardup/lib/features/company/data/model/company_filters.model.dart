@@ -12,6 +12,8 @@ class CompanyFilters extends Equatable {
   static const customerDefault = CompanyFilters(statuses: [UserStatus.active]);
 
   /// Only companies whose account (`users.status`) has one of these statuses.
+  /// Applied through the `account_status` computed field, because customers
+  /// cannot read `users` directly.
   final List<UserStatus>? statuses;
 
   bool get hasActiveFilters => statuses?.isNotEmpty ?? false;

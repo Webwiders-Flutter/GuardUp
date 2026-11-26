@@ -90,9 +90,7 @@ class CustomerGuardAboutTabWidget extends StatelessWidget {
                 ),
                 AppSpacing.sm.h,
                 Text(
-                  bio.isNotEmpty
-                      ? bio
-                      : 'Professional bodyguard with certified tactical protection, executive transport, and close perimeter security experience.',
+                  bio.isNotEmpty ? bio : 'Professional bodyguard with certified tactical protection, executive transport, and close perimeter security experience.',
                   style: context.textTheme.bodyMedium?.copyWith(
                     height: 1.5,
                     color: context.colors.onSurface.withValues(alpha: 0.85),
@@ -129,9 +127,9 @@ class CustomerGuardAboutTabWidget extends StatelessWidget {
                     ),
                     Text(
                       '\$${hourlyRate.toStringAsFixed(0)} / hr',
-                      style: context.textTheme.labelMedium
-                          ?.bold()
-                          .colour(context.colors.primary),
+                      style: context.textTheme.labelMedium?.bold().colour(
+                        context.colors.primary,
+                      ),
                     ),
                   ],
                 ),

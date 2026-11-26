@@ -33,8 +33,7 @@ final class CompanyProfileState extends Equatable {
       company: company ?? this.company,
       pickedLogo: clearPickedLogo ? null : (pickedLogo ?? this.pickedLogo),
       submitStatus: submitStatus ?? this.submitStatus,
-      resubmittedForReview:
-          resubmittedForReview ?? this.resubmittedForReview,
+      resubmittedForReview: resubmittedForReview ?? this.resubmittedForReview,
     );
   }
 
@@ -47,4 +46,3 @@ final class CompanyProfileState extends Equatable {
     resubmittedForReview,
   ];
 }
-

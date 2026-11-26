@@ -67,4 +67,3 @@ class AvailabilityState extends Equatable {
   @override
   List<Object?> get props => [schedule, loadStatus, saveStatus];
 }
-

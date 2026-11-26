@@ -62,9 +62,9 @@ class CustomerGuardReviewsTabWidget extends StatelessWidget {
                       children: [
                         Text(
                           averageRating.toStringAsFixed(1),
-                          style: context.textTheme.headlineMedium?.bold().colour(
-                            context.colors.onSurface,
-                          ),
+                          style: context.textTheme.headlineMedium
+                              ?.bold()
+                              .colour(context.colors.onSurface),
                         ),
                         AppSpacing.xs.w,
                         Icon(
@@ -112,66 +112,66 @@ class CustomerGuardReviewsTabWidget extends StatelessWidget {
             )
           else
             ...reviews.map((review) {
-            return QuickContainer(
-              w: double.infinity,
-              my: 6,
-              p: AppSpacing.md,
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-              color: context.colors.surfaceContainer,
-              border: Border.all(
-                color: context.colors.outlineVariant.withValues(alpha: 0.4),
-                width: 0.8,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        review.authorName,
-                        style: context.textTheme.titleSmall?.bold().colour(
-                          context.colors.onSurface,
+              return QuickContainer(
+                w: double.infinity,
+                my: 6,
+                p: AppSpacing.md,
+                borderRadius: BorderRadius.circular(AppRadius.lg),
+                color: context.colors.surfaceContainer,
+                border: Border.all(
+                  color: context.colors.outlineVariant.withValues(alpha: 0.4),
+                  width: 0.8,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          review.authorName,
+                          style: context.textTheme.titleSmall?.bold().colour(
+                            context.colors.onSurface,
+                          ),
                         ),
-                      ),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.star_rounded,
-                            size: 16,
-                            color: context.colors.primary,
-                          ),
-                          AppSpacing.xxs.w,
-                          Text(
-                            review.rating.toStringAsFixed(1),
-                            style: context.textTheme.labelMedium?.bold().colour(
-                              context.colors.primary,
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.star_rounded,
+                              size: 16,
+                              color: context.colors.primary,
                             ),
-                          ),
-                        ],
+                            AppSpacing.xxs.w,
+                            Text(
+                              review.rating.toStringAsFixed(1),
+                              style: context.textTheme.labelMedium
+                                  ?.bold()
+                                  .colour(context.colors.primary),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    AppSpacing.xxs.h,
+                    Text(
+                      review.timeAndContext,
+                      style: context.textTheme.bodySmall?.copyWith(
+                        fontSize: 11,
+                        color: context.colors.onSurfaceVariant,
                       ),
-                    ],
-                  ),
-                  AppSpacing.xxs.h,
-                  Text(
-                    review.timeAndContext,
-                    style: context.textTheme.bodySmall?.copyWith(
-                      fontSize: 11,
-                      color: context.colors.onSurfaceVariant,
                     ),
-                  ),
-                  AppSpacing.xs.h,
-                  Text(
-                    review.comment,
-                    style: context.textTheme.bodyMedium?.copyWith(
-                      height: 1.4,
-                      color: context.colors.onSurface.withValues(alpha: 0.85),
+                    AppSpacing.xs.h,
+                    Text(
+                      review.comment,
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        height: 1.4,
+                        color: context.colors.onSurface.withValues(alpha: 0.85),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            );
-          }),
+                  ],
+                ),
+              );
+            }),
 
           AppSpacing.xxl.h,
         ],

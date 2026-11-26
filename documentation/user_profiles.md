@@ -233,8 +233,48 @@ account, status and logo are never touched by this flow.
 The company sees each bodyguard's verification on its card (pending / rejected with
 the reason / blocked), and the rejection reason on the edit screen.
 
-Customers still see the sample roster on the All Bodyguards screen until the public
-bodyguard listing is built (`is_bodyguard_listed` already defines who is visible).
+### Listings and filters (mobile app)
+
+Who can be listed is decided by RLS (`is_bodyguard_listed`, and `companies` readable
+when the account is `ACTIVE`). The app narrows that with typed filters; each list is a
+`PaginatedBloc` over one repository query, so filters, search and the exact count stay
+in one request.
+
+`public.users` is readable only by its owner and admins. A customer's PostgREST embed
+of `users` is therefore always empty, and an `!inner` join to it removes every row (that
+is why companies did not show to customers). Migration
+`20261126000002_listing_computed_fields.sql` adds read-only functions instead:
+
+| Function | Kind | Returns |
+|---|---|---|
+| `account_status(companies)` | computed field, `SECURITY DEFINER` | `users.status` of the company account (only the status, only for company rows the caller can already read) |
+| `listing_services(bodyguards)` | computed relationship | `user_services` rows by `bodyguard_id` (company-managed) **or** `user_id` (self-registered) |
+| `listing_availabilities(bodyguards)` | computed relationship | the same for `user_availabilities` |
+
+Companies (`CompanyRepository.getPaginated`, `CompanyFilters`):
+
+| Filter | Query |
+|---|---|
+| `statuses` | `account_status=in.(…)`; customers use `[ACTIVE]` |
+
+Bodyguards (`BodyguardRepository.getPaginated`, `BodyguardFilters`):
+
+| Filter | Query |
+|---|---|
+| `statuses` | `status=in.(…)` |
+| `ownership` | `solo` → `company_id IS NULL` (registered without a company); `companyManaged` → `user_id IS NULL` |
+| `companyId` | `company_id=eq.…` (non-UUID → empty page, no request) |
+| `minHourlyRate` / `maxHourlyRate` | `hourly_rate` `gte` / `lte` |
+| `minRating` | `rating=gte.…` |
+| `serviceIds` | `listing_services!inner(service_id)` with `service_id=in.(…)` (offers any of them) |
+| `availability` | today's row of `listing_availabilities!inner` (`day_of_week`, `is_available`) |
+
+Customer defaults: companies `[ACTIVE]`; bodyguards `[ACTIVE]` **solo** guards on both
+the home screen and the All Bodyguards "Solo" tab. Company-managed bodyguards are listed
+through their company (company details tab, booking) and on the company's own roster.
+
+Gender is not a filter: `bodyguards.gender` was dropped (`20261124000024`) and
+`users.gender` is not readable by customers.
 
 ### Admin panel (`guardup_admin`)
 

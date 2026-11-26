@@ -43,20 +43,12 @@ class BodyguardDetailsBloc
           ),
         );
       } else {
-        emit(
-          state.copyWith(
-            status: ApiState.success(state.guard!),
-          ),
-        );
+        emit(state.copyWith(status: ApiState.success(state.guard!)));
       }
       return;
     }
 
-    emit(
-      state.copyWith(
-        status: ApiState.loading(previousData: state.guard),
-      ),
-    );
+    emit(state.copyWith(status: ApiState.loading(previousData: state.guard)));
 
     try {
       final detailed = await asyncHandler(
@@ -81,4 +73,3 @@ class BodyguardDetailsBloc
     }
   }
 }
-

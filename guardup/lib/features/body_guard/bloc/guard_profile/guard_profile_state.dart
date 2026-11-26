@@ -97,8 +97,7 @@ final class GuardProfileState extends Equatable {
           ? null
           : (pickedAvatar ?? this.pickedAvatar),
       submitStatus: submitStatus ?? this.submitStatus,
-      resubmittedForReview:
-          resubmittedForReview ?? this.resubmittedForReview,
+      resubmittedForReview: resubmittedForReview ?? this.resubmittedForReview,
       editStatus: editStatus ?? this.editStatus,
     );
   }
@@ -117,4 +116,3 @@ final class GuardProfileState extends Equatable {
     editStatus,
   ];
 }
-

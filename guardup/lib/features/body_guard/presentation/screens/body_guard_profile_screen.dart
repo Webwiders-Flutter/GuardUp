@@ -40,16 +40,14 @@ class BodyGuardProfileScreen extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (_) => sl<BodyguardDetailsBloc>(
-            param1: targetId,
-            param2: bodyguard,
-          )..add(const BodyguardDetailsStarted()),
+          create: (_) =>
+              sl<BodyguardDetailsBloc>(param1: targetId, param2: bodyguard)
+                ..add(const BodyguardDetailsStarted()),
         ),
         BlocProvider(
-          create: (_) => sl<GuardProfileBloc>(
-            param1: owner,
-            param2: bodyguard,
-          )..add(const GuardProfileStarted()),
+          create: (_) =>
+              sl<GuardProfileBloc>(param1: owner, param2: bodyguard)
+                ..add(const GuardProfileStarted()),
         ),
       ],
       child: _BodyGuardProfileView(bodyguard: bodyguard),
@@ -84,9 +82,7 @@ class _BodyGuardProfileViewState extends State<_BodyGuardProfileView>
   }
 
   void _reloadBodyguard() {
-    context.read<BodyguardDetailsBloc>().add(
-      const BodyguardDetailsRefreshed(),
-    );
+    context.read<BodyguardDetailsBloc>().add(const BodyguardDetailsRefreshed());
   }
 
   @override
@@ -168,14 +164,16 @@ class _BodyGuardProfileViewState extends State<_BodyGuardProfileView>
                 final isCompanyGuard = widget.bodyguard != null;
                 final name = (guard?.name.isNotEmpty == true)
                     ? guard!.name
-                    : (user?.name.isNotEmpty == true ? user!.name : 'Bodyguard');
+                    : (user?.name.isNotEmpty == true
+                          ? user!.name
+                          : 'Bodyguard');
                 final rating = guard?.rating ?? 5.0;
                 final hourlyRate = guard?.hourlyRate ?? 60.0;
                 final avatar = (guard?.profileImageUrl?.isNotEmpty == true)
                     ? guard!.profileImageUrl!
                     : ((user?.profileImageUrl?.isNotEmpty == true)
-                        ? user!.profileImageUrl!
-                        : Assets.images.dummyAvatar.path);
+                          ? user!.profileImageUrl!
+                          : Assets.images.dummyAvatar.path);
                 final bio = (guard?.bio.isNotEmpty == true) ? guard!.bio : null;
                 final location = (guard?.address?.isNotEmpty == true)
                     ? guard!.address!
@@ -189,13 +187,13 @@ class _BodyGuardProfileViewState extends State<_BodyGuardProfileView>
                 final effectiveServices = isCompanyGuard
                     ? profileServices
                     : (profileServices.isNotEmpty
-                        ? profileServices
-                        : authState.userServices);
+                          ? profileServices
+                          : authState.userServices);
                 final specialization = effectiveServices.isNotEmpty
                     ? effectiveServices.map((s) => s.name).join(', ')
                     : (guard?.bio.isNotEmpty == true
-                        ? guard!.bio
-                        : 'Executive & VIP Protection');
+                          ? guard!.bio
+                          : 'Executive & VIP Protection');
 
                 return Scaffold(
                   appBar: const AppAppBar.transparent(
@@ -255,18 +253,18 @@ class _BodyGuardProfileViewState extends State<_BodyGuardProfileView>
                                       _showEditBioSheet(context, bio ?? ''),
                                   onEditKeyDetails: () =>
                                       _showEditKeyDetailsSheet(
-                                    context,
-                                    experienceYears: experienceYears,
-                                    hourlyRate: hourlyRate,
-                                    address: location == 'Location not set'
-                                        ? ''
-                                        : location,
-                                    latitude: guard?.latitude,
-                                    longitude: guard?.longitude,
-                                    languages: languages,
-                                    certifications: certifications,
-                                    qualifications: qualifications,
-                                  ),
+                                        context,
+                                        experienceYears: experienceYears,
+                                        hourlyRate: hourlyRate,
+                                        address: location == 'Location not set'
+                                            ? ''
+                                            : location,
+                                        latitude: guard?.latitude,
+                                        longitude: guard?.longitude,
+                                        languages: languages,
+                                        certifications: certifications,
+                                        qualifications: qualifications,
+                                      ),
                                   onEditServices: () => _showEditServicesSheet(
                                     context,
                                     currentServices: effectiveServices,
@@ -299,7 +297,9 @@ class _BodyGuardProfileViewState extends State<_BodyGuardProfileView>
                                 padding:
                                     context.horizontalEdgeInsets +
                                     AppSpacing.md.yPadding,
-                                child: const BodyguardReviewsWidget(reviews: []),
+                                child: const BodyguardReviewsWidget(
+                                  reviews: [],
+                                ),
                               ),
                             ],
                           ),

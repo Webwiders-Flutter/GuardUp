@@ -54,10 +54,9 @@ class BodyGuardCompleteProfileScreen extends StatelessWidget {
         : ManagedBodyguardOwner(bodyguard?.id ?? '');
 
     return BlocProvider(
-      create: (_) => sl<GuardProfileBloc>(
-        param1: owner,
-        param2: bodyguard,
-      )..add(const GuardProfileStarted()),
+      create: (_) =>
+          sl<GuardProfileBloc>(param1: owner, param2: bodyguard)
+            ..add(const GuardProfileStarted()),
       child: _BodyGuardCompleteProfileView(
         bodyguard: bodyguard,
         isGuard: isGuard,
@@ -164,12 +163,15 @@ class _BodyGuardCompleteProfileViewState
     );
 
     if (pickedFile != null && mounted) {
-      context.read<GuardProfileBloc>().add(GuardProfileAvatarPicked(pickedFile));
+      context.read<GuardProfileBloc>().add(
+        GuardProfileAvatarPicked(pickedFile),
+      );
     }
   }
 
   void _handleRemoveService(String serviceId, List<String> currentSelection) {
-    final nextSelection = List<String>.from(currentSelection)..remove(serviceId);
+    final nextSelection = List<String>.from(currentSelection)
+      ..remove(serviceId);
     _serviceDropdownController.deselect(serviceId);
     context.read<GuardProfileBloc>().add(
       GuardProfileServicesChanged(nextSelection),
@@ -465,8 +467,7 @@ class _BodyGuardCompleteProfileViewState
                                                         ),
                                                       )
                                                     : (networkUrl != null &&
-                                                          networkUrl
-                                                              .isNotEmpty)
+                                                          networkUrl.isNotEmpty)
                                                     ? ClipOval(
                                                         child: AppImage.network(
                                                           imageUrl: networkUrl,
@@ -594,9 +595,7 @@ class _BodyGuardCompleteProfileViewState
                               AppSpacing.xxl.h,
 
                               // 3. Hourly Rate Field
-                              AppFieldLabel(
-                                text: context.l10n.hourlyRateLabel,
-                              ),
+                              AppFieldLabel(text: context.l10n.hourlyRateLabel),
                               AppSpacing.sm.h,
                               AppTextField(
                                 controller: _hourlyRateController,

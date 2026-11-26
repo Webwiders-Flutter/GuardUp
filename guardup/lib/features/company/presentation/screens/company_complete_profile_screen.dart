@@ -292,9 +292,7 @@ class _CompanyCompleteProfileViewState
                                             AppSpacing.xxs.h,
                                             Text(
                                               profileReason,
-                                              style: context
-                                                  .textTheme
-                                                  .bodySmall
+                                              style: context.textTheme.bodySmall
                                                   ?.colour(
                                                     context.colors.onSurface,
                                                   )

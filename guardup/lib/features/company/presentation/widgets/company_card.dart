@@ -212,8 +212,8 @@ class CompanyCard extends StatelessWidget {
             foregroundColor: context.colors.primary,
             borderRadius: AppRadius.sm.toBorderRadius,
             onPressed:
-                onBookNow ??
-                () => context.push(BookingScreen.route, extra: company),
+                onBookNow 
+                
           ),
       ],
     );

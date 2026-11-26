@@ -1,9 +1,10 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/core/constants/api/database_functions.dart';
 import '/core/constants/api/database_tables.dart';
 import '/core/constants/api/json_keys.dart';
+import '/core/error/api_exception.dart';
 import '/core/repositories/base.repository.dart';
-import '/features/auth/data/enum/user_status.enum.dart';
 import '../model/company.model.dart';
 import '../model/company_filters.model.dart';
 import '../model/company_profile_request.model.dart';
@@ -22,8 +23,16 @@ class CompanyRepository extends BaseSupabaseRepository<CompanyModel> {
         primarySortAscending: false,
       );
 
-  static const String _selectColumns = '''
+  /// `account_status` is a computed field (users.status of the company
+  /// account). The `user` embed is a plain left join: `users` is readable only
+  /// by its owner and admins, so it is `null` for everyone else and must never
+  /// be `!inner` (that removed every company from the customer list).
+  ///
+  /// Note: [getPaginated] uses this lean select columns string WITHOUT documents.
+  static const String _selectColumns =
+      '''
     *,
+    ${JsonKeys.accountStatus},
     user:users!companies_user_id_fkey(
       id,
       name,
@@ -32,16 +41,54 @@ class CompanyRepository extends BaseSupabaseRepository<CompanyModel> {
     )
   ''';
 
-  static const String _selectColumnsActiveOnly = '''
+  /// Detailed select columns used strictly for company detail views.
+  /// Documents are embedded via [DatabaseFunctions.listingDocuments].
+  static const String _detailsSelectColumns =
+      '''
     *,
-    user:users!companies_user_id_fkey!inner(
+    ${JsonKeys.accountStatus},
+    user:users!companies_user_id_fkey(
       id,
       name,
       status,
       profile_image_url
+    ),
+    documents:${DatabaseFunctions.listingDocuments}(
+      id,
+      user_id,
+      document_type_id,
+      file_url,
+      file_name,
+      status,
+      rejection_reason,
+      valid_till,
+      uploaded_at,
+      updated_at,
+      document_type:document_types(
+        id, name, description, target_role, is_required, is_active, display_order
+      )
     )
   ''';
 
+  /// One company profile with its account status, user summary, and verified documents.
+  ///
+  /// Documents are joined ONLY on this detail query, never in [getPaginated].
+  @override
+  Future<CompanyModel> getDetails(String id) async {
+    final row = await client
+        .from(tableName)
+        .select(_detailsSelectColumns)
+        .eq(JsonKeys.id, id)
+        .maybeSingle();
+
+    if (row == null) {
+      throw ApiException('Company not found. It may have been removed.');
+    }
+
+    return fromJson(row);
+  }
+
+  /// One page of companies matching [filters].
   @override
   Future<({List<CompanyModel> data, int total})> getPaginated({
     required int page,
@@ -49,39 +96,24 @@ class CompanyRepository extends BaseSupabaseRepository<CompanyModel> {
     bool? isActive,
     String? search,
     String? selectColumnsOverride,
-    UserStatus? status,
-    List<UserStatus>? statuses,
-    CompanyFilters? filters,
+    CompanyFilters filters = const CompanyFilters(),
     CustomQueryBuilder? customQuery,
   }) {
-    final effectiveStatuses = filters?.statuses ?? statuses;
-
-    // When filtering by active user status, use the !inner join so pagination counts stay exact
-    final selectQuery =
-        (status != null ||
-            (effectiveStatuses != null && effectiveStatuses.isNotEmpty))
-        ? _selectColumnsActiveOnly
-        : (selectColumnsOverride ?? _selectColumns);
-
     return super.getPaginated(
       page: page,
       pageSize: pageSize,
       isActive: isActive,
       search: search,
-      selectColumnsOverride: selectQuery,
+      selectColumnsOverride: selectColumnsOverride,
       customQuery: (query) {
-        if (customQuery != null) {
-          query = customQuery(query);
+        final statuses = filters.statuses;
+        if (statuses != null && statuses.isNotEmpty) {
+          query = query.inFilter(
+            JsonKeys.accountStatus,
+            statuses.map((s) => s.apiValue).toList(),
+          );
         }
-
-        if (effectiveStatuses != null && effectiveStatuses.isNotEmpty) {
-          final values = effectiveStatuses.map((s) => s.apiValue).toList();
-          query = query.inFilter('user.status', values);
-        } else if (status != null) {
-          query = query.eq('user.status', status.apiValue);
-        }
-
-        return query;
+        return customQuery?.call(query) ?? query;
       },
     );
   }

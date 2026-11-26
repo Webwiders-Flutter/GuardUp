@@ -26,9 +26,6 @@ extension CompanyModelX on CompanyModel {
   // profile_image_url (user?.profileImageUrl); today cards show initials.
   String? get logoUrl => null;
 
-  // TODO(migration): no company bio column.
-  String? get bio => null;
-
   // TODO(migration): count of the company's ACTIVE bodyguards; hard-coded today.
   int get activeGuards => 12;
 

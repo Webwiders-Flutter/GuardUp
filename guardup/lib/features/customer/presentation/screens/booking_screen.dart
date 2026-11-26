@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:quick_container/quick_container.dart';
 
+import '../../../../shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/core/constants/app_durations.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
@@ -52,13 +53,11 @@ class BookingScreen extends StatelessWidget {
       create: (_) => sl<BodyguardsBloc>(
         param1: BodyguardFilters(
           companyId: company?.id,
+          ownership: BodyguardOwnership.companyManaged,
           statuses: const [UserStatus.active],
         ),
       )..add(const PaginationLoadRequested()),
-      child: _BookingView(
-        company: company,
-        initialBodyguard: initialBodyguard,
-      ),
+      child: _BookingView(company: company, initialBodyguard: initialBodyguard),
     );
   }
 }
@@ -98,8 +97,7 @@ class _BookingViewState extends State<_BookingView> {
   void initState() {
     super.initState();
     _selectedGuardIdsNotifier = ValueNotifier<Set<String>>({
-      if (widget.initialBodyguard != null)
-        widget.initialBodyguard!.id,
+      if (widget.initialBodyguard != null) widget.initialBodyguard!.id,
     });
 
     final bloc = context.read<BodyguardsBloc>();
@@ -225,247 +223,253 @@ class _BookingViewState extends State<_BookingView> {
       listener: (context, state) =>
           _paginationController.updateState(state.pagination),
       child: Scaffold(
-      appBar: const AppAppBar.transparent(
-        title: 'Company Profile',
-        showBackIcon: true,
-        alignTitle: AlignTitle.right,
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding:
-              context.horizontalEdgeInsets +
-              const EdgeInsets.only(top: AppSpacing.sm, bottom: AppSpacing.md),
-          child: AppButton(
-            text: 'Next',
+        appBar: const AppAppBar.transparent(
+          title: 'Company Profile',
+          showBackIcon: true,
+          alignTitle: AlignTitle.right,
+        ),
+        bottomNavigationBar: SafeArea(
+          child: Padding(
+            padding:
+                context.horizontalEdgeInsets +
+                const EdgeInsets.only(
+                  top: AppSpacing.sm,
+                  bottom: AppSpacing.md,
+                ),
+            child: AppButton(
+              text: 'Next',
 
-            type: ButtonType.primary,
-            trailing: Icon(
-              Icons.arrow_forward_rounded,
-              size: AppSizes.iconSm,
-              color: context.colors.onPrimary,
+              type: ButtonType.primary,
+              trailing: Icon(
+                Icons.arrow_forward_rounded,
+                size: AppSizes.iconSm,
+                color: context.colors.onPrimary,
+              ),
+              onPressed: _handleNext,
             ),
-            onPressed: _handleNext,
           ),
         ),
-      ),
-      body: SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          padding: context.horizontalEdgeInsets + AppSpacing.md.yPadding,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // ---------------------------------------------------------------
-              // 1. Company Profile Header Card
-              // ---------------------------------------------------------------
-              if (widget.company != null) ...[
-                CompanyCard(company: widget.company!, onBookNow: () {}),
+        body: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            padding: context.horizontalEdgeInsets + AppSpacing.md.yPadding,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // ---------------------------------------------------------------
+                // 1. Company Profile Header Card
+                // ---------------------------------------------------------------
+                if (widget.company != null) ...[
+                  CompanyCard(company: widget.company!, onBookNow: () {
+                    AppSnackbar.show(message: "Coming soon");
+    return;
+                  }),
+                  AppSpacing.xl.h,
+                ],
+
+                // ---------------------------------------------------------------
+                // 2. Date & Time Selection Section
+                // ---------------------------------------------------------------
+                Text(
+                  'DATE & TIME',
+                  style: context.textTheme.labelMedium
+                      ?.copyWith(letterSpacing: 1.2)
+                      .colour(context.colors.onSurfaceVariant),
+                ),
+                AppSpacing.sm.h,
+                ListenableBuilder(
+                  listenable: Listenable.merge([
+                    _startDateNotifier,
+                    _startTimeNotifier,
+                    _endDateNotifier,
+                    _endTimeNotifier,
+                  ]),
+                  builder: (context, _) {
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildDateTimeRow(
+                          firstLabel: 'START DATE',
+                          firstValue: DateFormat('MMM dd, yyyy')
+                              .format(_startDateNotifier.value),
+                          firstIcon: Icons.calendar_today_outlined,
+                          onFirstTap: _pickStartDate,
+                          secondLabel: 'START TIME',
+                          secondValue: _startTimeNotifier.value.format(context),
+                          secondIcon: Icons.access_time_rounded,
+                          onSecondTap: _pickStartTime,
+                        ),
+                        AppSpacing.sm.h,
+                        _buildDateTimeRow(
+                          firstLabel: 'END DATE',
+                          firstValue: DateFormat('MMM dd, yyyy')
+                              .format(_endDateNotifier.value),
+                          firstIcon: Icons.calendar_today_outlined,
+                          onFirstTap: _pickEndDate,
+                          secondLabel: 'END TIME',
+                          secondValue: _endTimeNotifier.value.format(context),
+                          secondIcon: Icons.access_time_rounded,
+                          onSecondTap: _pickEndTime,
+                        ),
+                      ],
+                    );
+                  },
+                ),
+                AppSpacing.lg.h,
+
+                // ---------------------------------------------------------------
+                // 3. Search Bar with Custom Filter Icon
+                // ---------------------------------------------------------------
+                AppTextField.search(
+                  controller: _searchController,
+                  size: AppInputSize.small,
+                  decoration: InputDecoration(
+                    hintText: 'Search bodyguards near you...',
+                    prefixIcon: Icon(
+                      Icons.search_rounded,
+                      color: context.colors.onSurfaceVariant,
+                      size: AppSizes.iconSm + 2,
+                    ),
+                    suffixIcon: Padding(
+                      padding: const EdgeInsets.only(
+                        right: AppSpacing.xs,
+                        top: 2,
+                        bottom: 2,
+                      ),
+                      child: QuickContainer(
+                        w: 36,
+                        h: 36,
+                        radius: AppRadius.md,
+                        color: context.colors.primary.withValues(alpha: 0.12),
+                        border: Border.all(
+                          color: context.colors.primary.withValues(alpha: 0.35),
+                          width: 1.0,
+                        ),
+                        alignment: Alignment.center,
+                        child: Icon(
+                          Icons.tune_rounded,
+                          color: context.colors.primary,
+                          size: AppSizes.iconSm,
+                        ),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: AppRadius.xl.toBorderRadius,
+                      borderSide: BorderSide(
+                        color: context.colors.outlineVariant,
+                      ),
+                    ),
+                    fillColor: context.colors.onPrimary,
+                  ),
+                  style: TextStyle(color: context.colors.onSurface),
+                ),
+                AppSpacing.lg.h,
+
+                // ---------------------------------------------------------------
+                // 4. Selectable Bodyguards Operative List & 5. Payment Summary
+                // ---------------------------------------------------------------
+                AppPagination<BodyGuardModel>.list(
+                  controller: _paginationController,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  enablePullToRefresh: false,
+                  separatorBuilder: (context, index) => AppSpacing.md.h,
+                  itemBuilder: (context, guard, index) {
+                    return ListenableBuilder(
+                      listenable: _selectedGuardIdsNotifier,
+                      builder: (context, _) {
+                        final isSelected = _selectedGuardIdsNotifier.value
+                            .contains(guard.id);
+                        return BodyGuardCard(
+                          bodyguard: guard,
+                          isSelected: isSelected,
+                          onSelectedChanged: (selected) {
+                            final updated = Set<String>.from(
+                              _selectedGuardIdsNotifier.value,
+                            );
+                            if (selected == true) {
+                              updated.add(guard.id);
+                            } else {
+                              updated.remove(guard.id);
+                            }
+                            _selectedGuardIdsNotifier.value = updated;
+                          },
+                          onTap: () {
+                            final updated = Set<String>.from(
+                              _selectedGuardIdsNotifier.value,
+                            );
+                            if (updated.contains(guard.id)) {
+                              updated.remove(guard.id);
+                            } else {
+                              updated.add(guard.id);
+                            }
+                            _selectedGuardIdsNotifier.value = updated;
+                          },
+                        );
+                      },
+                    );
+                  },
+                  emptyBuilder: (context) => Padding(
+                    padding: AppSpacing.lg.yPadding,
+                    child: Center(
+                      child: Text(
+                        'No active bodyguards found.',
+                        style: context.textTheme.bodyMedium?.colour(
+                          context.colors.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                AppSpacing.md.h,
+
+                ListenableBuilder(
+                  listenable: Listenable.merge([
+                    _selectedGuardIdsNotifier,
+                    _paginationController,
+                    _startDateNotifier,
+                    _startTimeNotifier,
+                    _endDateNotifier,
+                    _endTimeNotifier,
+                  ]),
+                  builder: (context, _) {
+                    final selectedIds = _selectedGuardIdsNotifier.value;
+                    final loadedGuards = _paginationController.value.items;
+                    final allKnownGuards = [
+                      if (widget.initialBodyguard != null)
+                        widget.initialBodyguard!,
+                      ...loadedGuards,
+                    ];
+                    final selectedGuardsList = allKnownGuards
+                        .where((g) => selectedIds.contains(g.id))
+                        .toList();
+                    final double primaryRate = selectedGuardsList.isNotEmpty
+                        ? selectedGuardsList.first.hourlyRate
+                        : (widget.initialBodyguard?.hourlyRate ?? 60.0);
+                    final int hours = _calculatedHours;
+                    final double operativeCost = primaryRate * hours;
+                    const double discountAmount = 15.0;
+                    final double totalAmount =
+                        (operativeCost - discountAmount) > 0
+                        ? (operativeCost - discountAmount)
+                        : operativeCost;
+
+                    return _buildPaymentSummaryCard(
+                      context: context,
+                      primaryRate: primaryRate,
+                      hours: hours,
+                      operativeCost: operativeCost,
+                      discountAmount: discountAmount,
+                      totalAmount: totalAmount,
+                    );
+                  },
+                ),
                 AppSpacing.xl.h,
               ],
-
-              // ---------------------------------------------------------------
-              // 2. Date & Time Selection Section
-              // ---------------------------------------------------------------
-              Text(
-                'DATE & TIME',
-                style: context.textTheme.labelMedium
-                    ?.copyWith(letterSpacing: 1.2)
-                    .colour(context.colors.onSurfaceVariant),
-              ),
-              AppSpacing.sm.h,
-              ListenableBuilder(
-                listenable: Listenable.merge([
-                  _startDateNotifier,
-                  _startTimeNotifier,
-                  _endDateNotifier,
-                  _endTimeNotifier,
-                ]),
-                builder: (context, _) {
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildDateTimeRow(
-                        firstLabel: 'START DATE',
-                        firstValue: DateFormat('MMM dd, yyyy')
-                            .format(_startDateNotifier.value),
-                        firstIcon: Icons.calendar_today_outlined,
-                        onFirstTap: _pickStartDate,
-                        secondLabel: 'START TIME',
-                        secondValue: _startTimeNotifier.value.format(context),
-                        secondIcon: Icons.access_time_rounded,
-                        onSecondTap: _pickStartTime,
-                      ),
-                      AppSpacing.sm.h,
-                      _buildDateTimeRow(
-                        firstLabel: 'END DATE',
-                        firstValue: DateFormat('MMM dd, yyyy')
-                            .format(_endDateNotifier.value),
-                        firstIcon: Icons.calendar_today_outlined,
-                        onFirstTap: _pickEndDate,
-                        secondLabel: 'END TIME',
-                        secondValue: _endTimeNotifier.value.format(context),
-                        secondIcon: Icons.access_time_rounded,
-                        onSecondTap: _pickEndTime,
-                      ),
-                    ],
-                  );
-                },
-              ),
-              AppSpacing.lg.h,
-
-              // ---------------------------------------------------------------
-              // 3. Search Bar with Custom Filter Icon
-              // ---------------------------------------------------------------
-              AppTextField.search(
-                controller: _searchController,
-                size: AppInputSize.small,
-                decoration: InputDecoration(
-                  hintText: 'Search bodyguards near you...',
-                  prefixIcon: Icon(
-                    Icons.search_rounded,
-                    color: context.colors.onSurfaceVariant,
-                    size: AppSizes.iconSm + 2,
-                  ),
-                  suffixIcon: Padding(
-                    padding: const EdgeInsets.only(
-                      right: AppSpacing.xs,
-                      top: 2,
-                      bottom: 2,
-                    ),
-                    child: QuickContainer(
-                      w: 36,
-                      h: 36,
-                      radius: AppRadius.md,
-                      color: context.colors.primary.withValues(alpha: 0.12),
-                      border: Border.all(
-                        color: context.colors.primary.withValues(alpha: 0.35),
-                        width: 1.0,
-                      ),
-                      alignment: Alignment.center,
-                      child: Icon(
-                        Icons.tune_rounded,
-                        color: context.colors.primary,
-                        size: AppSizes.iconSm,
-                      ),
-                    ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: AppRadius.xl.toBorderRadius,
-                    borderSide: BorderSide(
-                      color: context.colors.outlineVariant,
-                    ),
-                  ),
-                  fillColor: context.colors.onPrimary,
-                ),
-                style: TextStyle(color: context.colors.onSurface),
-              ),
-              AppSpacing.lg.h,
-
-              // ---------------------------------------------------------------
-              // 4. Selectable Bodyguards Operative List & 5. Payment Summary
-              // ---------------------------------------------------------------
-              AppPagination<BodyGuardModel>.list(
-                controller: _paginationController,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                enablePullToRefresh: false,
-                separatorBuilder: (context, index) => AppSpacing.md.h,
-                itemBuilder: (context, guard, index) {
-                  return ListenableBuilder(
-                    listenable: _selectedGuardIdsNotifier,
-                    builder: (context, _) {
-                      final isSelected =
-                          _selectedGuardIdsNotifier.value.contains(guard.id);
-                      return BodyGuardCard(
-                        bodyguard: guard,
-                        isSelected: isSelected,
-                        onSelectedChanged: (selected) {
-                          final updated = Set<String>.from(
-                            _selectedGuardIdsNotifier.value,
-                          );
-                          if (selected == true) {
-                            updated.add(guard.id);
-                          } else {
-                            updated.remove(guard.id);
-                          }
-                          _selectedGuardIdsNotifier.value = updated;
-                        },
-                        onTap: () {
-                          final updated = Set<String>.from(
-                            _selectedGuardIdsNotifier.value,
-                          );
-                          if (updated.contains(guard.id)) {
-                            updated.remove(guard.id);
-                          } else {
-                            updated.add(guard.id);
-                          }
-                          _selectedGuardIdsNotifier.value = updated;
-                        },
-                      );
-                    },
-                  );
-                },
-                emptyBuilder: (context) => Padding(
-                  padding: AppSpacing.lg.yPadding,
-                  child: Center(
-                    child: Text(
-                      'No active bodyguards found.',
-                      style: context.textTheme.bodyMedium?.colour(
-                        context.colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              AppSpacing.md.h,
-
-              ListenableBuilder(
-                listenable: Listenable.merge([
-                  _selectedGuardIdsNotifier,
-                  _paginationController,
-                  _startDateNotifier,
-                  _startTimeNotifier,
-                  _endDateNotifier,
-                  _endTimeNotifier,
-                ]),
-                builder: (context, _) {
-                  final selectedIds = _selectedGuardIdsNotifier.value;
-                  final loadedGuards = _paginationController.value.items;
-                  final allKnownGuards = [
-                    if (widget.initialBodyguard != null)
-                      widget.initialBodyguard!,
-                    ...loadedGuards,
-                  ];
-                  final selectedGuardsList = allKnownGuards
-                      .where((g) => selectedIds.contains(g.id))
-                      .toList();
-                  final double primaryRate = selectedGuardsList.isNotEmpty
-                      ? selectedGuardsList.first.hourlyRate
-                      : (widget.initialBodyguard?.hourlyRate ?? 60.0);
-                  final int hours = _calculatedHours;
-                  final double operativeCost = primaryRate * hours;
-                  const double discountAmount = 15.0;
-                  final double totalAmount =
-                      (operativeCost - discountAmount) > 0
-                          ? (operativeCost - discountAmount)
-                          : operativeCost;
-
-                  return _buildPaymentSummaryCard(
-                    context: context,
-                    primaryRate: primaryRate,
-                    hours: hours,
-                    operativeCost: operativeCost,
-                    discountAmount: discountAmount,
-                    totalAmount: totalAmount,
-                  );
-                },
-              ),
-              AppSpacing.xl.h,
-            ],
+            ),
           ),
         ),
       ),
-    ),
     );
   }
 

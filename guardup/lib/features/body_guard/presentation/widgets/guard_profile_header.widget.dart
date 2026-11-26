@@ -83,8 +83,12 @@ class GuardProfileHeaderWidget extends StatelessWidget {
                       gradient: LinearGradient(
                         colors: [
                           Colors.transparent,
-                          context.colors.surfaceContainer.withValues(alpha: 0.2),
-                          context.colors.surfaceContainer.withValues(alpha: 0.6),
+                          context.colors.surfaceContainer.withValues(
+                            alpha: 0.2,
+                          ),
+                          context.colors.surfaceContainer.withValues(
+                            alpha: 0.6,
+                          ),
                         ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
@@ -104,7 +108,9 @@ class GuardProfileHeaderWidget extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: context.colors.surfaceDim.withValues(alpha: 0.85),
+                        color: context.colors.surfaceDim.withValues(
+                          alpha: 0.85,
+                        ),
                         borderRadius: BorderRadius.circular(AppRadius.full),
                         border: Border.all(
                           color: context.colors.primary.withValues(alpha: 0.6),
@@ -126,10 +132,7 @@ class GuardProfileHeaderWidget extends StatelessWidget {
                           Text(
                             'VERIFIED OFFICER',
                             style: context.textTheme.labelSmall
-                                ?.copyWith(
-                                  fontSize: 9.5,
-                                  letterSpacing: 0.8,
-                                )
+                                ?.copyWith(fontSize: 9.5, letterSpacing: 0.8)
                                 .colour(context.colors.primary),
                           ),
                         ],

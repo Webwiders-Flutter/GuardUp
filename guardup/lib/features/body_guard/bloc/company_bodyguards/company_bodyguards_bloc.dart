@@ -59,8 +59,9 @@ class CompanyBodyguardsBloc
     required BodyguardFilters filters,
     required String search,
   }) async {
-    final companyId =
-        _cachedCompanyId ??= await _repository.getMyCompanyId(companyUserId);
+    final companyId = _cachedCompanyId ??= await _repository.getMyCompanyId(
+      companyUserId,
+    );
 
     return _repository.getPaginated(
       page: page,
@@ -83,10 +84,7 @@ class CompanyBodyguardsBloc
       final status => [status],
     };
 
-    return applyFilters(
-      state.filters.copyWith(statuses: statuses),
-      emit,
-    );
+    return applyFilters(state.filters.copyWith(statuses: statuses), emit);
   }
 
   Future<void> _onDeleted(
@@ -114,4 +112,3 @@ class CompanyBodyguardsBloc
     }
   }
 }
-

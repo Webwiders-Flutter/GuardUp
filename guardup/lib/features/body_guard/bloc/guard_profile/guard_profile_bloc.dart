@@ -50,10 +50,7 @@ class GuardProfileBloc extends Bloc<GuardProfileEvent, GuardProfileState> {
       _onKeyDetailsSaved,
       transformer: droppable(),
     );
-    on<GuardProfileServicesSaved>(
-      _onServicesSaved,
-      transformer: droppable(),
-    );
+    on<GuardProfileServicesSaved>(_onServicesSaved, transformer: droppable());
   }
 
   static const String _tag = 'GuardProfileBloc';
@@ -104,7 +101,9 @@ class GuardProfileBloc extends Bloc<GuardProfileEvent, GuardProfileState> {
             return;
           }
 
-          final user = await asyncHandler(() => userRepository.getProfile(userId));
+          final user = await asyncHandler(
+            () => userRepository.getProfile(userId),
+          );
           var validServices = state.selectedServiceIds;
           try {
             final assignedIds = await asyncHandler(
@@ -166,11 +165,7 @@ class GuardProfileBloc extends Bloc<GuardProfileEvent, GuardProfileState> {
           );
       }
     } on ApiException catch (e) {
-      emit(
-        state.copyWith(
-          loadStatus: ApiState.failure(e.message, error: e),
-        ),
-      );
+      emit(state.copyWith(loadStatus: ApiState.failure(e.message, error: e)));
     }
   }
 
@@ -202,7 +197,9 @@ class GuardProfileBloc extends Bloc<GuardProfileEvent, GuardProfileState> {
     GuardProfileServicesChanged event,
     Emitter<GuardProfileState> emit,
   ) {
-    emit(state.copyWith(selectedServiceIds: List<String>.from(event.serviceIds)));
+    emit(
+      state.copyWith(selectedServiceIds: List<String>.from(event.serviceIds)),
+    );
   }
 
   Future<void> _onSubmitted(
@@ -380,11 +377,7 @@ class GuardProfileBloc extends Bloc<GuardProfileEvent, GuardProfileState> {
           );
       }
     } on ApiException catch (e) {
-      emit(
-        state.copyWith(
-          submitStatus: ApiState.failure(e.message, error: e),
-        ),
-      );
+      emit(state.copyWith(submitStatus: ApiState.failure(e.message, error: e)));
     }
   }
 
@@ -406,7 +399,9 @@ class GuardProfileBloc extends Bloc<GuardProfileEvent, GuardProfileState> {
 
     emit(state.copyWith(editStatus: const ApiState.loading()));
     try {
-      await asyncHandler(() => bodyguardRepository.updateBio(target, event.bio));
+      await asyncHandler(
+        () => bodyguardRepository.updateBio(target, event.bio),
+      );
       if (target is AccountOwner) {
         onAccountUpdated?.call();
       }

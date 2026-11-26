@@ -284,9 +284,7 @@ class _BodyguardAvailabilityViewState
             return Center(
               child: Padding(
                 padding: AppSpacing.xxl.allPadding,
-                child: CircularProgressIndicator(
-                  color: context.colors.primary,
-                ),
+                child: CircularProgressIndicator(color: context.colors.primary),
               ),
             );
           }
@@ -327,9 +325,9 @@ class _BodyguardAvailabilityViewState
                         horizontal: 12,
                         vertical: 20,
                       ),
-                      onTap: () => context
-                          .read<AvailabilityBloc>()
-                          .add(AvailabilityDayToggled(day)),
+                      onTap: () => context.read<AvailabilityBloc>().add(
+                        AvailabilityDayToggled(day),
+                      ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -367,7 +365,9 @@ class _BodyguardAvailabilityViewState
                                     '-',
                                     style: context.textTheme.bodyMedium
                                         ?.bold()
-                                        .colour(context.colors.onSurfaceVariant),
+                                        .colour(
+                                          context.colors.onSurfaceVariant,
+                                        ),
                                   ),
                                 ),
                                 _buildTimeInputField(
@@ -381,9 +381,9 @@ class _BodyguardAvailabilityViewState
                           else
                             _buildDayOffBadge(
                               context,
-                              onTap: () => context
-                                  .read<AvailabilityBloc>()
-                                  .add(AvailabilityDayToggled(day)),
+                              onTap: () => context.read<AvailabilityBloc>().add(
+                                AvailabilityDayToggled(day),
+                              ),
                             ),
                         ],
                       ),
@@ -399,9 +399,9 @@ class _BodyguardAvailabilityViewState
                 isLoading: isSaving,
                 onPressed: isSaving
                     ? null
-                    : () => context
-                        .read<AvailabilityBloc>()
-                        .add(const AvailabilitySaved()),
+                    : () => context.read<AvailabilityBloc>().add(
+                        const AvailabilitySaved(),
+                      ),
               ),
               AppSpacing.xl.h,
             ],

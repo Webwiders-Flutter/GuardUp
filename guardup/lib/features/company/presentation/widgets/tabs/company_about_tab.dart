@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:guardup/features/company/data/enum/company_doc_type.enum.dart';
 import 'package:intl/intl.dart';
 
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
-import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/features/body_guard/data/enum/document_status.enum.dart';
-import '/features/body_guard/data/model/user_document.model.dart';
+import '/features/documents/data/models/user_document.model.dart';
 import '/shared/widgets/inputs/document_upload_card.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 import '../../../data/model/company.model.dart';
@@ -20,42 +18,42 @@ class CompanyAboutTab extends StatelessWidget {
 
   const CompanyAboutTab({super.key, this.company});
 
-  static const String _defaultBio =
-      "Lorem Ipsum is simply dummy text of the printing and typesetting industry. "
-      "Lorem Ipsum has been the industry's standard dummy text ever since 1966, "
-      "when designers at Letraset and James Mosley, the librarian at St Bride Printing Library in London, "
-      "took a 1914 Cicero translation and scrambled it to make dummy text for Letraset's Body Type sheets. "
-      "It has survived not only many decades, but also the leap into electronic typesetting, remaining essentially unchanged.";
-
   @override
   Widget build(BuildContext context) {
-    final joinedDateText = company?.joinedAt != null
-        ? 'Joined ${DateFormat('dd MMM , yyyy').format(company!.joinedAt!)}'
-        : 'Joined 25 aug , 2024';
+    final joinedDateText = company?.createdAt != null
+        ? 'Joined ${DateFormat('dd MMM , yyyy').format(company!.createdAt!)}'
+        : 'Joined recently';
 
-    final effectiveDocs = const [
-      UserDocumentModel(
-        id: 'doc_1',
-        documentTypeId: 'incorporation',
-        fileUrl: '',
-        fileName: 'Certificate of Incorporation.pdf',
-        status: DocumentStatus.approved,
-      ),
-      UserDocumentModel(
-        id: 'doc_2',
-        documentTypeId: 'agency_license',
-        fileUrl: '',
-        fileName: 'Private Security Agency License.pdf',
-        status: DocumentStatus.approved,
-      ),
-      UserDocumentModel(
-        id: 'doc_3',
-        documentTypeId: 'insurance',
-        fileUrl: '',
-        fileName: 'Liability Insurance Coverage.pdf',
-        status: DocumentStatus.approved,
-      ),
-    ];
+    final bioText = company?.bio?.trim().isNotEmpty == true
+        ? company!.bio!
+        : '';
+
+    final docs = company?.documents;
+    final effectiveDocs =
+        docs ??
+        const [
+          UserDocumentModel(
+            id: 'doc_1',
+            documentTypeId: 'incorporation',
+            fileUrl: '',
+            fileName: 'Certificate of Incorporation.pdf',
+            status: DocumentStatus.approved,
+          ),
+          UserDocumentModel(
+            id: 'doc_2',
+            documentTypeId: 'agency_license',
+            fileUrl: '',
+            fileName: 'Private Security Agency License.pdf',
+            status: DocumentStatus.approved,
+          ),
+          UserDocumentModel(
+            id: 'doc_3',
+            documentTypeId: 'insurance',
+            fileUrl: '',
+            fileName: 'Liability Insurance Coverage.pdf',
+            status: DocumentStatus.approved,
+          ),
+        ];
 
     return SingleChildScrollView(
       padding: context.horizontalEdgeInsets + AppSpacing.md.yPadding,
@@ -89,7 +87,7 @@ class CompanyAboutTab extends StatelessWidget {
           // 2. Company Biography Paragraph
           // -------------------------------------------------------------------
           Text(
-            company?.bio ?? _defaultBio,
+            bioText,
             style: context.textTheme.bodySmall
                 ?.lineHeight(1.5)
                 .colour(context.colors.onSurfaceVariant),
@@ -111,17 +109,23 @@ class CompanyAboutTab extends StatelessWidget {
           // -------------------------------------------------------------------
           // 4. Read-Only Document Upload Cards
           // -------------------------------------------------------------------
-          for (int i = 0; i < CompanyDocType.values.length; i++) ...[
-            _buildDocumentCard(
-              context: context,
-              spec: (
-                icon: CompanyDocType.values[i].icon,
-                title: CompanyDocType.values[i].label(context.l10n),
+          if (docs != null && docs.isEmpty)
+            Padding(
+              padding: AppSpacing.lg.yPadding,
+              child: Center(
+                child: Text(
+                  'No verified documents available.',
+                  style: context.textTheme.bodyMedium?.colour(
+                    context.colors.onSurfaceVariant,
+                  ),
+                ),
               ),
-              docModel: i < effectiveDocs.length ? effectiveDocs[i] : null,
-            ),
-            if (i < CompanyDocType.values.length - 1) AppSpacing.md.h,
-          ],
+            )
+          else
+            for (int i = 0; i < effectiveDocs.length; i++) ...[
+              _buildDocumentCard(context: context, doc: effectiveDocs[i]),
+              if (i < effectiveDocs.length - 1) AppSpacing.md.h,
+            ],
           AppSpacing.xl.h,
         ],
       ),
@@ -130,18 +134,21 @@ class CompanyAboutTab extends StatelessWidget {
 
   Widget _buildDocumentCard({
     required BuildContext context,
-    required ({String title, IconData icon}) spec,
-    required UserDocumentModel? docModel,
+    required UserDocumentModel doc,
   }) {
+    final title =
+        doc.resolvedDocumentName ?? doc.fileName ?? 'Verified Document';
+    final iconData = doc.documentType?.icon ?? Icons.description_outlined;
+
     return DocumentUploadCard(
-      title: spec.title,
+      title: title,
       isReadOnly: true,
       showPreview: false,
-      status: docModel?.status ?? DocumentStatus.approved,
-      initialUrl: docModel?.fileUrl,
-      fileName: docModel?.fileName,
+      status: doc.status,
+      initialUrl: doc.fileUrl,
+      fileName: doc.fileName,
       icon: Icon(
-        spec.icon,
+        iconData,
         color: context.colors.primary,
         size: AppSizes.iconLg,
       ),

@@ -16,4 +16,3 @@ final class BodyguardDetailsStarted extends BodyguardDetailsEvent {
 final class BodyguardDetailsRefreshed extends BodyguardDetailsEvent {
   const BodyguardDetailsRefreshed();
 }
-

@@ -10,15 +10,16 @@ import '/core/repositories/base.repository.dart';
 import '/features/auth/data/enum/user_status.enum.dart';
 import '/shared/models/record_owner.model.dart';
 import '../enum/bodyguard_availability_status.enum.dart';
-import '../enum/week_day.enum.dart';
+import '../enum/bodyguard_ownership.enum.dart';
 import '../model/body_guard.model.dart';
 import '../model/bodyguard_filters.model.dart';
 import '../model/bodyguard_profile_request.model.dart';
 import 'availability.repository.dart';
 
-/// Company-managed bodyguards (`public.bodyguards` with `user_id = NULL`):
-/// listings, single operative details, creation, update, and service management.
-/// See documentation/user_profiles.md.
+/// Bodyguard profiles (`public.bodyguards`): self-registered (solo, `user_id`
+/// set) and company-managed (`user_id = NULL`). Listings with
+/// [BodyguardFilters], details, and managing company bodyguards.
+/// See documentation/user_profiles.md ("Listings and filters").
 ///
 /// Inherits [BaseSupabaseRepository] for standard CRUD, pagination, and sorting.
 class BodyguardRepository extends BaseSupabaseRepository<BodyGuardModel> {
@@ -40,8 +41,9 @@ class BodyguardRepository extends BaseSupabaseRepository<BodyGuardModel> {
   static const String _detailsSelect =
       '''
     *,
+    ${JsonKeys.isAvailableNow},
     $_companySelect,
-    services:user_services!user_services_bodyguard_id_fkey(
+    services:${DatabaseFunctions.listingServices}(
       id,
       service:services(id, name, description, icon_name, is_active, display_order)
     ),
@@ -61,7 +63,7 @@ class BodyguardRepository extends BaseSupabaseRepository<BodyGuardModel> {
         id, name, description, target_role, is_required, is_active, display_order
       )
     ),
-    availabilities:user_availabilities!user_availabilities_bodyguard_id_fkey(
+    availabilities:${DatabaseFunctions.listingAvailabilities}(
       id,
       user_id,
       bodyguard_id,
@@ -100,8 +102,15 @@ class BodyguardRepository extends BaseSupabaseRepository<BodyGuardModel> {
     return id;
   }
 
-  /// Standard paginated listing supporting search, status, availability status,
-  /// and company filtering directly within the single Supabase query.
+  /// Alias of the `!inner` embed that only exists to filter parent rows.
+  static const String _serviceFilter = 'service_filter';
+
+  /// One page of bodyguards matching [filters], in a single query so the
+  /// exact count stays in sync with the filters.
+  ///
+  /// Services and availability use the `listing_*` computed relationships,
+  /// which cover both company-managed (`bodyguard_id`) and self-registered
+  /// (`user_id`) bodyguards.
   @override
   Future<({List<BodyGuardModel> data, int total})> getPaginated({
     required int page,
@@ -109,41 +118,29 @@ class BodyguardRepository extends BaseSupabaseRepository<BodyGuardModel> {
     bool? isActive,
     String? search,
     String? selectColumnsOverride,
-    String? companyId,
-    UserStatus? status,
-    List<UserStatus>? statuses,
-    BodyguardAvailabilityStatus? availabilityStatus,
-    BodyguardFilters? filters,
+    BodyguardFilters filters = const BodyguardFilters(),
     CustomQueryBuilder? customQuery,
   }) {
-    final effectiveCompanyId = filters?.companyId ?? companyId;
-    final effectiveStatuses = filters?.statuses ?? statuses;
-    final effectiveAvailability = filters?.availability ?? availabilityStatus;
+    final companyId = filters.companyId;
 
-    // If a companyId is supplied but is not a valid UUID, querying PostgREST directly
-    // causes a PostgreSQL syntax error (code 22P02: invalid input syntax for type uuid).
-    // Safely return an empty list because no rows in the DB can match a non-UUID.
-    if (effectiveCompanyId != null &&
-        effectiveCompanyId.isNotEmpty &&
-        !AppRegex.uuid.hasMatch(effectiveCompanyId)) {
+    // A non-UUID company id makes PostgreSQL fail (22P02 invalid input syntax
+    // for type uuid). No row can match it, so return an empty page.
+    if (companyId != null &&
+        companyId.isNotEmpty &&
+        !AppRegex.uuid.hasMatch(companyId)) {
       return Future.value((data: <BodyGuardModel>[], total: 0));
     }
 
-    // When availabilityStatus is requested, embed an !inner join on the current day's
-    // availability row so the database filter and count pagination stay fully synchronized.
-    final now = DateTime.now();
-    final currentDay = WeekDay.fromDateTime(now).apiValue.toLowerCase();
+    final availability = filters.availability;
+    final serviceIds = filters.serviceIds;
+    final filterByServices = serviceIds != null && serviceIds.isNotEmpty;
 
-    final selectQuery = effectiveAvailability != null
-        ? '''
-          $_detailsSelect,
-          availability_filter:user_availabilities!user_availabilities_bodyguard_id_fkey!inner(
-            id,
-            day_of_week,
-            is_available
-          )
-        '''
-        : _detailsSelect;
+    final selectQuery = [
+      selectColumnsOverride ?? _detailsSelect,
+      if (filterByServices)
+        '$_serviceFilter:${DatabaseFunctions.listingServices}!inner'
+            '(${JsonKeys.serviceId})',
+    ].join(',');
 
     return super.getPaginated(
       page: page,
@@ -152,53 +149,63 @@ class BodyguardRepository extends BaseSupabaseRepository<BodyGuardModel> {
       search: search,
       selectColumnsOverride: selectQuery,
       customQuery: (query) {
-        query = query.isFilter(JsonKeys.userId, null);
+        query = switch (filters.ownership) {
+          BodyguardOwnership.solo => query.isFilter(JsonKeys.companyId, null),
+          BodyguardOwnership.companyManaged => query.isFilter(
+            JsonKeys.userId,
+            null,
+          ),
+          null => query,
+        };
 
-        if (effectiveCompanyId != null && effectiveCompanyId.isNotEmpty) {
-          query = query.eq(JsonKeys.companyId, effectiveCompanyId);
+        if (companyId != null && companyId.isNotEmpty) {
+          query = query.eq(JsonKeys.companyId, companyId);
         }
 
-        if (effectiveStatuses != null && effectiveStatuses.isNotEmpty) {
-          final values = effectiveStatuses.map((s) => s.apiValue).toList();
-          query = query.inFilter(JsonKeys.status, values);
-        } else if (status != null) {
-          query = query.eq(JsonKeys.status, status.apiValue);
+        final statuses = filters.statuses;
+        if (statuses != null && statuses.isNotEmpty) {
+          query = query.inFilter(
+            JsonKeys.status,
+            statuses.map((s) => s.apiValue).toList(),
+          );
         }
 
-        // Inner join filter on current day slot
-        if (effectiveAvailability != null) {
-          query = query.eq('availability_filter.day_of_week', currentDay);
-          if (effectiveAvailability == BodyguardAvailabilityStatus.available) {
-            query = query.eq('availability_filter.is_available', true);
-          } else if (effectiveAvailability ==
-              BodyguardAvailabilityStatus.notAvailable) {
-            query = query.eq('availability_filter.is_available', false);
+        if (filters.minHourlyRate != null) {
+          query = query.gte(JsonKeys.hourlyRate, filters.minHourlyRate!);
+        }
+        if (filters.maxHourlyRate != null) {
+          query = query.lte(JsonKeys.hourlyRate, filters.maxHourlyRate!);
+        }
+        if (filters.minRating != null) {
+          query = query.gte(JsonKeys.rating, filters.minRating!);
+        }
+
+        final address = filters.address?.trim();
+        if (address != null && address.isNotEmpty) {
+          query = query.ilike(JsonKeys.address, '%$address%');
+        }
+
+        if (filterByServices) {
+          query = query.inFilter(
+            '$_serviceFilter.${JsonKeys.serviceId}',
+            serviceIds,
+          );
+        }
+
+        // Operational availability filter using computed `is_available_now` or today's inner join.
+        if (availability != null) {
+          switch (availability) {
+            case BodyguardAvailabilityStatus.available:
+              query = query.eq(JsonKeys.isAvailableNow, true);
+            case BodyguardAvailabilityStatus.notAvailable:
+              query = query.eq(JsonKeys.isAvailableNow, false);
+            case BodyguardAvailabilityStatus.notSet:
+              break;
           }
         }
 
         return customQuery?.call(query) ?? query;
       },
-    );
-  }
-
-  /// One page of the signed-in company's bodyguards using [getPaginated].
-  Future<({List<BodyGuardModel> data, int total})> getCompanyBodyguards({
-    required int page,
-    required int pageSize,
-    String? search,
-    UserStatus? status,
-    List<UserStatus>? statuses,
-    BodyguardAvailabilityStatus? availabilityStatus,
-  }) async {
-    final companyId = await getMyCompanyId();
-    return getPaginated(
-      page: page,
-      pageSize: pageSize,
-      search: search,
-      companyId: companyId,
-      status: status,
-      statuses: statuses,
-      availabilityStatus: availabilityStatus,
     );
   }
 

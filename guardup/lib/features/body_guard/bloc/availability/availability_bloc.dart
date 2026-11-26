@@ -16,10 +16,8 @@ export 'availability_state.dart';
 
 /// Manages weekly availability schedule for an account or managed bodyguard.
 class AvailabilityBloc extends Bloc<AvailabilityEvent, AvailabilityState> {
-  AvailabilityBloc(
-    this._repository, {
-    required this.owner,
-  }) : super(AvailabilityState.initial()) {
+  AvailabilityBloc(this._repository, {required this.owner})
+    : super(AvailabilityState.initial()) {
     on<AvailabilityStarted>(_onStarted, transformer: restartable());
     on<AvailabilityDayToggled>(_onDayToggled);
     on<AvailabilityTimeChanged>(_onTimeChanged);
@@ -59,7 +57,9 @@ class AvailabilityBloc extends Bloc<AvailabilityEvent, AvailabilityState> {
           final existing = schedule[day]!;
           schedule[day] = AvailabilityDraft(
             isAvailable: row.isAvailable,
-            fromTime: row.fromTime.isNotEmpty ? row.fromTime : existing.fromTime,
+            fromTime: row.fromTime.isNotEmpty
+                ? row.fromTime
+                : existing.fromTime,
             toTime: row.toTime.isNotEmpty ? row.toTime : existing.toTime,
           );
         }
@@ -74,11 +74,7 @@ class AvailabilityBloc extends Bloc<AvailabilityEvent, AvailabilityState> {
         ),
       );
     } on ApiException catch (e) {
-      emit(
-        state.copyWith(
-          loadStatus: ApiState.failure(e.message, error: e),
-        ),
-      );
+      emit(state.copyWith(loadStatus: ApiState.failure(e.message, error: e)));
     }
   }
 
@@ -136,11 +132,7 @@ class AvailabilityBloc extends Bloc<AvailabilityEvent, AvailabilityState> {
       await asyncHandler(() => _repository.save(owner, requests));
       emit(state.copyWith(saveStatus: const ApiState.success(null)));
     } on ApiException catch (e) {
-      emit(
-        state.copyWith(
-          saveStatus: ApiState.failure(e.message, error: e),
-        ),
-      );
+      emit(state.copyWith(saveStatus: ApiState.failure(e.message, error: e)));
     }
   }
 }

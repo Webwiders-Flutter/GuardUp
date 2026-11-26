@@ -17,14 +17,12 @@ import '/shared/widgets/feedbacks/widgets/app_file_preview.dart';
 class CompanyGuardDocumentsTabWidget extends StatelessWidget {
   final BodyGuardModel bodyguard;
 
-  const CompanyGuardDocumentsTabWidget({
-    super.key,
-    required this.bodyguard,
-  });
+  const CompanyGuardDocumentsTabWidget({super.key, required this.bodyguard});
 
   @override
   Widget build(BuildContext context) {
-    final docs = (bodyguard.documents != null && bodyguard.documents!.isNotEmpty)
+    final docs =
+        (bodyguard.documents != null && bodyguard.documents!.isNotEmpty)
         ? bodyguard.documents!
         : const [
             UserDocumentModel(
@@ -108,17 +106,16 @@ class CompanyGuardDocumentsTabWidget extends StatelessWidget {
     final badgeColor = isApproved
         ? context.colors.success
         : isRejected
-            ? context.colors.error
-            : context.colors.primary;
+        ? context.colors.error
+        : context.colors.primary;
 
     final title = doc.fileName != null && doc.fileName!.isNotEmpty
         ? doc.fileName!
         : (doc.resolvedDocumentName ?? 'Verification Document');
 
-    final subtitle =
-        doc.documentType?.description?.isNotEmpty == true
-            ? doc.documentType!.description!
-            : (doc.resolvedDocumentName ?? 'Compliance & Verification');
+    final subtitle = doc.documentType?.description?.isNotEmpty == true
+        ? doc.documentType!.description!
+        : (doc.resolvedDocumentName ?? 'Compliance & Verification');
 
     return QuickContainer(
       p: 12,
@@ -183,8 +180,8 @@ class CompanyGuardDocumentsTabWidget extends StatelessWidget {
                                 isApproved
                                     ? Icons.check_circle_rounded
                                     : isRejected
-                                        ? Icons.cancel_rounded
-                                        : Icons.hourglass_top_rounded,
+                                    ? Icons.cancel_rounded
+                                    : Icons.hourglass_top_rounded,
                                 size: 11,
                                 color: badgeColor,
                               ),
@@ -261,7 +258,10 @@ class CompanyGuardDocumentsTabWidget extends StatelessWidget {
                 },
                 borderRadius: BorderRadius.circular(8),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

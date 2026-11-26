@@ -51,10 +51,9 @@ class BodyGuardUploadDocumentsScreen extends StatelessWidget {
         : ManagedBodyguardOwner(bodyguard?.id ?? '');
 
     return BlocProvider(
-      create: (_) => sl<DocumentsBloc>(
-        param1: owner,
-        param2: UserRole.guard,
-      )..add(const DocumentsStarted()),
+      create: (_) =>
+          sl<DocumentsBloc>(param1: owner, param2: UserRole.guard)
+            ..add(const DocumentsStarted()),
       child: _BodyGuardUploadDocumentsView(
         bodyguard: bodyguard,
         isGuard: isGuard,
@@ -67,10 +66,7 @@ class _BodyGuardUploadDocumentsView extends StatelessWidget {
   final BodyGuardModel? bodyguard;
   final bool isGuard;
 
-  const _BodyGuardUploadDocumentsView({
-    this.bodyguard,
-    required this.isGuard,
-  });
+  const _BodyGuardUploadDocumentsView({this.bodyguard, required this.isGuard});
 
   Future<void> _pickDocument(
     BuildContext context,
@@ -162,10 +158,7 @@ class _BodyGuardUploadDocumentsView extends StatelessWidget {
             if (bodyguard?.verificationStatus != UserStatus.active) {
               context.go(
                 AdminApprovalScreen.route,
-                extra: {
-                  'bodyguard': bodyguard,
-                  'isCompanyBodyguardFlow': true,
-                },
+                extra: {'bodyguard': bodyguard, 'isCompanyBodyguardFlow': true},
               );
             } else {
               context.pop(true);
@@ -383,12 +376,15 @@ class _BodyGuardUploadDocumentsView extends StatelessWidget {
                                         : null,
                                     rejectionReason:
                                         (isResubmitted || localFile != null)
-                                            ? null
-                                            : rejectionReason,
+                                        ? null
+                                        : rejectionReason,
                                     onPick: isVerified
                                         ? null
-                                        : () =>
-                                              _pickDocument(context, doc, state),
+                                        : () => _pickDocument(
+                                            context,
+                                            doc,
+                                            state,
+                                          ),
                                   ),
                                   AppSpacing.lg.h,
                                 ],
@@ -425,14 +421,16 @@ class _BodyGuardUploadDocumentsView extends StatelessWidget {
                                     child: AppRichText(
                                       spans: [
                                         AppTextSpan(
-                                          text: '256-Bit Encrypted & Compliant: ',
+                                          text:
+                                              '256-Bit Encrypted & Compliant: ',
                                           fontWeight: FontWeight.bold,
                                           color: context.colors.onSurface,
                                           fontSize: 12,
                                         ),
                                         AppTextSpan(
                                           text: 'Documents are stored in an encrypted vault and reviewed only by authorized government compliance officers.',
-                                          color: context.colors.onSurfaceVariant,
+                                          color:
+                                              context.colors.onSurfaceVariant,
                                           fontSize: 12,
                                         ),
                                       ],

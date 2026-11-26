@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:guardup/features/customer/customer.dart';
 import 'package:quick_container/quick_container.dart';
 
+import '../../../../shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/core/constants/app_durations.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
@@ -40,7 +41,13 @@ class BodyguardsListScreen extends StatelessWidget {
       providers: [
         BlocProvider(
           create: (_) =>
-              sl<BodyguardsBloc>()..add(const PaginationLoadRequested()),
+              // Solo guards only (no company); company-managed guards are
+              // listed through their company.
+              sl<BodyguardsBloc>(
+                param1: BodyguardFilters.customerDefault.copyWith(
+                  ownership: BodyguardOwnership.solo,
+                ),
+              )..add(const PaginationLoadRequested()),
         ),
         BlocProvider(
           create: (_) =>
@@ -85,8 +92,7 @@ class _BodyguardsListViewState extends State<_BodyguardsListView>
     final guardsBloc = context.read<BodyguardsBloc>();
     _guardsPaginationController = PaginationController<BodyGuardModel>(
       initialState: guardsBloc.state.pagination,
-      onRefresh: () async =>
-          guardsBloc.add(const PaginationLoadRequested()),
+      onRefresh: () async => guardsBloc.add(const PaginationLoadRequested()),
       onLoadMore: () async =>
           guardsBloc.add(const PaginationNextPageRequested()),
     );
@@ -94,8 +100,7 @@ class _BodyguardsListViewState extends State<_BodyguardsListView>
     final companiesBloc = context.read<CompaniesBloc>();
     _companiesPaginationController = PaginationController<CompanyModel>(
       initialState: companiesBloc.state.pagination,
-      onRefresh: () async =>
-          companiesBloc.add(const PaginationLoadRequested()),
+      onRefresh: () async => companiesBloc.add(const PaginationLoadRequested()),
       onLoadMore: () async =>
           companiesBloc.add(const PaginationNextPageRequested()),
     );
@@ -143,87 +148,89 @@ class _BodyguardsListViewState extends State<_BodyguardsListView>
         ),
       ],
       child: Scaffold(
-      backgroundColor: context.colors.transparent,
-      appBar: AppAppBar.transparent(
-        title: 'Bodyguards',
-        showBackIcon: true,
-        alignTitle: AlignTitle.center,
-        onBackTap: () => context.pop(),
-      ),
-      body: Column(
-        children: [
-          // Top Search & Mode Switcher
-          Padding(
-            padding: context.horizontalEdgeInsets,
-            child: Column(
-              children: [
-                AppSpacing.sm.h,
+        backgroundColor: context.colors.transparent,
+        appBar: AppAppBar.transparent(
+          title: 'Bodyguards',
+          showBackIcon: true,
+          alignTitle: AlignTitle.center,
+          onBackTap: () => context.pop(),
+        ),
+        body: Column(
+          children: [
+            // Top Search & Mode Switcher
+            Padding(
+              padding: context.horizontalEdgeInsets,
+              child: Column(
+                children: [
+                  AppSpacing.sm.h,
 
-                // Search Input with Luxury Tune/Filter Prefix
-                AppTextField.search(
-                  controller: _searchController,
-                  size: AppInputSize.small,
-                  decoration: InputDecoration(
-                    hintText: 'Search by name, clearance, or skill...',
-                    suffixIcon: Padding(
-                      padding: AppSpacing.sm.allPadding,
-                      child: QuickContainer(
-                        onTap: () {
-                          context.push(SearchBodyguardsScreen.route);
-                        },
-                        w: 36,
-                        h: 36,
-                        radius: AppRadius.md,
-                        color: context.colors.primary.withValues(alpha: 0.12),
-                        border: Border.all(
-                          color: context.colors.primary.withValues(alpha: 0.35),
-                          width: 1.0,
-                        ),
-                        alignment: Alignment.center,
-                        child: Icon(
-                          Icons.tune_rounded,
-                          color: context.colors.primary,
-                          size: AppSizes.iconSm,
+                  // Search Input with Luxury Tune/Filter Prefix
+                  AppTextField.search(
+                    controller: _searchController,
+                    size: AppInputSize.small,
+                    decoration: InputDecoration(
+                      hintText: 'Search by name, clearance, or skill...',
+                      suffixIcon: Padding(
+                        padding: AppSpacing.sm.allPadding,
+                        child: QuickContainer(
+                          onTap: () {
+                            context.push(SearchBodyguardsScreen.route);
+                          },
+                          w: 36,
+                          h: 36,
+                          radius: AppRadius.md,
+                          color: context.colors.primary.withValues(alpha: 0.12),
+                          border: Border.all(
+                            color: context.colors.primary.withValues(
+                              alpha: 0.35,
+                            ),
+                            width: 1.0,
+                          ),
+                          alignment: Alignment.center,
+                          child: Icon(
+                            Icons.tune_rounded,
+                            color: context.colors.primary,
+                            size: AppSizes.iconSm,
+                          ),
                         ),
                       ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: AppRadius.xl.toBorderRadius,
-                      borderSide: BorderSide(
-                        color: context.colors.outlineVariant,
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: AppRadius.xl.toBorderRadius,
+                        borderSide: BorderSide(
+                          color: context.colors.outlineVariant,
+                        ),
                       ),
+                      fillColor: context.colors.onPrimary,
                     ),
-                    fillColor: context.colors.onPrimary,
+                    style: TextStyle(color: context.colors.onSurface),
                   ),
-                  style: TextStyle(color: context.colors.onSurface),
-                ),
-                Divider(color: context.colors.outlineVariant, height: 25),
+                  Divider(color: context.colors.outlineVariant, height: 25),
 
-                // Solo vs Company Pill Tabs
-                AppTabBar.pill(
-                  controller: _quickFilterTabController,
-                  tabNames: _quickFilters,
-                  radius: AppRadius.sm,
-                  height: 38,
-                ),
-                AppSpacing.md.h,
-              ],
+                  // Solo vs Company Pill Tabs
+                  AppTabBar.pill(
+                    controller: _quickFilterTabController,
+                    tabNames: _quickFilters,
+                    radius: AppRadius.sm,
+                    height: 38,
+                  ),
+                  AppSpacing.md.h,
+                ],
+              ),
             ),
-          ),
 
-          // Tab Content Views
-          Expanded(
-            child: TabBarView(
-              controller: _quickFilterTabController,
-              children: [
-                _buildSoloGuardsList(context),
-                _buildCompaniesList(context),
-              ],
+            // Tab Content Views
+            Expanded(
+              child: TabBarView(
+                controller: _quickFilterTabController,
+                children: [
+                  _buildSoloGuardsList(context),
+                  _buildCompaniesList(context),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
     );
   }
 
@@ -236,7 +243,8 @@ class _BodyguardsListViewState extends State<_BodyguardsListView>
         const EdgeInsets.only(bottom: AppSpacing.xxl),
       ),
       separatorBuilder: (context, index) => AppSpacing.md.h,
-      initialLoaderBuilder: (context) => const BodyGuardListSkeleton(itemCount: 4),
+      initialLoaderBuilder: (context) =>
+          const BodyGuardListSkeleton(itemCount: 4),
       emptyBuilder: (context) => Center(
         child: Padding(
           padding: AppSpacing.xl.allPadding,
@@ -257,6 +265,8 @@ class _BodyguardsListViewState extends State<_BodyguardsListView>
             context.push(GuardDetailScreen.route, extra: guard);
           },
           onBookNow: () {
+            AppSnackbar.show(message: "Coming soon");
+    return;
             context.push(CustomerBookingDetailsScreen.route, extra: guard);
           },
         );
@@ -291,6 +301,8 @@ class _BodyguardsListViewState extends State<_BodyguardsListView>
             context.push(CompanyDetailsScreen.route, extra: comp);
           },
           onBookNow: () {
+            AppSnackbar.show(message: "Coming soon");
+    return;
             context.push(BookingScreen.route, extra: comp);
           },
         );

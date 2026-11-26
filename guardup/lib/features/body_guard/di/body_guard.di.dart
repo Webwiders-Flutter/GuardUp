@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '/core/services/file_storage/file_storage.service.dart';
 import '/features/auth/bloc/auth_bloc.dart';
 import '/features/auth/bloc/auth_event.dart';
-import '/features/auth/data/enum/user_status.enum.dart';
 import '/features/auth/data/repositories/auth_repository.dart';
 import '/features/auth/data/repositories/user_repository.dart';
 import '/features/services/data/repositories/services.repository.dart';
@@ -36,8 +35,7 @@ void registerBodyguardDependencies(GetIt sl) {
     (initialFilters, _) => BodyguardsBloc(
       sl<BodyguardRepository>(),
       initialFilters:
-          initialFilters ??
-          const BodyguardFilters(statuses: [UserStatus.active]),
+          initialFilters ?? BodyguardFilters.customerDefault,
     ),
   );
   sl.registerFactoryParam<BodyguardDetailsBloc, String, BodyGuardModel?>(
@@ -48,10 +46,7 @@ void registerBodyguardDependencies(GetIt sl) {
     ),
   );
   sl.registerFactoryParam<AvailabilityBloc, RecordOwner, void>(
-    (owner, _) => AvailabilityBloc(
-      sl<AvailabilityRepository>(),
-      owner: owner,
-    ),
+    (owner, _) => AvailabilityBloc(sl<AvailabilityRepository>(), owner: owner),
   );
   sl.registerFactoryParam<GuardProfileBloc, RecordOwner, BodyGuardModel?>(
     (owner, preview) => GuardProfileBloc(
