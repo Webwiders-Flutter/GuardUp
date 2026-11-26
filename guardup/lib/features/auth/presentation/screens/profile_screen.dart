@@ -8,17 +8,20 @@ import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/di/injection_container.dart';
+import '/core/extensions/api_error.extension.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/number.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
+import '/features/auth/bloc/account/account_bloc.dart';
 import '/features/auth/bloc/auth_bloc.dart';
 import '/features/auth/bloc/auth_event.dart';
 import '/features/auth/bloc/auth_state.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/feedbacks/widgets/app_file_preview.dart';
 import '/shared/widgets/feedbacks/widgets/app_popup.dart';
+import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
@@ -41,10 +44,26 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      bloc: sl<AuthBloc>(),
-      builder: (context, state) {
-        final role = state.sessionRole;
+    return BlocProvider(
+      create: (_) => sl<AccountBloc>(),
+      child: BlocListener<AccountBloc, AccountState>(
+        listenWhen: (prev, curr) => prev.status != curr.status,
+        listener: (context, accountState) {
+          if (accountState.status.isSuccess &&
+              accountState.status.dataOrNull == AccountAction.accountDeleted) {
+            context.go(AccountStatusScreen.deletedRoute);
+          } else if (accountState.status.isFailure) {
+            AppSnackbar.error(
+              context.apiErrorText(
+                accountState.status.errorOrNull,
+                fallback: 'Failed to delete account. Please try again.',
+              ),
+            );
+          }
+        },
+        child: BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, state) {
+            final role = state.sessionRole;
 
         return Scaffold(
           appBar: AppAppBar.transparent(
@@ -210,7 +229,7 @@ class ProfileScreen extends StatelessWidget {
                     );
                     if (result?.action == PopupAction.confirm &&
                         context.mounted) {
-                      sl<AuthBloc>().add(const AuthSignOutRequested());
+                      context.read<AuthBloc>().add(const AuthSignOutRequested());
                       context.go(LoginScreen.route);
                     }
                   },
@@ -225,8 +244,9 @@ class ProfileScreen extends StatelessWidget {
                     );
                     if (result?.action == PopupAction.confirm &&
                         context.mounted) {
-                      sl<AuthBloc>().add(const AuthDeleteAccountRequested());
-                      context.go(AccountStatusScreen.deletedRoute);
+                      context.read<AccountBloc>().add(
+                        const AccountDeleteRequested(),
+                      );
                     }
                   },
                 ),
@@ -236,6 +256,8 @@ class ProfileScreen extends StatelessWidget {
           ),
         );
       },
+    ),
+    ),
     );
   }
 

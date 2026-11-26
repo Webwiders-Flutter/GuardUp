@@ -32,4 +32,16 @@ void registerAuthDependencies(GetIt sl) {
           sl<AuthBloc>().add(AuthRoleSelected(role)),
     ),
   );
+  sl.registerFactory<AccountBloc>(
+    () => AccountBloc(
+      authRepository: sl<AuthRepository>(),
+      userRepository: sl<UserRepository>(),
+      fileStorageService: sl<FileStorageService>(),
+      getCurrentUserId: () => sl<AuthRepository>().currentUserId,
+      onAccountUpdated: () =>
+          sl<AuthBloc>().add(const AuthProfileRefreshRequested()),
+      onAccountDeleted: () =>
+          sl<AuthBloc>().add(const AuthSignOutRequested()),
+    ),
+  );
 }

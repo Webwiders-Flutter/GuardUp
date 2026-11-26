@@ -10,6 +10,7 @@ import 'package:quick_container/quick_container.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
+import '/core/extensions/api_error.extension.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
@@ -28,7 +29,7 @@ import '/features/company/presentation/screens/company_upload_documents_screen.d
 
 /// Screen displaying the application status / review stage for onboarding operatives & companies,
 /// or for company-managed bodyguards submitted for admin verification.
-class AdminApprovalScreen extends StatefulWidget {
+class AdminApprovalScreen extends StatelessWidget {
   static const route = '/admin-approval';
 
   final BodyGuardModel? bodyguard;
@@ -41,12 +42,31 @@ class AdminApprovalScreen extends StatefulWidget {
   });
 
   @override
-  State<AdminApprovalScreen> createState() => _AdminApprovalScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => sl<AccountBloc>(),
+      child: _AdminApprovalView(
+        bodyguard: bodyguard,
+        isCompanyBodyguardFlow: isCompanyBodyguardFlow,
+      ),
+    );
+  }
 }
 
-class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
-  bool _isChecking = false;
+class _AdminApprovalView extends StatefulWidget {
+  final BodyGuardModel? bodyguard;
+  final bool isCompanyBodyguardFlow;
 
+  const _AdminApprovalView({
+    this.bodyguard,
+    this.isCompanyBodyguardFlow = false,
+  });
+
+  @override
+  State<_AdminApprovalView> createState() => _AdminApprovalViewState();
+}
+
+class _AdminApprovalViewState extends State<_AdminApprovalView> {
   void _navigateToListing(BuildContext context) {
     context.go(CompanyBodyguardsScreen.route);
   }
@@ -55,8 +75,8 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && sl.isRegistered<AuthBloc>() && !widget.isCompanyBodyguardFlow) {
-        sl<AuthBloc>().add(const AuthReloadRoleDataRequested());
+      if (mounted && !widget.isCompanyBodyguardFlow) {
+        context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
       }
     });
   }
@@ -75,74 +95,64 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
     return 'Your application was rejected. Please review feedback and resubmit.';
   }
 
-  Future<void> _checkStatus() async {
-    final authBloc = sl.isRegistered<AuthBloc>() ? sl<AuthBloc>() : null;
-    final currentUserId =
-        authBloc?.state.user?.id ??
-        (sl.isRegistered<AuthRepository>()
-            ? sl<AuthRepository>().currentUserId
-            : null);
-
-    if (currentUserId == null || !sl.isRegistered<UserRepository>()) return;
-
-    setState(() => _isChecking = true);
-
-    try {
-      final data = await sl<UserRepository>().getUserData(currentUserId);
-      if (!mounted) return;
-
-      if (data != null) {
-        authBloc?.add(const AuthCheckStatusRequested());
-        authBloc?.add(const AuthReloadRoleDataRequested());
-        final rawStatus = (data['status'] as String? ?? '').toUpperCase();
-
-        if (rawStatus == 'APPROVED' || rawStatus == 'ACTIVE') {
-          AppSnackbar.success(
-            'Your profile has been approved! Welcome to GuardUp.',
-          );
-          if (mounted) {
-            context.go(CustomerHomeScreen.route);
-          }
-          return;
-        } else if (rawStatus == 'REJECTED') {
-          final reason = data['rejection_reason'] as String?;
-          AppSnackbar.error(
-            reason != null && reason.isNotEmpty
-                ? 'Application Rejected: $reason'
-                : 'Your application was rejected. Please review feedback and resubmit.',
-          );
-        } else if (rawStatus == 'BLOCKED') {
-          AppSnackbar.error('Your account has been suspended.');
-        } else {
-          AppSnackbar.info(
-            'Your application is under review by our compliance team.',
-          );
-        }
-      } else {
-        AppSnackbar.info('Your application is still under review.');
-      }
-    } catch (e) {
-      if (mounted) {
-        AppSnackbar.error(
-          'Failed to check status. Please check your connection.',
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isChecking = false);
-      }
-    }
+  void _checkStatus() {
+    if (context.read<AccountBloc>().state.status.isLoading) return;
+    context.read<AccountBloc>().add(const AccountProfileRefreshed());
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthBloc>().state;
+    final isChecking = context.watch<AccountBloc>().state.status.isLoading;
     final isRejected = !widget.isCompanyBodyguardFlow && authState.isRejected;
     final statusColor = isRejected
         ? context.colors.error
         : context.colors.primary;
 
-    return PopScope(
+    return BlocListener<AccountBloc, AccountState>(
+      listenWhen: (prev, curr) => prev.status != curr.status,
+      listener: (context, accountState) {
+        if (accountState.status.isFailure) {
+          AppSnackbar.error(
+            context.apiErrorText(
+              accountState.status.errorOrNull,
+              fallback: 'Failed to check status. Please check your connection.',
+            ),
+          );
+          return;
+        }
+        if (accountState.status.isSuccess &&
+            accountState.status.dataOrNull == AccountAction.profileRefreshed) {
+          final profile = accountState.updatedUser;
+          if (profile == null) {
+            AppSnackbar.info('Your application is still under review.');
+            return;
+          }
+          final effectiveStatus = profile.role == UserRole.customer
+              ? UserStatus.active
+              : profile.status;
+          if (effectiveStatus == UserStatus.active) {
+            AppSnackbar.success(
+              'Your profile has been approved! Welcome to GuardUp.',
+            );
+            context.go(CustomerHomeScreen.route);
+          } else if (effectiveStatus == UserStatus.rejected) {
+            final reason = profile.rejectionReason;
+            AppSnackbar.error(
+              reason != null && reason.isNotEmpty
+                  ? 'Application Rejected: $reason'
+                  : 'Your application was rejected. Please review feedback and resubmit.',
+            );
+          } else if (effectiveStatus == UserStatus.blocked) {
+            AppSnackbar.error('Your account has been suspended.');
+          } else {
+            AppSnackbar.info(
+              'Your application is under review by our compliance team.',
+            );
+          }
+        }
+      },
+      child: PopScope(
       canPop: !widget.isCompanyBodyguardFlow,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
@@ -360,7 +370,7 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                         AppButton(
                           type: ButtonType.secondaryOff,
                           text: 'Check Status',
-                          leading: _isChecking
+                          leading: isChecking
                               ? const SizedBox(
                                   width: AppSizes.iconSmd,
                                   height: AppSizes.iconSmd,
@@ -375,7 +385,7 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                                   Icons.refresh_rounded,
                                   size: AppSizes.iconSmd,
                                 ),
-                          onPressed: _isChecking ? null : _checkStatus,
+                          onPressed: isChecking ? null : _checkStatus,
                         ),
                         AppSpacing.md.h,
                         AppButton(
@@ -398,7 +408,9 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                             color: context.colors.onSurfaceVariant,
                           ),
                           onPressed: () {
-                            sl<AuthBloc>().add(const AuthSignOutRequested());
+                            context.read<AuthBloc>().add(
+                              const AuthSignOutRequested(),
+                            );
                             context.go(LoginScreen.route);
                           },
                         ),
@@ -406,7 +418,7 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                       ] else ...[
                         AppButton(
                           text: 'Check Status',
-                          leading: _isChecking
+                          leading: isChecking
                               ? const SizedBox(
                                   width: AppSizes.iconSmd,
                                   height: AppSizes.iconSmd,
@@ -421,7 +433,7 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                                   Icons.refresh_rounded,
                                   size: AppSizes.iconSmd,
                                 ),
-                          onPressed: _isChecking ? null : _checkStatus,
+                          onPressed: isChecking ? null : _checkStatus,
                         ),
                         AppSpacing.md.h,
 
@@ -434,7 +446,9 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                             color: context.colors.onSurfaceVariant,
                           ),
                           onPressed: () {
-                            sl<AuthBloc>().add(const AuthSignOutRequested());
+                            context.read<AuthBloc>().add(
+                              const AuthSignOutRequested(),
+                            );
                             context.go(LoginScreen.route);
                           },
                         ),
@@ -449,6 +463,7 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
           },
         ),
       ),
+    ),
     ),
     );
   }

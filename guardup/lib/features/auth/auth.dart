@@ -1,3 +1,4 @@
+export 'bloc/account/account_bloc.dart';
 export 'bloc/auth_bloc.dart';
 export 'bloc/auth_event.dart';
 export 'bloc/auth_form/auth_form_bloc.dart';
