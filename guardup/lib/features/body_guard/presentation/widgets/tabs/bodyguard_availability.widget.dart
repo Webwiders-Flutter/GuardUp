@@ -262,7 +262,9 @@ class _BodyguardAvailabilityViewState
           listener: (context, state) {
             if (state.saveStatus.isSuccess) {
               if (widget.owner is AccountOwner) {
-                context.read<AuthBloc>().add(const AuthCheckStatusRequested());
+                context.read<AuthBloc>().add(
+                  const AuthProfileRefreshRequested(),
+                );
               }
               AppSnackbar.success('Availability updated successfully.');
             } else if (state.saveStatus.isFailure) {

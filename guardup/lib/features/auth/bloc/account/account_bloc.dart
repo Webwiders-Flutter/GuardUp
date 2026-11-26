@@ -8,8 +8,8 @@ import '/core/services/file_storage/models/file_upload_request.model.dart';
 import '/core/state/api_state.dart';
 import '/core/utils/callback/async_callback.handler.dart';
 import '../../data/model/user_account_request.model.dart';
-import '../../domain/repositories/auth_repository.dart';
-import '../../domain/repositories/user_repository.dart';
+import '../../data/repositories/auth_repository.dart';
+import '../../data/repositories/user_repository.dart';
 import 'account_event.dart';
 import 'account_state.dart';
 

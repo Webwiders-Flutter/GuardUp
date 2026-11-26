@@ -12,8 +12,6 @@ export 'data/model/user.model.dart';
 export 'data/model/user_account_request.model.dart';
 export 'data/repositories/auth_repository.dart';
 export 'data/repositories/user_repository.dart';
-export 'domain/repositories/auth_repository.dart';
-export 'domain/repositories/user_repository.dart';
 export 'presentation/screens/account_status_screen.dart';
 export 'presentation/screens/admin_approval_screen.dart';
 export 'presentation/screens/change_password_screen.dart';

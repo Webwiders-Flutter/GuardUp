@@ -3,19 +3,24 @@ import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart' as supa;
 
 import '/core/logger/app_logger.dart';
-import '../../domain/repositories/auth_repository.dart';
+import '../enum/oauth_provider.enum.dart';
+import '../enum/otp_type.enum.dart';
 
-/// Concrete Supabase implementation of [AuthRepository] with full logging.
-class SupabaseAuthRepository implements AuthRepository {
+export '../enum/oauth_provider.enum.dart';
+export '../enum/otp_type.enum.dart';
+
+/// Thin Supabase GoTrue wrapper handling authentication sessions, sign-in/up,
+/// OTP verification, password updates, and account deletion.
+class AuthRepository {
   final supa.SupabaseClient client;
 
-  SupabaseAuthRepository({required this.client});
+  AuthRepository({required this.client});
 
   supa.SupabaseClient get _supabase => client;
 
   static const String _tag = 'AuthRepository';
 
-  @override
+  /// Emits the signed-in user's ID or `null` whenever Supabase auth state changes.
   Stream<String?> get authStateChanges {
     return _supabase.auth.onAuthStateChange.map((data) {
       AppLogger.d(
@@ -26,13 +31,11 @@ class SupabaseAuthRepository implements AuthRepository {
     });
   }
 
-  @override
+  /// Currently signed-in user's ID, or `null` if unauthenticated.
   String? get currentUserId => _supabase.auth.currentUser?.id;
 
-  @override
   bool get isAuthenticated => currentUserId != null;
 
-  @override
   Future<String> signUpWithEmail({
     required String email,
     required String password,
@@ -62,7 +65,6 @@ class SupabaseAuthRepository implements AuthRepository {
     }
   }
 
-  @override
   Future<String> signInWithEmail({
     required String email,
     required String password,
@@ -86,66 +88,21 @@ class SupabaseAuthRepository implements AuthRepository {
     }
   }
 
-  @override
   Future<String> signIn({required String email, required String password}) =>
       signInWithEmail(email: email, password: password);
 
-  @override
   Future<String> signUp({
     required String email,
     required String password,
     Map<String, dynamic>? data,
   }) => signUpWithEmail(email: email, password: password, metadata: data);
 
-  @override
   Future<void> sendPasswordReset(String email) =>
       sendPasswordResetEmail(email: email);
 
-  @override
   Future<void> updatePassword(String newPassword) =>
       changePassword(newPassword: newPassword);
 
-  @override
-  Future<void> signUpWithPhone({
-    required String phoneNumber,
-    String? password,
-    Map<String, dynamic>? metadata,
-  }) async {
-    AppLogger.d('signUpWithPhone: ${phoneNumber.trim()}', tag: _tag);
-
-    try {
-      if (password != null && password.isNotEmpty) {
-        await _supabase.auth.signUp(
-          phone: phoneNumber.trim(),
-          password: password,
-          data: metadata,
-        );
-      } else {
-        await _supabase.auth.signInWithOtp(
-          phone: phoneNumber.trim(),
-          data: metadata,
-        );
-      }
-      AppLogger.d('signUpWithPhone success', tag: _tag);
-    } catch (e, st) {
-      AppLogger.e('signUpWithPhone error', tag: _tag, error: e, stackTrace: st);
-      rethrow;
-    }
-  }
-
-  @override
-  Future<void> signInWithPhone({required String phoneNumber}) async {
-    AppLogger.d('signInWithPhone: ${phoneNumber.trim()}', tag: _tag);
-    try {
-      await _supabase.auth.signInWithOtp(phone: phoneNumber.trim());
-      AppLogger.d('signInWithPhone success: SMS OTP sent', tag: _tag);
-    } catch (e, st) {
-      AppLogger.e('signInWithPhone error', tag: _tag, error: e, stackTrace: st);
-      rethrow;
-    }
-  }
-
-  @override
   Future<String> verifyOtp({
     required String target,
     required String token,
@@ -160,21 +117,14 @@ class SupabaseAuthRepository implements AuthRepository {
       tag: _tag,
     );
 
-    supa.OtpType supaOtpType;
-    switch (type) {
-      case OtpType.email:
-        supaOtpType = supa.OtpType.email;
-      case OtpType.sms:
-        supaOtpType = supa.OtpType.sms;
-      case OtpType.recovery:
-        supaOtpType = supa.OtpType.recovery;
-      case OtpType.magicLink:
-        supaOtpType = supa.OtpType.magiclink;
-      case OtpType.emailChange:
-        supaOtpType = supa.OtpType.emailChange;
-      case OtpType.phoneChange:
-        supaOtpType = supa.OtpType.phoneChange;
-    }
+    final supaOtpType = switch (type) {
+      OtpType.email => supa.OtpType.email,
+      OtpType.sms => supa.OtpType.sms,
+      OtpType.recovery => supa.OtpType.recovery,
+      OtpType.magicLink => supa.OtpType.magiclink,
+      OtpType.emailChange => supa.OtpType.emailChange,
+      OtpType.phoneChange => supa.OtpType.phoneChange,
+    };
 
     try {
       supa.AuthResponse response;
@@ -217,7 +167,6 @@ class SupabaseAuthRepository implements AuthRepository {
     }
   }
 
-  @override
   Future<void> resendOtp({
     required String target,
     required OtpType type,
@@ -245,20 +194,13 @@ class SupabaseAuthRepository implements AuthRepository {
       }
     }
 
-    supa.OtpType supaOtpType;
-    switch (type) {
-      case OtpType.email:
-      case OtpType.magicLink:
-        supaOtpType = supa.OtpType.signup;
-      case OtpType.sms:
-        supaOtpType = supa.OtpType.sms;
-      case OtpType.recovery:
-        supaOtpType = supa.OtpType.recovery;
-      case OtpType.emailChange:
-        supaOtpType = supa.OtpType.emailChange;
-      case OtpType.phoneChange:
-        supaOtpType = supa.OtpType.phoneChange;
-    }
+    final supaOtpType = switch (type) {
+      OtpType.email || OtpType.magicLink => supa.OtpType.signup,
+      OtpType.sms => supa.OtpType.sms,
+      OtpType.recovery => supa.OtpType.recovery,
+      OtpType.emailChange => supa.OtpType.emailChange,
+      OtpType.phoneChange => supa.OtpType.phoneChange,
+    };
 
     try {
       await _supabase.auth.resend(
@@ -276,7 +218,6 @@ class SupabaseAuthRepository implements AuthRepository {
     }
   }
 
-  @override
   Future<String> signInWithOAuth({
     required OAuthProvider provider,
     List<String>? scopes,
@@ -284,19 +225,13 @@ class SupabaseAuthRepository implements AuthRepository {
   }) async {
     AppLogger.d('signInWithOAuth: provider=${provider.name}', tag: _tag);
 
-    supa.OAuthProvider supaProvider;
-    switch (provider) {
-      case OAuthProvider.google:
-        supaProvider = supa.OAuthProvider.google;
-      case OAuthProvider.apple:
-        supaProvider = supa.OAuthProvider.apple;
-      case OAuthProvider.facebook:
-        supaProvider = supa.OAuthProvider.facebook;
-      case OAuthProvider.github:
-        supaProvider = supa.OAuthProvider.github;
-      case OAuthProvider.twitter:
-        supaProvider = supa.OAuthProvider.twitter;
-    }
+    final supaProvider = switch (provider) {
+      OAuthProvider.google => supa.OAuthProvider.google,
+      OAuthProvider.apple => supa.OAuthProvider.apple,
+      OAuthProvider.facebook => supa.OAuthProvider.facebook,
+      OAuthProvider.github => supa.OAuthProvider.github,
+      OAuthProvider.twitter => supa.OAuthProvider.twitter,
+    };
 
     try {
       final success = await _supabase.auth.signInWithOAuth(
@@ -315,46 +250,6 @@ class SupabaseAuthRepository implements AuthRepository {
     }
   }
 
-  @override
-  Future<void> signInWithMagicLink({required String email}) async {
-    AppLogger.d('signInWithMagicLink: ${email.trim()}', tag: _tag);
-    try {
-      await _supabase.auth.signInWithOtp(email: email.trim());
-      AppLogger.d('signInWithMagicLink success: sent', tag: _tag);
-    } catch (e, st) {
-      AppLogger.e(
-        'signInWithMagicLink error',
-        tag: _tag,
-        error: e,
-        stackTrace: st,
-      );
-      rethrow;
-    }
-  }
-
-  @override
-  Future<String> signInAnonymously() async {
-    AppLogger.d('signInAnonymously', tag: _tag);
-    try {
-      final response = await _supabase.auth.signInAnonymously();
-      final user = response.user;
-      if (user == null) {
-        throw Exception('Anonymous sign in failed.');
-      }
-      AppLogger.d('signInAnonymously success: userId=${user.id}', tag: _tag);
-      return user.id;
-    } catch (e, st) {
-      AppLogger.e(
-        'signInAnonymously error',
-        tag: _tag,
-        error: e,
-        stackTrace: st,
-      );
-      rethrow;
-    }
-  }
-
-  @override
   Future<void> sendPasswordResetEmail({required String email}) async {
     AppLogger.d('sendPasswordResetEmail: ${email.trim()}', tag: _tag);
     try {
@@ -371,7 +266,6 @@ class SupabaseAuthRepository implements AuthRepository {
     }
   }
 
-  @override
   Future<void> changePassword({
     required String newPassword,
     String? oldPassword,
@@ -404,41 +298,6 @@ class SupabaseAuthRepository implements AuthRepository {
     }
   }
 
-  @override
-  Future<void> updateUser({
-    String? email,
-    String? password,
-    Map<String, dynamic>? metadata,
-  }) async {
-    AppLogger.d('updateUser: email=$email', tag: _tag);
-    try {
-      await _supabase.auth.updateUser(
-        supa.UserAttributes(
-          email: email?.trim(),
-          password: password,
-          data: metadata,
-        ),
-      );
-      AppLogger.d('updateUser success', tag: _tag);
-    } catch (e, st) {
-      AppLogger.e('updateUser error', tag: _tag, error: e, stackTrace: st);
-      rethrow;
-    }
-  }
-
-  @override
-  Future<void> refreshSession() async {
-    AppLogger.d('refreshSession', tag: _tag);
-    try {
-      await _supabase.auth.refreshSession();
-      AppLogger.d('refreshSession success', tag: _tag);
-    } catch (e, st) {
-      AppLogger.e('refreshSession error', tag: _tag, error: e, stackTrace: st);
-      rethrow;
-    }
-  }
-
-  @override
   Future<void> signOut() async {
     AppLogger.d('signOut: userId=$currentUserId', tag: _tag);
     try {
@@ -450,7 +309,6 @@ class SupabaseAuthRepository implements AuthRepository {
     }
   }
 
-  @override
   Future<void> deleteAccount() async {
     final uid = currentUserId;
     AppLogger.w('deleteAccount requested for userId=$uid', tag: _tag);
@@ -461,7 +319,7 @@ class SupabaseAuthRepository implements AuthRepository {
       try {
         await signOut();
       } catch (_) {
-        // Ignored: session could already be destroyed by delete_user RPC
+        // Session may already be revoked by delete_user RPC
       }
       AppLogger.d('deleteAccount success', tag: _tag);
     } catch (e, st) {

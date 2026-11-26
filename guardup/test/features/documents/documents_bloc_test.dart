@@ -5,7 +5,7 @@ import 'package:guardup/core/state/api_state.dart';
 import 'package:guardup/features/auth/data/enum/user_role.enum.dart';
 import 'package:guardup/features/auth/data/model/user.model.dart';
 import 'package:guardup/features/auth/data/model/user_account_request.model.dart';
-import 'package:guardup/features/auth/domain/repositories/user_repository.dart';
+import 'package:guardup/features/auth/data/repositories/user_repository.dart';
 import 'package:guardup/features/body_guard/data/enum/document_status.enum.dart';
 import 'package:guardup/features/body_guard/data/repositories/bodyguard.repository.dart';
 import 'package:guardup/features/documents/bloc/documents_bloc.dart';

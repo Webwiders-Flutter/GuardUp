@@ -8,8 +8,8 @@ import 'package:guardup/features/auth/bloc/auth_form/auth_form_bloc.dart';
 import 'package:guardup/features/auth/data/enum/user_role.enum.dart';
 import 'package:guardup/features/auth/data/enum/user_status.enum.dart';
 import 'package:guardup/features/auth/data/model/user.model.dart';
-import 'package:guardup/features/auth/domain/repositories/auth_repository.dart';
-import 'package:guardup/features/auth/domain/repositories/user_repository.dart';
+import 'package:guardup/features/auth/data/repositories/auth_repository.dart';
+import 'package:guardup/features/auth/data/repositories/user_repository.dart';
 
 class _MockAuthRepository extends Mock implements AuthRepository {}
 

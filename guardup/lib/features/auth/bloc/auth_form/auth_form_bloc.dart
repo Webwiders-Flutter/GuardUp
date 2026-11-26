@@ -9,8 +9,8 @@ import '/core/utils/callback/async_callback.handler.dart';
 import '../../data/enum/user_role.enum.dart';
 import '../../data/enum/user_status.enum.dart';
 import '../../data/model/user.model.dart';
-import '../../domain/repositories/auth_repository.dart';
-import '../../domain/repositories/user_repository.dart';
+import '../../data/repositories/auth_repository.dart';
+import '../../data/repositories/user_repository.dart';
 import 'auth_form_event.dart';
 import 'auth_form_state.dart';
 

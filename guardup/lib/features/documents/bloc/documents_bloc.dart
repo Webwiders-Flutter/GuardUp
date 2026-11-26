@@ -7,7 +7,7 @@ import '/core/state/api_state.dart';
 import '/core/utils/callback/async_callback.handler.dart';
 import '/features/auth/data/enum/user_role.enum.dart';
 import '/features/auth/data/model/user_account_request.model.dart';
-import '/features/auth/domain/repositories/user_repository.dart';
+import '/features/auth/data/repositories/user_repository.dart';
 import '/features/body_guard/data/repositories/bodyguard.repository.dart';
 import '/shared/models/record_owner.model.dart';
 import '../data/models/user_document.model.dart';

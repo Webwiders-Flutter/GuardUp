@@ -8,7 +8,7 @@ import '/core/services/file_storage/models/file_upload_request.model.dart';
 import '/core/state/api_state.dart';
 import '/core/utils/callback/async_callback.handler.dart';
 import '/features/auth/data/model/user_account_request.model.dart';
-import '/features/auth/domain/repositories/user_repository.dart';
+import '/features/auth/data/repositories/user_repository.dart';
 import '../../data/repositories/company.repository.dart';
 import 'company_profile_event.dart';
 import 'company_profile_state.dart';

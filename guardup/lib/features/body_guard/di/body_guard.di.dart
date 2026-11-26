@@ -5,8 +5,8 @@ import '/core/services/file_storage/file_storage.service.dart';
 import '/features/auth/bloc/auth_bloc.dart';
 import '/features/auth/bloc/auth_event.dart';
 import '/features/auth/data/enum/user_status.enum.dart';
-import '/features/auth/domain/repositories/auth_repository.dart';
-import '/features/auth/domain/repositories/user_repository.dart';
+import '/features/auth/data/repositories/auth_repository.dart';
+import '/features/auth/data/repositories/user_repository.dart';
 import '/features/services/data/repositories/services.repository.dart';
 import '/shared/models/record_owner.model.dart';
 import '../bloc/availability/availability_bloc.dart';
@@ -65,8 +65,7 @@ void registerBodyguardDependencies(GetIt sl) {
       getCurrentUserId: () => sl<AuthRepository>().currentUserId,
       onAccountUpdated: () {
         if (sl.isRegistered<AuthBloc>()) {
-          sl<AuthBloc>().add(const AuthCheckStatusRequested());
-          sl<AuthBloc>().add(const AuthReloadRoleDataRequested());
+          sl<AuthBloc>().add(const AuthProfileRefreshRequested());
         }
       },
     ),

@@ -10,7 +10,7 @@ import 'package:guardup/core/services/file_storage/models/file_upload_request.mo
 import 'package:guardup/core/state/api_state.dart';
 import 'package:guardup/features/auth/data/model/user.model.dart';
 import 'package:guardup/features/auth/data/model/user_account_request.model.dart';
-import 'package:guardup/features/auth/domain/repositories/user_repository.dart';
+import 'package:guardup/features/auth/data/repositories/user_repository.dart';
 import 'package:guardup/features/body_guard/bloc/guard_profile/guard_profile_bloc.dart';
 import 'package:guardup/features/body_guard/data/model/body_guard.model.dart';
 import 'package:guardup/features/body_guard/data/model/bodyguard_profile_request.model.dart';

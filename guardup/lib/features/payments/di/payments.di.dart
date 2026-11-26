@@ -4,9 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '/features/auth/bloc/auth_bloc.dart';
 import '/features/auth/bloc/auth_event.dart';
 import '/features/auth/data/enum/user_role.enum.dart';
-import '/features/auth/data/enum/user_status.enum.dart';
-import '/features/auth/domain/repositories/auth_repository.dart';
-import '/features/auth/domain/repositories/user_repository.dart';
+import '/features/auth/data/repositories/auth_repository.dart';
+import '/features/auth/data/repositories/user_repository.dart';
 import '/features/settings/bloc/admin_settings_cubit.dart';
 import '../bloc/bank_accounts/bank_accounts_bloc.dart';
 import '../bloc/membership_plans/membership_plans_bloc.dart';
@@ -38,10 +37,7 @@ void registerPaymentsDependencies(GetIt sl) {
       getCurrentUserId: () => sl<AuthRepository>().currentUserId,
       onPaymentRecorded: () {
         if (sl.isRegistered<AuthBloc>()) {
-          sl<AuthBloc>().add(
-            const AuthUpdateUserStatusRequested(UserStatus.pendingApproval),
-          );
-          sl<AuthBloc>().add(const AuthCheckStatusRequested());
+          sl<AuthBloc>().add(const AuthProfileRefreshRequested());
         }
       },
     ),

@@ -5,7 +5,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:guardup/core/error/api_exception.dart';
 import 'package:guardup/core/state/api_state.dart';
 import 'package:guardup/features/auth/data/enum/user_role.enum.dart';
-import 'package:guardup/features/auth/domain/repositories/user_repository.dart';
+import 'package:guardup/features/auth/data/repositories/user_repository.dart';
 import 'package:guardup/features/payments/bloc/registration_fee/registration_fee_bloc.dart';
 import 'package:guardup/features/payments/data/enum/transaction_type.enum.dart';
 import 'package:guardup/features/settings/bloc/admin_settings_cubit.dart';

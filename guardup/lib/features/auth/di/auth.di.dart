@@ -6,12 +6,12 @@ import '../auth.dart';
 
 void registerAuthDependencies(GetIt sl) {
   sl.registerLazySingleton<AuthRepository>(
-    () => SupabaseAuthRepository(
+    () => AuthRepository(
       client: sl<SupabaseClient>(),
     ),
   );
   sl.registerLazySingleton<UserRepository>(
-    () => SupabaseUserRepository(
+    () => UserRepository(
       sl<FileStorageService>(),
       client: sl<SupabaseClient>(),
     ),

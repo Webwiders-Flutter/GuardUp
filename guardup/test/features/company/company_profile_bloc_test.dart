@@ -10,7 +10,7 @@ import 'package:guardup/core/services/file_storage/models/file_upload_request.mo
 import 'package:guardup/core/state/api_state.dart';
 import 'package:guardup/features/auth/data/model/user.model.dart';
 import 'package:guardup/features/auth/data/model/user_account_request.model.dart';
-import 'package:guardup/features/auth/domain/repositories/user_repository.dart';
+import 'package:guardup/features/auth/data/repositories/user_repository.dart';
 import 'package:guardup/features/company/bloc/company_profile/company_profile_bloc.dart';
 import 'package:guardup/features/company/data/enum/business_type.enum.dart';
 import 'package:guardup/features/company/data/model/company.model.dart';

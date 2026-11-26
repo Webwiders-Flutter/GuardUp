@@ -7,7 +7,7 @@ import '/core/error/api_exception.dart';
 import '/core/state/api_state.dart';
 import '/core/utils/callback/async_callback.handler.dart';
 import '/features/auth/data/enum/user_role.enum.dart';
-import '/features/auth/domain/repositories/user_repository.dart';
+import '/features/auth/data/repositories/user_repository.dart';
 import '/features/settings/bloc/admin_settings_cubit.dart';
 import '../../data/enum/transaction_type.enum.dart';
 import '../../data/model/transaction.model.dart';
