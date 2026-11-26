@@ -16,6 +16,7 @@ import '/core/extensions/textstyle_extension.dart';
 import '/features/auth/auth.dart';
 import '/features/body_guard/body_guard.dart';
 import '/features/company/company.dart';
+import '/shared/bloc/pagination/pagination_event.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/navigation/app_tab_bar.dart';
 import '/shared/widgets/pagination/app_pagination.dart';
@@ -56,7 +57,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
   late final PaginationController<BodyGuardModel>
   _bodyguardsPaginationController;
 
-  late final CompaniesCubit _companiesCubit;
+  late final CompaniesBloc _companiesBloc;
   StreamSubscription<CompaniesState>? _companiesSubscription;
   late final PaginationController<CompanyModel> _companiesPaginationController;
 
@@ -85,22 +86,20 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
 
     _bodyguardsCubit.refresh(status: UserStatus.active, updateStatus: true);
 
-    _companiesCubit = sl<CompaniesCubit>();
+    _companiesBloc = sl<CompaniesBloc>();
     _companiesPaginationController = PaginationController<CompanyModel>(
-      initialState: _companiesCubit.state.pagination,
-      onRefresh: () => _companiesCubit.refresh(
-        status: UserStatus.active,
-        updateStatus: true,
-      ),
-      onLoadMore: _companiesCubit.loadMore,
+      initialState: _companiesBloc.state.pagination,
+      onRefresh: () async => _companiesBloc.add(const PaginationLoadRequested()),
+      onLoadMore: () async =>
+          _companiesBloc.add(const PaginationNextPageRequested()),
     );
 
-    _companiesSubscription = _companiesCubit.stream.listen((state) {
+    _companiesSubscription = _companiesBloc.stream.listen((state) {
       if (!mounted) return;
       _companiesPaginationController.updateState(state.pagination);
     });
 
-    _companiesCubit.refresh(status: UserStatus.active, updateStatus: true);
+    _companiesBloc.add(const PaginationLoadRequested());
   }
 
   @override
@@ -111,7 +110,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
     _bodyguardsCubit.close();
     _bodyguardsPaginationController.dispose();
     _companiesSubscription?.cancel();
-    _companiesCubit.close();
+    unawaited(_companiesBloc.close());
     _companiesPaginationController.dispose();
     super.dispose();
   }

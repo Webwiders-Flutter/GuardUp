@@ -11,7 +11,7 @@ export 'data/model/company_profile_request.model.dart';
 export 'data/repositories/company.repository.dart';
 
 // Bloc / Cubit
-export 'bloc/companies/companies_cubit.dart';
+export 'bloc/companies/companies_bloc.dart';
 
 // Widgets
 export 'presentation/widgets/company_card.dart';

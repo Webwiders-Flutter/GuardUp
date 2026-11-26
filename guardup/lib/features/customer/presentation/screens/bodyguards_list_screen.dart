@@ -17,6 +17,7 @@ import '/core/extensions/textstyle_extension.dart';
 import '/features/auth/auth.dart';
 import '/features/body_guard/body_guard.dart';
 import '/features/company/company.dart';
+import '/shared/bloc/pagination/pagination_event.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/navigation/app_tab_bar.dart';
 import '/shared/widgets/pagination/app_pagination.dart';
@@ -47,7 +48,7 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
   StreamSubscription<BodyguardsState>? _guardsSubscription;
   Timer? _searchDebounce;
 
-  late final CompaniesCubit _companiesCubit;
+  late final CompaniesBloc _companiesBloc;
   StreamSubscription<CompaniesState>? _companiesSubscription;
 
   late final PaginationController<BodyGuardModel> _guardsPaginationController;
@@ -79,26 +80,20 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
 
     _guardsCubit.refresh(status: UserStatus.active);
 
-    _companiesCubit = sl<CompaniesCubit>();
+    _companiesBloc = sl<CompaniesBloc>();
     _companiesPaginationController = PaginationController<CompanyModel>(
-      initialState: _companiesCubit.state.pagination,
-      onRefresh: () => _companiesCubit.refresh(
-        status: UserStatus.active,
-        updateStatus: true,
-        search: _searchController.text.trim(),
-      ),
-      onLoadMore: _companiesCubit.loadMore,
+      initialState: _companiesBloc.state.pagination,
+      onRefresh: () async => _companiesBloc.add(const PaginationLoadRequested()),
+      onLoadMore: () async =>
+          _companiesBloc.add(const PaginationNextPageRequested()),
     );
 
-    _companiesSubscription = _companiesCubit.stream.listen((state) {
+    _companiesSubscription = _companiesBloc.stream.listen((state) {
       if (!mounted) return;
       _companiesPaginationController.updateState(state.pagination);
     });
 
-    _companiesCubit.refresh(
-      status: UserStatus.active,
-      updateStatus: true,
-    );
+    _companiesBloc.add(const PaginationLoadRequested());
 
     _searchController.addListener(_handleSearch);
   }
@@ -109,7 +104,7 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
     _guardsSubscription?.cancel();
     _guardsCubit.close();
     _companiesSubscription?.cancel();
-    _companiesCubit.close();
+    unawaited(_companiesBloc.close());
     _searchController.removeListener(_handleSearch);
     _searchController.dispose();
     _quickFilterTabController.dispose();
@@ -128,10 +123,7 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
         search: query,
         status: UserStatus.active,
       );
-      _companiesCubit.refresh(
-        search: query,
-        status: UserStatus.active,
-      );
+      _companiesBloc.add(PaginationSearchChanged(query));
     });
   }
 

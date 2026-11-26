@@ -9,7 +9,7 @@ import '../model/company_filters.model.dart';
 import '../model/company_profile_request.model.dart';
 
 /// Repository for querying security company profiles (`public.companies`).
-final class CompanyRepository extends BaseSupabaseRepository<CompanyModel> {
+class CompanyRepository extends BaseSupabaseRepository<CompanyModel> {
   CompanyRepository(SupabaseClient client)
     : super(
         client: client,
