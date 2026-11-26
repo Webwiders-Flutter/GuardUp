@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide LocalStorage;
 
@@ -13,8 +14,11 @@ import '/features/auth/auth.dart';
 import '/features/auth/di/auth.di.dart';
 import '/features/body_guard/di/body_guard.di.dart';
 import '/features/company/di/company.di.dart';
+import '/features/documents/di/documents.di.dart';
+import '/features/legal/di/legal.di.dart';
 import '/features/notifications/di/notifications.di.dart';
 import '/features/notifications/notifications.dart';
+import '/features/payments/di/payments.di.dart';
 import '/features/services/di/services.di.dart';
 import '/shared/functionalities/connectivity/connectivity.dart';
 import '/shared/functionalities/language/language.dart';
@@ -33,9 +37,7 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<FileStorageService>(
     () => SupabaseFileStorageService(),
   );
-  sl.registerLazySingleton<AddressSearchService>(
-    () => AddressSearchService(),
-  );
+  sl.registerLazySingleton<AddressSearchService>(() => AddressSearchService());
   sl.registerLazySingleton<DocumentSubmissionService>(
     () => SupabaseDocumentSubmissionService(
       fileStorageService: sl<FileStorageService>(),
@@ -62,8 +64,11 @@ Future<void> initDependencies() async {
   registerAdminSettingsDependencies(sl);
   registerAuthDependencies(sl);
   registerServicesDependencies(sl);
+  registerDocumentsDependencies(sl);
   registerBodyguardDependencies(sl);
   registerCompanyDependencies(sl);
+  registerPaymentsDependencies(sl);
+  registerLegalDependencies(sl);
   registerNotificationsDependencies(sl);
 
   // Synchronize notifications & devices on auth state changes

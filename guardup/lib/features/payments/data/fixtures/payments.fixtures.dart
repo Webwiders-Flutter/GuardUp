@@ -1,5 +1,6 @@
 import '../enum/transaction_type.enum.dart';
 import '../model/bank_account.model.dart';
+import '../enum/discount_type.enum.dart';
 import '../model/plan.model.dart';
 import '../model/transaction.model.dart';
 
@@ -28,7 +29,7 @@ final List<PlanModel> membershipPlanPlaceholders = [
     ],
     pricePerMonth: 499.00,
     discount: 10.00,
-    discountType: 'PERCENTAGE',
+    discountType: DiscountType.percentage,
     discountUpto: 500.00,
     isPopular: false,
     displayOrder: 1000,
@@ -44,7 +45,7 @@ final List<PlanModel> membershipPlanPlaceholders = [
     ],
     pricePerMonth: 999.00,
     discount: 20.00,
-    discountType: 'PERCENTAGE',
+    discountType: DiscountType.percentage,
     discountUpto: 1500.00,
     isPopular: true,
     badge: '★ MOST POPULAR',
@@ -62,7 +63,7 @@ final List<PlanModel> membershipPlanPlaceholders = [
     ],
     pricePerMonth: 1999.00,
     discount: 30.00,
-    discountType: 'PERCENTAGE',
+    discountType: DiscountType.percentage,
     isPopular: false,
     displayOrder: 3000,
   ),

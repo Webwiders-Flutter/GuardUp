@@ -11,6 +11,7 @@ export 'data/model/availability_request.model.dart';
 export 'data/model/body_guard.model.dart';
 export 'data/model/bodyguard_filters.model.dart';
 export 'data/model/bodyguard_profile_request.model.dart';
+export 'data/model/document_type.model.dart';
 export 'data/model/user_availability.model.dart';
 export 'data/model/user_document.model.dart';
 
@@ -18,6 +19,7 @@ export 'data/model/user_document.model.dart';
 export '/core/extensions/availability.extension.dart';
 
 // Repositories
+export 'data/repositories/availability.repository.dart';
 export 'data/repositories/bodyguard.repository.dart';
 
 // BloC / Cubit

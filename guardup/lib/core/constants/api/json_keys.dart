@@ -79,6 +79,7 @@ final class JsonKeys {
   static const String contentType = 'content_type';
   static const String language = 'language';
   static const String lastPublishedAt = 'last_published_at';
+  static const String contentHtml = 'content_html';
 
   // Documents
   static const String targetRole = 'target_role';
