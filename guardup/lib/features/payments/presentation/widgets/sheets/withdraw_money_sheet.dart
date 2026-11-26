@@ -1,30 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../data/fixtures/payments.fixtures.dart';
-
-import '/core/constants/api/database_tables.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
+import '/core/di/injection_container.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/number.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
-import '/features/payments/data/model/bank_account.model.dart';
-import '/features/payments/presentation/screens/my_bank_details_screen.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/feedbacks/widgets/app_sheet.dart';
 import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
+import '../../../bloc/bank_accounts/bank_accounts_bloc.dart';
+import '../../../data/model/user_bank_account.model.dart';
+import '../../screens/my_bank_details_screen.dart';
 
 /// Modal bottom sheet allowing users to withdraw funds from their wallet
 /// into a selected bank account.
-class WithdrawMoneySheet extends StatefulWidget {
+class WithdrawMoneySheet extends StatelessWidget {
   /// Total available balance in the wallet.
   final double balance;
 
@@ -44,70 +43,34 @@ class WithdrawMoneySheet extends StatefulWidget {
   }
 
   @override
-  State<WithdrawMoneySheet> createState() => _WithdrawMoneySheetState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => sl<BankAccountsBloc>()..add(const BankAccountsStarted()),
+      child: _WithdrawMoneyView(balance: balance),
+    );
+  }
 }
 
-class _WithdrawMoneySheetState extends State<WithdrawMoneySheet> {
+class _WithdrawMoneyView extends StatefulWidget {
+  final double balance;
+
+  const _WithdrawMoneyView({required this.balance});
+
+  @override
+  State<_WithdrawMoneyView> createState() => _WithdrawMoneyViewState();
+}
+
+class _WithdrawMoneyViewState extends State<_WithdrawMoneyView> {
   final _amountController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  List<BankAccount> _accounts = [];
-  BankAccount? _selectedAccount;
-  bool _isLoadingAccounts = true;
+  UserBankAccountModel? _selectedAccount;
   String? _amountError;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadBankAccounts();
-  }
 
   @override
   void dispose() {
     _amountController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadBankAccounts() async {
-    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
-    if (currentUserId == null) {
-      if (mounted) {
-        setState(() {
-          _accounts = bankAccountPlaceholders;
-          _selectedAccount = _accounts.isNotEmpty ? _accounts.first : null;
-          _isLoadingAccounts = false;
-        });
-      }
-      return;
-    }
-
-    try {
-      final rows = await Supabase.instance.client
-          .from(DatabaseTables.userBankAccounts)
-          .select()
-          .eq('user_id', currentUserId)
-          .order('created_at', ascending: false);
-
-      final fetched = (rows as List<dynamic>)
-          .map((r) => BankAccount.fromSupabase(r as Map<String, dynamic>))
-          .toList();
-
-      if (mounted) {
-        setState(() {
-          _accounts = fetched.isNotEmpty ? fetched : bankAccountPlaceholders;
-          _selectedAccount = _accounts.isNotEmpty ? _accounts.first : null;
-          _isLoadingAccounts = false;
-        });
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() {
-          _accounts = bankAccountPlaceholders;
-          _selectedAccount = _accounts.isNotEmpty ? _accounts.first : null;
-          _isLoadingAccounts = false;
-        });
-      }
-    }
   }
 
   void _applyPercentage(double fraction) {
@@ -176,41 +139,52 @@ class _WithdrawMoneySheetState extends State<WithdrawMoneySheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // ── Balance Display Card ──────────────────────────────────────────
-          _buildBalanceCard(context),
-          AppSpacing.lg.h,
+    return BlocConsumer<BankAccountsBloc, BankAccountsState>(
+      listenWhen: (previous, current) => previous.accounts != current.accounts,
+      listener: (context, state) {
+        if (_selectedAccount == null ||
+            !state.accounts.any((a) => a.id == _selectedAccount!.id)) {
+          setState(() => _selectedAccount = state.accounts.firstOrNull);
+        }
+      },
+      builder: (context, state) {
+        return Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ── Balance Display Card ──────────────────────────────────────────
+              _buildBalanceCard(context),
+              AppSpacing.lg.h,
 
-          // ── Select Bank Account Section ───────────────────────────────────
-          _buildBankSelectionSection(context),
-          AppSpacing.lg.h,
+              // ── Select Bank Account Section ───────────────────────────────────
+              _buildBankSelectionSection(context, state),
+              AppSpacing.lg.h,
 
-          // ── Withdrawal Amount Input ───────────────────────────────────────
-          _buildAmountInput(context),
-          AppSpacing.sm.h,
+              // ── Withdrawal Amount Input ───────────────────────────────────────
+              _buildAmountInput(context),
+              AppSpacing.sm.h,
 
-          // ── Quick Percentage Shortcuts ───────────────────────────────────
-          _buildQuickPercentageChips(context),
-          AppSpacing.lg.h,
+              // ── Quick Percentage Shortcuts ───────────────────────────────────
+              _buildQuickPercentageChips(context),
+              AppSpacing.lg.h,
 
-          // ── Fee & Delivery Breakdown ──────────────────────────────────────
-          _buildTransferDetails(context),
-          AppSpacing.xl.h,
+              // ── Fee & Delivery Breakdown ──────────────────────────────────────
+              _buildTransferDetails(context),
+              AppSpacing.xl.h,
 
-          // ── Proceed Button ───────────────────────────────────────────────
-          AppButton(
-            text: 'Proceed to Withdraw',
-            size: ButtonSize.large,
-            onPressed: _handleProceed,
+              // ── Proceed Button ───────────────────────────────────────────────
+              AppButton(
+                text: 'Proceed to Withdraw',
+                size: ButtonSize.large,
+                onPressed: _handleProceed,
+              ),
+              AppSpacing.md.h,
+            ],
           ),
-          AppSpacing.md.h,
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -275,7 +249,20 @@ class _WithdrawMoneySheetState extends State<WithdrawMoneySheet> {
     );
   }
 
-  Widget _buildBankSelectionSection(BuildContext context) {
+  Widget _buildBankSelectionSection(
+    BuildContext context,
+    BankAccountsState state,
+  ) {
+    final isLoadingAccounts = state.loadStatus.isLoading;
+    final accounts = state.accounts;
+
+    Future<void> openAddAccount() async {
+      await context.push(MyBankDetailsScreen.route);
+      if (context.mounted) {
+        context.read<BankAccountsBloc>().add(const BankAccountsStarted());
+      }
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -288,9 +275,7 @@ class _WithdrawMoneySheetState extends State<WithdrawMoneySheet> {
               style: context.textTheme.titleSmall?.bold(),
             ),
             GestureDetector(
-              onTap: () {
-                context.push(MyBankDetailsScreen.route);
-              },
+              onTap: openAddAccount,
               child: Text(
                 '+ Add Account',
                 style: context.textTheme.labelMedium?.bold().colour(
@@ -301,7 +286,7 @@ class _WithdrawMoneySheetState extends State<WithdrawMoneySheet> {
           ],
         ),
         AppSpacing.sm.h,
-        if (_isLoadingAccounts)
+        if (isLoadingAccounts)
           Center(
             child: Padding(
               padding: AppSpacing.md.allPadding,
@@ -315,7 +300,7 @@ class _WithdrawMoneySheetState extends State<WithdrawMoneySheet> {
               ),
             ),
           )
-        else if (_accounts.isEmpty)
+        else if (accounts.isEmpty)
           QuickContainer(
             p: AppSpacing.md,
             radius: AppRadius.md,
@@ -351,14 +336,14 @@ class _WithdrawMoneySheetState extends State<WithdrawMoneySheet> {
                 AppButton(
                   text: 'Add',
                   size: ButtonSize.small,
-                  onPressed: () => context.push(MyBankDetailsScreen.route),
+                  onPressed: openAddAccount,
                 ),
               ],
             ),
           )
         else
           Column(
-            children: _accounts.map((account) {
+            children: accounts.map((account) {
               final isSelected = _selectedAccount?.id == account.id;
               final maskedNumber = account.accountNumber.length > 4
                   ? '•••• •••• •••• ${account.accountNumber.substring(account.accountNumber.length - 4)}'
@@ -372,9 +357,7 @@ class _WithdrawMoneySheetState extends State<WithdrawMoneySheet> {
                   },
                   p: AppSpacing.md,
                   radius: AppRadius.md,
-                  color: isSelected
-                      ? context.colors.surfaceContainer
-                      : context.colors.surfaceContainer,
+                  color: context.colors.surfaceContainer,
                   border: Border.all(
                     color: isSelected
                         ? context.colors.primary

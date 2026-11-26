@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:guardup/core/constants/api/database_tables.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:guardup/core/constants/app_radius.dart';
 import 'package:guardup/core/di/injection_container.dart';
+import 'package:guardup/core/extensions/api_error.extension.dart';
 import 'package:guardup/core/extensions/string.extension.dart';
-import 'package:guardup/core/logger/app_logger.dart';
 import 'package:guardup/features/auth/auth.dart';
 import 'package:quick_container/quick_container.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
@@ -20,19 +19,33 @@ import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
-import '../../data/model/bank_account.model.dart';
+import '../../bloc/bank_accounts/bank_accounts_bloc.dart';
+import '../../data/model/bank_account_request.model.dart';
+import '../../data/model/user_bank_account.model.dart';
 
 /// Screen allowing bodyguards and companies to manage their live bank account details.
-class MyBankDetailsScreen extends StatefulWidget {
+class MyBankDetailsScreen extends StatelessWidget {
   static const route = '/my-bank-details';
 
   const MyBankDetailsScreen({super.key});
 
   @override
-  State<MyBankDetailsScreen> createState() => _MyBankDetailsScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => sl<BankAccountsBloc>()..add(const BankAccountsStarted()),
+      child: const _MyBankDetailsView(),
+    );
+  }
 }
 
-class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
+class _MyBankDetailsView extends StatefulWidget {
+  const _MyBankDetailsView();
+
+  @override
+  State<_MyBankDetailsView> createState() => _MyBankDetailsViewState();
+}
+
+class _MyBankDetailsViewState extends State<_MyBankDetailsView> {
   final _formKey = GlobalKey<FormState>();
 
   final _accountNumberController = TextEditingController();
@@ -41,22 +54,14 @@ class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
   final _branchController = TextEditingController();
   final _ifscCodeController = TextEditingController();
 
-  final ValueNotifier<List<BankAccount>> _accountsNotifier =
-      ValueNotifier<List<BankAccount>>([]);
-  final ValueNotifier<bool> _isLoadingNotifier = ValueNotifier<bool>(true);
-  final ValueNotifier<bool> _isSubmittingNotifier = ValueNotifier<bool>(false);
-
   @override
   void initState() {
     super.initState();
-    if (sl.isRegistered<AuthBloc>()) {
-      final authState = sl<AuthBloc>().state;
-      final name = authState.user?.name ?? '';
-      if (name.isNotEmpty && name != 'User') {
-        _accountHolderController.text = name;
-      }
+    final authState = context.read<AuthBloc>().state;
+    final name = authState.user?.name ?? '';
+    if (name.isNotEmpty && name != 'User') {
+      _accountHolderController.text = name;
     }
-    _loadBankAccounts();
   }
 
   @override
@@ -66,94 +71,26 @@ class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
     _bankNameController.dispose();
     _branchController.dispose();
     _ifscCodeController.dispose();
-    _accountsNotifier.dispose();
-    _isLoadingNotifier.dispose();
-    _isSubmittingNotifier.dispose();
     super.dispose();
   }
 
-  Future<void> _loadBankAccounts() async {
-    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
-    if (currentUserId == null) {
-      if (mounted) _isLoadingNotifier.value = false;
-      return;
-    }
-
-    try {
-      final rows = await Supabase.instance.client
-          .from(DatabaseTables.userBankAccounts)
-          .select()
-          .eq('user_id', currentUserId)
-          .order('created_at', ascending: false);
-
-      final accounts = (rows as List<dynamic>)
-          .map((r) => BankAccount.fromSupabase(r as Map<String, dynamic>))
-          .toList();
-
-      if (mounted) {
-        _accountsNotifier.value = accounts;
-      }
-    } catch (e, st) {
-      AppLogger.d('Error loading bank accounts: $e', tag: 'MyBankDetailsScreen', error: e, stackTrace: st);
-    } finally {
-      if (mounted) {
-        _isLoadingNotifier.value = false;
-      }
-    }
-  }
-
-  Future<void> _handleAddAccount() async {
+  void _handleAddAccount(BankAccountsState state) {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    if (_isSubmittingNotifier.value) return;
+    if (state.actionStatus.isLoading) return;
 
-    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
-    if (currentUserId == null) return;
+    final request = BankAccountRequest(
+      accountNumber: _accountNumberController.text.trim(),
+      accountHolder: _accountHolderController.text.trim(),
+      bankName: _bankNameController.text.trim(),
+      branch: _branchController.text.trim(),
+      ifscCode: _ifscCodeController.text.trim().toUpperCase(),
+      branchAddress: _branchController.text.trim(),
+    );
 
-    _isSubmittingNotifier.value = true;
-
-    try {
-      final payload = {
-        'user_id': currentUserId,
-        'account_number': _accountNumberController.text.trim(),
-        'account_holder': _accountHolderController.text.trim(),
-        'bank_name': _bankNameController.text.trim(),
-        'branch': _branchController.text.trim(),
-        'ifsc_code': _ifscCodeController.text.trim().toUpperCase(),
-        'branch_address': _branchController.text.trim(),
-        'is_primary': _accountsNotifier.value.isEmpty,
-      };
-
-      final inserted = await Supabase.instance.client
-          .from(DatabaseTables.userBankAccounts)
-          .insert(payload)
-          .select()
-          .single();
-
-      final newAccount = BankAccount.fromSupabase(inserted);
-      _accountsNotifier.value = [newAccount, ..._accountsNotifier.value];
-
-      _accountNumberController.clear();
-      _accountHolderController.clear();
-      _bankNameController.clear();
-      _branchController.clear();
-      _ifscCodeController.clear();
-      _formKey.currentState?.reset();
-
-      if (mounted) {
-        AppSnackbar.success('Bank account added successfully');
-      }
-    } catch (e) {
-      if (mounted) {
-        AppSnackbar.error('Failed to add bank account: $e');
-      }
-    } finally {
-      if (mounted) {
-        _isSubmittingNotifier.value = false;
-      }
-    }
+    context.read<BankAccountsBloc>().add(BankAccountAdded(request));
   }
 
-  Future<void> _handleDeleteAccount(BankAccount account) async {
+  Future<void> _handleDeleteAccount(UserBankAccountModel account) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -190,29 +127,13 @@ class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
       ),
     );
 
-    if (confirmed == true) {
-      try {
-        await Supabase.instance.client
-            .from(DatabaseTables.userBankAccounts)
-            .delete()
-            .eq('id', account.id);
-
-        _accountsNotifier.value = _accountsNotifier.value
-            .where((a) => a.id != account.id)
-            .toList();
-
-        if (mounted) {
-          AppSnackbar.success('Bank account removed');
-        }
-      } catch (e) {
-        if (mounted) {
-          AppSnackbar.error('Failed to remove account: $e');
-        }
-      }
+    if (confirmed == true && mounted) {
+      context.read<BankAccountsBloc>().add(BankAccountDeleted(account.id));
     }
   }
 
-  void _showEditAccountSheet(BankAccount account) {
+  void _showEditAccountSheet(UserBankAccountModel account) {
+    final bloc = context.read<BankAccountsBloc>();
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -220,36 +141,68 @@ class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
-      builder: (_) => _EditBankAccountSheet(
-        account: account,
-        onAccountUpdated: (updated) {
-          _accountsNotifier.value = _accountsNotifier.value
-              .map((a) => a.id == updated.id ? updated : a)
-              .toList();
-        },
+      builder: (_) => BlocProvider.value(
+        value: bloc,
+        child: _EditBankAccountSheet(account: account),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppAppBar.transparent(title: context.l10n.myBankDetailsTitle),
-      body: SingleChildScrollView(
-        padding: context.horizontalEdgeInsets,
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AppSpacing.xl.h,
+    return BlocConsumer<BankAccountsBloc, BankAccountsState>(
+      listenWhen: (previous, current) =>
+          previous.actionStatus != current.actionStatus,
+      listener: (context, state) {
+        if (state.actionStatus.isSuccess) {
+          switch (state.lastAction) {
+            case BankAccountAction.add:
+              _accountNumberController.clear();
+              _accountHolderController.clear();
+              _bankNameController.clear();
+              _branchController.clear();
+              _ifscCodeController.clear();
+              _formKey.currentState?.reset();
+              AppSnackbar.success('Bank account added successfully');
+            case BankAccountAction.update:
+              AppSnackbar.success('Bank account updated successfully');
+            case BankAccountAction.delete:
+              AppSnackbar.success('Bank account removed');
+            case BankAccountAction.setPrimary:
+              AppSnackbar.success('Primary bank account updated');
+            case BankAccountAction.none:
+              break;
+          }
+        } else if (state.actionStatus.isFailure) {
+          AppSnackbar.error(
+            context.apiErrorText(
+              state.actionStatus.errorOrNull,
+              fallback: state.actionStatus.errorMessageOrNull,
+            ),
+          );
+        }
+      },
+      builder: (context, state) {
+        final isLoading = state.loadStatus.isLoading;
+        final isSubmitting =
+            state.actionStatus.isLoading &&
+            state.lastAction == BankAccountAction.add;
+        final accounts = state.accounts;
 
-              // 1. Saved Bank Accounts Section
-              ValueListenableBuilder<bool>(
-                valueListenable: _isLoadingNotifier,
-                builder: (context, isLoading, _) {
-                  if (isLoading) {
-                    return Padding(
+        return Scaffold(
+          appBar: AppAppBar.transparent(title: context.l10n.myBankDetailsTitle),
+          body: SingleChildScrollView(
+            padding: context.horizontalEdgeInsets,
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AppSpacing.xl.h,
+
+                  // 1. Saved Bank Accounts Section
+                  if (isLoading)
+                    Padding(
                       padding: const EdgeInsets.symmetric(
                         vertical: AppSpacing.xxl,
                       ),
@@ -258,156 +211,150 @@ class _MyBankDetailsScreenState extends State<MyBankDetailsScreen> {
                           color: context.colors.primary,
                         ),
                       ),
-                    );
-                  }
-
-                  return ValueListenableBuilder<List<BankAccount>>(
-                    valueListenable: _accountsNotifier,
-                    builder: (context, accounts, _) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
+                    )
+                  else
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              context.l10n.savedBankAccount,
+                              style: context.textTheme.titleMedium?.bold(),
+                            ),
+                            if (accounts.isNotEmpty)
                               Text(
-                                context.l10n.savedBankAccount,
-                                style: context.textTheme.titleMedium?.bold(),
+                                '${accounts.length} Saved',
+                                style: context.textTheme.labelSmall
+                                    ?.bold()
+                                    .colour(context.colors.primary),
                               ),
-                              if (accounts.isNotEmpty)
-                                Text(
-                                  '${accounts.length} Saved',
-                                  style: context.textTheme.labelSmall
-                                      ?.bold()
-                                      .colour(context.colors.primary),
+                          ],
+                        ),
+                        AppSpacing.sm.h,
+                        if (accounts.isEmpty) ...[
+                          WrapperCard(
+                            padding: const EdgeInsets.all(AppSpacing.lg),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.account_balance_outlined,
+                                  color: context.colors.outline,
+                                  size: AppSizes.iconLg,
                                 ),
-                            ],
-                          ),
-                          AppSpacing.sm.h,
-                          if (accounts.isEmpty) ...[
-                            WrapperCard(
-                              padding: const EdgeInsets.all(AppSpacing.lg),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.account_balance_outlined,
-                                    color: context.colors.outline,
-                                    size: AppSizes.iconLg,
-                                  ),
-                                  AppSpacing.md.w,
-                                  Expanded(
-                                    child: Text(
-                                      'No bank accounts saved yet. Add your details below for withdrawals and deposits.',
-                                      style: context.textTheme.bodySmall
-                                          ?.colour(
-                                            context.colors.onSurfaceVariant,
-                                          ),
+                                AppSpacing.md.w,
+                                Expanded(
+                                  child: Text(
+                                    'No bank accounts saved yet. Add your details below for withdrawals and deposits.',
+                                    style: context.textTheme.bodySmall?.colour(
+                                      context.colors.onSurfaceVariant,
                                     ),
                                   ),
-                                ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ] else ...[
+                          ...accounts.map(
+                            (account) => Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: AppSpacing.md,
+                              ),
+                              child: BankAccountCard(
+                                account: account,
+                                onEdit: () => _showEditAccountSheet(account),
+                                onDelete: () => _handleDeleteAccount(account),
                               ),
                             ),
-                          ] else ...[
-                            ...accounts.map(
-                              (account) => Padding(
-                                padding: const EdgeInsets.only(
-                                  bottom: AppSpacing.md,
-                                ),
-                                child: BankAccountCard(
-                                  account: account,
-                                  onEdit: () => _showEditAccountSheet(account),
-                                  onDelete: () => _handleDeleteAccount(account),
-                                ),
-                              ),
-                            ),
-                          ],
-                          AppSpacing.lg.h,
+                          ),
                         ],
-                      );
-                    },
-                  );
-                },
-              ),
+                        AppSpacing.lg.h,
+                      ],
+                    ),
 
-              // 2. Add New Bank Account Section
-              Text(
-                context.l10n.addNewBankAccount,
-                style: context.textTheme.titleMedium?.bold(),
-              ),
-              AppSpacing.md.h,
+                  // 2. Add New Bank Account Section
+                  Text(
+                    context.l10n.addNewBankAccount,
+                    style: context.textTheme.titleMedium?.bold(),
+                  ),
+                  AppSpacing.md.h,
 
-              // Form fields
-              AppTextField(
-                controller: _accountNumberController,
-                decoration: InputDecoration(
-                  hintText: context.l10n.accountNumber,
-                ),
-                keyboardType: TextInputType.number,
-                textInputAction: TextInputAction.next,
-                validator: (value) => Validators.required(context, value),
-              ),
-              AppSpacing.md.h,
+                  // Form fields
+                  AppTextField(
+                    controller: _accountNumberController,
+                    decoration: InputDecoration(
+                      hintText: context.l10n.accountNumber,
+                    ),
+                    keyboardType: TextInputType.number,
+                    textInputAction: TextInputAction.next,
+                    validator: (value) => Validators.required(context, value),
+                  ),
+                  AppSpacing.md.h,
 
-              AppTextField(
-                controller: _accountHolderController,
-                decoration: InputDecoration(
-                  hintText: context.l10n.accountHolder,
-                ),
-                textCapitalization: TextCapitalization.words,
-                textInputAction: TextInputAction.next,
-                validator: (value) => Validators.required(context, value),
-              ),
-              AppSpacing.md.h,
+                  AppTextField(
+                    controller: _accountHolderController,
+                    decoration: InputDecoration(
+                      hintText: context.l10n.accountHolder,
+                    ),
+                    textCapitalization: TextCapitalization.words,
+                    textInputAction: TextInputAction.next,
+                    validator: (value) => Validators.required(context, value),
+                  ),
+                  AppSpacing.md.h,
 
-              AppTextField(
-                controller: _bankNameController,
-                decoration: InputDecoration(hintText: context.l10n.bankName),
-                textCapitalization: TextCapitalization.words,
-                textInputAction: TextInputAction.next,
-                validator: (value) => Validators.required(context, value),
-              ),
-              AppSpacing.md.h,
+                  AppTextField(
+                    controller: _bankNameController,
+                    decoration: InputDecoration(
+                      hintText: context.l10n.bankName,
+                    ),
+                    textCapitalization: TextCapitalization.words,
+                    textInputAction: TextInputAction.next,
+                    validator: (value) => Validators.required(context, value),
+                  ),
+                  AppSpacing.md.h,
 
-              AppTextField(
-                controller: _branchController,
-                decoration: InputDecoration(hintText: context.l10n.branch),
-                textCapitalization: TextCapitalization.words,
-                textInputAction: TextInputAction.next,
-                validator: (value) => Validators.required(context, value),
-              ),
-              AppSpacing.md.h,
+                  AppTextField(
+                    controller: _branchController,
+                    decoration: InputDecoration(hintText: context.l10n.branch),
+                    textCapitalization: TextCapitalization.words,
+                    textInputAction: TextInputAction.next,
+                    validator: (value) => Validators.required(context, value),
+                  ),
+                  AppSpacing.md.h,
 
-              AppTextField(
-                controller: _ifscCodeController,
-                decoration: InputDecoration(hintText: context.l10n.ifscCode),
-                textCapitalization: TextCapitalization.characters,
-                textInputAction: TextInputAction.done,
-                validator: (value) => Validators.ifsc(context, value),
-              ),
-              AppSpacing.xl.h,
+                  AppTextField(
+                    controller: _ifscCodeController,
+                    decoration: InputDecoration(
+                      hintText: context.l10n.ifscCode,
+                    ),
+                    textCapitalization: TextCapitalization.characters,
+                    textInputAction: TextInputAction.done,
+                    validator: (value) => Validators.ifsc(context, value),
+                  ),
+                  AppSpacing.xl.h,
 
-              // Add Button
-              ValueListenableBuilder<bool>(
-                valueListenable: _isSubmittingNotifier,
-                builder: (context, isSubmitting, _) {
-                  return AppButton(
+                  // Add Button
+                  AppButton(
                     text: isSubmitting ? 'Adding...' : context.l10n.add,
                     isLoading: isSubmitting,
-                    onPressed: isSubmitting ? null : _handleAddAccount,
-                  );
-                },
+                    onPressed: isSubmitting
+                        ? null
+                        : () => _handleAddAccount(state),
+                  ),
+                  AppSpacing.xxl.h,
+                ],
               ),
-              AppSpacing.xxl.h,
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
 
 class BankAccountCard extends StatelessWidget {
-  final BankAccount account;
+  final UserBankAccountModel account;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
@@ -529,10 +476,9 @@ class BankAccountCard extends StatelessWidget {
 
 /// Modal bottom sheet for editing an existing saved bank account.
 class _EditBankAccountSheet extends StatefulWidget {
-  final BankAccount account;
-  final ValueChanged<BankAccount>? onAccountUpdated;
+  final UserBankAccountModel account;
 
-  const _EditBankAccountSheet({required this.account, this.onAccountUpdated});
+  const _EditBankAccountSheet({required this.account});
 
   @override
   State<_EditBankAccountSheet> createState() => _EditBankAccountSheetState();
@@ -546,7 +492,6 @@ class _EditBankAccountSheetState extends State<_EditBankAccountSheet> {
   late final TextEditingController _bankNameController;
   late final TextEditingController _branchController;
   late final TextEditingController _ifscCodeController;
-  bool _isSaving = false;
 
   @override
   void initState() {
@@ -572,146 +517,145 @@ class _EditBankAccountSheetState extends State<_EditBankAccountSheet> {
     super.dispose();
   }
 
-  Future<void> _handleUpdate() async {
+  void _handleUpdate(bool isSaving) {
     if (!(_sheetFormKey.currentState?.validate() ?? false)) return;
-    if (_isSaving) return;
+    if (isSaving) return;
 
-    setState(() => _isSaving = true);
+    final request = BankAccountRequest(
+      accountNumber: _accountNumberController.text.trim(),
+      accountHolder: _accountHolderController.text.trim(),
+      bankName: _bankNameController.text.trim(),
+      branch: _branchController.text.trim(),
+      ifscCode: _ifscCodeController.text.trim().toUpperCase(),
+      branchAddress: _branchController.text.trim(),
+      isPrimary: widget.account.isPrimary,
+    );
 
-    try {
-      final updatedPayload = {
-        'account_number': _accountNumberController.text.trim(),
-        'account_holder': _accountHolderController.text.trim(),
-        'bank_name': _bankNameController.text.trim(),
-        'branch': _branchController.text.trim(),
-        'ifsc_code': _ifscCodeController.text.trim().toUpperCase(),
-        'branch_address': _branchController.text.trim(),
-        'updated_at': DateTime.now().toIso8601String(),
-      };
-
-      final updatedRow = await Supabase.instance.client
-          .from(DatabaseTables.userBankAccounts)
-          .update(updatedPayload)
-          .eq('id', widget.account.id)
-          .select()
-          .single();
-
-      final updatedAccount = BankAccount.fromSupabase(updatedRow);
-
-      if (mounted) {
-        widget.onAccountUpdated?.call(updatedAccount);
-        Navigator.pop(context);
-        AppSnackbar.success('Bank account updated successfully');
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isSaving = false);
-        AppSnackbar.error('Failed to update bank account: $e');
-      }
-    }
+    context.read<BankAccountsBloc>().add(
+      BankAccountUpdated(widget.account.id, request),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: AppSpacing.lg,
-        right: AppSpacing.lg,
-        top: AppSpacing.lg,
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
-      ),
-      child: SingleChildScrollView(
-        child: Form(
-          key: _sheetFormKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: context.colors.outlineVariant,
-                    borderRadius: BorderRadius.circular(AppRadius.full),
-                  ),
-                ),
-              ),
-              AppSpacing.md.h,
-              Text(
-                'Edit Bank Account',
-                style: context.textTheme.titleMedium?.bold().colour(
-                  context.colors.onSurface,
-                ),
-              ),
-              AppSpacing.xs.h,
-              Text(
-                'Update your account credentials for withdrawals and payouts.',
-                style: context.textTheme.bodySmall?.colour(
-                  context.colors.onSurfaceVariant,
-                ),
-              ),
-              AppSpacing.lg.h,
+    return BlocConsumer<BankAccountsBloc, BankAccountsState>(
+      listenWhen: (previous, current) =>
+          previous.actionStatus != current.actionStatus &&
+          current.lastAction == BankAccountAction.update &&
+          current.actionStatus.isSuccess,
+      listener: (context, state) {
+        Navigator.pop(context);
+      },
+      builder: (context, state) {
+        final isSaving =
+            state.actionStatus.isLoading &&
+            state.lastAction == BankAccountAction.update;
 
-              AppTextField(
-                controller: _accountNumberController,
-                decoration: InputDecoration(
-                  hintText: context.l10n.accountNumber,
-                ),
-                keyboardType: TextInputType.number,
-                textInputAction: TextInputAction.next,
-                validator: (value) => Validators.required(context, value),
-              ),
-              AppSpacing.md.h,
-
-              AppTextField(
-                controller: _accountHolderController,
-                decoration: InputDecoration(
-                  hintText: context.l10n.accountHolder,
-                ),
-                textCapitalization: TextCapitalization.words,
-                textInputAction: TextInputAction.next,
-                validator: (value) => Validators.required(context, value),
-              ),
-              AppSpacing.md.h,
-
-              AppTextField(
-                controller: _bankNameController,
-                decoration: InputDecoration(hintText: context.l10n.bankName),
-                textCapitalization: TextCapitalization.words,
-                textInputAction: TextInputAction.next,
-                validator: (value) => Validators.required(context, value),
-              ),
-              AppSpacing.md.h,
-
-              AppTextField(
-                controller: _branchController,
-                decoration: InputDecoration(hintText: context.l10n.branch),
-                textCapitalization: TextCapitalization.words,
-                textInputAction: TextInputAction.next,
-                validator: (value) => Validators.required(context, value),
-              ),
-              AppSpacing.md.h,
-
-              AppTextField(
-                controller: _ifscCodeController,
-                decoration: InputDecoration(hintText: context.l10n.ifscCode),
-                textCapitalization: TextCapitalization.characters,
-                textInputAction: TextInputAction.done,
-                validator: (value) => Validators.ifsc(context, value),
-              ),
-              AppSpacing.xl.h,
-
-              AppButton(
-                text: _isSaving ? 'Saving...' : 'Save Changes',
-                isLoading: _isSaving,
-                onPressed: _isSaving ? null : _handleUpdate,
-              ),
-              AppSpacing.sm.h,
-            ],
+        return Padding(
+          padding: EdgeInsets.only(
+            left: AppSpacing.lg,
+            right: AppSpacing.lg,
+            top: AppSpacing.lg,
+            bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
           ),
-        ),
-      ),
+          child: SingleChildScrollView(
+            child: Form(
+              key: _sheetFormKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: context.colors.outlineVariant,
+                        borderRadius: BorderRadius.circular(AppRadius.full),
+                      ),
+                    ),
+                  ),
+                  AppSpacing.md.h,
+                  Text(
+                    'Edit Bank Account',
+                    style: context.textTheme.titleMedium?.bold().colour(
+                      context.colors.onSurface,
+                    ),
+                  ),
+                  AppSpacing.xs.h,
+                  Text(
+                    'Update your account credentials for withdrawals and payouts.',
+                    style: context.textTheme.bodySmall?.colour(
+                      context.colors.onSurfaceVariant,
+                    ),
+                  ),
+                  AppSpacing.lg.h,
+
+                  AppTextField(
+                    controller: _accountNumberController,
+                    decoration: InputDecoration(
+                      hintText: context.l10n.accountNumber,
+                    ),
+                    keyboardType: TextInputType.number,
+                    textInputAction: TextInputAction.next,
+                    validator: (value) => Validators.required(context, value),
+                  ),
+                  AppSpacing.md.h,
+
+                  AppTextField(
+                    controller: _accountHolderController,
+                    decoration: InputDecoration(
+                      hintText: context.l10n.accountHolder,
+                    ),
+                    textCapitalization: TextCapitalization.words,
+                    textInputAction: TextInputAction.next,
+                    validator: (value) => Validators.required(context, value),
+                  ),
+                  AppSpacing.md.h,
+
+                  AppTextField(
+                    controller: _bankNameController,
+                    decoration: InputDecoration(
+                      hintText: context.l10n.bankName,
+                    ),
+                    textCapitalization: TextCapitalization.words,
+                    textInputAction: TextInputAction.next,
+                    validator: (value) => Validators.required(context, value),
+                  ),
+                  AppSpacing.md.h,
+
+                  AppTextField(
+                    controller: _branchController,
+                    decoration: InputDecoration(hintText: context.l10n.branch),
+                    textCapitalization: TextCapitalization.words,
+                    textInputAction: TextInputAction.next,
+                    validator: (value) => Validators.required(context, value),
+                  ),
+                  AppSpacing.md.h,
+
+                  AppTextField(
+                    controller: _ifscCodeController,
+                    decoration: InputDecoration(
+                      hintText: context.l10n.ifscCode,
+                    ),
+                    textCapitalization: TextCapitalization.characters,
+                    textInputAction: TextInputAction.done,
+                    validator: (value) => Validators.ifsc(context, value),
+                  ),
+                  AppSpacing.xl.h,
+
+                  AppButton(
+                    text: isSaving ? 'Saving...' : 'Save Changes',
+                    isLoading: isSaving,
+                    onPressed: isSaving ? null : () => _handleUpdate(isSaving),
+                  ),
+                  AppSpacing.sm.h,
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

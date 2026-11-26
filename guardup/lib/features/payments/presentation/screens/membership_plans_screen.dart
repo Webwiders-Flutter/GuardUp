@@ -1,30 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/core/di/injection_container.dart';
-import 'package:guardup/core/logger/app_logger.dart';
 import 'package:quick_container/quick_container.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../data/fixtures/payments.fixtures.dart';
-
-import '/core/constants/api/database_tables.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
+import '/core/extensions/api_error.extension.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/number.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/features/auth/bloc/auth_bloc.dart';
+import '/features/customer/presentation/screens/customer_home_screen.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/misc/app_rich_text.dart';
 import '/shared/widgets/sections/app_appbar.dart';
-import '../../data/model/plan.model.dart';
+import '../../bloc/membership_plans/membership_plans_bloc.dart';
 import '../widgets/plan_selection_card.dart';
-import '/features/customer/presentation/screens/customer_home_screen.dart';
 
 /// The invocation mode defining header text, badges, and bottom action buttons.
 enum MembershipPlanMode {
@@ -53,7 +50,7 @@ typedef MembershipPlanArgs = ({
   String? activePlanId,
 });
 
-class MembershipPlansScreen extends StatefulWidget {
+class MembershipPlansScreen extends StatelessWidget {
   static const route = '/membership-plans';
 
   final MembershipPlanMode mode;
@@ -70,189 +67,45 @@ class MembershipPlansScreen extends StatefulWidget {
   });
 
   @override
-  State<MembershipPlansScreen> createState() => _MembershipPlansScreenState();
+  Widget build(BuildContext context) {
+    final authPlanId = context.read<AuthBloc>().state.membershipPlanId;
+    final resolvedActivePlanId =
+        (activePlanId != null && activePlanId!.isNotEmpty)
+            ? activePlanId
+            : (authPlanId != null && authPlanId.isNotEmpty
+                ? authPlanId
+                : null);
+
+    return BlocProvider(
+      create: (_) => sl<MembershipPlansBloc>()
+        ..add(MembershipPlansStarted(activePlanId: resolvedActivePlanId)),
+      child: _MembershipPlansView(
+        mode: mode,
+        bookingAmount: bookingAmount,
+        operativeName: operativeName,
+      ),
+    );
+  }
 }
 
-class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
-  final _plansNotifier = ValueNotifier<List<PlanModel>>(membershipPlanPlaceholders);
-  final _isLoadingNotifier = ValueNotifier<bool>(true);
-  final _isSubmittingNotifier = ValueNotifier<bool>(false);
-  final _selectedPlanNotifier = ValueNotifier<PlanModel?>(null);
-  late final _activePlanIdNotifier = ValueNotifier<String?>(
-    widget.activePlanId,
-  );
+class _MembershipPlansView extends StatelessWidget {
+  final MembershipPlanMode mode;
+  final double? bookingAmount;
+  final String? operativeName;
 
-  @override
-  void initState() {
-    super.initState();
-    _resolveActivePlanId();
-    _loadPlans();
-  }
+  const _MembershipPlansView({
+    required this.mode,
+    this.bookingAmount,
+    this.operativeName,
+  });
 
-  @override
-  void dispose() {
-    _plansNotifier.dispose();
-    _isLoadingNotifier.dispose();
-    _isSubmittingNotifier.dispose();
-    _selectedPlanNotifier.dispose();
-    _activePlanIdNotifier.dispose();
-    super.dispose();
-  }
-
-  void _resolveActivePlanId() {
-    if (widget.activePlanId != null && widget.activePlanId!.isNotEmpty) {
-      _activePlanIdNotifier.value = widget.activePlanId;
-      return;
-    }
-    final authState = sl.isRegistered<AuthBloc>() ? sl<AuthBloc>().state : null;
-    if (authState?.membershipPlanId != null &&
-        authState!.membershipPlanId!.isNotEmpty) {
-      _activePlanIdNotifier.value = authState.membershipPlanId;
-    }
-  }
-
-  Future<void> _loadPlans() async {
-    _isLoadingNotifier.value = true;
-    try {
-      final rows = await Supabase.instance.client
-          .from(DatabaseTables.membershipPlans)
-          .select()
-          .eq('is_active', true)
-          .order('display_order', ascending: true);
-
-      final fetchedPlans = (rows as List)
-          .map((r) => PlanModel.fromJson(r as Map<String, dynamic>))
-          .toList();
-
-      if (mounted) {
-        if (fetchedPlans.isNotEmpty) {
-          _plansNotifier.value = fetchedPlans;
-        }
-        _updateSelectedPlan();
-      }
-    } catch (e, stack) {
-      AppLogger.d(
-        'Error loading dynamic membership plans: $e',
-        tag: 'MembershipPlansScreen',
-        error: e,
-        stackTrace: stack,
-      );
-      if (mounted && _plansNotifier.value.isEmpty) {
-        _plansNotifier.value = membershipPlanPlaceholders;
-        _updateSelectedPlan();
-      }
-    } finally {
-      if (mounted) {
-        _isLoadingNotifier.value = false;
-      }
-    }
-  }
-
-  void _updateSelectedPlan() {
-    final plans = _plansNotifier.value;
-    if (plans.isEmpty) return;
-
-    final activeId = _activePlanIdNotifier.value;
-    if (activeId != null && activeId.isNotEmpty) {
-      final active = plans.where((p) => p.id == activeId).firstOrNull;
-      if (active != null) {
-        _selectedPlanNotifier.value = active;
-        return;
-      }
-    }
-
-    final popular = plans.where((p) => p.isPopular).firstOrNull;
-    _selectedPlanNotifier.value = popular ?? plans.first;
-  }
-
-  Future<void> _handleAction() async {
+  void _handleAction() {
+    // TODO(migration): membership purchase not implemented (no column)
     AppSnackbar.info('Coming Soon! This feature will be available soon.');
-
-    // final selectedPlan = _selectedPlanNotifier.value;
-    // if (selectedPlan == null) return;
-
-    // final currentUserId = Supabase.instance.client.auth.currentUser?.id;
-
-    // if (widget.mode == MembershipPlanMode.onboarding) {
-    //   // 1. Signup / Onboarding flow: save membership plan to user & redirect home
-    //   _isSubmittingNotifier.value = true;
-    //   try {
-    //     if (currentUserId != null) {
-    //       await Supabase.instance.client
-    //           .from(DatabaseTables.users)
-    //           .update({'membership_plan_id': selectedPlan.id})
-    //           .eq('id', currentUserId);
-
-    //       if (sl.isRegistered<AuthBloc>()) {
-    //         sl<AuthBloc>().add(const AuthReloadRoleDataRequested());
-    //       }
-    //     }
-    //     if (mounted) {
-    //       AppSnackbar.success('Welcome to ${selectedPlan.name}!');
-    //       context.go(CustomerHomeScreen.route);
-    //     }
-    //   } catch (e) {
-    //     // Failed to save membership plan on onboarding
-    //     if (mounted) {
-    //       context.go(CustomerHomeScreen.route);
-    //     }
-    //   } finally {
-    //     if (mounted) {
-    //       _isSubmittingNotifier.value = false;
-    //     }
-    //   }
-    //   return;
-    // }
-
-    // if (widget.mode == MembershipPlanMode.booking) {
-    //   // 2. Booking flow: return chosen plan to checkout
-    //   context.pop(selectedPlan);
-    //   return;
-    // }
-
-    // // 3. Profile flow: Upgrade or switch plan
-    // final activeId = _activePlanIdNotifier.value;
-    // if (activeId == selectedPlan.id) {
-    //   AppSnackbar.info(
-    //     'You are already subscribed to the ${selectedPlan.name} plan.',
-    //   );
-    //   return;
-    // }
-
-    // _isSubmittingNotifier.value = true;
-    // try {
-    //   if (currentUserId != null) {
-    //     await Supabase.instance.client
-    //         .from(DatabaseTables.users)
-    //         .update({'membership_plan_id': selectedPlan.id})
-    //         .eq('id', currentUserId);
-
-    //     _activePlanIdNotifier.value = selectedPlan.id;
-
-    //     if (sl.isRegistered<AuthBloc>()) {
-    //       sl<AuthBloc>().add(const AuthReloadRoleDataRequested());
-    //     }
-    //   }
-    //   if (mounted) {
-    //     AppSnackbar.success(
-    //       'Membership plan updated to ${selectedPlan.name} successfully!',
-    //     );
-    //     context.pop();
-    //   }
-    // } catch (e) {
-    //   // Failed to update membership plan
-    //   if (mounted) {
-    //     AppSnackbar.error('Failed to update membership plan: $e');
-    //   }
-    // } finally {
-    //   if (mounted) {
-    //     _isSubmittingNotifier.value = false;
-    //   }
-    // }
   }
 
   Widget _buildHeader(BuildContext context, bool isBooking) {
-    final bool isOnboarding = widget.mode == MembershipPlanMode.onboarding;
+    final bool isOnboarding = mode == MembershipPlanMode.onboarding;
     return Padding(
       padding: AppSpacing.sm.bPadding,
       child: Column(
@@ -317,7 +170,7 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
                   ),
                 ),
                 AppTextSpan(
-                  text: (widget.bookingAmount ?? 240.0).toInrAmount,
+                  text: (bookingAmount ?? 240.0).toInrAmount,
                   style: context.textTheme.bodyMedium?.semiBold(),
                 ),
                 AppTextSpan(
@@ -327,7 +180,7 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
                   ),
                 ),
                 AppTextSpan(
-                  text: widget.operativeName ?? 'Operative Vikram Singh',
+                  text: operativeName ?? 'Operative Vikram Singh',
                   style: context.textTheme.bodyMedium?.semiBold(),
                 ),
                 AppTextSpan(
@@ -354,186 +207,204 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isBooking = widget.mode == MembershipPlanMode.booking;
-    final bool isOnboarding = widget.mode == MembershipPlanMode.onboarding;
+    final bool isBooking = mode == MembershipPlanMode.booking;
+    final bool isOnboarding = mode == MembershipPlanMode.onboarding;
 
-    return Scaffold(
-      appBar: AppAppBar.transparent(
-        showBackIcon: !isOnboarding,
-        actions: const [],
-      ),
-      body: SafeArea(
-        child: RefreshIndicator(
-          color: context.colors.primary,
-          backgroundColor: context.colors.surface,
-          onRefresh: _loadPlans,
-          child: ListenableBuilder(
-            listenable: Listenable.merge([
-              _plansNotifier,
-              _isLoadingNotifier,
-              _selectedPlanNotifier,
-              _activePlanIdNotifier,
-            ]),
-            builder: (context, _) {
-              final plans = _plansNotifier.value;
-              final isLoading = _isLoadingNotifier.value;
-              final selectedPlan = _selectedPlanNotifier.value;
-              final activePlanId = _activePlanIdNotifier.value;
+    return BlocBuilder<MembershipPlansBloc, MembershipPlansState>(
+      builder: (context, state) {
+        final plans = state.plans;
+        final isLoading = state.loadStatus.isLoading;
+        final selectedPlan = state.selectedPlan;
+        final activePlanId = state.activePlanId;
+        final isCurrent =
+            selectedPlan != null &&
+            selectedPlan.id == activePlanId &&
+            !isBooking &&
+            !isOnboarding;
 
-              if (isLoading && plans.isEmpty) {
-                return Center(
-                  child: CircularProgressIndicator(
-                    color: context.colors.primary,
-                  ),
-                );
-              }
-
-              return ListView.separated(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: context.horizontalEdgeInsets + AppSpacing.md.bPadding,
-                itemCount: plans.length + 1, // Header + plans
-                separatorBuilder: (context, index) {
-                  if (index == 0) return const SizedBox.shrink();
-                  return AppSpacing.md.h;
-                },
-                itemBuilder: (context, index) {
-                  if (index == 0) {
-                    return _buildHeader(context, isBooking);
-                  }
-
-                  final plan = plans[index - 1];
-                  final isSelected = selectedPlan?.id == plan.id;
-                  final isCurrentPlan =
-                      !isBooking && !isOnboarding && plan.id == activePlanId;
-
-                  return PlanSelectionCard(
-                    plan: plan,
-                    isSelected: isSelected,
-                    isCurrentPlan: isCurrentPlan,
-                    bookingAmount: isBooking
-                        ? (widget.bookingAmount ?? 240.0)
-                        : null,
-                    onTap: () => _selectedPlanNotifier.value = plan,
-                  );
-                },
-              );
-            },
+        return Scaffold(
+          appBar: AppAppBar.transparent(
+            showBackIcon: !isOnboarding,
+            actions: const [],
           ),
-        ),
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: context.horizontalEdgeInsets + AppSpacing.md.yPadding,
-          child: ListenableBuilder(
-            listenable: Listenable.merge([
-              _selectedPlanNotifier,
-              _isSubmittingNotifier,
-              _activePlanIdNotifier,
-            ]),
-            builder: (context, _) {
-              final selectedPlan = _selectedPlanNotifier.value;
-              final isSubmitting = _isSubmittingNotifier.value;
-              final activePlanId = _activePlanIdNotifier.value;
-              final isCurrent =
-                  selectedPlan != null &&
-                  selectedPlan.id == activePlanId &&
-                  !isBooking &&
-                  !isOnboarding;
-
-              if (isBooking || isOnboarding) {
-                return Row(
-                  children: [
-                    Expanded(
-                      flex: 6,
-                      child: AppButton(
-                        text: 'Apply ${selectedPlan?.title ?? 'Plan'}',
-                        isLoading: isSubmitting,
-                        gradient: const LinearGradient(
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                          colors: [Color(0xFFE2B755), Color(0xFFC48E28)],
-                        ),
-                        foregroundColor: const Color(0xFF191B23),
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                        height: 52,
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFC48E28)
-                                .withValues(alpha: 0.25),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                        trailing: const Icon(
-                          Icons.arrow_forward_rounded,
-                          size: AppSizes.iconSmd,
-                          color: Color(0xFF191B23),
-                        ),
-                        onPressed: selectedPlan != null ? _handleAction : null,
-                      ),
-                    ),
-                    AppSpacing.md.w,
-                    Expanded(
-                      flex: 4,
-                      child: AppButton(
-                        text: 'Skip',
-                        backgroundColor: const Color(0xFF262A34),
-                        foregroundColor: Colors.white,
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                        height: 52,
-                        onPressed: isSubmitting
-                            ? null
-                            : () => context.go(CustomerHomeScreen.route),
-                      ),
-                    ),
-                  ],
+          body: SafeArea(
+            child: RefreshIndicator(
+              color: context.colors.primary,
+              backgroundColor: context.colors.surface,
+              onRefresh: () async {
+                final bloc = context.read<MembershipPlansBloc>();
+                bloc.add(
+                  MembershipPlansStarted(activePlanId: state.activePlanId),
                 );
-              }
-
-              return AppButton(
-                text: isCurrent ? 'Current Plan' : 'Upgrade your plan',
-                isLoading: isSubmitting,
-                gradient: isCurrent
-                    ? null
-                    : const LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [Color(0xFFE2B755), Color(0xFFC48E28)],
+                await bloc.stream.firstWhere((s) => !s.loadStatus.isLoading);
+              },
+              child: (isLoading && plans.isEmpty)
+                  ? Center(
+                      child: CircularProgressIndicator(
+                        color: context.colors.primary,
                       ),
-                foregroundColor: isCurrent ? null : const Color(0xFF191B23),
-                backgroundColor: isCurrent
-                    ? context.colors.surfaceContainerHigh
-                    : null,
-                borderRadius: BorderRadius.circular(AppRadius.md),
-                height: 52,
-                boxShadow: isCurrent
-                    ? null
-                    : [
-                        BoxShadow(
-                          color: const Color(0xFFC48E28)
-                              .withValues(alpha: 0.25),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
+                    )
+                  : (state.loadStatus.isFailure && plans.isEmpty)
+                  ? Center(
+                      child: Padding(
+                        padding: context.horizontalEdgeInsets,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              context.apiErrorText(
+                                state.loadStatus.errorOrNull,
+                                fallback: state.loadStatus.errorMessageOrNull,
+                              ),
+                              textAlign: TextAlign.center,
+                              style: context.textTheme.bodyMedium,
+                            ),
+                            AppSpacing.md.h,
+                            AppButton(
+                              text: 'Retry',
+                              onPressed: () => context
+                                  .read<MembershipPlansBloc>()
+                                  .add(
+                                    MembershipPlansStarted(
+                                      activePlanId: state.activePlanId,
+                                    ),
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : ListView.separated(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding:
+                          context.horizontalEdgeInsets + AppSpacing.md.bPadding,
+                      itemCount: plans.length + 1, // Header + plans
+                      separatorBuilder: (context, index) {
+                        if (index == 0) return const SizedBox.shrink();
+                        return AppSpacing.md.h;
+                      },
+                      itemBuilder: (context, index) {
+                        if (index == 0) {
+                          return _buildHeader(context, isBooking);
+                        }
+
+                        final plan = plans[index - 1];
+                        final isSelected = selectedPlan?.id == plan.id;
+                        final isCurrentPlan =
+                            !isBooking &&
+                            !isOnboarding &&
+                            plan.id == activePlanId;
+
+                        return PlanSelectionCard(
+                          plan: plan,
+                          isSelected: isSelected,
+                          isCurrentPlan: isCurrentPlan,
+                          bookingAmount: isBooking
+                              ? (bookingAmount ?? 240.0)
+                              : null,
+                          onTap: () => context
+                              .read<MembershipPlansBloc>()
+                              .add(MembershipPlanSelected(plan)),
+                        );
+                      },
+                    ),
+            ),
+          ),
+          bottomNavigationBar: SafeArea(
+            child: Padding(
+              padding: context.horizontalEdgeInsets + AppSpacing.md.yPadding,
+              child: (isBooking || isOnboarding)
+                  ? Row(
+                      children: [
+                        Expanded(
+                          flex: 6,
+                          child: AppButton(
+                            text: 'Apply ${selectedPlan?.title ?? 'Plan'}',
+                            gradient: const LinearGradient(
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                              colors: [Color(0xFFE2B755), Color(0xFFC48E28)],
+                            ),
+                            foregroundColor: const Color(0xFF191B23),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                            height: 52,
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFC48E28)
+                                    .withValues(alpha: 0.25),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                            trailing: const Icon(
+                              Icons.arrow_forward_rounded,
+                              size: AppSizes.iconSmd,
+                              color: Color(0xFF191B23),
+                            ),
+                            onPressed: selectedPlan != null
+                                ? _handleAction
+                                : null,
+                          ),
+                        ),
+                        AppSpacing.md.w,
+                        Expanded(
+                          flex: 4,
+                          child: AppButton(
+                            text: 'Skip',
+                            backgroundColor: const Color(0xFF262A34),
+                            foregroundColor: Colors.white,
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                            height: 52,
+                            onPressed: () =>
+                                context.go(CustomerHomeScreen.route),
+                          ),
                         ),
                       ],
-                trailing: isCurrent
-                    ? const Icon(
-                        Icons.check_circle_outline_rounded,
-                        size: AppSizes.iconSmd,
-                      )
-                    : const Icon(
-                        Icons.arrow_forward_rounded,
-                        size: AppSizes.iconSmd,
-                        color: Color(0xFF191B23),
-                      ),
-                onPressed: (selectedPlan != null && !isCurrent)
-                    ? _handleAction
-                    : null,
-              );
-            },
+                    )
+                  : AppButton(
+                      text: isCurrent ? 'Current Plan' : 'Upgrade your plan',
+                      gradient: isCurrent
+                          ? null
+                          : const LinearGradient(
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                              colors: [Color(0xFFE2B755), Color(0xFFC48E28)],
+                            ),
+                      foregroundColor:
+                          isCurrent ? null : const Color(0xFF191B23),
+                      backgroundColor: isCurrent
+                          ? context.colors.surfaceContainerHigh
+                          : null,
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      height: 52,
+                      boxShadow: isCurrent
+                          ? null
+                          : [
+                              BoxShadow(
+                                color: const Color(0xFFC48E28)
+                                    .withValues(alpha: 0.25),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                      trailing: isCurrent
+                          ? const Icon(
+                              Icons.check_circle_outline_rounded,
+                              size: AppSizes.iconSmd,
+                            )
+                          : const Icon(
+                              Icons.arrow_forward_rounded,
+                              size: AppSizes.iconSmd,
+                              color: Color(0xFF191B23),
+                            ),
+                      onPressed: (selectedPlan != null && !isCurrent)
+                          ? _handleAction
+                          : null,
+                    ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

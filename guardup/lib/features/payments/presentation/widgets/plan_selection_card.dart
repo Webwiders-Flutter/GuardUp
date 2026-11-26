@@ -10,12 +10,12 @@ import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/shared/widgets/misc/app_rich_text.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
-import '../../data/model/plan.model.dart';
+import '../../data/model/membership_plan.model.dart';
 
 /// A luxury selectable membership plan card matching GuardUp design standards.
 class PlanSelectionCard extends StatelessWidget {
   /// The plan model data for this card.
-  final PlanModel plan;
+  final MembershipPlanModel plan;
 
   /// Whether this plan is currently selected.
   final bool isSelected;

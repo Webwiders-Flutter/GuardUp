@@ -7,7 +7,7 @@ import '../model/bank_account_request.model.dart';
 import '../model/user_bank_account.model.dart';
 
 /// `public.user_bank_accounts`: Saved payout bank accounts for users and guards.
-final class BankAccountRepository
+class BankAccountRepository
     extends BaseSupabaseRepository<UserBankAccountModel> {
   BankAccountRepository(SupabaseClient client)
     : super(
@@ -45,6 +45,23 @@ final class BankAccountRepository
     final row = await client
         .from(tableName)
         .insert(request.toJson(userId: userId))
+        .select()
+        .single();
+    return UserBankAccountModel.fromJson(row);
+  }
+
+  /// Updates an existing bank account row by [id].
+  Future<UserBankAccountModel> update(
+    String id,
+    BankAccountRequest request,
+  ) async {
+    final row = await client
+        .from(tableName)
+        .update({
+          ...request.toJson(),
+          JsonKeys.updatedAt: DateTime.now().toIso8601String(),
+        })
+        .eq(JsonKeys.id, id)
         .select()
         .single();
     return UserBankAccountModel.fromJson(row);

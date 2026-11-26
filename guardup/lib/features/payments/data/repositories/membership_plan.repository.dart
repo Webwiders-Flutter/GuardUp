@@ -6,7 +6,7 @@ import '/core/repositories/base.repository.dart';
 import '../model/membership_plan.model.dart';
 
 /// `public.membership_plans`: Customer VIP membership tiers.
-final class MembershipPlanRepository
+class MembershipPlanRepository
     extends BaseSupabaseRepository<MembershipPlanModel> {
   MembershipPlanRepository(SupabaseClient client)
     : super(
