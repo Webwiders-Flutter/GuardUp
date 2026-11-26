@@ -11,6 +11,7 @@ import '../../data/fixtures/notifications.fixtures.dart';
 import '/shared/widgets/misc/skeleton_effect.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
+import '/core/extensions/api_error.extension.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
@@ -212,17 +213,34 @@ class _NotificationsScreenState extends State<NotificationsScreen>
   Widget build(BuildContext context) {
     return BlocProvider.value(
       value: _notificationsBloc,
-      child: BlocListener<NotificationsBloc, NotificationsState>(
-        listener: (context, state) {
-          _paginationController.updateState(state.paginationState);
-          final expectedIndex = _categoryIndex(state.activeCategory);
-          if (_tabController.index != expectedIndex) {
-            _tabController.animateTo(expectedIndex);
-          }
-          if (state.actionError != null) {
-            AppSnackbar.error(state.actionError!);
-          }
-        },
+      child: MultiBlocListener(
+        listeners: [
+          BlocListener<NotificationsBloc, NotificationsState>(
+            listenWhen: (previous, current) =>
+                previous.paginationState != current.paginationState ||
+                previous.activeCategory != current.activeCategory,
+            listener: (context, state) {
+              _paginationController.updateState(state.paginationState);
+              final expectedIndex = _categoryIndex(state.activeCategory);
+              if (_tabController.index != expectedIndex) {
+                _tabController.animateTo(expectedIndex);
+              }
+            },
+          ),
+          BlocListener<NotificationsBloc, NotificationsState>(
+            listenWhen: (previous, current) =>
+                previous.actionStatus != current.actionStatus &&
+                current.actionStatus.isFailure,
+            listener: (context, state) {
+              AppSnackbar.error(
+                context.apiErrorText(
+                  state.actionStatus.errorOrNull,
+                  fallback: state.actionStatus.errorMessageOrNull,
+                ),
+              );
+            },
+          ),
+        ],
         child: Scaffold(
           appBar: _isSelectionMode
               ? AppAppBar.transparent(

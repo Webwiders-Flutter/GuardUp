@@ -1,7 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '/features/auth/bloc/auth_bloc.dart';
+import '/features/auth/domain/repositories/auth_repository.dart';
 import '../bloc/notifications/notifications_bloc.dart';
 import '../bloc/unread_count/unread_notification_count_cubit.dart';
 import '../bloc/user_device/user_device_cubit.dart';
@@ -28,7 +28,7 @@ void registerNotificationsDependencies(GetIt sl) {
   sl.registerFactory<NotificationsBloc>(
     () => NotificationsBloc(
       repository: sl<NotificationRepository>(),
-      getUserId: () => sl<AuthBloc>().state.user?.id ?? '',
+      getUserId: () => sl<AuthRepository>().currentUserId ?? '',
       unreadCountCubit: sl<UnreadNotificationCountCubit>(),
     ),
   );

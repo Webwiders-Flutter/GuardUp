@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '/core/state/api_state.dart';
 import '/shared/widgets/pagination/pagination.state.dart';
 import '../../data/enums/notification_type.enum.dart';
 import '../../data/models/notification.model.dart';
@@ -8,27 +9,23 @@ import '../../data/models/notification.model.dart';
 class NotificationsState extends Equatable {
   final PaginationState<NotificationModel> paginationState;
   final NotificationCategory activeCategory;
-  final String? actionError;
-  final String? actionSuccess;
+  final ApiState<void> actionStatus;
 
   const NotificationsState({
     this.paginationState = const PaginationState<NotificationModel>(),
     this.activeCategory = NotificationCategory.all,
-    this.actionError,
-    this.actionSuccess,
+    this.actionStatus = const ApiState.initial(),
   });
 
   NotificationsState copyWith({
     PaginationState<NotificationModel>? paginationState,
     NotificationCategory? activeCategory,
-    String? actionError,
-    String? actionSuccess,
+    ApiState<void>? actionStatus,
   }) {
     return NotificationsState(
       paginationState: paginationState ?? this.paginationState,
       activeCategory: activeCategory ?? this.activeCategory,
-      actionError: actionError,
-      actionSuccess: actionSuccess,
+      actionStatus: actionStatus ?? this.actionStatus,
     );
   }
 
@@ -36,7 +33,6 @@ class NotificationsState extends Equatable {
   List<Object?> get props => [
     paginationState,
     activeCategory,
-    actionError,
-    actionSuccess,
+    actionStatus,
   ];
 }

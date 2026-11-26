@@ -9,8 +9,7 @@ import '../models/notification_filters.model.dart';
 
 /// Repository for managing user notifications in Supabase `public.notifications`.
 /// Extends [BaseSupabaseRepository] to provide standardized CRUD and pagination.
-final class NotificationRepository
-    extends BaseSupabaseRepository<NotificationModel> {
+class NotificationRepository extends BaseSupabaseRepository<NotificationModel> {
   NotificationRepository(SupabaseClient client)
     : super(
         client: client,

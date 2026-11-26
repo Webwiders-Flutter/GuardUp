@@ -51,6 +51,12 @@ sealed class ApiState<T> extends Equatable {
     _ => null,
   };
 
+  /// Returns the failure error object if in [ApiFailure], otherwise `null`.
+  Object? get errorOrNull => switch (this) {
+    ApiFailure<T>(:final error) => error,
+    _ => null,
+  };
+
   /// Functional pattern matcher covering all states exhaustively.
   R when<R>({
     required R Function() initial,

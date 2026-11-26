@@ -3,11 +3,14 @@ import 'dart:async';
 
 import 'dart:math';
 
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '/core/constants/app_constants.dart';
+import '/core/error/api_exception.dart';
 import '/core/state/api_state.dart';
+import '/core/utils/callback/async_callback.handler.dart';
 import '/shared/widgets/pagination/pagination.state.dart';
 import '../../data/models/notification.model.dart';
 import '../../data/models/notification_filters.model.dart';
@@ -31,9 +34,18 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
        _getUserId = getUserId,
        _unreadCountCubit = unreadCountCubit,
        super(const NotificationsState()) {
-    on<NotificationsFetchRequested>(_onFetchRequested);
-    on<NotificationsLoadMoreRequested>(_onLoadMoreRequested);
-    on<NotificationsCategoryChanged>(_onCategoryChanged);
+    on<NotificationsFetchRequested>(
+      _onFetchRequested,
+      transformer: restartable(),
+    );
+    on<NotificationsLoadMoreRequested>(
+      _onLoadMoreRequested,
+      transformer: droppable(),
+    );
+    on<NotificationsCategoryChanged>(
+      _onCategoryChanged,
+      transformer: restartable(),
+    );
     on<NotificationMarkAsReadRequested>(_onMarkAsReadRequested);
     on<NotificationsMarkAllAsReadRequested>(_onMarkAllAsReadRequested);
     on<NotificationDeleteRequested>(_onDeleteRequested);
@@ -73,10 +85,12 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
     );
 
     try {
-      final result = await _repository.getPaginated(
-        page: 1,
-        pageSize: AppConstants.paginationLimit,
-        filters: NotificationFilters(userId: userId, category: category),
+      final result = await asyncHandler(
+        () => _repository.getPaginated(
+          page: 1,
+          pageSize: AppConstants.paginationLimit,
+          filters: NotificationFilters(userId: userId, category: category),
+        ),
       );
 
       emit(
@@ -90,11 +104,11 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
           ),
         ),
       );
-    } catch (e) {
+    } on ApiException catch (e) {
       emit(
         state.copyWith(
           paginationState: PaginationState<NotificationModel>(
-            status: ApiState.failure(e.toString()),
+            status: ApiState.failure(e.message, error: e),
           ),
         ),
       );
@@ -121,12 +135,14 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
     );
 
     try {
-      final result = await _repository.getPaginated(
-        page: nextPage,
-        pageSize: current.pageSize,
-        filters: NotificationFilters(
-          userId: userId,
-          category: state.activeCategory,
+      final result = await asyncHandler(
+        () => _repository.getPaginated(
+          page: nextPage,
+          pageSize: current.pageSize,
+          filters: NotificationFilters(
+            userId: userId,
+            category: state.activeCategory,
+          ),
         ),
       );
 
@@ -141,21 +157,21 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
           ),
         ),
       );
-    } catch (e) {
+    } on ApiException catch (e) {
       emit(
         state.copyWith(
           paginationState: current.copyWith(
-            loadMoreStatus: ApiState.failure(e.toString()),
+            loadMoreStatus: ApiState.failure(e.message, error: e),
           ),
         ),
       );
     }
   }
 
-  void _onCategoryChanged(
+  Future<void> _onCategoryChanged(
     NotificationsCategoryChanged event,
     Emitter<NotificationsState> emit,
-  ) {
+  ) async {
     if (event.category == state.activeCategory &&
         state.paginationState.items.isNotEmpty) {
       return;
@@ -199,8 +215,10 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
     _unreadCountCubit?.decrement();
 
     try {
-      await _repository.markAsRead(notificationId: event.notificationId);
-    } catch (e) {
+      await asyncHandler(
+        () => _repository.markAsRead(notificationId: event.notificationId),
+      );
+    } on ApiException {
       emit(
         state.copyWith(
           paginationState: state.paginationState.copyWith(items: previousItems),
@@ -226,17 +244,19 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
     emit(
       state.copyWith(
         paginationState: state.paginationState.copyWith(items: updatedItems),
+        actionStatus: const ApiState.loading(),
       ),
     );
     _unreadCountCubit?.clearAll();
 
     try {
-      await _repository.markAllAsRead(userId);
-    } catch (e) {
+      await asyncHandler(() => _repository.markAllAsRead(userId));
+      emit(state.copyWith(actionStatus: const ApiState.success(null)));
+    } on ApiException catch (e) {
       emit(
         state.copyWith(
           paginationState: state.paginationState.copyWith(items: previousItems),
-          actionError: 'Failed to mark all as read',
+          actionStatus: ApiState.failure(e.message, error: e),
         ),
       );
       unawaited(_unreadCountCubit?.refreshCount(userId));
@@ -264,6 +284,7 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
           items: updatedItems,
           total: newTotal,
         ),
+        actionStatus: const ApiState.loading(),
       ),
     );
 
@@ -272,15 +293,16 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
     }
 
     try {
-      await _repository.delete(event.notificationId);
-    } catch (e) {
+      await asyncHandler(() => _repository.delete(event.notificationId));
+      emit(state.copyWith(actionStatus: const ApiState.success(null)));
+    } on ApiException catch (e) {
       emit(
         state.copyWith(
           paginationState: state.paginationState.copyWith(
             items: previousItems,
             total: state.paginationState.total,
           ),
-          actionError: 'Failed to delete notification',
+          actionStatus: ApiState.failure(e.message, error: e),
         ),
       );
       if (!target.isRead) {
@@ -315,32 +337,30 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
           items: updatedItems,
           total: newTotal,
         ),
+        actionStatus: const ApiState.loading(),
       ),
     );
 
     if (unreadDeletedCount > 0) {
-      for (var i = 0; i < unreadDeletedCount; i++) {
-        _unreadCountCubit?.decrement();
-      }
+      _unreadCountCubit?.decrement(decreaseBy: unreadDeletedCount);
     }
 
     // 2. Persist to Supabase
     try {
-      await _repository.deleteMany(event.notificationIds);
-    } catch (e) {
+      await asyncHandler(() => _repository.deleteMany(event.notificationIds));
+      emit(state.copyWith(actionStatus: const ApiState.success(null)));
+    } on ApiException catch (e) {
       emit(
         state.copyWith(
           paginationState: state.paginationState.copyWith(
             items: previousItems,
             total: state.paginationState.total,
           ),
-          actionError: 'Failed to delete notifications',
+          actionStatus: ApiState.failure(e.message, error: e),
         ),
       );
       if (unreadDeletedCount > 0) {
-        for (var i = 0; i < unreadDeletedCount; i++) {
-          _unreadCountCubit?.increment();
-        }
+        _unreadCountCubit?.increment(increaseBy: unreadDeletedCount);
       }
     }
   }

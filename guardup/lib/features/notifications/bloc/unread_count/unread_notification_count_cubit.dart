@@ -3,8 +3,10 @@ import 'dart:math';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '/core/error/api_exception.dart';
 import '/core/logger/app_logger.dart';
 import '/core/services/notification/push_notification_service.dart';
+import '/core/utils/callback/async_callback.handler.dart';
 import '../../data/repositories/notification_repository.dart';
 
 /// Cubit managing the unread notification count badge in real-time.
@@ -42,22 +44,22 @@ class UnreadNotificationCountCubit extends Cubit<int> {
     }
     _currentUserId = userId;
     try {
-      final count = await _repository.getUnreadCount(userId);
+      final count = await asyncHandler(() => _repository.getUnreadCount(userId));
       emit(count);
-    } catch (e) {
+    } on ApiException catch (e) {
       AppLogger.w(
-        'Failed to load unread notification count: $e',
+        'Failed to load unread notification count: ${e.message}',
         tag: 'UnreadNotificationCountCubit',
       );
     }
   }
 
-  /// Increments the unread count by 1 (e.g. upon incoming push notification).
+  /// Increments the unread count by [increaseBy] (e.g. upon incoming push notification).
   void increment({int increaseBy = 1}) {
     emit(state + increaseBy);
   }
 
-  /// Decrements the unread count (e.g. when an unread notification is clicked/read).
+  /// Decrements the unread count by [decreaseBy] (clamped at 0).
   void decrement({int decreaseBy = 1}) {
     emit(max(0, state - decreaseBy));
   }
@@ -75,11 +77,11 @@ class UnreadNotificationCountCubit extends Cubit<int> {
       return;
     }
     try {
-      final count = await _repository.getUnreadCount(uid);
+      final count = await asyncHandler(() => _repository.getUnreadCount(uid));
       emit(count);
-    } catch (e) {
+    } on ApiException catch (e) {
       AppLogger.w(
-        'Failed to refresh unread count: $e',
+        'Failed to refresh unread count: ${e.message}',
         tag: 'UnreadNotificationCountCubit',
       );
     }
