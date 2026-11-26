@@ -13,7 +13,7 @@ import '../models/document_type.model.dart';
 import '../models/user_document.model.dart';
 
 /// `public.user_documents`: User and bodyguard uploaded compliance documents.
-final class UserDocumentsRepository
+class UserDocumentsRepository
     extends BaseSupabaseRepository<UserDocumentModel> {
   final FileStorageService? fileStorageService;
 

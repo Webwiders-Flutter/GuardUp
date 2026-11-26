@@ -23,6 +23,9 @@ abstract class UserRepository {
   /// Updates account-level fields for [id].
   Future<UserModel> updateAccount(String id, UserAccountRequest request);
 
+  /// Moves a user account's status to `PENDING_APPROVAL` for admin review.
+  Future<void> submitForReview(String userId);
+
   /// Streams real-time updates for a specific user profile by [userId].
   Stream<UserModel?> watchUserProfile(String userId);
 

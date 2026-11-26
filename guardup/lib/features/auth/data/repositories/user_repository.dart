@@ -10,6 +10,7 @@ import '/core/repositories/base.repository.dart';
 import '/core/services/file_storage/file_storage.service.dart';
 import '/core/services/file_storage/models/file_upload_request.model.dart';
 import '../../domain/repositories/user_repository.dart';
+import '../enum/user_status.enum.dart';
 import '../model/user.model.dart';
 import '../model/user_account_request.model.dart';
 import '../profile_fields.dart';
@@ -191,6 +192,17 @@ class SupabaseUserRepository extends BaseSupabaseRepository<UserModel>
       throw ApiException('User profile not found after update.');
     }
     return updated;
+  }
+
+  @override
+  Future<void> submitForReview(String userId) async {
+    await _supabase
+        .from(DatabaseTables.users)
+        .update({
+          JsonKeys.status: UserStatus.pendingApproval.apiValue,
+          JsonKeys.updatedAt: DateTime.now().toIso8601String(),
+        })
+        .eq(JsonKeys.id, userId);
   }
 
   @override

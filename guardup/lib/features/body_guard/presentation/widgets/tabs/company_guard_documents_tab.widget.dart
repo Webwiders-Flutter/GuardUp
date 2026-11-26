@@ -8,11 +8,9 @@ import '/core/extensions/textstyle_extension.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/features/body_guard/data/enum/document_status.enum.dart';
-import '/features/body_guard/data/enum/guard_doc_type.enum.dart';
 import '/features/body_guard/data/model/body_guard.model.dart';
 import '/features/body_guard/data/model/user_document.model.dart';
 import '/shared/widgets/feedbacks/widgets/app_file_preview.dart';
-import '/core/utils/json_converters/enum.jsonconverter.dart';
 
 /// Company View "Document" Tab: Displays operative credentials and compliance documents
 /// along with verification audit badges and preview capabilities.
@@ -113,24 +111,14 @@ class CompanyGuardDocumentsTabWidget extends StatelessWidget {
             ? context.colors.error
             : context.colors.primary;
 
-    final docType = GuardDocType.values.fromValue(doc.documentTypeId);
     final title = doc.fileName != null && doc.fileName!.isNotEmpty
         ? doc.fileName!
-        : switch (docType) {
-            GuardDocType.idProof => 'Government ID / Passport',
-            GuardDocType.securityLicense => 'Armed Security Officer License',
-            GuardDocType.policeVerification => 'Police Background Clearance',
-            GuardDocType.certifications => 'Tactical Protection Certification',
-            null => 'Verification Document',
-          };
+        : (doc.resolvedDocumentName ?? 'Verification Document');
 
-    final subtitle = switch (docType) {
-      GuardDocType.idProof => 'Identity Verification Proof',
-      GuardDocType.securityLicense => 'Security Industry Authority (SIA)',
-      GuardDocType.policeVerification => 'Federal Crime Records Registry',
-      GuardDocType.certifications => 'Executive Close Protection Institute',
-      null => 'Compliance & Verification',
-    };
+    final subtitle =
+        doc.documentType?.description?.isNotEmpty == true
+            ? doc.documentType!.description!
+            : (doc.resolvedDocumentName ?? 'Compliance & Verification');
 
     return QuickContainer(
       p: 12,

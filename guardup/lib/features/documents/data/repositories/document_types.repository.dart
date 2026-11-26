@@ -7,7 +7,7 @@ import '/features/auth/data/enum/user_role.enum.dart';
 import '../models/document_type.model.dart';
 
 /// `public.document_types`: Admin-configured document definitions.
-final class DocumentTypesRepository
+class DocumentTypesRepository
     extends BaseSupabaseRepository<DocumentTypeModel> {
   DocumentTypesRepository(SupabaseClient client)
     : super(
