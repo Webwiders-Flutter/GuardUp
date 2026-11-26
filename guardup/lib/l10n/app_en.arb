@@ -1189,5 +1189,17 @@
   "goToDashboard": "Go to Dashboard",
   "@goToDashboard": {
     "description": "Button to navigate to home/dashboard"
+  },
+  "noInternetConnection": "No internet connection",
+  "@noInternetConnection": {
+    "description": "Generic error shown when the device is offline"
+  },
+  "requestTimeout": "Request timeout",
+  "@requestTimeout": {
+    "description": "Generic error shown when a request times out"
+  },
+  "invalidDataFormat": "Invalid data format",
+  "@invalidDataFormat": {
+    "description": "Generic error shown when a server response cannot be parsed"
   }
 }
