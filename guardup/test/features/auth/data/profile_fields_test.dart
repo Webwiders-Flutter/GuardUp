@@ -5,7 +5,7 @@ import 'package:guardup/features/auth/data/profile_fields.dart';
 /// `UserRepository.updateProfileFields`.
 void main() {
   group('ProfileFields.split', () {
-    test('guard key details: rate etc. to bodyguards, address to users', () {
+    test('guard key details: rate, address etc. to bodyguards', () {
       final split = ProfileFields.split({
         'experience_years': 7,
         'hourly_rate': 55.0,
@@ -17,17 +17,18 @@ void main() {
       }, 'GUARD');
 
       expect(split.profileTable, 'bodyguards');
+      // users.address / latitude / longitude were dropped by migration
+      // 20261124000026; they live on bodyguards.
       expect(split.profile, {
         'experience_years': 7,
         'hourly_rate': 55.0,
-        'languages': 'English',
-        'certifications': 'CPR',
-      });
-      expect(split.account, {
         'address': 'Street 1',
         'latitude': 1.0,
         'longitude': 2.0,
+        'languages': 'English',
+        'certifications': 'CPR',
       });
+      expect(split.account, isEmpty);
       expect(split.ignored, isEmpty);
     });
 
@@ -82,8 +83,9 @@ void main() {
 
       expect(split.profileTable, 'companies');
       expect(split.profile['experience_years'], 12);
-      expect(split.account.keys, unorderedEquals(['name', 'address']));
-      expect(split.ignored, isEmpty);
+      expect(split.account.keys, unorderedEquals(['name']));
+      // Companies have no address column (users.address was dropped).
+      expect(split.ignored, ['address']);
     });
 
     test('company sending guard-only columns: ignored, not written', () {
