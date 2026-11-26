@@ -8,6 +8,8 @@ export 'data/enum/week_day.enum.dart';
 
 // Models
 export 'data/model/body_guard.model.dart';
+export 'data/model/bodyguard_filters.model.dart';
+export 'data/model/bodyguard_profile_request.model.dart';
 export 'data/model/user_availability.model.dart';
 export 'data/model/user_document.model.dart';
 

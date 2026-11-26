@@ -4,6 +4,7 @@ export 'data/enum/company_doc_type.enum.dart';
 
 // Models
 export 'data/model/company.model.dart';
+export 'data/model/company_filters.model.dart';
 
 // Repositories
 export 'data/repositories/company.repository.dart';
