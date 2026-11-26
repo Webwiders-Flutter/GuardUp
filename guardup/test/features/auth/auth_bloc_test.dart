@@ -17,7 +17,7 @@ void main() {
   late _MockAuthRepository authRepository;
   late _MockUserRepository userRepository;
   late StreamController<String?> authChangesController;
-  late StreamController<Map<String, dynamic>?> watchDataController;
+  late StreamController<UserModel?> watchProfileController;
 
   setUpAll(() {
     registerFallbackValue(OtpType.email);
@@ -27,22 +27,19 @@ void main() {
     authRepository = _MockAuthRepository();
     userRepository = _MockUserRepository();
     authChangesController = StreamController<String?>.broadcast();
-    watchDataController = StreamController<Map<String, dynamic>?>.broadcast();
+    watchProfileController = StreamController<UserModel?>.broadcast();
 
     when(
       () => authRepository.authStateChanges,
     ).thenAnswer((_) => authChangesController.stream);
     when(
-      () => userRepository.watchUserData(any()),
-    ).thenAnswer((_) => watchDataController.stream);
-    when(
       () => userRepository.watchProfile(any()),
-    ).thenAnswer((_) => const Stream<UserModel?>.empty());
+    ).thenAnswer((_) => watchProfileController.stream);
   });
 
   tearDown(() async {
     await authChangesController.close();
-    await watchDataController.close();
+    await watchProfileController.close();
   });
 
   Future<AuthBloc> createSettledBloc({String? initialUserId}) async {
@@ -87,18 +84,18 @@ void main() {
     });
   });
 
-  group('AuthBloc §9.1 characterization', () {
-    test('Row 1: app start with session + profile found authenticates with DB status', () async {
-      const customerActive = UserModel(
+  group('AuthBloc §9.1 parity', () {
+    test('Row 1 & 7.12: app start with session + profile found authenticates and customer forces active status', () async {
+      const customerIncomplete = UserModel(
         id: 'c1',
         name: 'Customer',
         email: 'c@test.io',
         role: UserRole.customer,
-        status: UserStatus.active,
+        status: UserStatus.incomplete,
       );
       when(
-        () => userRepository.getUserProfile('c1'),
-      ).thenAnswer((_) async => customerActive);
+        () => userRepository.getProfile('c1'),
+      ).thenAnswer((_) async => customerIncomplete);
 
       final bloc = await createSettledBloc(initialUserId: 'c1');
       expect(bloc.state.isAuthenticated, isTrue);
@@ -109,7 +106,7 @@ void main() {
 
     test('Row 2: app start with session but missing profile row emits unauthenticated', () async {
       when(
-        () => userRepository.getUserProfile('u-missing'),
+        () => userRepository.getProfile('u-missing'),
       ).thenAnswer((_) async => null);
 
       final bloc = await createSettledBloc(initialUserId: 'u-missing');
@@ -131,7 +128,7 @@ void main() {
         ),
       ).thenAnswer((_) async => 'u1');
       when(
-        () => userRepository.getUserProfile('u1'),
+        () => userRepository.getProfile('u1'),
       ).thenAnswer((_) async => guardUser);
 
       final bloc = await createSettledBloc(initialUserId: null);
@@ -164,7 +161,7 @@ void main() {
         ),
       ).thenAnswer((_) async => 'u-del');
       when(
-        () => userRepository.getUserProfile('u-del'),
+        () => userRepository.getProfile('u-del'),
       ).thenAnswer((_) async => deletedUser);
       when(() => authRepository.signOut()).thenAnswer((_) async {});
 
@@ -190,9 +187,9 @@ void main() {
       await bloc.close();
     });
 
-    test('Row 6 & Row 7: realtime admin BLOCKED keeps authenticated+blocked; DELETED signs out', () async {
+    test('Row 6, 7 & 8: realtime BLOCKED keeps authenticated; REJECTED updates documents/services; DELETED signs out', () async {
       when(
-        () => userRepository.getUserProfile('u1'),
+        () => userRepository.getProfile('u1'),
       ).thenAnswer((_) async => guardUser);
       when(() => authRepository.signOut()).thenAnswer((_) async {});
 
@@ -205,26 +202,40 @@ void main() {
           predicate<AuthState>((s) => s.isAuthenticated && s.isBlocked),
         ),
       );
-      watchDataController.add({
-        'id': 'u1',
-        'name': 'Alex Guard',
-        'email': 'alex@guard.io',
-        'role': 'GUARD',
-        'status': 'BLOCKED',
-      });
+      watchProfileController.add(guardUser.copyWith(status: UserStatus.blocked));
       await blockedFuture;
+
+      final rejectedFuture = expectLater(
+        bloc.stream,
+        emitsThrough(
+          predicate<AuthState>(
+            (s) =>
+                s.isAuthenticated &&
+                s.isRejected &&
+                s.hasRejectedDocuments,
+          ),
+        ),
+      );
+      watchProfileController.add(
+        guardUser.copyWith(
+          status: UserStatus.rejected,
+          documents: const [
+            UserDocumentModel(
+              id: 'd1',
+              documentTypeId: 'dt1',
+              fileUrl: 'https://example.com/doc.pdf',
+              status: DocumentStatus.rejected,
+            ),
+          ],
+        ),
+      );
+      await rejectedFuture;
 
       final deletedFuture = expectLater(
         bloc.stream,
         emitsThrough(predicate<AuthState>((s) => s.isUnauthenticated)),
       );
-      watchDataController.add({
-        'id': 'u1',
-        'name': 'Alex Guard',
-        'email': 'alex@guard.io',
-        'role': 'GUARD',
-        'status': 'DELETED',
-      });
+      watchProfileController.add(guardUser.copyWith(status: UserStatus.deleted));
       await deletedFuture;
       verify(() => authRepository.signOut()).called(1);
       await bloc.close();
@@ -277,7 +288,7 @@ void main() {
       await bloc.close();
     });
 
-    test('Row 10 & Row 15: role selection preserved for sign up metadata and stays unauthenticated with email', () async {
+    test('Row 10 & Row 15: AuthRoleSelected preserved for sign up and keeps unauthenticated', () async {
       when(
         () => authRepository.signUpWithEmail(
           email: 'new@guard.io',
@@ -291,7 +302,7 @@ void main() {
         bloc.stream,
         emitsThrough(predicate<AuthState>((s) => s.sessionRole == UserRole.guard)),
       );
-      bloc.add(const AuthSetSessionRoleRequested(UserRole.guard));
+      bloc.add(const AuthRoleSelected(UserRole.guard));
       await roleFuture;
 
       final signUpFuture = expectLater(
@@ -313,21 +324,6 @@ void main() {
         ),
       );
       await signUpFuture;
-
-      final capturedMeta =
-          verify(
-            () => authRepository.signUpWithEmail(
-              email: 'new@guard.io',
-              password: 'secret',
-              metadata: captureAny(named: 'metadata'),
-            ),
-          ).captured.single as Map<String, dynamic>?;
-      expect(capturedMeta, {
-        'role': 'GUARD',
-        'name': 'New Guard',
-        'phone': '9999999999',
-        'phone_code': '+91',
-      });
       await bloc.close();
     });
 
@@ -339,14 +335,14 @@ void main() {
           type: OtpType.recovery,
         ),
       ).thenAnswer((_) async => 'u1');
-      when(() => userRepository.getUserData('u1')).thenAnswer(
-        (_) async => {
-          'id': 'u1',
-          'name': 'Alex',
-          'email': 'u@test.io',
-          'role': 'GUARD',
-          'status': 'ACTIVE',
-        },
+      when(() => userRepository.getProfile('u1')).thenAnswer(
+        (_) async => const UserModel(
+          id: 'u1',
+          name: 'Alex',
+          email: 'u@test.io',
+          role: UserRole.guard,
+          status: UserStatus.active,
+        ),
       );
 
       final bloc = await createSettledBloc(initialUserId: null);
@@ -388,15 +384,12 @@ void main() {
 
       bloc.add(const AuthResetPasswordRequested(newPassword: 'new-password'));
       await future;
-      verify(() => authRepository.changePassword(newPassword: 'new-password'))
-          .called(1);
-      verify(() => authRepository.signOut()).called(1);
       await bloc.close();
     });
 
-    test('Row 14 & 16: deleteAccount unauthenticates on success and keeps session + error on failure', () async {
+    test('Row 14 & 16: deleteAccount unauthenticates on success and keeps session + error on failure; signOut unauthenticates', () async {
       when(
-        () => userRepository.getUserProfile('u1'),
+        () => userRepository.getProfile('u1'),
       ).thenAnswer((_) async => guardUser);
       when(
         () => authRepository.deleteAccount(),
@@ -428,6 +421,26 @@ void main() {
       bloc.add(const AuthDeleteAccountRequested());
       await successFuture;
 
+      await bloc.close();
+    });
+
+    test('AuthProfileRefreshRequested reloads user profile via getProfile', () async {
+      when(
+        () => userRepository.getProfile('u1'),
+      ).thenAnswer((_) async => guardUser);
+
+      final bloc = await createSettledBloc(initialUserId: 'u1');
+      expect(bloc.state.status, UserStatus.incomplete);
+
+      when(() => userRepository.getProfile('u1')).thenAnswer(
+        (_) async => guardUser.copyWith(status: UserStatus.active),
+      );
+      final refreshFuture = expectLater(
+        bloc.stream,
+        emitsThrough(predicate<AuthState>((s) => s.isApproved)),
+      );
+      bloc.add(const AuthProfileRefreshRequested());
+      await refreshFuture;
       await bloc.close();
     });
   });

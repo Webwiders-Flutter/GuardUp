@@ -3,9 +3,9 @@ import 'package:equatable/equatable.dart';
 import '/core/state/api_state.dart';
 import '/features/body_guard/data/enum/document_status.enum.dart';
 import '/features/body_guard/data/model/body_guard.model.dart';
-import '/features/services/data/models/service.model.dart';
 import '/features/body_guard/data/model/user_document.model.dart';
 import '/features/company/data/model/company.model.dart';
+import '/features/services/data/models/service.model.dart';
 import '../data/enum/user_role.enum.dart';
 import '../data/enum/user_status.enum.dart';
 import '../data/model/user.model.dart';
@@ -24,6 +24,8 @@ class AuthState extends Equatable {
   final String? email;
   final String? phoneCode;
   final String? phoneNumber;
+  final UserRole? pendingRole;
+  final String? pendingEmail;
   final List<ServiceModel> userServices;
   final List<UserDocumentModel> userDocuments;
 
@@ -34,6 +36,8 @@ class AuthState extends Equatable {
     this.email,
     this.phoneCode,
     this.phoneNumber,
+    this.pendingRole,
+    this.pendingEmail,
     this.userServices = const [],
     this.userDocuments = const [],
   });
@@ -51,6 +55,8 @@ class AuthState extends Equatable {
     String? email,
     String? phoneCode,
     String? phoneNumber,
+    UserRole? pendingRole,
+    String? pendingEmail,
     List<ServiceModel> userServices = const [],
     List<UserDocumentModel> userDocuments = const [],
   }) : this(
@@ -60,6 +66,8 @@ class AuthState extends Equatable {
          email: email,
          phoneCode: phoneCode,
          phoneNumber: phoneNumber,
+         pendingRole: pendingRole,
+         pendingEmail: pendingEmail,
          userServices: userServices,
          userDocuments: userDocuments,
        );
@@ -71,17 +79,23 @@ class AuthState extends Equatable {
     String? email,
     String? phoneCode,
     String? phoneNumber,
-    List<ServiceModel> userServices = const [],
-    List<UserDocumentModel> userDocuments = const [],
+    UserRole? pendingRole,
+    String? pendingEmail,
+    List<ServiceModel>? userServices,
+    List<UserDocumentModel>? userDocuments,
   }) : this(
          sessionStatus: AuthSessionStatus.authenticated,
          operationState: operationState ?? ApiSuccess(user),
-         status: status ?? (user.role == UserRole.customer ? UserStatus.active : user.status),
+         status:
+             status ??
+             (user.role == UserRole.customer ? UserStatus.active : user.status),
          email: email ?? (user.email.isNotEmpty ? user.email : null),
          phoneCode: phoneCode ?? user.phoneCode,
          phoneNumber: phoneNumber ?? user.phoneNumber,
-         userServices: userServices,
-         userDocuments: userDocuments,
+         pendingRole: pendingRole,
+         pendingEmail: pendingEmail,
+         userServices: userServices ?? user.serviceListData ?? const [],
+         userDocuments: userDocuments ?? user.documents ?? const [],
        );
 
   bool get isAuthenticated => sessionStatus == AuthSessionStatus.authenticated;
@@ -90,6 +104,7 @@ class AuthState extends Equatable {
   bool get isUnknown => sessionStatus == AuthSessionStatus.unknown;
 
   UserModel? get user => operationState.dataOrNull;
+
   BodyGuardModel? get guardProfile {
     final bg = user?.bodyguard;
     if (bg == null) return null;
@@ -100,9 +115,10 @@ class AuthState extends Equatable {
     }
     return bg;
   }
+
   CompanyModel? get companyProfile => user?.company;
 
-  UserRole get sessionRole => user?.role ?? UserRole.customer;
+  UserRole get sessionRole => user?.role ?? pendingRole ?? UserRole.customer;
   UserRole get role => sessionRole;
   bool get isLoading => operationState.isLoading;
   bool get hasError => operationState.isFailure;
@@ -171,6 +187,8 @@ class AuthState extends Equatable {
     String? email,
     String? phoneCode,
     String? phoneNumber,
+    UserRole? pendingRole,
+    String? pendingEmail,
     List<ServiceModel>? userServices,
     List<UserDocumentModel>? userDocuments,
   }) {
@@ -181,6 +199,8 @@ class AuthState extends Equatable {
       email: email ?? this.email,
       phoneCode: phoneCode ?? this.phoneCode,
       phoneNumber: phoneNumber ?? this.phoneNumber,
+      pendingRole: pendingRole ?? this.pendingRole,
+      pendingEmail: pendingEmail ?? this.pendingEmail,
       userServices: userServices ?? this.userServices,
       userDocuments: userDocuments ?? this.userDocuments,
     );
@@ -194,6 +214,8 @@ class AuthState extends Equatable {
     email,
     phoneCode,
     phoneNumber,
+    pendingRole,
+    pendingEmail,
     userServices,
     userDocuments,
   ];

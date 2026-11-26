@@ -14,6 +14,26 @@ abstract class AuthEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+/// Starts watching auth session state changes and initial session bootstrap.
+class AuthStarted extends AuthEvent {
+  const AuthStarted();
+}
+
+/// Re-fetches the current user's full profile and updates session state.
+class AuthProfileRefreshRequested extends AuthEvent {
+  const AuthProfileRefreshRequested();
+}
+
+/// Stores the role chosen before sign-up (`SelectRoleScreen`).
+class AuthRoleSelected extends AuthEvent {
+  const AuthRoleSelected(this.role);
+
+  final UserRole role;
+
+  @override
+  List<Object?> get props => [role];
+}
+
 /// Dispatched on startup or refresh to check the initial authentication state.
 class AuthCheckStatusRequested extends AuthEvent {
   const AuthCheckStatusRequested();
