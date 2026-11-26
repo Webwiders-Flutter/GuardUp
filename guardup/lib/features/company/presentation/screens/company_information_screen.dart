@@ -15,6 +15,7 @@ import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 import '/features/company/presentation/screens/company_edit_profile_screen.dart';
+import '/core/extensions/company.extension.dart';
 
 /// Screen presenting read-only company details.
 class CompanyInformationScreen extends StatelessWidget {

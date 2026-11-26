@@ -25,6 +25,7 @@ import '/shared/widgets/sections/wrapper_card.dart';
 import '../../data/enum/transaction_type.enum.dart';
 import '../../data/model/transaction.model.dart';
 import '/features/payments/presentation/screens/payment_success_screen.dart';
+import '/core/extensions/company.extension.dart';
 
 /// Screen presenting the one-time registration fee for verification and priority onboarding.
 class RegistrationFeeScreen extends StatefulWidget {

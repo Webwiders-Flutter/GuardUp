@@ -130,8 +130,8 @@ class _BodyGuardCompleteProfileScreenState
           : (metaName ?? '');
       initialAvatar = authUser?.profileImageUrl;
     } else if (widget.bodyguard != null) {
-      initialName = widget.bodyguard!.user.name;
-      initialAvatar = widget.bodyguard!.user.profileImageUrl;
+      initialName = widget.bodyguard!.name;
+      initialAvatar = widget.bodyguard!.profileImageUrl;
       if (widget.bodyguard!.hourlyRate > 0) {
         initialRate = widget.bodyguard!.hourlyRate.toInt().toString();
       }

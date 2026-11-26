@@ -30,6 +30,7 @@ import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 import '/shared/widgets/selection/selection.controller.dart';
 import '../../data/enum/business_type.enum.dart';
+import '/core/extensions/company.extension.dart';
 
 /// Screen allowing a company to view and edit its profile details.
 class CompanyEditProfileScreen extends StatefulWidget {

@@ -93,10 +93,10 @@ class AuthState extends Equatable {
   BodyGuardModel? get guardProfile {
     final bg = user?.bodyguard;
     if (bg == null) return null;
-    if ((bg.userAvailabilities == null || bg.userAvailabilities!.isEmpty) &&
+    if ((bg.availabilities == null || bg.availabilities!.isEmpty) &&
         user?.availabilities != null &&
         user!.availabilities!.isNotEmpty) {
-      return bg.copyWith(userAvailabilities: user!.availabilities);
+      return bg.copyWith(availabilities: user!.availabilities);
     }
     return bg;
   }

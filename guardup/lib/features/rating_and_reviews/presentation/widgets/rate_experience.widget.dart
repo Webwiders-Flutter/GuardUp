@@ -18,6 +18,7 @@ import '/shared/widgets/feedbacks/widgets/app_sheet.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '../../data/model/review.model.dart';
+import '/features/body_guard/data/fixtures/bodyguard.fixtures.dart';
 
 /// Interactive modal widget enabling clients to submit a bodyguard star rating
 /// and textual review.
@@ -142,7 +143,7 @@ class _RateExperienceWidgetState extends State<RateExperienceWidget> {
     final targetGuard =
         widget.bodyguard ??
         widget.booking?.bodyguard ??
-        BodyGuardModel.fakeData.first;
+        bodyguardPlaceholders.first;
 
     final review = ReviewModel(
       id: 'rev_${DateTime.now().millisecondsSinceEpoch}',
@@ -151,7 +152,12 @@ class _RateExperienceWidgetState extends State<RateExperienceWidget> {
         name: 'Client Account',
         role: UserRole.customer,
       ),
-      to: targetGuard.user,
+      to: UserModel(
+        id: targetGuard.userId ?? targetGuard.id,
+        name: targetGuard.name,
+        profileImageUrl: targetGuard.profileImageUrl,
+        role: UserRole.guard,
+      ),
       rating: rating > 0 ? rating : 5.0,
       reviewDescription: reviewText.isNotEmpty
           ? reviewText
@@ -170,10 +176,10 @@ class _RateExperienceWidgetState extends State<RateExperienceWidget> {
     final guard =
         widget.bodyguard ??
         widget.booking?.bodyguard ??
-        BodyGuardModel.fakeData.first;
-    final avatarUrl = guard.user.profileImageUrl;
+        bodyguardPlaceholders.first;
+    final avatarUrl = guard.profileImageUrl;
     final isNetworkAvatar = avatarUrl != null && avatarUrl.startsWith('http');
-    final guardName = guard.user.name;
+    final guardName = guard.name;
     final guardSpecialization =
         widget.booking?.bodyguardSpecialization ??
         (guard.bio.isNotEmpty

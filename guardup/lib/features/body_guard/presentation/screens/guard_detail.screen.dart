@@ -29,6 +29,8 @@ import '../widgets/tabs/customer_guard_experience_tab.widget.dart';
 import '../widgets/tabs/customer_guard_reviews_tab.widget.dart';
 import 'body_guard_complete_profile_screen.dart';
 import 'body_guard_profile_screen.dart';
+import '/features/body_guard/data/fixtures/bodyguard.fixtures.dart';
+import '/features/company/data/fixtures/company.fixtures.dart';
 
 /// Consolidated, role-adaptive bodyguard detail screen.
 ///
@@ -313,13 +315,13 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
       );
     }
 
-    final guardName = _guard?.user.name.isNotEmpty == true
-        ? _guard!.user.name
+    final guardName = _guard?.name.isNotEmpty == true
+        ? _guard!.name
         : 'Vikram Singh';
     final photoPath =
-        _guard?.user.profileImageUrl ?? Assets.images.onboardingImage01.path;
+        _guard?.profileImageUrl ?? Assets.images.onboardingImage01.path;
     final isVerified = _guard?.isVerified ?? true;
-    final company = _guard?.company ?? CompanyModel.fakeData.first;
+    final company = _guard?.company ?? companyPlaceholders.first;
 
     return Scaffold(
       backgroundColor: context.colors.transparent,
@@ -468,7 +470,7 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
 
   List<Widget> _buildCompanyTabs() {
     final currentGuard =
-        _guard ?? BodyGuardModel.fakeData.first.copyWith(id: widget.id);
+        _guard ?? bodyguardPlaceholders.first.copyWith(id: widget.id);
 
     return [
       CompanyGuardOverviewTabWidget(bodyguard: currentGuard),
@@ -479,7 +481,7 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
 
   List<Widget> _buildCustomerTabs() {
     final currentGuard =
-        _guard ?? BodyGuardModel.fakeData.first.copyWith(id: widget.id);
+        _guard ?? bodyguardPlaceholders.first.copyWith(id: widget.id);
 
     return [
       ListenableBuilder(

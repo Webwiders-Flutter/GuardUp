@@ -72,7 +72,7 @@ class CustomerBodyguardCardWidget extends StatelessWidget {
                   p: 1,
                   child: AppImage.asset(
                     assetPath:
-                        guard.user.profileImageUrl ??
+                        guard.profileImageUrl ??
                         Assets.images.profilePicture.path,
                     fit: BoxFit.cover,
                     borderRadius: BorderRadius.circular(15),
@@ -156,7 +156,7 @@ class CustomerBodyguardCardWidget extends StatelessWidget {
 
                   // Name
                   Text(
-                    guard.user.name,
+                    guard.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: context.textTheme.titleMedium?.bold().colour(

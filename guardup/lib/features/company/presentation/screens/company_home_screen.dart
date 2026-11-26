@@ -31,6 +31,7 @@ import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 import '/features/chat/presentation/screens/chat_screen.dart';
+import '/core/extensions/company.extension.dart';
 
 /// Company operational dashboard / home screen presenting:
 /// - Company header profile in [AppAppBar]
@@ -141,12 +142,12 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
   Future<void> _handleDeleteBodyguard(BodyGuardModel bodyguard) async {
     final result = await AppPopup.showDeleteConfirmation(
       context,
-      deleteItemName: bodyguard.user.name,
+      deleteItemName: bodyguard.name,
     );
     if (result?.action != PopupAction.confirm || !mounted) return;
     final deleted = await _bodyguardsCubit.delete(bodyguard);
     if (deleted && mounted) {
-      AppSnackbar.success('${bodyguard.user.name} removed.');
+      AppSnackbar.success('${bodyguard.name} removed.');
       // Pull the next bodyguard into the preview.
       unawaited(_bodyguardsCubit.refresh());
     }

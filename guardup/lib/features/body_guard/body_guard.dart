@@ -11,8 +11,8 @@ export 'data/model/body_guard.model.dart';
 export 'data/model/user_availability.model.dart';
 export 'data/model/user_document.model.dart';
 
-// Domain
-export 'domain/helpers/bodyguard_availability.helper.dart';
+// Extensions
+export '/core/extensions/availability.extension.dart';
 
 // Repositories
 export 'data/repositories/bodyguard.repository.dart';

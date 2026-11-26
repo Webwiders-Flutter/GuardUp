@@ -246,7 +246,6 @@ class ProfileScreen extends StatelessWidget {
 
     final dynamicCompany = CompanyModel(
       id: company?.id ?? state.user?.id ?? '',
-      name: companyName,
       companyName: companyName,
       experienceYears: company?.experienceYears ?? 0,
     );

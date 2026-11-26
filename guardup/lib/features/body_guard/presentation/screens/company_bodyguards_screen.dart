@@ -32,6 +32,7 @@ import '/features/body_guard/presentation/screens/body_guard_complete_profile_sc
 import '/features/body_guard/presentation/screens/body_guard_profile_screen.dart';
 import '/features/customer/presentation/screens/customer_home_screen.dart';
 import '/shared/widgets/navigation/app_tab_bar.dart';
+import '/features/body_guard/data/fixtures/bodyguard.fixtures.dart';
 
 /// Screen presenting all company or platform bodyguards with search,
 /// pagination, and management actions (Add, Edit, Delete).
@@ -86,7 +87,7 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen>
     } else {
       _paginationController = PaginationController<BodyGuardModel>(
         initialState: PaginationState<BodyGuardModel>(
-          items: BodyGuardModel.fakeData,
+          items: bodyguardPlaceholders,
           total: 3,
           status: const ApiState.success(null),
         ),
@@ -159,12 +160,12 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen>
     if (cubit == null) return;
     final result = await AppPopup.showDeleteConfirmation(
       context,
-      deleteItemName: bodyguard.user.name,
+      deleteItemName: bodyguard.name,
     );
     if (result?.action != PopupAction.confirm || !mounted) return;
     final deleted = await cubit.delete(bodyguard);
     if (deleted && mounted) {
-      AppSnackbar.success('${bodyguard.user.name} removed.');
+      AppSnackbar.success('${bodyguard.name} removed.');
     }
   }
 

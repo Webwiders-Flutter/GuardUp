@@ -1,88 +1,56 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '/features/auth/auth.dart';
-import '/features/company/company.dart';
-import '../enum/bodyguard_availability_status.enum.dart';
-import '../enum/guard_service.enum.dart';
-import '../enum/week_day.enum.dart';
-import '../../domain/helpers/bodyguard_availability.helper.dart';
+import '/core/utils/json_converters/json_converters.dart';
+import '/features/auth/data/enum/user_status.enum.dart';
+import '/features/company/data/model/company.model.dart';
 import '/features/services/data/models/service.model.dart';
 import 'user_availability.model.dart';
 import 'user_document.model.dart';
 
+export '/core/extensions/bodyguard.extension.dart';
+
 part 'body_guard.model.freezed.dart';
 part 'body_guard.model.g.dart';
 
-List<ServiceModel>? _servicesFromJson(dynamic json) {
-  if (json is! List) return null;
-  return [
-    for (final row in json)
-      if (row is Map<String, dynamic>)
-        if (row['service'] is Map<String, dynamic>)
-          ServiceModel.fromJson(row['service'] as Map<String, dynamic>)
-        else
-          ServiceModel.fromJson(row),
-  ];
-}
+CompanyModel? _companyFromJson(dynamic json) =>
+    EmbeddedParser.parseObject(json, CompanyModel.fromJson);
 
-UserModel _userFromJson(dynamic json) {
-  if (json is UserModel) return json;
-  if (json is Map<String, dynamic>) return UserModel.fromJson(json);
-  return const UserModel(id: '', name: '');
-}
+List<UserDocumentModel>? _documentsFromJson(dynamic json) =>
+    EmbeddedParser.parseList(json, UserDocumentModel.fromJson);
 
-List<UserAvailabilityModel>? _userAvailabilitiesFromJson(dynamic json) {
-  if (json is! List) return null;
-  return [
-    for (final item in json)
-      if (item is UserAvailabilityModel)
-        item
-      else if (item is Map<String, dynamic>)
-        UserAvailabilityModel.fromJson(item),
-  ];
-}
+List<UserAvailabilityModel>? _availabilitiesFromJson(dynamic json) =>
+    EmbeddedParser.parseList(json, UserAvailabilityModel.fromJson);
 
-List<UserDocumentModel>? _userDocumentsFromJson(dynamic json) {
-  if (json is! List) return null;
-  return [
-    for (final item in json)
-      if (item is UserDocumentModel)
-        item
-      else if (item is Map<String, dynamic>)
-        UserDocumentModel.fromJson(item),
-  ];
-}
-
-/// Bodyguard profile (`public.bodyguards`).
+/// Bodyguard profile (`public.bodyguards`), 1:1 with the table.
 ///
-/// - Self-registered: [userId] is the GUARD account; name, photo, gender, and
-///   [status] are copied from that account.
+/// - Self-registered: [userId] is the GUARD account; [name],
+///   [profileImageUrl] and [status] are copied from that account by
+///   `sync_bodyguard_identity()`.
 /// - Company-managed: [userId] is null, [companyId] is the managing company.
+///
+/// Display helpers live in `BodyGuardModelX` (core/extensions).
 @freezed
 abstract class BodyGuardModel with _$BodyGuardModel {
-  const BodyGuardModel._();
-
   const factory BodyGuardModel({
     required String id,
     String? userId,
     String? companyId,
     @Default('') String name,
     String? profileImageUrl,
-    @JsonKey(fromJson: _userFromJson, includeToJson: false)
-    @Default(UserModel(id: '', name: ''))
-    UserModel user,
-    @JsonKey(includeToJson: false) CompanyModel? company,
-    @Default(0.0) double hourlyRate,
-    @Default(0.0) double rating,
-    @Default(0) int experienceYears,
+    @DoubleConverter() @Default(0.0) double hourlyRate,
+    @DoubleConverter() @Default(0.0) double rating,
+    @IntConverter() @Default(0) int experienceYears,
     @Default('') String bio,
+
+    /// Free text, comma separated (e.g. "English, Hindi").
     String? languages,
+
+    /// Free text, comma separated (e.g. "CPR, First Aid").
     String? certifications,
     String? qualifications,
-    String? serviceArea,
     String? address,
-    double? latitude,
-    double? longitude,
+    @NullableDoubleConverter() double? latitude,
+    @NullableDoubleConverter() double? longitude,
     @Default(true) bool isActive,
     @Default(UserStatus.incomplete)
     @JsonKey(unknownEnumValue: UserStatus.incomplete)
@@ -91,120 +59,17 @@ abstract class BodyGuardModel with _$BodyGuardModel {
     DateTime? createdAt,
     DateTime? updatedAt,
 
-    // Embedded relations
-    @JsonKey(fromJson: _servicesFromJson, includeToJson: false)
+    // Embedded relations (see BodyguardRepository select strings).
+    @JsonKey(fromJson: _companyFromJson, includeToJson: false)
+    CompanyModel? company,
+    @JsonKey(fromJson: servicesFromUserServices, includeToJson: false)
     List<ServiceModel>? services,
-    @JsonKey(fromJson: _userDocumentsFromJson, includeToJson: false)
+    @JsonKey(fromJson: _documentsFromJson, includeToJson: false)
     List<UserDocumentModel>? documents,
-    @JsonKey(name: 'user_availabilities', fromJson: _userAvailabilitiesFromJson, includeToJson: false)
-    List<UserAvailabilityModel>? userAvailabilities,
+    @JsonKey(fromJson: _availabilitiesFromJson, includeToJson: false)
+    List<UserAvailabilityModel>? availabilities,
   }) = _BodyGuardModel;
 
-  factory BodyGuardModel.fromJson(Map<String, dynamic> json) {
-    final model = _$BodyGuardModelFromJson(json);
-    // If it's a company-managed bodyguard with no separate user account,
-    // populate model.user with the row's name and photo so callers of
-    // bodyguard.user.name or bodyguard.user.profileImageUrl transparently work.
-    if (model.user.name.isEmpty && model.name.isNotEmpty) {
-      return model.copyWith(
-        user: UserModel(
-          id: model.userId ?? model.id,
-          name: model.name,
-          profileImageUrl: model.profileImageUrl,
-          role: UserRole.guard,
-        ),
-      );
-    }
-    return model;
-  }
-
-  String get displayName =>
-      name.isNotEmpty ? name : (user.name.isNotEmpty ? user.name : 'Bodyguard');
-  String get displayAvatar => profileImageUrl ?? user.profileImageUrl ?? '';
-  String get location =>
-      (address?.isNotEmpty == true) ? address! : 'Location not set';
-
-  /// Evaluates dynamic operational availability from [userAvailabilities].
-  BodyguardAvailabilityStatus get availabilityStatus =>
-      userAvailabilities.evaluateAvailabilityStatus();
-
-  // Backward-compatibility getters for presentation (ensuring zero regressions)
-  UserStatus get verificationStatus => status;
-  List<UserDocumentModel>? get userDocuments => documents;
-  int get reviewCount => 0;
-  bool get isVerified => status == UserStatus.active;
-  int get totalCompletedMissions => 0;
-  String get currency => 'USD';
-  BodyguardAvailabilityStatus get operationalStatus => availabilityStatus;
-  List<GuardService> get serviceTypes => const [];
-
-  /// Default 7-day schedule for previews and fake models.
-  static List<UserAvailabilityModel> get defaultUserAvailabilities => [
-    for (final day in WeekDay.values)
-      UserAvailabilityModel(
-        id: 'avail_${day.name}',
-        dayOfWeek: day,
-        isAvailable: true,
-        fromTime: '08:00 AM',
-        toTime: '10:00 PM',
-      ),
-  ];
-
-  /// Curated fake bodyguard profiles for lists, search, and rosters.
-  static List<BodyGuardModel> get fakeData => [
-    BodyGuardModel(
-      id: 'guard_vikram_singh',
-      name: 'Vikram Singh',
-      user: const UserModel(
-        id: 'usr_vikram',
-        name: 'Vikram Singh',
-        role: UserRole.guard,
-      ),
-      company: CompanyModel.fakeData.first,
-      userAvailabilities: defaultUserAvailabilities,
-      hourlyRate: 60.0,
-      bio:
-          'Former Special Forces operative with 5+ years of high-threat dignitary protection, tactical motorcade operations, and counter-surveillance across global metropolitan centers.',
-      experienceYears: 0,
-      rating: 0.0,
-      qualifications: 'Certified Close Protection Spec',
-      status: UserStatus.active,
-    ),
-    BodyGuardModel(
-      id: 'guard_marcus_sterling',
-      name: 'Marcus Sterling',
-      user: const UserModel(
-        id: 'usr_marcus',
-        name: 'Marcus Sterling',
-        role: UserRole.guard,
-      ),
-      company: CompanyModel.fakeData[1],
-      userAvailabilities: defaultUserAvailabilities,
-      hourlyRate: 85.0,
-      bio:
-          'High-value bullion and luxury asset courier protection specialist with extensive urban combat and emergency route-clearing background.',
-      experienceYears: 0,
-      rating: 0.0,
-      qualifications: 'Tactical Defensive Driving Spec',
-      status: UserStatus.active,
-    ),
-    BodyGuardModel(
-      id: 'guard_elena_rostova',
-      name: 'Elena Rostova',
-      user: const UserModel(
-        id: 'usr_elena',
-        name: 'Elena Rostova',
-        role: UserRole.guard,
-      ),
-      company: CompanyModel.fakeData[2],
-      userAvailabilities: defaultUserAvailabilities,
-      hourlyRate: 75.0,
-      bio:
-          'Former intelligence tactical trainer specializing in high-profile celebrity, diplomat, and executive close-quarter protection details.',
-      experienceYears: 0,
-      rating: 0.0,
-      qualifications: 'Executive Protection & Threat Recon',
-      status: UserStatus.active,
-    ),
-  ];
+  factory BodyGuardModel.fromJson(Map<String, dynamic> json) =>
+      _$BodyGuardModelFromJson(json);
 }

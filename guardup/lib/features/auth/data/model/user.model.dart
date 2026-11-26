@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '/core/utils/json_converters/json_converters.dart';
 import '/features/body_guard/data/model/body_guard.model.dart';
 import '/features/services/data/models/service.model.dart';
 import '/features/body_guard/data/model/user_availability.model.dart';
@@ -13,38 +14,20 @@ import '../enum/user_status.enum.dart';
 part 'user.model.freezed.dart';
 part 'user.model.g.dart';
 
-/// Embedded `user_services(id, service:services(...))` rows as services.
-List<ServiceModel>? _servicesFromJson(dynamic json) {
-  if (json is! List) return null;
-  return [
-    for (final row in json)
-      if (row is Map<String, dynamic>)
-        if (row['service'] is Map<String, dynamic>)
-          ServiceModel.fromJson(row['service'] as Map<String, dynamic>)
-        else
-          ServiceModel.fromJson(row),
-  ];
-}
+BodyGuardModel? _bodyguardFromJson(dynamic json) =>
+    EmbeddedParser.parseObject(json, BodyGuardModel.fromJson);
 
-BodyGuardModel? _bodyguardFromJson(dynamic json) {
-  if (json == null) return null;
-  if (json is BodyGuardModel) return json;
-  if (json is Map<String, dynamic>) return BodyGuardModel.fromJson(json);
-  if (json is List && json.isNotEmpty && json.first is Map<String, dynamic>) {
-    return BodyGuardModel.fromJson(json.first as Map<String, dynamic>);
-  }
-  return null;
-}
+CompanyModel? _companyFromJson(dynamic json) =>
+    EmbeddedParser.parseObject(json, CompanyModel.fromJson);
 
-CompanyModel? _companyFromJson(dynamic json) {
-  if (json == null) return null;
-  if (json is CompanyModel) return json;
-  if (json is Map<String, dynamic>) return CompanyModel.fromJson(json);
-  if (json is List && json.isNotEmpty && json.first is Map<String, dynamic>) {
-    return CompanyModel.fromJson(json.first as Map<String, dynamic>);
-  }
-  return null;
-}
+List<UserDocumentModel>? _documentsFromJson(dynamic json) =>
+    EmbeddedParser.parseList(json, UserDocumentModel.fromJson);
+
+List<BankAccount>? _bankAccountsFromJson(dynamic json) =>
+    EmbeddedParser.parseList(json, BankAccount.fromJson);
+
+List<UserAvailabilityModel>? _availabilitiesFromJson(dynamic json) =>
+    EmbeddedParser.parseList(json, UserAvailabilityModel.fromJson);
 
 /// A login account (`public.users`): customer, guard, company, admin.
 @freezed
@@ -79,59 +62,18 @@ abstract class UserModel with _$UserModel {
     // Embedded relations
     @JsonKey(
       name: 'user_services',
-      fromJson: _servicesFromJson,
+      fromJson: servicesFromUserServices,
       includeToJson: false,
     )
     List<ServiceModel>? serviceListData,
-    @JsonKey(includeToJson: false) List<UserDocumentModel>? documents,
-    @JsonKey(includeToJson: false) List<BankAccount>? bankAccounts,
-    @JsonKey(includeToJson: false) List<UserAvailabilityModel>? availabilities,
+    @JsonKey(fromJson: _documentsFromJson, includeToJson: false)
+    List<UserDocumentModel>? documents,
+    @JsonKey(fromJson: _bankAccountsFromJson, includeToJson: false)
+    List<BankAccount>? bankAccounts,
+    @JsonKey(fromJson: _availabilitiesFromJson, includeToJson: false)
+    List<UserAvailabilityModel>? availabilities,
   }) = _UserModel;
-
-  /// Creates a [UserModel] for request payloads (omitting the server-generated [id]).
-  factory UserModel.fromRequest({
-    required String name,
-    String? email,
-    String? phoneNumber,
-    String phoneCode = '+91',
-    String? profileImageUrl,
-    UserRole? role,
-    UserStatus? status,
-    GenderType? gender,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) => UserModel(
-    id: '',
-    name: name,
-    email: email ?? '',
-    phoneNumber: phoneNumber,
-    phoneCode: phoneCode,
-    profileImageUrl: profileImageUrl,
-    role: role ?? UserRole.customer,
-    status: status ?? UserStatus.incomplete,
-    gender: gender,
-    createdAt: createdAt,
-    updatedAt: updatedAt,
-  );
 
   factory UserModel.fromJson(Map<String, dynamic> json) =>
       _$UserModelFromJson(json);
-
-  static List<UserModel> get fakeData => const [
-    UserModel(
-      id: 'usr_vikram',
-      name: 'Vikram Singh',
-      role: UserRole.guard,
-    ),
-    UserModel(
-      id: 'usr_marcus',
-      name: 'Marcus Sterling',
-      role: UserRole.guard,
-    ),
-    UserModel(
-      id: 'usr_customer_1',
-      name: 'Sara Khan',
-      role: UserRole.customer,
-    ),
-  ];
 }

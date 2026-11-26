@@ -16,6 +16,7 @@ import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 import '../../data/enum/booking_status.enum.dart';
 import '../../data/model/booking.model.dart';
+import '/core/extensions/bodyguard.extension.dart';
 
 /// A sleek, luxury card widget presenting a bodyguard booking assignment.
 ///
@@ -166,7 +167,7 @@ class BookingCard extends StatelessWidget {
 
   Widget _buildCustomerViewHeader(BuildContext context) {
     final guard = booking.bodyguard;
-    final avatarUrl = guard.user.profileImageUrl;
+    final avatarUrl = guard.profileImageUrl;
     final isNetworkAvatar = avatarUrl != null && avatarUrl.startsWith('http');
     final isVerified = guard.isVerified;
 
@@ -225,7 +226,7 @@ class BookingCard extends StatelessWidget {
               _buildStatusBadge(context),
               AppSpacing.xs.h,
               Text(
-                guard.user.name,
+                guard.name,
                 style: context.textTheme.titleMedium?.bold(),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

@@ -46,12 +46,8 @@ abstract class BookingModel with _$BookingModel {
       endDateTime: DateTime(2025, 4, 24, 18, 0),
       bodyguard: BodyGuardModel(
         id: 'guard_vikram',
-        user: UserModel(
-          id: 'usr_vikram',
-          name: 'Vikram Singh',
-          profileImageUrl: Assets.images.profilePicture.path,
-          role: UserRole.guard,
-        ),
+        name: 'Vikram Singh',
+        profileImageUrl: Assets.images.profilePicture.path,
         hourlyRate: 60.0,
         bio: 'Executive security specialist.',
         rating: 0.0,
@@ -77,12 +73,8 @@ abstract class BookingModel with _$BookingModel {
       endDateTime: DateTime.now().add(const Duration(hours: 3)),
       bodyguard: BodyGuardModel(
         id: 'guard_rahul',
-        user: UserModel(
-          id: 'usr_rahul',
-          name: 'Rahul Patel',
-          profileImageUrl: Assets.images.profilePicture2.path,
-          role: UserRole.guard,
-        ),
+        name: 'Rahul Patel',
+        profileImageUrl: Assets.images.profilePicture2.path,
         hourlyRate: 60.0,
         bio: 'Close protection operative.',
         rating: 0.0,
@@ -108,12 +100,8 @@ abstract class BookingModel with _$BookingModel {
       endDateTime: DateTime.now().subtract(const Duration(days: 1, hours: -4)),
       bodyguard: BodyGuardModel(
         id: 'guard_siwa',
-        user: UserModel(
-          id: 'usr_siwa',
-          name: 'Siwa Patel',
-          profileImageUrl: Assets.images.profilePicture.path,
-          role: UserRole.guard,
-        ),
+        name: 'Siwa Patel',
+        profileImageUrl: Assets.images.profilePicture.path,
         hourlyRate: 60.0,
         bio: 'Senior dignitary bodyguard.',
         rating: 0.0,
@@ -141,12 +129,8 @@ abstract class BookingModel with _$BookingModel {
       endDateTime: DateTime.now().add(const Duration(hours: 2)),
       bodyguard: BodyGuardModel(
         id: 'guard_marcus',
-        user: UserModel(
-          id: 'usr_marcus',
-          name: 'Marcus Sterling',
-          profileImageUrl: Assets.images.profilePicture.path,
-          role: UserRole.guard,
-        ),
+        name: 'Marcus Sterling',
+        profileImageUrl: Assets.images.profilePicture.path,
         hourlyRate: 60.0,
         bio: 'Tactical motorcade specialist.',
         rating: 0.0,
@@ -168,12 +152,8 @@ abstract class BookingModel with _$BookingModel {
       endDateTime: DateTime.now().add(const Duration(days: 1, hours: 5)),
       bodyguard: BodyGuardModel(
         id: 'guard_david',
-        user: UserModel(
-          id: 'usr_david',
-          name: 'David Sterling',
-          profileImageUrl: Assets.images.profilePicture2.path,
-          role: UserRole.guard,
-        ),
+        name: 'David Sterling',
+        profileImageUrl: Assets.images.profilePicture2.path,
         hourlyRate: 60.0,
         bio: 'Dignitary protection.',
         rating: 0.0,

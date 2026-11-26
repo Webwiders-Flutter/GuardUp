@@ -13,6 +13,7 @@ import '../widgets/tabs/company_about_tab.dart';
 import '../widgets/tabs/company_bodyguards_tab.dart';
 import '../widgets/tabs/company_reviews_tab.dart';
 import '/features/customer/presentation/screens/booking_screen.dart';
+import '/features/company/data/fixtures/company.fixtures.dart';
 
 /// Company operational profile and details screen.
 ///
@@ -43,7 +44,7 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen>
   @override
   void initState() {
     super.initState();
-    final effectiveCompany = widget.company ?? CompanyModel.fakeData.first;
+    final effectiveCompany = widget.company ?? companyPlaceholders.first;
     final reviewsCountLabel = '${effectiveCompany.reviewCount}';
 
     _tabNames = ['About', 'Bodyguards', 'Reviews ($reviewsCountLabel)'];
@@ -63,7 +64,7 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final effectiveCompany = widget.company ?? CompanyModel.fakeData.first;
+    final effectiveCompany = widget.company ?? companyPlaceholders.first;
 
     return Scaffold(
       appBar: const AppAppBar.transparent(

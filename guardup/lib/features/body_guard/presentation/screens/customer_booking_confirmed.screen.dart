@@ -54,10 +54,10 @@ class CustomerBookingConfirmedScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveGuardName =
-        guardName ?? bodyguard?.user.name ?? 'Vikram Singh';
+        guardName ?? bodyguard?.name ?? 'Vikram Singh';
     final effectivePhoto =
         guardPhoto ??
-        bodyguard?.user.profileImageUrl ??
+        bodyguard?.profileImageUrl ??
         Assets.images.onboardingImage01.path;
     final effectiveRate = hourlyRate ?? bodyguard?.hourlyRate ?? 60.0;
     final effectiveBookingId = bookingId ?? '#GUPT25456';

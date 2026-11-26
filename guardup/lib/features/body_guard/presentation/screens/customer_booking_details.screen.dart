@@ -45,9 +45,9 @@ class CustomerBookingDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final guardName = bodyguard?.user.name ?? 'Vikram Singh';
+    final guardName = bodyguard?.name ?? 'Vikram Singh';
     final photoPath =
-        bodyguard?.user.profileImageUrl ?? Assets.images.onboardingImage01.path;
+        bodyguard?.profileImageUrl ?? Assets.images.onboardingImage01.path;
 
     final dateFormat = DateFormat('MMM d, yyyy');
     final formattedStartDate = dateFormat.format(startDate);

@@ -4,8 +4,9 @@ import 'package:skeletonizer/skeletonizer.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/shared/widgets/misc/skeleton_effect.dart';
-import '../../data/model/body_guard.model.dart';
 import 'body_guard_card.dart';
+import '/features/body_guard/data/fixtures/bodyguard.fixtures.dart';
+import '/features/auth/data/enum/user_role.enum.dart';
 
 /// Shimmer placeholder for a bodyguard list while the first page loads.
 ///
@@ -19,7 +20,7 @@ class BodyGuardListSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final samples = BodyGuardModel.fakeData;
+    final samples = bodyguardPlaceholders;
 
     return Skeletonizer(
       effect: SkeletonEffect.adaptiveShimmer(context),
@@ -36,7 +37,7 @@ class BodyGuardListSkeleton extends StatelessWidget {
                   : AppSpacing.md.bPadding,
               child: BodyGuardCard(
                 bodyguard: samples[index % samples.length],
-                role: samples[index % samples.length].user.role,
+                role: UserRole.guard,
               ),
             ),
           ),

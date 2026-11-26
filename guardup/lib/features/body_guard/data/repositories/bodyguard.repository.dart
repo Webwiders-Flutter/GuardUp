@@ -58,7 +58,7 @@ final class BodyguardRepository
         id, name, description, target_role, is_required, is_active, display_order
       )
     ),
-    user_availabilities:user_availabilities!user_availabilities_bodyguard_id_fkey(
+    availabilities:user_availabilities!user_availabilities_bodyguard_id_fkey(
       id,
       user_id,
       bodyguard_id,
@@ -219,13 +219,13 @@ final class BodyguardRepository
     var model = fromJson(row);
 
     // Fallback if user_availabilities relation returned empty
-    if (model.userAvailabilities == null || model.userAvailabilities!.isEmpty) {
+    if (model.availabilities == null || model.availabilities!.isEmpty) {
       final availabilities = await _fetchAvailabilities(
         bodyguardId: id,
         userId: model.userId,
       );
       if (availabilities.isNotEmpty) {
-        model = model.copyWith(userAvailabilities: availabilities);
+        model = model.copyWith(availabilities: availabilities);
       }
     }
 

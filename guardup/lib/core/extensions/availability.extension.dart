@@ -1,5 +1,5 @@
-import '../../data/enum/bodyguard_availability_status.enum.dart';
-import '../../data/model/user_availability.model.dart';
+import '/features/body_guard/data/enum/bodyguard_availability_status.enum.dart';
+import '/features/body_guard/data/model/user_availability.model.dart';
 
 /// Helper and extension methods for evaluating bodyguard availability schedules
 /// and dynamic operational statuses.
