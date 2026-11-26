@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -42,7 +43,7 @@ class LanguageCubit extends Cubit<LanguageState> {
         value: language.apiValue,
       );
       if (sl.isRegistered<UserDeviceCubit>()) {
-        sl<UserDeviceCubit>().updateDeviceLanguage(language.apiValue);
+        unawaited(sl<UserDeviceCubit>().updateDeviceLanguage(language.apiValue));
       }
     } catch (_) {}
   }

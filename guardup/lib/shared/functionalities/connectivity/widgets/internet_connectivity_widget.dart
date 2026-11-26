@@ -124,13 +124,13 @@ class _NoInternetBannerState extends State<NoInternetBanner>
   Future<void> _onRetry() async {
     if (_isCheckingNotifier.value) return;
     _isCheckingNotifier.value = true;
-    HapticFeedback.lightImpact();
+    unawaited(HapticFeedback.lightImpact());
 
     try {
       final cubit = _resolveCubit(context);
       final isConnected = await cubit.checkConnection();
       if (!isConnected && mounted) {
-        HapticFeedback.mediumImpact();
+        unawaited(HapticFeedback.mediumImpact());
       }
     } finally {
       if (mounted) {

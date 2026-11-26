@@ -1,3 +1,4 @@
+import 'dart:async';
 // ignore_for_file: prefer_initializing_formals
 
 import 'dart:math';
@@ -245,7 +246,7 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
           actionError: 'Failed to mark all as read',
         ),
       );
-      _unreadCountCubit?.refreshCount(userId);
+      unawaited(_unreadCountCubit?.refreshCount(userId));
     }
   }
 

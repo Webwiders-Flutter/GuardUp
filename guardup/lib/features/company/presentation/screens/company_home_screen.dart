@@ -129,13 +129,13 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
         extra: bodyguard,
       );
     }
-    if (mounted) _bodyguardsCubit.refresh();
+    if (mounted) unawaited(_bodyguardsCubit.refresh());
   }
 
   Future<void> _handleViewAllBodyguards() async {
     await context.push(CompanyBodyguardsScreen.route);
     // Bodyguards may have been added, edited or removed there.
-    if (mounted) _bodyguardsCubit.refresh();
+    if (mounted) unawaited(_bodyguardsCubit.refresh());
   }
 
   Future<void> _handleDeleteBodyguard(BodyGuardModel bodyguard) async {
@@ -148,7 +148,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
     if (deleted && mounted) {
       AppSnackbar.success('${bodyguard.user.name} removed.');
       // Pull the next bodyguard into the preview.
-      _bodyguardsCubit.refresh();
+      unawaited(_bodyguardsCubit.refresh());
     }
   }
 

@@ -82,7 +82,7 @@ class AppGateCubit extends Cubit<AdminSettingsModel> {
     emit(_adminSettingsCubit.settings);
 
     // Reactively receive updates whenever AdminSettingsCubit emits fresh settings
-    _settingsSub?.cancel();
+    unawaited(_settingsSub?.cancel());
     _settingsSub = _adminSettingsCubit.stream.listen((apiState) {
       final settings = apiState.dataOrNull;
       if (settings != null) {

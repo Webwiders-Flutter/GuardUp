@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/features/auth/auth.dart';
@@ -261,7 +262,7 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
     } else {
       await context.push(BodyGuardCompleteProfileScreen.route, extra: guard);
     }
-    _loadDetails();
+    unawaited(_loadDetails());
   }
 
   @override

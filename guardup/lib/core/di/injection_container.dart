@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide LocalStorage;
 
@@ -147,5 +148,5 @@ Future<void> initDependencies() async {
   );
 
   // Preload global active services once on app start
-  sl<ServicesCubit>().loadServices();
+  unawaited(sl<ServicesCubit>().loadServices());
 }

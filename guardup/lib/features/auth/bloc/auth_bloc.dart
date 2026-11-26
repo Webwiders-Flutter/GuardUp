@@ -194,7 +194,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     if (event.userId == null) {
-      _profileSubscription?.cancel();
+      unawaited(_profileSubscription?.cancel());
       _profileSubscription = null;
       emit(const AuthState.unauthenticated());
     } else {
@@ -683,7 +683,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     if (authRepo != null) {
       await authRepo.signOut();
     }
-    _profileSubscription?.cancel();
+    unawaited(_profileSubscription?.cancel());
     _profileSubscription = null;
     emit(const AuthState.unauthenticated());
   }
@@ -709,7 +709,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         return;
       }
     }
-    _profileSubscription?.cancel();
+    unawaited(_profileSubscription?.cancel());
     _profileSubscription = null;
     emit(const AuthState.unauthenticated());
   }

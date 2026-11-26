@@ -43,6 +43,8 @@ class SupabaseUserRepository extends UserRepository {
     AppLogger.d('Subscribing to realtime user profile for userId=$userId', tag: _tag);
 
     final subscriptions = <StreamSubscription<List<Map<String, dynamic>>>>[];
+    // Returned as the stream; closed by the subscriber via onCancel.
+    // ignore: close_sinks
     late final StreamController<Map<String, dynamic>?> controller;
     Map<String, dynamic>? accountRow;
     Map<String, dynamic>? lastMerged;

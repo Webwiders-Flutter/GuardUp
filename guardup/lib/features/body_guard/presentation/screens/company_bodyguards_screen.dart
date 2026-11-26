@@ -139,7 +139,7 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen>
   Future<void> _handleAddBodyguard() async {
     await context.push(BodyGuardCompleteProfileScreen.route);
     // A bodyguard may have been created even if the flow was not finished.
-    if (mounted) _cubit?.refresh();
+    if (mounted) unawaited(_cubit?.refresh());
   }
 
   Future<void> _handleEditBodyguard(BodyGuardModel bodyguard) async {
@@ -151,7 +151,7 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen>
         extra: bodyguard,
       );
     }
-    if (mounted) _cubit?.refresh();
+    if (mounted) unawaited(_cubit?.refresh());
   }
 
   Future<void> _handleDeleteBodyguard(BodyGuardModel bodyguard) async {
