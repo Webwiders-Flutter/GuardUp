@@ -23,7 +23,7 @@ export 'data/repositories/availability.repository.dart';
 export 'data/repositories/bodyguard.repository.dart';
 
 // BloC / Cubit
-export 'bloc/bodyguards/bodyguards_cubit.dart';
+export 'bloc/bodyguards/bodyguards_bloc.dart';
 export 'bloc/company_bodyguards/company_bodyguards_cubit.dart';
 
 // Widgets

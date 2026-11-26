@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:quick_container/quick_container.dart';
@@ -17,6 +18,7 @@ import '/core/extensions/textstyle_extension.dart';
 import '/features/auth/auth.dart';
 import '/features/body_guard/body_guard.dart';
 import '/features/company/company.dart';
+import '/shared/bloc/pagination/pagination_event.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/pagination/app_pagination.dart';
@@ -36,7 +38,7 @@ import '/features/payments/presentation/screens/payment_success_screen.dart';
 /// - Bodyguard operative roster cards with selection checkboxes using [BodyGuardCard]
 /// - Payment summary card with tier badge, operative rates, discounts, and total
 /// - Sticky bottom action button for reservation progression
-class BookingScreen extends StatefulWidget {
+class BookingScreen extends StatelessWidget {
   static const route = '/customer-booking';
 
   final CompanyModel? company;
@@ -45,10 +47,33 @@ class BookingScreen extends StatefulWidget {
   const BookingScreen({super.key, this.company, this.initialBodyguard});
 
   @override
-  State<BookingScreen> createState() => _BookingScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => sl<BodyguardsBloc>(
+        param1: BodyguardFilters(
+          companyId: company?.id,
+          statuses: const [UserStatus.active],
+        ),
+      )..add(const PaginationLoadRequested()),
+      child: _BookingView(
+        company: company,
+        initialBodyguard: initialBodyguard,
+      ),
+    );
+  }
 }
 
-class _BookingScreenState extends State<BookingScreen> {
+class _BookingView extends StatefulWidget {
+  final CompanyModel? company;
+  final BodyGuardModel? initialBodyguard;
+
+  const _BookingView({this.company, this.initialBodyguard});
+
+  @override
+  State<_BookingView> createState() => _BookingViewState();
+}
+
+class _BookingViewState extends State<_BookingView> {
   final _searchController = TextEditingController();
 
   final ValueNotifier<DateTime> _startDateNotifier = ValueNotifier(
@@ -66,8 +91,6 @@ class _BookingScreenState extends State<BookingScreen> {
   late final ValueNotifier<Set<String>> _selectedGuardIdsNotifier;
   final ValueNotifier<String> _searchQueryNotifier = ValueNotifier('');
 
-  late final BodyguardsCubit _cubit;
-  StreamSubscription<BodyguardsState>? _cubitSubscription;
   Timer? _searchDebounce;
   late final PaginationController<BodyGuardModel> _paginationController;
 
@@ -79,29 +102,11 @@ class _BookingScreenState extends State<BookingScreen> {
         widget.initialBodyguard!.id,
     });
 
-    _cubit = sl<BodyguardsCubit>();
+    final bloc = context.read<BodyguardsBloc>();
     _paginationController = PaginationController<BodyGuardModel>(
-      initialState: _cubit.state.pagination,
-      onRefresh: () => _cubit.refresh(
-        companyId: widget.company?.id,
-        updateCompanyId: true,
-        status: UserStatus.active,
-        updateStatus: true,
-        search: _searchController.text.trim(),
-      ),
-      onLoadMore: _cubit.loadMore,
-    );
-
-    _cubitSubscription = _cubit.stream.listen((state) {
-      if (!mounted) return;
-      _paginationController.updateState(state.pagination);
-    });
-
-    _cubit.refresh(
-      companyId: widget.company?.id,
-      updateCompanyId: true,
-      status: UserStatus.active,
-      updateStatus: true,
+      initialState: bloc.state.pagination,
+      onRefresh: () async => bloc.add(const PaginationLoadRequested()),
+      onLoadMore: () async => bloc.add(const PaginationNextPageRequested()),
     );
 
     _searchController.addListener(_onSearchChanged);
@@ -113,19 +118,13 @@ class _BookingScreenState extends State<BookingScreen> {
     _searchDebounce?.cancel();
     _searchDebounce = Timer(AppDurations.slow, () {
       if (!mounted) return;
-      _cubit.refresh(
-        companyId: widget.company?.id,
-        status: UserStatus.active,
-        search: term,
-      );
+      context.read<BodyguardsBloc>().add(PaginationSearchChanged(term));
     });
   }
 
   @override
   void dispose() {
     _searchDebounce?.cancel();
-    _cubitSubscription?.cancel();
-    _cubit.close();
     _paginationController.dispose();
     _searchController.dispose();
     _startDateNotifier.dispose();
@@ -220,7 +219,12 @@ class _BookingScreenState extends State<BookingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BlocListener<BodyguardsBloc, BodyguardsState>(
+      listenWhen: (previous, current) =>
+          previous.pagination != current.pagination,
+      listener: (context, state) =>
+          _paginationController.updateState(state.pagination),
+      child: Scaffold(
       appBar: const AppAppBar.transparent(
         title: 'Company Profile',
         showBackIcon: true,
@@ -461,6 +465,7 @@ class _BookingScreenState extends State<BookingScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 

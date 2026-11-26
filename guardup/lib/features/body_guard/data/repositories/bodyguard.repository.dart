@@ -21,7 +21,7 @@ import 'availability.repository.dart';
 /// See documentation/user_profiles.md.
 ///
 /// Inherits [BaseSupabaseRepository] for standard CRUD, pagination, and sorting.
-final class BodyguardRepository extends BaseSupabaseRepository<BodyGuardModel> {
+class BodyguardRepository extends BaseSupabaseRepository<BodyGuardModel> {
   BodyguardRepository(SupabaseClient client)
     : super(
         client: client,

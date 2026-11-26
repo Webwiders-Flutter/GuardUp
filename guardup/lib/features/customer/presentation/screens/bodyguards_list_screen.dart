@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/features/customer/customer.dart';
 import 'package:quick_container/quick_container.dart';
@@ -26,7 +27,7 @@ import '/shared/widgets/sections/app_appbar.dart';
 
 /// All Bodyguards & Security Roster listing screen featuring live search,
 /// Solo vs Company mode toggling with [AppTabBar.pill], and paginated feeds using [AppPagination].
-class BodyguardsListScreen extends StatefulWidget {
+class BodyguardsListScreen extends StatelessWidget {
   static const route = '/customer-body-guard';
 
   final int initialTabIndex;
@@ -34,22 +35,40 @@ class BodyguardsListScreen extends StatefulWidget {
   const BodyguardsListScreen({super.key, this.initialTabIndex = 0});
 
   @override
-  State<BodyguardsListScreen> createState() => _BodyguardsListScreenState();
+  Widget build(BuildContext context) {
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) =>
+              sl<BodyguardsBloc>()..add(const PaginationLoadRequested()),
+        ),
+        BlocProvider(
+          create: (_) =>
+              sl<CompaniesBloc>()..add(const PaginationLoadRequested()),
+        ),
+      ],
+      child: _BodyguardsListView(initialTabIndex: initialTabIndex),
+    );
+  }
 }
 
-class _BodyguardsListScreenState extends State<BodyguardsListScreen>
+class _BodyguardsListView extends StatefulWidget {
+  final int initialTabIndex;
+
+  const _BodyguardsListView({required this.initialTabIndex});
+
+  @override
+  State<_BodyguardsListView> createState() => _BodyguardsListViewState();
+}
+
+class _BodyguardsListViewState extends State<_BodyguardsListView>
     with SingleTickerProviderStateMixin {
   late final TabController _quickFilterTabController;
   final TextEditingController _searchController = TextEditingController();
 
   static const List<String> _quickFilters = ['Solo', 'Company'];
 
-  late final BodyguardsCubit _guardsCubit;
-  StreamSubscription<BodyguardsState>? _guardsSubscription;
   Timer? _searchDebounce;
-
-  late final CompaniesBloc _companiesBloc;
-  StreamSubscription<CompaniesState>? _companiesSubscription;
 
   late final PaginationController<BodyGuardModel> _guardsPaginationController;
   late final PaginationController<CompanyModel> _companiesPaginationController;
@@ -63,37 +82,23 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
       initialIndex: widget.initialTabIndex.clamp(0, _quickFilters.length - 1),
     );
 
-    _guardsCubit = sl<BodyguardsCubit>();
+    final guardsBloc = context.read<BodyguardsBloc>();
     _guardsPaginationController = PaginationController<BodyGuardModel>(
-      initialState: _guardsCubit.state.pagination,
-      onRefresh: () => _guardsCubit.refresh(
-        status: UserStatus.active,
-        search: _searchController.text.trim(),
-      ),
-      onLoadMore: _guardsCubit.loadMore,
-    );
-
-    _guardsSubscription = _guardsCubit.stream.listen((state) {
-      if (!mounted) return;
-      _guardsPaginationController.updateState(state.pagination);
-    });
-
-    _guardsCubit.refresh(status: UserStatus.active);
-
-    _companiesBloc = sl<CompaniesBloc>();
-    _companiesPaginationController = PaginationController<CompanyModel>(
-      initialState: _companiesBloc.state.pagination,
-      onRefresh: () async => _companiesBloc.add(const PaginationLoadRequested()),
+      initialState: guardsBloc.state.pagination,
+      onRefresh: () async =>
+          guardsBloc.add(const PaginationLoadRequested()),
       onLoadMore: () async =>
-          _companiesBloc.add(const PaginationNextPageRequested()),
+          guardsBloc.add(const PaginationNextPageRequested()),
     );
 
-    _companiesSubscription = _companiesBloc.stream.listen((state) {
-      if (!mounted) return;
-      _companiesPaginationController.updateState(state.pagination);
-    });
-
-    _companiesBloc.add(const PaginationLoadRequested());
+    final companiesBloc = context.read<CompaniesBloc>();
+    _companiesPaginationController = PaginationController<CompanyModel>(
+      initialState: companiesBloc.state.pagination,
+      onRefresh: () async =>
+          companiesBloc.add(const PaginationLoadRequested()),
+      onLoadMore: () async =>
+          companiesBloc.add(const PaginationNextPageRequested()),
+    );
 
     _searchController.addListener(_handleSearch);
   }
@@ -101,10 +106,6 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
   @override
   void dispose() {
     _searchDebounce?.cancel();
-    _guardsSubscription?.cancel();
-    _guardsCubit.close();
-    _companiesSubscription?.cancel();
-    unawaited(_companiesBloc.close());
     _searchController.removeListener(_handleSearch);
     _searchController.dispose();
     _quickFilterTabController.dispose();
@@ -119,17 +120,29 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
     _searchDebounce?.cancel();
     _searchDebounce = Timer(AppDurations.slow, () {
       if (!mounted) return;
-      _guardsCubit.refresh(
-        search: query,
-        status: UserStatus.active,
-      );
-      _companiesBloc.add(PaginationSearchChanged(query));
+      context.read<BodyguardsBloc>().add(PaginationSearchChanged(query));
+      context.read<CompaniesBloc>().add(PaginationSearchChanged(query));
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<BodyguardsBloc, BodyguardsState>(
+          listenWhen: (previous, current) =>
+              previous.pagination != current.pagination,
+          listener: (context, state) =>
+              _guardsPaginationController.updateState(state.pagination),
+        ),
+        BlocListener<CompaniesBloc, CompaniesState>(
+          listenWhen: (previous, current) =>
+              previous.pagination != current.pagination,
+          listener: (context, state) =>
+              _companiesPaginationController.updateState(state.pagination),
+        ),
+      ],
+      child: Scaffold(
       backgroundColor: context.colors.transparent,
       appBar: AppAppBar.transparent(
         title: 'Bodyguards',
@@ -210,6 +223,7 @@ class _BodyguardsListScreenState extends State<BodyguardsListScreen>
           ),
         ],
       ),
+    ),
     );
   }
 

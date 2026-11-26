@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -32,7 +30,7 @@ import '/features/customer/presentation/screens/booking_screen.dart';
 /// Screen 1: Primary Customer Home Screen displaying greeting, search bar,
 /// quick filters, elite promo banner, services, top security companies,
 /// and top bodyguards.
-class CustomerHomeScreen extends StatefulWidget {
+class CustomerHomeScreen extends StatelessWidget {
   /// Shared `/home` route: one shell tab whose builder in `app_router.dart`
   /// shows the customer, company or bodyguard home based on the session role.
   static const route = '/home';
@@ -40,10 +38,31 @@ class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({super.key});
 
   @override
-  State<CustomerHomeScreen> createState() => _CustomerHomeScreenState();
+  Widget build(BuildContext context) {
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) =>
+              sl<BodyguardsBloc>()..add(const PaginationLoadRequested()),
+        ),
+        BlocProvider(
+          create: (_) =>
+              sl<CompaniesBloc>()..add(const PaginationLoadRequested()),
+        ),
+      ],
+      child: const _CustomerHomeView(),
+    );
+  }
 }
 
-class _CustomerHomeScreenState extends State<CustomerHomeScreen>
+class _CustomerHomeView extends StatefulWidget {
+  const _CustomerHomeView();
+
+  @override
+  State<_CustomerHomeView> createState() => _CustomerHomeViewState();
+}
+
+class _CustomerHomeViewState extends State<_CustomerHomeView>
     with SingleTickerProviderStateMixin {
   late final TabController _quickFilterTabController;
   final ValueNotifier<String> _serviceCategoryNotifier = ValueNotifier<String>(
@@ -52,13 +71,8 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
 
   static const List<String> _quickFilters = ['Near By', 'Rated', 'Available'];
 
-  late final BodyguardsCubit _bodyguardsCubit;
-  StreamSubscription<BodyguardsState>? _bodyguardsSubscription;
   late final PaginationController<BodyGuardModel>
   _bodyguardsPaginationController;
-
-  late final CompaniesBloc _companiesBloc;
-  StreamSubscription<CompaniesState>? _companiesSubscription;
   late final PaginationController<CompanyModel> _companiesPaginationController;
 
   @override
@@ -69,48 +83,30 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
       vsync: this,
     );
 
-    _bodyguardsCubit = sl<BodyguardsCubit>();
+    final bodyguardsBloc = context.read<BodyguardsBloc>();
     _bodyguardsPaginationController = PaginationController<BodyGuardModel>(
-      initialState: _bodyguardsCubit.state.pagination,
-      onRefresh: () => _bodyguardsCubit.refresh(
-        status: UserStatus.active,
-        updateStatus: true,
-      ),
-      onLoadMore: _bodyguardsCubit.loadMore,
-    );
-
-    _bodyguardsSubscription = _bodyguardsCubit.stream.listen((state) {
-      if (!mounted) return;
-      _bodyguardsPaginationController.updateState(state.pagination);
-    });
-
-    _bodyguardsCubit.refresh(status: UserStatus.active, updateStatus: true);
-
-    _companiesBloc = sl<CompaniesBloc>();
-    _companiesPaginationController = PaginationController<CompanyModel>(
-      initialState: _companiesBloc.state.pagination,
-      onRefresh: () async => _companiesBloc.add(const PaginationLoadRequested()),
+      initialState: bodyguardsBloc.state.pagination,
+      onRefresh: () async =>
+          bodyguardsBloc.add(const PaginationLoadRequested()),
       onLoadMore: () async =>
-          _companiesBloc.add(const PaginationNextPageRequested()),
+          bodyguardsBloc.add(const PaginationNextPageRequested()),
     );
 
-    _companiesSubscription = _companiesBloc.stream.listen((state) {
-      if (!mounted) return;
-      _companiesPaginationController.updateState(state.pagination);
-    });
-
-    _companiesBloc.add(const PaginationLoadRequested());
+    final companiesBloc = context.read<CompaniesBloc>();
+    _companiesPaginationController = PaginationController<CompanyModel>(
+      initialState: companiesBloc.state.pagination,
+      onRefresh: () async =>
+          companiesBloc.add(const PaginationLoadRequested()),
+      onLoadMore: () async =>
+          companiesBloc.add(const PaginationNextPageRequested()),
+    );
   }
 
   @override
   void dispose() {
     _quickFilterTabController.dispose();
     _serviceCategoryNotifier.dispose();
-    _bodyguardsSubscription?.cancel();
-    _bodyguardsCubit.close();
     _bodyguardsPaginationController.dispose();
-    _companiesSubscription?.cancel();
-    unawaited(_companiesBloc.close());
     _companiesPaginationController.dispose();
     super.dispose();
   }
@@ -133,7 +129,22 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<BodyguardsBloc, BodyguardsState>(
+          listenWhen: (previous, current) =>
+              previous.pagination != current.pagination,
+          listener: (context, state) =>
+              _bodyguardsPaginationController.updateState(state.pagination),
+        ),
+        BlocListener<CompaniesBloc, CompaniesState>(
+          listenWhen: (previous, current) =>
+              previous.pagination != current.pagination,
+          listener: (context, state) =>
+              _companiesPaginationController.updateState(state.pagination),
+        ),
+      ],
+      child: Scaffold(
       backgroundColor: context.colors.transparent,
       appBar: AppAppBar(
         titleWidget: BlocBuilder<AuthBloc, AuthState>(
@@ -342,6 +353,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen>
           ),
         ),
       ),
+    ),
     );
   }
 }
