@@ -1,5 +1,5 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/features/auth/auth.dart';
 import 'package:guardup/features/company/company.dart';
@@ -10,15 +10,16 @@ import 'package:guardup/shared/widgets/feedbacks/widgets/app_file_preview.dart';
 
 import '/core/constants/app_spacing.dart';
 import '/core/di/injection_container.dart';
+import '/core/extensions/api_error.extension.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/navigation/app_tab_bar.dart';
 import '/shared/widgets/sections/app_appbar.dart';
+import '../../bloc/bodyguard_details/bodyguard_details_bloc.dart';
 import '../../data/enum/bodyguard_availability_status.enum.dart';
 import '../../data/model/body_guard.model.dart';
-import '../../data/repositories/bodyguard.repository.dart';
 import '../widgets/guard_metrics_row.widget.dart';
 import '../widgets/guard_profile_header.widget.dart';
 import '../widgets/tabs/company_guard_bookings_tab.widget.dart';
@@ -37,11 +38,11 @@ import '/features/company/data/fixtures/company.fixtures.dart';
 /// Accepts a mandatory [id] and an optional [bodyguard] model.
 /// If [bodyguard] is passed, displays it immediately while fetching full joined
 /// details (company, documents, services, availabilities) in the background.
-/// If only [id] is passed, fetches the full model via [BodyguardRepository.getDetails].
+/// If only [id] is passed, fetches the full model via [BodyguardDetailsBloc].
 ///
 /// Adapts dynamically for Company (Overview, Document, Booking + Edit CTA)
 /// and Customer (About, Experience, Reviews + Sticky Book Now CTA).
-class GuardDetailScreen extends StatefulWidget {
+class GuardDetailScreen extends StatelessWidget {
   static const route = '/guard-detail';
 
   final String id;
@@ -56,19 +57,40 @@ class GuardDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<GuardDetailScreen> createState() => _GuardDetailScreenState();
+  Widget build(BuildContext context) {
+    final targetId = id.isNotEmpty ? id : (bodyguard?.id ?? '');
+    return BlocProvider(
+      create: (_) => sl<BodyguardDetailsBloc>(
+        param1: targetId,
+        param2: bodyguard,
+      )..add(const BodyguardDetailsStarted()),
+      child: _GuardDetailView(
+        id: id,
+        isCompanyView: isCompanyView,
+      ),
+    );
+  }
 }
 
-class _GuardDetailScreenState extends State<GuardDetailScreen>
+class _GuardDetailView extends StatefulWidget {
+  final String id;
+  final bool? isCompanyView;
+
+  const _GuardDetailView({
+    required this.id,
+    this.isCompanyView,
+  });
+
+  @override
+  State<_GuardDetailView> createState() => _GuardDetailViewState();
+}
+
+class _GuardDetailViewState extends State<_GuardDetailView>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
 
   static const List<String> _companyTabs = ['Overview', 'Document', 'Booking'];
   static const List<String> _customerTabs = ['About', 'Experience', 'Reviews'];
-
-  late BodyGuardModel? _guard;
-  bool _isLoading = false;
-  String? _errorMessage;
 
   // Booking pickers for Customer view
   final ValueNotifier<DateTime> _startDateNotifier = ValueNotifier(
@@ -86,10 +108,7 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
 
   bool get _isCompany {
     if (widget.isCompanyView != null) return widget.isCompanyView!;
-    if (sl.isRegistered<AuthBloc>()) {
-      return sl<AuthBloc>().state.isCompany;
-    }
-    return false;
+    return context.read<AuthBloc>().state.isCompany;
   }
 
   List<String> get _activeTabs => _isCompany ? _companyTabs : _customerTabs;
@@ -113,15 +132,14 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
     return diff > 0 ? diff : 4;
   }
 
-  double get _hourlyRate => _guard?.hourlyRate ?? 0.0;
-  double get _totalAmount => _hourlyRate * _durationHours;
+  double _hourlyRate(BodyGuardModel? guard) => guard?.hourlyRate ?? 0.0;
+  double _totalAmount(BodyGuardModel? guard) =>
+      _hourlyRate(guard) * _durationHours;
 
   @override
   void initState() {
     super.initState();
-    _guard = widget.bodyguard;
     _tabController = TabController(length: _activeTabs.length, vsync: this);
-    _loadDetails();
   }
 
   @override
@@ -132,43 +150,6 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
     _endDateNotifier.dispose();
     _endTimeNotifier.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadDetails() async {
-    final targetId = widget.id.isNotEmpty ? widget.id : _guard?.id ?? '';
-    if (targetId.isEmpty) {
-      if (_guard == null) {
-        setState(() => _errorMessage = 'Bodyguard not found.');
-      }
-      return;
-    }
-
-    if (_guard == null) {
-      setState(() => _isLoading = true);
-    }
-
-    try {
-      final repository = sl<BodyguardRepository>();
-
-      final detailed = await repository.getDetails(targetId);
-      if (mounted) {
-        setState(() {
-          _guard = detailed;
-          _isLoading = false;
-          _errorMessage = null;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          if (_guard == null) {
-            _errorMessage =
-                'Could not load bodyguard details. Please try again.';
-          }
-        });
-      }
-    }
   }
 
   Future<void> _pickDate({required bool isStart}) async {
@@ -238,237 +219,261 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
     }
   }
 
-  void _onBookNowPressed() {
+  void _onBookNowPressed(BodyGuardModel? guard) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => CustomerBookingDetailsScreen(
-          bodyguard: _guard,
+          bodyguard: guard,
           startDate: _startDateNotifier.value,
           startTime: _startTimeNotifier.value,
           endDate: _endDateNotifier.value,
           endTime: _endTimeNotifier.value,
           durationHours: _durationHours,
-          hourlyRate: _hourlyRate,
+          hourlyRate: _hourlyRate(guard),
         ),
       ),
     );
   }
 
-  Future<void> _onEditPressed() async {
-    final guard = _guard;
+  Future<void> _onEditPressed(BodyGuardModel? guard) async {
     if (guard == null) return;
     if (guard.verificationStatus == UserStatus.active) {
       await context.push(BodyGuardProfileScreen.route, extra: guard);
     } else {
       await context.push(BodyGuardCompleteProfileScreen.route, extra: guard);
     }
-    unawaited(_loadDetails());
+    if (mounted) {
+      context.read<BodyguardDetailsBloc>().add(
+        const BodyguardDetailsRefreshed(),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading && _guard == null) {
-      return Scaffold(
-        backgroundColor: context.colors.transparent,
-        appBar: AppAppBar.transparent(
-          title: 'Guard Details',
-          showBackIcon: true,
-          onBackTap: () => context.pop(),
-        ),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
+    return BlocBuilder<BodyguardDetailsBloc, BodyguardDetailsState>(
+      builder: (context, state) {
+        final guard = state.guard;
 
-    if (_errorMessage != null && _guard == null) {
-      return Scaffold(
-        backgroundColor: context.colors.transparent,
-        appBar: AppAppBar.transparent(
-          title: 'Guard Details',
-          showBackIcon: true,
-          onBackTap: () => context.pop(),
-        ),
-        body: Center(
-          child: Padding(
-            padding: context.horizontalEdgeInsets,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.error_outline_rounded,
-                  size: 48,
-                  color: context.colors.error,
-                ),
-                AppSpacing.md.h,
-                Text(
-                  _errorMessage!,
-                  textAlign: TextAlign.center,
-                  style: context.textTheme.bodyMedium,
-                ),
-                AppSpacing.lg.h,
-                AppButton(text: 'Retry', onPressed: _loadDetails),
-              ],
+        if (state.isLoading) {
+          return Scaffold(
+            backgroundColor: context.colors.transparent,
+            appBar: AppAppBar.transparent(
+              title: 'Guard Details',
+              showBackIcon: true,
+              onBackTap: () => context.pop(),
             ),
-          ),
-        ),
-      );
-    }
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
 
-    final guardName = _guard?.name.isNotEmpty == true
-        ? _guard!.name
-        : 'Vikram Singh';
-    final photoPath =
-        _guard?.profileImageUrl ?? Assets.images.onboardingImage01.path;
-    final isVerified = _guard?.isVerified ?? true;
-    final company = _guard?.company ?? companyPlaceholders.first;
-
-    return Scaffold(
-      backgroundColor: context.colors.transparent,
-      appBar: AppAppBar.transparent(
-        titleWidget: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              child: Text(
-                guardName,
-                style: context.textTheme.titleSmall?.bold().colour(
-                  context.colors.onSurface,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
+        if (state.isFailure) {
+          return Scaffold(
+            backgroundColor: context.colors.transparent,
+            appBar: AppAppBar.transparent(
+              title: 'Guard Details',
+              showBackIcon: true,
+              onBackTap: () => context.pop(),
             ),
-            if (isVerified) ...[
-              AppSpacing.xs.w,
-              Assets.svg.verifiedShieldBadge.svg(width: 16, height: 16),
-            ],
-          ],
-        ),
-        fontSize: 14,
-        showBackIcon: true,
-        alignTitle: AlignTitle.right,
-        onBackTap: () => context.pop(),
-      ),
-
-      // Bottom Bar adapts by View Role
-      bottomNavigationBar: _isCompany
-          ? AppButton(
-              text: 'Edit Guard',
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-              onPressed: _onEditPressed,
-            )
-          : _buildCustomerBottomBar(),
-
-      body: NestedScrollView(
-        headerSliverBuilder: (context, innerBoxIsScrolled) {
-          return [
-            SliverToBoxAdapter(
-              child: SingleChildScrollView(
+            body: Center(
+              child: Padding(
                 padding: context.horizontalEdgeInsets,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    AppSpacing.sm.h,
-
-                    // 1. Operative Hero Profile Card
-                    GuardProfileHeaderWidget(
-                      name: guardName,
-                      specialization:
-                          (_guard?.qualifications?.isNotEmpty == true)
-                              ? _guard!.qualifications!
-                              : (_guard?.bio.isNotEmpty == true
-                                  ? _guard!.bio
-                                  : 'Licensed armed, Corporate visits'),
-                      hourlyRate: _hourlyRate,
-                      imagePath: photoPath,
-                      isVerified: isVerified,
-                      onImageTap: () {
-                        if (photoPath.isNotEmpty) {
-                          AppFilePreviewSheet.show(
-                            context: context,
-                            title: guardName,
-                            fileUrl: photoPath,
-                          );
-                        }
-                      },
+                    Icon(
+                      Icons.error_outline_rounded,
+                      size: 48,
+                      color: context.colors.error,
                     ),
-
                     AppSpacing.md.h,
-
-                    // 2. Affiliated Security Company Card
-                    CompanyCard(
-                      company: company,
-                      onTap: _isCompany
-                          ? null
-                          : () {
-                              context.push(
-                                CompanyDetailsScreen.route,
-                                extra: company,
-                              );
-                            },
-                      onBookNow: _isCompany
-                          ? null
-                          : () {
-                              context.push(BookingScreen.route, extra: company);
-                            },
+                    Text(
+                      context.apiErrorText(
+                        state.status.errorOrNull,
+                        fallback: state.status.errorMessageOrNull,
+                      ),
+                      textAlign: TextAlign.center,
+                      style: context.textTheme.bodyMedium,
                     ),
-
-                    AppSpacing.md.h,
-
-                    // 3. Three Metrics Summary Row
-                    GuardMetricsRowWidget(
-                      experience: (_guard?.experienceYears != null &&
-                              _guard!.experienceYears > 0)
-                          ? '${_guard!.experienceYears}+ yrs'
-                          : '0 yrs',
-                      qualifications:
-                          (_guard?.qualifications?.isNotEmpty == true)
-                              ? _guard!.qualifications!
-                              : (_guard?.bio.isNotEmpty == true
-                                  ? _guard!.bio
-                                  : 'Not specified'),
-                      status: _guard?.availabilityStatus ??
-                          BodyguardAvailabilityStatus.notSet,
-                      verificationStatus: _guard?.verificationStatus,
+                    AppSpacing.lg.h,
+                    AppButton(
+                      text: 'Retry',
+                      onPressed: () => context
+                          .read<BodyguardDetailsBloc>()
+                          .add(const BodyguardDetailsRefreshed()),
                     ),
-
-                    AppSpacing.md.h,
                   ],
                 ),
               ),
             ),
-          ];
-        },
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 4. Dynamic Underline Tab Bar
-            AppTabBar.underline(
-              controller: _tabController,
-              tabNames: _activeTabs,
-              isScrollable: false,
-              indicatorColor: context.colors.primary,
-              dividerColor: context.colors.outlineVariant,
-              height: 42,
-            ),
-            AppSpacing.md.h,
+          );
+        }
 
-            // 5. Dynamic Tab Content
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: _isCompany
-                    ? _buildCompanyTabs()
-                    : _buildCustomerTabs(),
-              ),
+        final guardName = guard?.name.isNotEmpty == true
+            ? guard!.name
+            : 'Vikram Singh';
+        final photoPath =
+            guard?.profileImageUrl ?? Assets.images.onboardingImage01.path;
+        final isVerified = guard?.isVerified ?? true;
+        final company = guard?.company ?? companyPlaceholders.first;
+        final hourlyRate = _hourlyRate(guard);
+
+        return Scaffold(
+          backgroundColor: context.colors.transparent,
+          appBar: AppAppBar.transparent(
+            titleWidget: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    guardName,
+                    style: context.textTheme.titleSmall?.bold().colour(
+                      context.colors.onSurface,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (isVerified) ...[
+                  AppSpacing.xs.w,
+                  Assets.svg.verifiedShieldBadge.svg(width: 16, height: 16),
+                ],
+              ],
             ),
-          ],
-        ),
-      ),
+            fontSize: 14,
+            showBackIcon: true,
+            alignTitle: AlignTitle.right,
+            onBackTap: () => context.pop(),
+          ),
+
+          // Bottom Bar adapts by View Role
+          bottomNavigationBar: _isCompany
+              ? AppButton(
+                  text: 'Edit Guard',
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 18,
+                  ),
+                  onPressed: () => _onEditPressed(guard),
+                )
+              : _buildCustomerBottomBar(guard),
+
+          body: NestedScrollView(
+            headerSliverBuilder: (context, innerBoxIsScrolled) {
+              return [
+                SliverToBoxAdapter(
+                  child: SingleChildScrollView(
+                    padding: context.horizontalEdgeInsets,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AppSpacing.sm.h,
+
+                        // 1. Operative Hero Profile Card
+                        GuardProfileHeaderWidget(
+                          name: guardName,
+                          specialization:
+                              (guard?.qualifications?.isNotEmpty == true)
+                                  ? guard!.qualifications!
+                                  : (guard?.bio.isNotEmpty == true
+                                      ? guard!.bio
+                                      : 'Licensed armed, Corporate visits'),
+                          hourlyRate: hourlyRate,
+                          imagePath: photoPath,
+                          isVerified: isVerified,
+                          onImageTap: () {
+                            if (photoPath.isNotEmpty) {
+                              AppFilePreviewSheet.show(
+                                context: context,
+                                title: guardName,
+                                fileUrl: photoPath,
+                              );
+                            }
+                          },
+                        ),
+
+                        AppSpacing.md.h,
+
+                        // 2. Affiliated Security Company Card
+                        CompanyCard(
+                          company: company,
+                          onTap: _isCompany
+                              ? null
+                              : () {
+                                  context.push(
+                                    CompanyDetailsScreen.route,
+                                    extra: company,
+                                  );
+                                },
+                          onBookNow: _isCompany
+                              ? null
+                              : () {
+                                  context.push(
+                                    BookingScreen.route,
+                                    extra: company,
+                                  );
+                                },
+                        ),
+
+                        AppSpacing.md.h,
+
+                        // 3. Three Metrics Summary Row
+                        GuardMetricsRowWidget(
+                          experience: (guard?.experienceYears != null &&
+                                  guard!.experienceYears > 0)
+                              ? '${guard.experienceYears}+ yrs'
+                              : '0 yrs',
+                          qualifications:
+                              (guard?.qualifications?.isNotEmpty == true)
+                                  ? guard!.qualifications!
+                                  : (guard?.bio.isNotEmpty == true
+                                      ? guard!.bio
+                                      : 'Not specified'),
+                          status: guard?.availabilityStatus ??
+                              BodyguardAvailabilityStatus.notSet,
+                          verificationStatus: guard?.verificationStatus,
+                        ),
+
+                        AppSpacing.md.h,
+                      ],
+                    ),
+                  ),
+                ),
+              ];
+            },
+            body: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 4. Dynamic Underline Tab Bar
+                AppTabBar.underline(
+                  controller: _tabController,
+                  tabNames: _activeTabs,
+                  isScrollable: false,
+                  indicatorColor: context.colors.primary,
+                  dividerColor: context.colors.outlineVariant,
+                  height: 42,
+                ),
+                AppSpacing.md.h,
+
+                // 5. Dynamic Tab Content
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: _isCompany
+                        ? _buildCompanyTabs(guard)
+                        : _buildCustomerTabs(guard),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
-  List<Widget> _buildCompanyTabs() {
+  List<Widget> _buildCompanyTabs(BodyGuardModel? guard) {
     final currentGuard =
-        _guard ?? bodyguardPlaceholders.first.copyWith(id: widget.id);
+        guard ?? bodyguardPlaceholders.first.copyWith(id: widget.id);
 
     return [
       CompanyGuardOverviewTabWidget(bodyguard: currentGuard),
@@ -477,9 +482,9 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
     ];
   }
 
-  List<Widget> _buildCustomerTabs() {
+  List<Widget> _buildCustomerTabs(BodyGuardModel? guard) {
     final currentGuard =
-        _guard ?? bodyguardPlaceholders.first.copyWith(id: widget.id);
+        guard ?? bodyguardPlaceholders.first.copyWith(id: widget.id);
 
     return [
       ListenableBuilder(
@@ -492,7 +497,7 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
         builder: (context, _) {
           return CustomerGuardAboutTabWidget(
             bio: currentGuard.bio,
-            hourlyRate: _hourlyRate,
+            hourlyRate: _hourlyRate(guard),
             startDate: _startDateNotifier.value,
             startTime: _startTimeNotifier.value,
             endDate: _endDateNotifier.value,
@@ -531,7 +536,7 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
     ];
   }
 
-  Widget _buildCustomerBottomBar() {
+  Widget _buildCustomerBottomBar(BodyGuardModel? guard) {
     return ListenableBuilder(
       listenable: Listenable.merge([
         _startDateNotifier,
@@ -570,7 +575,7 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
                     textBaseline: TextBaseline.alphabetic,
                     children: [
                       Text(
-                        '\$${_totalAmount.toStringAsFixed(2)}',
+                        '\$${_totalAmount(guard).toStringAsFixed(2)}',
                         style: context.textTheme.titleLarge?.bold().colour(
                           context.colors.primary,
                         ),
@@ -591,7 +596,7 @@ class _GuardDetailScreenState extends State<GuardDetailScreen>
 
               // Book Now CTA Button
               GestureDetector(
-                onTap: _onBookNowPressed,
+                onTap: () => _onBookNowPressed(guard),
                 behavior: HitTestBehavior.opaque,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
