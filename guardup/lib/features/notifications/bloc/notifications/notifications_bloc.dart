@@ -9,7 +9,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '/core/constants/app_constants.dart';
 import '/core/state/api_state.dart';
 import '/shared/widgets/pagination/pagination.state.dart';
-import '../../data/enums/notification_type.enum.dart';
 import '../../data/models/notification.model.dart';
 import '../../data/models/notification_filters.model.dart';
 import '../../data/repositories/notification_repository.dart';
@@ -48,22 +47,16 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
     final category = event.category ?? state.activeCategory;
     final userId = _getUserId();
 
-    // In dev / test when user session is not in Supabase, filter fakeData so tabs work
     if (userId.isEmpty) {
-      final fakeItems = NotificationModel.fakeData.where((n) {
-        if (category == NotificationCategory.all) return true;
-        return n.type.category == category;
-      }).toList();
-
       emit(
         state.copyWith(
           activeCategory: category,
-          paginationState: PaginationState<NotificationModel>(
-            items: fakeItems,
-            total: fakeItems.length,
+          paginationState: const PaginationState<NotificationModel>(
+            items: [],
+            total: 0,
             page: 1,
             pageSize: AppConstants.paginationLimit,
-            status: const ApiState.success(null),
+            status: ApiState.success(null),
           ),
         ),
       );

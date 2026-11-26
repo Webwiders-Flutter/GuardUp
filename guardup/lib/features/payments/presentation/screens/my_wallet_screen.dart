@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 
 import 'my_bank_details_screen.dart';
+import '../../data/fixtures/payments.fixtures.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
@@ -42,8 +43,8 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
 
     _paginationController = PaginationController<TransactionModel>(
       initialState: PaginationState<TransactionModel>(
-        items: TransactionModel.fakeData,
-        total: TransactionModel.fakeData.length,
+        items: transactionFixtures,
+        total: transactionFixtures.length,
         status: const ApiState.success(null),
       ),
     );
@@ -67,7 +68,7 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
     if (_selectedFilter == filter) return;
     setState(() => _selectedFilter = filter);
 
-    final all = TransactionModel.fakeData;
+    final all = transactionFixtures;
     final List<TransactionModel> filtered;
     if (filter == 'Withdrawals') {
       filtered = all.where((t) => t.type.isDebit).toList();

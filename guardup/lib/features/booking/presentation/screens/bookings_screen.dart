@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:guardup/core/extensions/number.extension.dart';
 import 'package:guardup/shared/widgets/sections/app_appbar.dart';
 
+import '../../data/fixtures/booking.fixtures.dart';
+
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
@@ -61,7 +63,7 @@ class _BookingsScreenState extends State<BookingsScreen>
     super.initState();
     _tabController = TabController(length: _tabNames.length, vsync: this);
 
-    final initialItems = List<BookingModel>.from(BookingModel.fakeData);
+    final initialItems = List<BookingModel>.from(bookingFixtures);
 
     _paginationController = PaginationController<BookingModel>(
       initialState: PaginationState<BookingModel>(

@@ -52,7 +52,7 @@ class _BodyGuardHomeScreenState extends State<BodyGuardHomeScreen> {
 
     _bookingsPaginationController = PaginationController<BookingModel>(
       initialState: PaginationState<BookingModel>(
-        items: BookingModel.fakeData.take(3).toList(),
+        items: bookingFixtures.take(3).toList(),
         total: 3,
         status: const ApiState.success(null),
       ),
@@ -60,7 +60,7 @@ class _BodyGuardHomeScreenState extends State<BodyGuardHomeScreen> {
 
     _transactionsPaginationController = PaginationController<TransactionModel>(
       initialState: PaginationState<TransactionModel>(
-        items: TransactionModel.fakeData.take(5).toList(),
+        items: transactionFixtures.take(5).toList(),
         total: 3,
         status: const ApiState.success(null),
       ),
@@ -243,9 +243,10 @@ class _BodyGuardHomeScreenState extends State<BodyGuardHomeScreen> {
         final guardName = state.user?.name.isNotEmpty == true
             ? state.user!.name
             : (state.user?.bodyguard?.name.isNotEmpty == true
-                ? state.user!.bodyguard!.name
-                : 'Bodyguard');
-        final avatar = state.user?.profileImageUrl ??
+                  ? state.user!.bodyguard!.name
+                  : 'Bodyguard');
+        final avatar =
+            state.user?.profileImageUrl ??
             state.user?.bodyguard?.profileImageUrl ??
             '';
 

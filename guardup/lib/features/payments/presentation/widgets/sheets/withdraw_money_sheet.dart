@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:quick_container/quick_container.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../data/fixtures/payments.fixtures.dart';
+
 import '/core/constants/api/database_tables.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
@@ -71,7 +73,7 @@ class _WithdrawMoneySheetState extends State<WithdrawMoneySheet> {
     if (currentUserId == null) {
       if (mounted) {
         setState(() {
-          _accounts = BankAccount.fakeData;
+          _accounts = bankAccountPlaceholders;
           _selectedAccount = _accounts.isNotEmpty ? _accounts.first : null;
           _isLoadingAccounts = false;
         });
@@ -92,7 +94,7 @@ class _WithdrawMoneySheetState extends State<WithdrawMoneySheet> {
 
       if (mounted) {
         setState(() {
-          _accounts = fetched.isNotEmpty ? fetched : BankAccount.fakeData;
+          _accounts = fetched.isNotEmpty ? fetched : bankAccountPlaceholders;
           _selectedAccount = _accounts.isNotEmpty ? _accounts.first : null;
           _isLoadingAccounts = false;
         });
@@ -100,7 +102,7 @@ class _WithdrawMoneySheetState extends State<WithdrawMoneySheet> {
     } catch (_) {
       if (mounted) {
         setState(() {
-          _accounts = BankAccount.fakeData;
+          _accounts = bankAccountPlaceholders;
           _selectedAccount = _accounts.isNotEmpty ? _accounts.first : null;
           _isLoadingAccounts = false;
         });
@@ -174,7 +176,6 @@ class _WithdrawMoneySheetState extends State<WithdrawMoneySheet> {
 
   @override
   Widget build(BuildContext context) {
-
     return Form(
       key: _formKey,
       child: Column(

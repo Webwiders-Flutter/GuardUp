@@ -66,7 +66,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
 
     _bookingsPaginationController = PaginationController<BookingModel>(
       initialState: PaginationState<BookingModel>(
-        items: BookingModel.fakeData.take(3).toList(),
+        items: bookingFixtures.take(3).toList(),
         total: 3,
         status: const ApiState.success(null),
       ),
@@ -334,7 +334,8 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
       builder: (context, state) {
         final user = state.user;
         final company = user?.company;
-        final companyName = company?.displayName ?? user?.name ?? 'Security Company';
+        final companyName =
+            company?.displayName ?? user?.name ?? 'Security Company';
         final logoUrl = user?.profileImageUrl ?? '';
         final initials = companyName.isNotEmpty
             ? companyName.getInitials()

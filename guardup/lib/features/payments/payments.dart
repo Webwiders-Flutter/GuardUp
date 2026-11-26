@@ -1,5 +1,6 @@
 export 'data/enum/transaction_status.enum.dart';
 export 'data/enum/transaction_type.enum.dart';
+export 'data/fixtures/payments.fixtures.dart';
 export 'data/model/bank_account.model.dart';
 export 'data/model/bank_account_request.model.dart';
 export 'data/model/plan.model.dart';

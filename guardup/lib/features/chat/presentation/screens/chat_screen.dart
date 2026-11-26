@@ -11,6 +11,7 @@ import '/core/extensions/textstyle_extension.dart';
 import '/gen/assets.gen.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/sections/app_appbar.dart';
+import '../../data/fixtures/chat.fixtures.dart';
 
 import 'package:quick_container/quick_container.dart';
 
@@ -34,7 +35,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
   final _messagesNotifier = ValueNotifier<List<MessageModel>>(
-    MessageModel.fakeData,
+    messageFixtures,
   );
 
   @override

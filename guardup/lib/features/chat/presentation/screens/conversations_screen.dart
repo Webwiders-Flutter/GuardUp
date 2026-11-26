@@ -9,6 +9,7 @@ import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/core/state/api_state.dart';
+import '../../data/fixtures/chat.fixtures.dart';
 import '/shared/widgets/inputs/app_text_field.dart';
 import '/shared/widgets/pagination/app_pagination.dart';
 import '/shared/widgets/pagination/pagination.controller.dart';
@@ -34,8 +35,8 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
   final _searchController = TextEditingController();
   late final _paginationController = PaginationController<ConversationModel>(
     initialState: PaginationState<ConversationModel>(
-      items: ConversationModel.fakeData,
-      total: ConversationModel.fakeData.length,
+      items: conversationFixtures,
+      total: conversationFixtures.length,
       status: ApiState.success(null),
     ),
   );

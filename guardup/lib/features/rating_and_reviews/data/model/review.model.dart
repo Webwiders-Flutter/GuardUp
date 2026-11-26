@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '/features/auth/auth.dart';
+import '../fixtures/rating_and_reviews.fixtures.dart';
 
 part 'review.model.freezed.dart';
 part 'review.model.g.dart';
@@ -25,5 +26,6 @@ abstract class ReviewModel with _$ReviewModel {
       _$ReviewModelFromJson(json);
 
   /// Curated list of verified client reviews matching the GuardUp design.
-  static List<ReviewModel> get fakeData => const [];
+  @Deprecated('Use reviewFixtures from data/fixtures/rating_and_reviews.fixtures.dart')
+  static List<ReviewModel> get fakeData => reviewFixtures;
 }

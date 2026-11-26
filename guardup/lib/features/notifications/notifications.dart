@@ -1,3 +1,4 @@
+export 'data/fixtures/notifications.fixtures.dart';
 export 'data/models/notification.model.dart';
 export 'data/models/user_device.model.dart';
 export 'data/models/notification_filters.model.dart';

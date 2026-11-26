@@ -6,6 +6,8 @@ import 'package:guardup/core/logger/app_logger.dart';
 import 'package:quick_container/quick_container.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../data/fixtures/payments.fixtures.dart';
+
 import '/core/constants/api/database_tables.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
@@ -41,7 +43,6 @@ enum MembershipPlanMode {
   final String apiValue;
 
   const MembershipPlanMode(this.apiValue);
-
 }
 
 /// Named record typedef for navigation arguments to [MembershipPlansScreen].
@@ -73,7 +74,7 @@ class MembershipPlansScreen extends StatefulWidget {
 }
 
 class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
-  final _plansNotifier = ValueNotifier<List<PlanModel>>(PlanModel.fakeData);
+  final _plansNotifier = ValueNotifier<List<PlanModel>>(membershipPlanPlaceholders);
   final _isLoadingNotifier = ValueNotifier<bool>(true);
   final _isSubmittingNotifier = ValueNotifier<bool>(false);
   final _selectedPlanNotifier = ValueNotifier<PlanModel?>(null);
@@ -130,9 +131,14 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
         _updateSelectedPlan();
       }
     } catch (e, stack) {
-      AppLogger.d('Error loading dynamic membership plans: $e', tag: 'MembershipPlansScreen', error: e, stackTrace: stack);
+      AppLogger.d(
+        'Error loading dynamic membership plans: $e',
+        tag: 'MembershipPlansScreen',
+        error: e,
+        stackTrace: stack,
+      );
       if (mounted && _plansNotifier.value.isEmpty) {
-        _plansNotifier.value = PlanModel.fakeData;
+        _plansNotifier.value = membershipPlanPlaceholders;
         _updateSelectedPlan();
       }
     } finally {
@@ -445,19 +451,15 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
                         gradient: const LinearGradient(
                           begin: Alignment.centerLeft,
                           end: Alignment.centerRight,
-                          colors: [
-                            Color(0xFFE2B755),
-                            Color(0xFFC48E28),
-                          ],
+                          colors: [Color(0xFFE2B755), Color(0xFFC48E28)],
                         ),
                         foregroundColor: const Color(0xFF191B23),
                         borderRadius: BorderRadius.circular(AppRadius.md),
                         height: 52,
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFC48E28).withValues(
-                              alpha: 0.25,
-                            ),
+                            color: const Color(0xFFC48E28)
+                                .withValues(alpha: 0.25),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
@@ -496,23 +498,20 @@ class _MembershipPlansScreenState extends State<MembershipPlansScreen> {
                     : const LinearGradient(
                         begin: Alignment.centerLeft,
                         end: Alignment.centerRight,
-                        colors: [
-                          Color(0xFFE2B755),
-                          Color(0xFFC48E28),
-                        ],
+                        colors: [Color(0xFFE2B755), Color(0xFFC48E28)],
                       ),
                 foregroundColor: isCurrent ? null : const Color(0xFF191B23),
-                backgroundColor:
-                    isCurrent ? context.colors.surfaceContainerHigh : null,
+                backgroundColor: isCurrent
+                    ? context.colors.surfaceContainerHigh
+                    : null,
                 borderRadius: BorderRadius.circular(AppRadius.md),
                 height: 52,
                 boxShadow: isCurrent
                     ? null
                     : [
                         BoxShadow(
-                          color: const Color(0xFFC48E28).withValues(
-                            alpha: 0.25,
-                          ),
+                          color: const Color(0xFFC48E28)
+                              .withValues(alpha: 0.25),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),

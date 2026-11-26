@@ -17,7 +17,7 @@ class BodyguardReviewsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveReviews = reviews ?? ReviewModel.fakeData;
+    final effectiveReviews = reviews ?? reviewFixtures;
 
     return AppPagination<ReviewModel>.list(
       state: PaginationState<ReviewModel>(

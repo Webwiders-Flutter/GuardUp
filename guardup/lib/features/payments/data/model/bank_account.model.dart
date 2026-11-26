@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../fixtures/payments.fixtures.dart';
+
 part 'bank_account.model.freezed.dart';
 part 'bank_account.model.g.dart';
 
@@ -31,15 +33,6 @@ abstract class BankAccount with _$BankAccount {
     );
   }
 
-  static List<BankAccount> get fakeData => const [
-    BankAccount(
-      id: '1',
-      accountNumber: '1234567890129875',
-      accountHolder: 'Rock Smith',
-      bankName: 'Bank Name',
-      branch: 'indore',
-      ifscCode: 'WORD6589',
-      branchAddress: 'indore',
-    ),
-  ];
+  @Deprecated('Use bankAccountPlaceholders from data/fixtures/payments.fixtures.dart')
+  static List<BankAccount> get fakeData => bankAccountPlaceholders;
 }

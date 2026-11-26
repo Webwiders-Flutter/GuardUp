@@ -6,6 +6,8 @@ import 'package:guardup/shared/widgets/buttons/app_button.dart';
 import 'package:guardup/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
+import '../../data/fixtures/notifications.fixtures.dart';
+
 import '/shared/widgets/misc/skeleton_effect.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_spacing.dart';
@@ -305,7 +307,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                         context.horizontalEdgeInsets + AppSpacing.md.bPadding,
                     separatorBuilder: (context, index) => AppSpacing.md.h,
                     initialLoaderBuilder: (context) {
-                      final sampleList = NotificationModel.fakeData;
+                      final sampleList = notificationPlaceholders;
                       return Skeletonizer(
                         effect: SkeletonEffect.adaptiveShimmer(context),
                         enabled: true,
