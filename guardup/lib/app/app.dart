@@ -7,7 +7,7 @@ import 'package:material_ui/material_ui.dart' as mui;
 import '/app/gate/gate.dart';
 import '/app/routes/app_router.dart';
 import '/app/theme/app_theme.dart';
-import '/core/config/admin_settings/admin_settings.dart';
+import '/features/settings/settings.dart';
 import '/core/config/config.dart';
 import '/core/di/injection_container.dart';
 import '/features/auth/auth.dart';

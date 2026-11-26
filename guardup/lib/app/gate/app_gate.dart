@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '/app/screens/app_maintenance_screen.dart';
 import '/app/screens/force_update_screen.dart';
 import '/app/screens/optional_update_dialog.dart';
-import '/core/config/admin_settings/admin_settings.dart';
+import '/features/settings/settings.dart';
 import '/core/logger/app_logger.dart';
 import 'cubit/app_gate_cubit.dart';
 

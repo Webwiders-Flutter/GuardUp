@@ -9,7 +9,7 @@ import '../firebase_options.dart';
 import '/app/gate/gate.dart';
 import '/app/theme/colors/app_colors.dart';
 import '/bootstrap/flavor.dart';
-import '/core/config/admin_settings/admin_settings.dart';
+import '/features/settings/settings.dart';
 import '/core/config/config.dart';
 import '/core/di/injection_container.dart';
 import '/core/services/notification/push_notification_service.dart';

@@ -4,8 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '/core/logger/app_logger.dart';
 import '/core/state/api_state.dart';
 import '/features/auth/data/enum/user_role.enum.dart';
-import '../models/admin_settings.model.dart';
-import '../repository/admin_settings.repository.dart';
+import '../data/models/admin_settings.model.dart';
+import '../data/repositories/admin_settings.repository.dart';
 
 /// Cubit managing real-time platform configuration and registration fees.
 class AdminSettingsCubit extends Cubit<ApiState<AdminSettingsModel>> {

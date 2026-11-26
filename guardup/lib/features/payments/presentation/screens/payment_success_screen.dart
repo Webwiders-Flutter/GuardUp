@@ -13,7 +13,7 @@ import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/string.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
-import '/core/config/admin_settings/admin_settings.dart';
+import '/features/settings/settings.dart';
 import '/features/auth/bloc/auth_bloc.dart';
 import '/features/auth/data/enum/user_role.enum.dart';
 import '/features/auth/data/model/user.model.dart';

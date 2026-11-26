@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-import '/core/config/admin_settings/admin_settings.dart';
+import '/features/settings/settings.dart';
 import '/core/logger/app_logger.dart';
 import '/core/services/app_update/app_update.service.dart';
 import '/core/utils/validators.dart';

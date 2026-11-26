@@ -7,7 +7,7 @@ import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
-import '/core/config/admin_settings/admin_settings.dart';
+import '/features/settings/settings.dart';
 import '/core/services/launcher/app_launcher.service.dart';
 import '/shared/widgets/buttons/app_button.dart';
 

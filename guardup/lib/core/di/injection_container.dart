@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide LocalStorage;
 
-import '/core/config/admin_settings/di/admin_settings.di.dart';
+import '/features/settings/di/settings.di.dart';
 import '/core/services/document_submission/document_submission_service.dart';
 import '/core/services/file_storage/file_storage.service.dart';
 import '/core/services/file_storage/supabase_file_storage.service.dart';
