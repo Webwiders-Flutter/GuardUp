@@ -51,12 +51,18 @@ names, which is what both apps read.
 
 ### `user_availabilities`
 
-One row per day (`UNIQUE (user_id, day_of_week)`), upserted by the mobile app.
+One row per day (`UNIQUE (user_id, day_of_week)` for accounts, `UNIQUE (bodyguard_id, day_of_week)` for company-managed bodyguards), upserted by the mobile app.
 
 - `day_of_week` is stored in **lowercase** (`monday` … `sunday`), matching the
   admin `WeekDay` enum values. Any other value is ignored.
 - `from_time` / `to_time` are display strings such as `09:00 AM`.
 - A day with no row is shown as **Not set**; `is_available = false` is shown as **Off**.
+- Legacy accounts that originally stored schedules in `users.metadata['availability']`
+  are backfilled into `public.user_availabilities` by migration
+  `20261126000001_backfill_user_availabilities_from_metadata.sql` (inserting all
+  7 lowercase weekday rows per qualifying user with `ON CONFLICT (user_id, day_of_week) DO NOTHING`).
+  The legacy `metadata['availability']` key is left intact in place, and the mobile
+  app no longer reads or double-writes it.
 
 ### `user_bank_accounts`
 

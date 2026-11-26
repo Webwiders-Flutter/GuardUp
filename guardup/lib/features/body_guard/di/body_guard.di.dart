@@ -2,6 +2,8 @@ import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '/features/auth/data/enum/user_status.enum.dart';
+import '/shared/models/record_owner.model.dart';
+import '../bloc/availability/availability_bloc.dart';
 import '../bloc/bodyguard_details/bodyguard_details_bloc.dart';
 import '../bloc/bodyguards/bodyguards_bloc.dart';
 import '../bloc/company_bodyguards/company_bodyguards_bloc.dart';
@@ -36,6 +38,12 @@ void registerBodyguardDependencies(GetIt sl) {
       sl<BodyguardRepository>(),
       bodyguardId: bodyguardId,
       preview: preview,
+    ),
+  );
+  sl.registerFactoryParam<AvailabilityBloc, RecordOwner, void>(
+    (owner, _) => AvailabilityBloc(
+      sl<AvailabilityRepository>(),
+      owner: owner,
     ),
   );
 }

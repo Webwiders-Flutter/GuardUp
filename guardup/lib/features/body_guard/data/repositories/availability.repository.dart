@@ -8,7 +8,7 @@ import '../model/availability_request.model.dart';
 import '../model/user_availability.model.dart';
 
 /// `public.user_availabilities`: Working schedules for accounts and managed bodyguards.
-final class AvailabilityRepository {
+class AvailabilityRepository {
   final SupabaseClient client;
 
   AvailabilityRepository(this.client);
