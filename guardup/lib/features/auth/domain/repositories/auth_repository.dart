@@ -35,6 +35,25 @@ abstract class AuthRepository {
     required String password,
   });
 
+  /// Convenient alias for [signInWithEmail].
+  Future<String> signIn({required String email, required String password}) =>
+      signInWithEmail(email: email, password: password);
+
+  /// Convenient alias for [signUpWithEmail].
+  Future<String> signUp({
+    required String email,
+    required String password,
+    Map<String, dynamic>? data,
+  }) => signUpWithEmail(email: email, password: password, metadata: data);
+
+  /// Convenient alias for [sendPasswordResetEmail].
+  Future<void> sendPasswordReset(String email) =>
+      sendPasswordResetEmail(email: email);
+
+  /// Convenient alias for [changePassword].
+  Future<void> updatePassword(String newPassword) =>
+      changePassword(newPassword: newPassword);
+
   /// Signs up or starts the sign-in flow using a phone number.
   Future<void> signUpWithPhone({
     required String phoneNumber,

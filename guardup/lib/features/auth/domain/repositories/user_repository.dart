@@ -3,6 +3,7 @@ import 'dart:async';
 import '/core/services/file_storage/file_storage.service.dart';
 import '/core/services/file_storage/models/file_upload_request.model.dart';
 import '../../data/model/user.model.dart';
+import '../../data/model/user_account_request.model.dart';
 
 /// Abstract contract for managing User Profiles and profile storage.
 ///
@@ -12,6 +13,15 @@ abstract class UserRepository {
   final FileStorageService fileStorageService;
 
   const UserRepository(this.fileStorageService);
+
+  /// Retrieves full typed profile for [id] with embedded relations.
+  Future<UserModel?> getProfile(String id);
+
+  /// Streams typed [UserModel] with embedded relations in real-time.
+  Stream<UserModel?> watchProfile(String id);
+
+  /// Updates account-level fields for [id].
+  Future<UserModel> updateAccount(String id, UserAccountRequest request);
 
   /// Streams real-time updates for a specific user profile by [userId].
   Stream<UserModel?> watchUserProfile(String userId);

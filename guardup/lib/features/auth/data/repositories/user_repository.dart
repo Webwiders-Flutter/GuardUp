@@ -4,31 +4,197 @@ import 'package:supabase_flutter/supabase_flutter.dart' as supa;
 
 import '/core/constants/api/database_tables.dart';
 import '/core/constants/api/json_keys.dart';
+import '/core/error/api_exception.dart';
 import '/core/logger/app_logger.dart';
+import '/core/repositories/base.repository.dart';
+import '/core/services/file_storage/file_storage.service.dart';
+import '/core/services/file_storage/models/file_upload_request.model.dart';
 import '../../domain/repositories/user_repository.dart';
-import '../profile_fields.dart';
 import '../model/user.model.dart';
+import '../model/user_account_request.model.dart';
+import '../profile_fields.dart';
 
 /// Concrete Supabase implementation of [UserRepository] with structured logging.
-class SupabaseUserRepository extends UserRepository {
-  final supa.SupabaseClient client;
+class SupabaseUserRepository extends BaseSupabaseRepository<UserModel>
+    implements UserRepository {
+  @override
+  final FileStorageService fileStorageService;
 
-  SupabaseUserRepository(
-    super.fileStorageService, {
-    required this.client,
-  });
+  SupabaseUserRepository(this.fileStorageService, {required super.client})
+    : super(
+        tableName: DatabaseTables.users,
+        fromJson: UserModel.fromJson,
+        entityName: 'user',
+        searchFields: const [JsonKeys.name, JsonKeys.email],
+        selectColumns: _profileSelect,
+        primarySortColumn: JsonKeys.createdAt,
+        primarySortAscending: false,
+      );
 
   supa.SupabaseClient get _supabase => client;
 
   static const String _tag = 'UserRepository';
 
+  static const String _profileSelect = '''
+    *,
+    bodyguard:bodyguards!bodyguards_user_id_fkey(*),
+    company:companies!companies_user_id_fkey(*),
+    availabilities:user_availabilities!user_availabilities_user_id_fkey(*),
+    user_services!user_services_user_id_fkey(
+      id,
+      service:services(id, name, description, icon_name, is_active, display_order)
+    ),
+    documents:user_documents!user_documents_user_id_fkey(
+      *,
+      document_type:document_types(*)
+    )
+  ''';
+
   @override
-  Stream<UserModel?> watchUserProfile(String userId) {
-    return watchUserData(userId).map((data) {
-      if (data == null) return null;
-      return UserModel.fromJson(data);
-    });
+  Future<UserModel?> getProfile(String id) async {
+    AppLogger.d('getProfile: id=$id', tag: _tag);
+    final row = await _supabase
+        .from(DatabaseTables.users)
+        .select(_profileSelect)
+        .eq(JsonKeys.id, id)
+        .maybeSingle();
+
+    if (row == null) {
+      AppLogger.w('No profile found in users table for id=$id', tag: _tag);
+      return null;
+    }
+    return UserModel.fromJson(row);
   }
+
+  @override
+  Stream<UserModel?> watchProfile(String userId) {
+    AppLogger.d(
+      'Subscribing to realtime watchProfile for userId=$userId',
+      tag: _tag,
+    );
+
+    final subscriptions = <StreamSubscription<List<Map<String, dynamic>>>>[];
+    // ignore: close_sinks
+    late final StreamController<UserModel?> controller;
+    Map<String, dynamic>? accountRow;
+    UserModel? lastMerged;
+    var watchingRelated = false;
+    var generation = 0;
+    var isClosed = false;
+
+    void logError(Object error) {
+      AppLogger.w(
+        'Realtime subscription error for userId=$userId: $error',
+        tag: _tag,
+      );
+    }
+
+    Future<void> emitMerged() async {
+      final current = ++generation;
+      UserModel? merged;
+      try {
+        merged = await getProfile(userId);
+      } catch (e) {
+        AppLogger.w(
+          'Could not re-read profile for userId=$userId: $e',
+          tag: _tag,
+        );
+      }
+      if (isClosed || current != generation) return;
+      final account = accountRow;
+      if (account == null) return;
+
+      final model = merged ?? lastMerged;
+      lastMerged = model;
+      controller.add(model);
+    }
+
+    void watchRelatedTables(String? role) {
+      if (watchingRelated) return;
+      final profileTable = switch (role) {
+        'GUARD' => DatabaseTables.bodyguards,
+        'COMPANY' => DatabaseTables.companies,
+        _ => null,
+      };
+
+      watchingRelated = true;
+
+      if (profileTable != null) {
+        subscriptions.add(
+          _supabase
+              .from(profileTable)
+              .stream(primaryKey: [JsonKeys.id])
+              .eq(JsonKeys.userId, userId)
+              .listen((_) => emitMerged(), onError: logError),
+        );
+      }
+
+      subscriptions.add(
+        _supabase
+            .from(DatabaseTables.userDocuments)
+            .stream(primaryKey: [JsonKeys.id])
+            .eq(JsonKeys.userId, userId)
+            .listen((_) => emitMerged(), onError: logError),
+      );
+    }
+
+    controller = StreamController<UserModel?>(
+      onListen: () {
+        subscriptions.add(
+          _supabase
+              .from(DatabaseTables.users)
+              .stream(primaryKey: [JsonKeys.id])
+              .eq(JsonKeys.id, userId)
+              .listen((rows) {
+                if (rows.isEmpty) {
+                  AppLogger.w(
+                    'Realtime stream received empty rows for userId=$userId (User might be deleted)',
+                    tag: _tag,
+                  );
+                  generation++;
+                  accountRow = null;
+                  lastMerged = null;
+                  controller.add(null);
+                  return;
+                }
+                final row = rows.first;
+                accountRow = row;
+                watchRelatedTables(row[JsonKeys.role] as String?);
+                emitMerged();
+              }, onError: logError),
+        );
+      },
+      onCancel: () async {
+        isClosed = true;
+        for (final subscription in subscriptions) {
+          await subscription.cancel();
+        }
+        subscriptions.clear();
+      },
+    );
+
+    return controller.stream;
+  }
+
+  @override
+  Future<UserModel> updateAccount(String id, UserAccountRequest request) async {
+    AppLogger.d('updateAccount: id=$id', tag: _tag);
+    final payload = request.toJson();
+    if (payload.isNotEmpty) {
+      await _supabase
+          .from(DatabaseTables.users)
+          .update(payload)
+          .eq(JsonKeys.id, id);
+    }
+    final updated = await getProfile(id);
+    if (updated == null) {
+      throw ApiException('User profile not found after update.');
+    }
+    return updated;
+  }
+
+  @override
+  Stream<UserModel?> watchUserProfile(String userId) => watchProfile(userId);
 
   /// Streams the merged profile row (same shape as [getUserData]).
   ///
@@ -38,7 +204,10 @@ class SupabaseUserRepository extends UserRepository {
   /// Emits `null` only when the account row itself disappears.
   @override
   Stream<Map<String, dynamic>?> watchUserData(String userId) {
-    AppLogger.d('Subscribing to realtime user profile for userId=$userId', tag: _tag);
+    AppLogger.d(
+      'Subscribing to realtime user profile for userId=$userId',
+      tag: _tag,
+    );
 
     final subscriptions = <StreamSubscription<List<Map<String, dynamic>>>>[];
     // Returned as the stream; closed by the subscriber via onCancel.
@@ -51,7 +220,10 @@ class SupabaseUserRepository extends UserRepository {
     var isClosed = false;
 
     void logError(Object error) {
-      AppLogger.w('Realtime subscription error for userId=$userId: $error', tag: _tag);
+      AppLogger.w(
+        'Realtime subscription error for userId=$userId: $error',
+        tag: _tag,
+      );
     }
 
     Future<void> emitMerged() async {
@@ -60,7 +232,10 @@ class SupabaseUserRepository extends UserRepository {
       try {
         merged = await _fetchProfileRow(userId);
       } catch (e) {
-        AppLogger.w('Could not re-read profile for userId=$userId: $e', tag: _tag);
+        AppLogger.w(
+          'Could not re-read profile for userId=$userId: $e',
+          tag: _tag,
+        );
       }
       // A newer change (or cancellation) superseded this read.
       if (isClosed || current != generation) return;
@@ -156,11 +331,17 @@ class SupabaseUserRepository extends UserRepository {
       final response = await _fetchProfileRow(userId);
 
       if (response == null) {
-        AppLogger.w('No profile found in users table for userId=$userId', tag: _tag);
+        AppLogger.w(
+          'No profile found in users table for userId=$userId',
+          tag: _tag,
+        );
         return null;
       }
       final model = UserModel.fromJson(response);
-      AppLogger.d('getUserProfile success: name=${model.name}, role=${model.role}', tag: _tag);
+      AppLogger.d(
+        'getUserProfile success: name=${model.name}, role=${model.role}',
+        tag: _tag,
+      );
       return model;
     } catch (e, st) {
       AppLogger.e('getUserProfile error', tag: _tag, error: e, stackTrace: st);
@@ -175,7 +356,10 @@ class SupabaseUserRepository extends UserRepository {
       final response = await _fetchProfileRow(userId);
 
       if (response == null) {
-        AppLogger.w('No data found in users table for userId=$userId', tag: _tag);
+        AppLogger.w(
+          'No data found in users table for userId=$userId',
+          tag: _tag,
+        );
         return null;
       }
       AppLogger.d(
@@ -198,7 +382,12 @@ class SupabaseUserRepository extends UserRepository {
       await _supabase.from(DatabaseTables.users).upsert(json);
       AppLogger.d('createUserProfile success: id=${user.id}', tag: _tag);
     } catch (e, st) {
-      AppLogger.e('createUserProfile error', tag: _tag, error: e, stackTrace: st);
+      AppLogger.e(
+        'createUserProfile error',
+        tag: _tag,
+        error: e,
+        stackTrace: st,
+      );
       rethrow;
     }
   }
@@ -213,7 +402,12 @@ class SupabaseUserRepository extends UserRepository {
           .eq('id', user.id);
       AppLogger.d('updateUserProfile success: id=${user.id}', tag: _tag);
     } catch (e, st) {
-      AppLogger.e('updateUserProfile error', tag: _tag, error: e, stackTrace: st);
+      AppLogger.e(
+        'updateUserProfile error',
+        tag: _tag,
+        error: e,
+        stackTrace: st,
+      );
       rethrow;
     }
   }
@@ -267,7 +461,12 @@ class SupabaseUserRepository extends UserRepository {
       }
       AppLogger.d('updateProfileFields success: userId=$userId', tag: _tag);
     } catch (e, st) {
-      AppLogger.e('updateProfileFields error', tag: _tag, error: e, stackTrace: st);
+      AppLogger.e(
+        'updateProfileFields error',
+        tag: _tag,
+        error: e,
+        stackTrace: st,
+      );
       rethrow;
     }
   }
@@ -279,7 +478,12 @@ class SupabaseUserRepository extends UserRepository {
       await _supabase.from(DatabaseTables.users).delete().eq('id', userId);
       AppLogger.d('deleteUserProfile success: userId=$userId', tag: _tag);
     } catch (e, st) {
-      AppLogger.e('deleteUserProfile error', tag: _tag, error: e, stackTrace: st);
+      AppLogger.e(
+        'deleteUserProfile error',
+        tag: _tag,
+        error: e,
+        stackTrace: st,
+      );
       rethrow;
     }
   }
@@ -296,7 +500,12 @@ class SupabaseUserRepository extends UserRepository {
       AppLogger.d('userProfileExists: $exists for userId=$userId', tag: _tag);
       return exists;
     } catch (e, st) {
-      AppLogger.e('userProfileExists error', tag: _tag, error: e, stackTrace: st);
+      AppLogger.e(
+        'userProfileExists error',
+        tag: _tag,
+        error: e,
+        stackTrace: st,
+      );
       return false;
     }
   }
@@ -328,7 +537,8 @@ class SupabaseUserRepository extends UserRepository {
       if (res is Map) {
         final hasConflict = res['has_conflict'] == true;
         if (hasConflict) {
-          final message = res['message'] as String? ??
+          final message =
+              res['message'] as String? ??
               'This account is already registered. Please sign in or use different details.';
           AppLogger.w('Conflict detected: $message', tag: _tag);
           return message;
@@ -344,7 +554,9 @@ class SupabaseUserRepository extends UserRepository {
   }
 
   @override
-  Future<({bool exists, String? errorMessage})> checkEmailExists(String email) async {
+  Future<({bool exists, String? errorMessage})> checkEmailExists(
+    String email,
+  ) async {
     final cleanEmail = email.trim().toLowerCase();
     AppLogger.d('checkEmailExists: $cleanEmail', tag: _tag);
 
@@ -364,8 +576,7 @@ class SupabaseUserRepository extends UserRepository {
         if (!hasConflict) {
           return (
             exists: false,
-            errorMessage:
-                'No account found with this email. Please check your email or sign up.',
+            errorMessage: 'No account found with this email. Please check your email or sign up.',
           );
         }
         return (exists: true, errorMessage: null);
@@ -377,4 +588,32 @@ class SupabaseUserRepository extends UserRepository {
       return (exists: true, errorMessage: null);
     }
   }
+
+  @override
+  Future<String> uploadProfileImage({
+    required String userId,
+    required FileUploadRequest request,
+  }) => fileStorageService.uploadSingleFile(request);
+
+  @override
+  Future<String> uploadProfile({
+    required String userId,
+    required FileUploadRequest request,
+  }) => uploadProfileImage(userId: userId, request: request);
+
+  @override
+  Future<void> deleteProfileImage({
+    required String userId,
+    required String imageUrl,
+  }) => fileStorageService.deleteFileFromUrl(imageUrl);
+
+  @override
+  Future<String> replaceProfileImage({
+    required String userId,
+    required FileUploadRequest newRequest,
+    String? oldImageUrl,
+  }) => fileStorageService.insertAndDeleteFile(
+    newRequest: newRequest,
+    oldUrl: oldImageUrl,
+  );
 }
