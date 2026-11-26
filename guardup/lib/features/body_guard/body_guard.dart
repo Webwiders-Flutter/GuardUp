@@ -7,6 +7,7 @@ export 'data/enum/guard_service.enum.dart';
 export 'data/enum/week_day.enum.dart';
 
 // Models
+export 'data/model/availability_request.model.dart';
 export 'data/model/body_guard.model.dart';
 export 'data/model/bodyguard_filters.model.dart';
 export 'data/model/bodyguard_profile_request.model.dart';

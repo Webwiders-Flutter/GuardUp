@@ -8,6 +8,7 @@ final class JsonKeys {
   static const String description = 'description';
   static const String descriptionHi = 'description_hi';
   static const String sortOrder = 'display_order';
+  static const String displayOrder = 'display_order';
   static const String userId = 'user_id';
   static const String createdAt = 'created_at';
   static const String updatedAt = 'updated_at';
@@ -16,11 +17,15 @@ final class JsonKeys {
   // Account (users) Keys
   static const String role = 'role';
   static const String status = 'status';
+  static const String email = 'email';
   static const String rejectionReason = 'rejection_reason';
   static const String profileImageUrl = 'profile_image_url';
   static const String gender = 'gender';
   static const String phoneCode = 'phone_code';
   static const String phoneNumber = 'phone_number';
+  static const String isPushNotificationEnabled =
+      'is_push_notification_enabled';
+  static const String metadata = 'metadata';
   static const String address = 'address';
   static const String latitude = 'latitude';
   static const String longitude = 'longitude';
@@ -35,11 +40,6 @@ final class JsonKeys {
 
   // Bodyguard profile (bodyguards) Keys
   static const String bodyguardId = 'bodyguard_id';
-
-  // Notification `data` payload keys (also sent with the push)
-  static const String event = 'event';
-  static const String route = 'route';
-  static const String notificationId = 'notification_id';
   static const String hourlyRate = 'hourly_rate';
   static const String rating = 'rating';
   static const String experienceYears = 'experience_years';
@@ -48,16 +48,57 @@ final class JsonKeys {
   static const String certifications = 'certifications';
   static const String qualifications = 'qualifications';
 
+  // Availability Keys
+  static const String dayOfWeek = 'day_of_week';
+  static const String isAvailable = 'is_available';
+  static const String fromTime = 'from_time';
+  static const String toTime = 'to_time';
+
+  // Bank Account Keys
+  static const String accountNumber = 'account_number';
+  static const String accountHolder = 'account_holder';
+  static const String bankName = 'bank_name';
+  static const String branch = 'branch';
+  static const String ifscCode = 'ifsc_code';
+  static const String branchAddress = 'branch_address';
+  static const String isPrimary = 'is_primary';
+
+  // Membership plans
+  static const String pricePerMonth = 'price_per_month';
+  static const String pricePerYear = 'price_per_year';
+  static const String discount = 'discount';
+  static const String discountType = 'discount_type';
+  static const String discountUpto = 'discount_upto';
+  static const String isPopular = 'is_popular';
+
+  // Contact Us Keys
+  static const String fullName = 'full_name';
+  static const String message = 'message';
+
+  // Legal & Content Keys
+  static const String contentType = 'content_type';
+  static const String language = 'language';
+  static const String lastPublishedAt = 'last_published_at';
+
+  // Documents
+  static const String targetRole = 'target_role';
+  static const String isRequired = 'is_required';
+  static const String validTill = 'valid_till';
+  static const String uploadedAt = 'uploaded_at';
+
   // Profile child tables
   static const String serviceId = 'service_id';
   static const String documentTypeId = 'document_type_id';
   static const String fileUrl = 'file_url';
   static const String fileName = 'file_name';
 
-  // RPC parameters for set_user_services / set_bodyguard_services
+  // RPC parameters for set_user_services / set_bodyguard_services / check_conflict
   static const String pUserId = 'p_user_id';
   static const String pBodyguardId = 'p_bodyguard_id';
   static const String pServiceIds = 'p_service_ids';
+  static const String pEmail = 'p_email';
+  static const String pPhoneNumber = 'p_phone_number';
+  static const String pPhoneCode = 'p_phone_code';
 
   // Device & Push Notification Keys
   static const String token = 'token';
@@ -71,6 +112,9 @@ final class JsonKeys {
   static const String pLanguageCode = 'p_language_code';
 
   // Notification Keys
+  static const String event = 'event';
+  static const String route = 'route';
+  static const String notificationId = 'notification_id';
   static const String type = 'type';
   static const String title = 'title';
   static const String titleHi = 'title_hi';

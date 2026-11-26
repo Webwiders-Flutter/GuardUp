@@ -15,6 +15,9 @@ final class DatabaseFunctions {
   static const String checkUserPhoneOrEmailExists =
       'check_user_phone_or_email_exists';
 
+  /// Checks if either phone or email conflicts with an existing registration.
+  static const String checkRegistrationConflict = 'check_registration_conflict';
+
   /// Checks administrative role access.
   static const String isAdmin = 'is_admin';
 

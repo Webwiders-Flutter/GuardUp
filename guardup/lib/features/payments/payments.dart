@@ -1,6 +1,7 @@
 export 'data/enum/transaction_status.enum.dart';
 export 'data/enum/transaction_type.enum.dart';
 export 'data/model/bank_account.model.dart';
+export 'data/model/bank_account_request.model.dart';
 export 'data/model/plan.model.dart';
 export 'data/model/transaction.model.dart';
 export 'presentation/screens/membership_plans_screen.dart';

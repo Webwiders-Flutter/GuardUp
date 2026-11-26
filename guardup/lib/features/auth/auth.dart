@@ -7,6 +7,7 @@ export 'data/enum/otp_type.enum.dart';
 export 'data/enum/user_role.enum.dart';
 export 'data/enum/user_status.enum.dart';
 export 'data/model/user.model.dart';
+export 'data/model/user_account_request.model.dart';
 export 'data/repositories/auth_repository.dart';
 export 'data/repositories/user_repository.dart';
 export 'domain/repositories/auth_repository.dart';
