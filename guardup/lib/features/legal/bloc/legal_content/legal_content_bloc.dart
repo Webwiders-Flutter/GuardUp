@@ -1,20 +1,25 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
-import '/core/constants/api/database_tables.dart';
 import '/core/di/injection_container.dart';
 import '/core/logger/app_logger.dart';
 import '/core/state/api_state.dart';
-import '/features/auth/bloc/auth_bloc.dart';
 import '/features/auth/data/enum/user_role.enum.dart';
 import '../../data/model/legal_content.model.dart';
+import '../../data/repositories/legal_content.repository.dart';
 import 'legal_content_event.dart';
 import 'legal_content_state.dart';
 
 class LegalContentBloc extends Bloc<LegalContentEvent, LegalContentState> {
-  LegalContentBloc() : super(const LegalContentState()) {
+  LegalContentBloc({
+    LegalContentRepository? repository,
+    this.getCurrentRole,
+  })  : _repository = repository ?? sl<LegalContentRepository>(),
+        super(const LegalContentState()) {
     on<LegalContentRequested>(_onLegalContentRequested);
   }
+
+  final LegalContentRepository _repository;
+  final UserRole Function()? getCurrentRole;
 
   Future<void> _onLegalContentRequested(
     LegalContentRequested event,
@@ -29,44 +34,30 @@ class LegalContentBloc extends Bloc<LegalContentEvent, LegalContentState> {
     );
 
     try {
-      // 2. Resolve target role: from event, or from AuthBloc current state, or default to CUSTOMER
-      UserRole targetRole = event.role ?? UserRole.customer;
-      if (event.role == null && sl.isRegistered<AuthBloc>()) {
-        targetRole = sl<AuthBloc>().state.sessionRole;
-      }
+      // 2. Resolve target role: from event, or from constructor callback, or default to CUSTOMER
+      final targetRole =
+          event.role ?? getCurrentRole?.call() ?? UserRole.customer;
 
-      // 3. Query public.legal_content table
-      final row = await Supabase.instance.client
-          .from(DatabaseTables.legalContent)
-          .select()
-          .eq('role', targetRole.apiValue)
-          .eq('content_type', event.contentType.apiValue)
-          .eq('language', event.language)
-          .order('last_published_at', ascending: false)
-          .limit(1)
-          .maybeSingle();
+      // 3. Query repository
+      final model = await _repository.getLatest(
+        role: targetRole,
+        type: event.contentType,
+        language: event.language,
+      );
 
-      if (row != null && (row['content_html'] as String?)?.isNotEmpty == true) {
-        final html = row['content_html'] as String;
-        final updatedAtStr = row['updated_at'] ?? row['last_published_at'];
-        final dynamicModel = LegalContentModel(
-          id: (row['id'] as String?) ?? 'legal_${event.contentType.name}',
-          contentType: event.contentType,
-          title: event.contentType.name,
-          contentHtml: html,
-          clauses: const [],
-          updatedAt: updatedAtStr != null
-              ? DateTime.tryParse(updatedAtStr.toString())
-              : null,
-        );
-
-        emit(state.copyWith(contentState: ApiState.success(dynamicModel)));
+      if (model != null && model.contentHtml.isNotEmpty) {
+        emit(state.copyWith(contentState: ApiState.success(model)));
       } else {
         // Fallback to static content if no database record exists
         emit(state.copyWith(contentState: ApiState.success(fallbackData)));
       }
     } catch (e, st) {
-      AppLogger.d('Error fetching legal content from Supabase: $e', tag: 'LegalContentBloc', error: e, stackTrace: st);
+      AppLogger.d(
+        'Error fetching legal content: $e',
+        tag: 'LegalContentBloc',
+        error: e,
+        stackTrace: st,
+      );
       emit(state.copyWith(contentState: ApiState.success(fallbackData)));
     }
   }

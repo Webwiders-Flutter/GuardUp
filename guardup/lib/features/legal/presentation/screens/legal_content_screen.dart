@@ -4,6 +4,7 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:quick_container/quick_container.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
+import '/core/di/injection_container.dart';
 import '../../../../shared/widgets/misc/skeleton_effect.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
@@ -37,7 +38,7 @@ class LegalContentScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) =>
-          LegalContentBloc()..add(LegalContentRequested(type, role: role)),
+          sl<LegalContentBloc>()..add(LegalContentRequested(type, role: role)),
       child: _LegalContentView(type: type),
     );
   }

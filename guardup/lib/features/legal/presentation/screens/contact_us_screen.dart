@@ -29,7 +29,7 @@ class ContactUsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => ContactUsBloc(),
+      create: (context) => sl<ContactUsBloc>(),
       child: const _ContactUsView(),
     );
   }

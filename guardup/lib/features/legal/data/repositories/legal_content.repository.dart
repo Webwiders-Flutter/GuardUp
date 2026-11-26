@@ -7,7 +7,7 @@ import '../enum/content_type.enum.dart';
 import '../model/legal_content.model.dart';
 
 /// `public.legal_content`: Terms, privacy, about us, and policy texts.
-final class LegalContentRepository {
+class LegalContentRepository {
   final SupabaseClient client;
 
   LegalContentRepository(this.client);

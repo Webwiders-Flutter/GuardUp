@@ -7,7 +7,7 @@ import '../model/contact_us.model.dart';
 import '../model/contact_us_request.model.dart';
 
 /// `public.contact_us`: User and principal support submissions.
-final class ContactUsRepository extends BaseSupabaseRepository<ContactUsModel> {
+class ContactUsRepository extends BaseSupabaseRepository<ContactUsModel> {
   ContactUsRepository(SupabaseClient client)
     : super(
         client: client,
