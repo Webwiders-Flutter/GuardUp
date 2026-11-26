@@ -4,7 +4,6 @@ import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide LocalStorage;
 
 import '/features/settings/di/settings.di.dart';
-import '/core/services/document_submission/document_submission_service.dart';
 import '/core/services/file_storage/file_storage.service.dart';
 import '/core/services/file_storage/supabase_file_storage.service.dart';
 import '/core/services/local_storage/local_storage.service.dart';
@@ -38,12 +37,6 @@ Future<void> initDependencies() async {
     () => SupabaseFileStorageService(),
   );
   sl.registerLazySingleton<AddressSearchService>(() => AddressSearchService());
-  sl.registerLazySingleton<DocumentSubmissionService>(
-    () => SupabaseDocumentSubmissionService(
-      fileStorageService: sl<FileStorageService>(),
-      userRepository: sl<UserRepository>(),
-    ),
-  );
 
   // ------------------------------------------------------------
   // Connectivity & Language

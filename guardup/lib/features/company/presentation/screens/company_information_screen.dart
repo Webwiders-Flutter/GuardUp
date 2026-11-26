@@ -1,21 +1,21 @@
-import '/features/company/data/enum/business_type.enum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '/core/constants/app_spacing.dart';
 import '/core/di/injection_container.dart';
+import '/core/extensions/company.extension.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
 import '/features/auth/bloc/auth_bloc.dart';
-import '/features/auth/bloc/auth_state.dart';
+import '/features/company/data/enum/business_type.enum.dart';
+import '/features/company/presentation/screens/company_edit_profile_screen.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
-import '/features/company/presentation/screens/company_edit_profile_screen.dart';
-import '/core/extensions/company.extension.dart';
+import '../../bloc/company_profile/company_profile_bloc.dart';
 
 /// Screen presenting read-only company details.
 class CompanyInformationScreen extends StatelessWidget {
@@ -36,27 +36,61 @@ class CompanyInformationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      bloc: sl<AuthBloc>(),
-      builder: (context, state) {
-        final user = state.user;
-        final company = user?.company;
-        final effectiveCompanyName = companyName ??
+    return BlocProvider(
+      create: (_) =>
+          sl<CompanyProfileBloc>()..add(const CompanyProfileStarted()),
+      child: _CompanyInformationView(
+        companyName: companyName,
+        email: email,
+        phone: phone,
+        companyType: companyType,
+      ),
+    );
+  }
+}
+
+class _CompanyInformationView extends StatelessWidget {
+  final String? companyName;
+  final String? email;
+  final String? phone;
+  final String? companyType;
+
+  const _CompanyInformationView({
+    this.companyName,
+    this.email,
+    this.phone,
+    this.companyType,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final authState = context.watch<AuthBloc>().state;
+    return BlocBuilder<CompanyProfileBloc, CompanyProfileState>(
+      builder: (context, profileState) {
+        final user = authState.user;
+        final company = profileState.company ?? user?.company;
+        final effectiveCompanyName =
+            companyName ??
             company?.displayName ??
             (user?.name.isNotEmpty == true ? user!.name : 'Security Company');
 
-        final effectiveEmail = email ?? company?.businessEmail ?? user?.email ?? '';
-        final effectivePhone = phone ??
+        final effectiveEmail =
+            email ?? company?.businessEmail ?? user?.email ?? '';
+        final effectivePhone =
+            phone ??
             (company?.companyPhoneNumber?.isNotEmpty == true
                 ? '${company!.companyPhoneCode} ${company.companyPhoneNumber}'
                 : (user?.phoneNumber?.isNotEmpty == true
-                    ? '${user!.phoneCode} ${user.phoneNumber}'
-                    : ''));
-        final effectiveCompanyType = companyType ??
+                      ? '${user!.phoneCode} ${user.phoneNumber}'
+                      : ''));
+        final effectiveCompanyType =
+            companyType ??
             company?.companyType?.label(context.l10n) ??
             BusinessType.pvtLtd.label(context.l10n);
         final expYears = company?.experienceYears ?? 0;
-        final experienceFormatted = expYears > 0 ? '$expYears+ Yrs Exp' : '0 Yrs Exp';
+        final experienceFormatted = expYears > 0
+            ? '$expYears+ Yrs Exp'
+            : '0 Yrs Exp';
 
         return Scaffold(
           appBar: AppAppBar.transparent(
@@ -104,14 +138,21 @@ class CompanyInformationScreen extends StatelessWidget {
                           value: experienceFormatted,
                         ),
 
-                        Spacer(),
+                        const Spacer(),
                         AppSpacing.xl.h,
 
                         // Edit Information Button
                         AppButton(
                           text: context.l10n.update,
-                          onPressed: () {
-                            context.push(CompanyEditProfileScreen.route);
+                          onPressed: () async {
+                            final updated = await context.push<bool>(
+                              CompanyEditProfileScreen.route,
+                            );
+                            if (updated == true && context.mounted) {
+                              context.read<CompanyProfileBloc>().add(
+                                const CompanyProfileStarted(),
+                              );
+                            }
                           },
                         ),
                         AppSpacing.huge.h,

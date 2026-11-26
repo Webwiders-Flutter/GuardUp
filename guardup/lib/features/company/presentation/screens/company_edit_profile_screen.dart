@@ -1,25 +1,21 @@
-
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_cropper/image_cropper.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:quick_container/quick_container.dart';
 
-import '/core/constants/api/storage_buckets.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/di/injection_container.dart';
+import '/core/extensions/api_error.extension.dart';
+import '/core/extensions/company.extension.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/localization.extension.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/core/extensions/string.extension.dart';
 import '/core/extensions/textstyle_extension.dart';
-import '/core/services/file_storage/file_storage.service.dart';
-import '/core/services/file_storage/models/file_upload_request.model.dart';
 import '/core/utils/validators.dart';
 import '/features/auth/bloc/auth_bloc.dart';
-import '/features/auth/domain/repositories/auth_repository.dart';
-import '/features/auth/domain/repositories/user_repository.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/shared/widgets/inputs/app_dropdown.dart';
@@ -29,21 +25,35 @@ import '/shared/widgets/sections/app_appbar.dart';
 import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/sections/wrapper_card.dart';
 import '/shared/widgets/selection/selection.controller.dart';
+import '../../bloc/company_profile/company_profile_bloc.dart';
 import '../../data/enum/business_type.enum.dart';
-import '/core/extensions/company.extension.dart';
+import '../../data/model/company_profile_request.model.dart';
 
 /// Screen allowing a company to view and edit its profile details.
-class CompanyEditProfileScreen extends StatefulWidget {
+class CompanyEditProfileScreen extends StatelessWidget {
   static const route = '/company-edit-profile';
 
   const CompanyEditProfileScreen({super.key});
 
   @override
-  State<CompanyEditProfileScreen> createState() =>
-      _CompanyEditProfileScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) =>
+          sl<CompanyProfileBloc>()..add(const CompanyProfileStarted()),
+      child: const _CompanyEditProfileView(),
+    );
+  }
 }
 
-class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
+class _CompanyEditProfileView extends StatefulWidget {
+  const _CompanyEditProfileView();
+
+  @override
+  State<_CompanyEditProfileView> createState() =>
+      _CompanyEditProfileViewState();
+}
+
+class _CompanyEditProfileViewState extends State<_CompanyEditProfileView> {
   final _formKey = GlobalKey<FormState>();
 
   final _companyNameController = TextEditingController();
@@ -54,21 +64,20 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
     initial: BusinessType.pvtLtd,
     allowDeselect: false,
   );
-  final ValueNotifier<XFile?> _logoImageNotifier = ValueNotifier<XFile?>(null);
 
   String? _existingLogoUrl;
   String _phoneCode = '+91';
-  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    final state = sl<AuthBloc>().state;
+    final state = context.read<AuthBloc>().state;
     final user = state.user;
     final company = user?.company;
 
     _companyNameController.text = company?.displayName ?? user?.name ?? '';
-    _emailController.text = company?.businessEmail ?? user?.email ?? state.email ?? '';
+    _emailController.text =
+        company?.businessEmail ?? user?.email ?? state.email ?? '';
     _phoneController.text = company?.companyPhoneNumber?.isNotEmpty == true
         ? company!.companyPhoneNumber!
         : (user?.phoneNumber ?? state.phoneNumber ?? '');
@@ -92,7 +101,6 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
     _phoneController.dispose();
     _experienceController.dispose();
     _businessTypeController.dispose();
-    _logoImageNotifier.dispose();
     super.dispose();
   }
 
@@ -108,146 +116,101 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
     );
 
     if (pickedFile != null && mounted) {
-      _logoImageNotifier.value = pickedFile;
+      context.read<CompanyProfileBloc>().add(
+        CompanyProfileLogoPicked(pickedFile),
+      );
     }
   }
 
-  Future<void> _handleSave() async {
+  void _handleSave(CompanyProfileState state) {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (state.submitStatus.isLoading) return;
 
-    final currentUserId = sl.isRegistered<AuthRepository>()
-        ? sl<AuthRepository>().currentUserId
-        : null;
-    if (currentUserId == null || !sl.isRegistered<UserRepository>()) {
-      context.pop();
-      return;
-    }
+    final companyName = _companyNameController.text.trim();
+    final expYears = int.tryParse(_experienceController.text.trim()) ?? 0;
 
-    setState(() => _isLoading = true);
-    try {
-      String? logoUrl = _existingLogoUrl;
-      if (_logoImageNotifier.value != null &&
-          sl.isRegistered<FileStorageService>()) {
-        final xFile = _logoImageNotifier.value!;
-        final ext = xFile.name.split('.').last;
-        final storagePath =
-            '$currentUserId/logo_${DateTime.now().millisecondsSinceEpoch}.$ext';
-        logoUrl = await sl<FileStorageService>().uploadSingleFile(
-          FileUploadRequest.fromXFile(
-            bucket: StorageBuckets.documents,
-            path: storagePath,
-            xFile: xFile,
-            upsert: true,
-          ),
-        );
-      }
-
-      final companyName = _companyNameController.text.trim();
-      // Always store the API value; screens format it with businessTypeLabel.
-      final companyType =
-          (_businessTypeController.selectedItem ?? BusinessType.pvtLtd).apiValue;
-      final expYears = int.tryParse(_experienceController.text.trim()) ?? 0;
-
-      final updateData = <String, dynamic>{
-        'company_name': companyName,
-        'name': companyName,
-        'company_type': companyType,
-        'experience_years': expYears,
-        'profile_image_url': ?logoUrl,
-      };
-
-      try {
-        await sl<UserRepository>().updateProfileFields(
-          userId: currentUserId,
-          data: updateData,
-        );
-      } catch (e) {
-        if (e.toString().contains('column') ||
-            e.toString().contains('experience')) {
-          final userRow = await sl<UserRepository>().getUserData(currentUserId);
-          final existingMeta = (userRow?['metadata'] is Map)
-              ? Map<String, dynamic>.from(userRow!['metadata'] as Map)
-              : <String, dynamic>{};
-          existingMeta['experience_years'] = expYears;
-
-          await sl<UserRepository>().updateProfileFields(
-            userId: currentUserId,
-            data: {
-              'company_name': companyName,
-              'name': companyName,
-              'company_type': companyType,
-              'metadata': existingMeta,
-              'profile_image_url': ?logoUrl,
-            },
-          );
-        } else {
-          rethrow;
-        }
-      }
-
-      if (mounted) {
-        AppSnackbar.success('Company profile updated successfully.');
-        context.pop();
-      }
-    } catch (e) {
-      if (mounted) {
-        AppSnackbar.error('Failed to update profile: $e');
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    context.read<CompanyProfileBloc>().add(
+      CompanyProfileSubmitted(
+        CompanyProfileRequest(
+          companyName: companyName,
+          businessEmail: _emailController.text.trim(),
+          companyType:
+              _businessTypeController.selectedItem ?? BusinessType.pvtLtd,
+          companyPhoneCode: _phoneCode,
+          companyPhoneNumber: _phoneController.text.trim(),
+          experienceYears: expYears,
+        ),
+        refreshAccount: true,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppAppBar.transparent(
-        title: context.l10n.editCompanyProfile,
-        fontSize: 14,
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            padding: context.horizontalEdgeInsets,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: Form(
-                key: _formKey,
-                child: IntrinsicHeight(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      AppSpacing.xl.h,
+    return BlocConsumer<CompanyProfileBloc, CompanyProfileState>(
+      listenWhen: (prev, curr) => prev.submitStatus != curr.submitStatus,
+      listener: (context, state) {
+        if (state.submitStatus.isSuccess) {
+          AppSnackbar.success('Company profile updated successfully.');
+          context.pop(true);
+        } else if (state.submitStatus.isFailure) {
+          AppSnackbar.error(
+            context.apiErrorText(
+              state.submitStatus.errorOrNull,
+              fallback: 'Failed to update profile',
+            ),
+          );
+        }
+      },
+      builder: (context, state) {
+        final logoImage = state.pickedLogo;
+        final isLoading = state.submitStatus.isLoading;
 
-                      // 1. Avatar Card with Monogram / Logo, Camera Badge & Company Name
-                      WrapperCard(
-                        borderColor: context.colors.surface.withValues(
-                          alpha: 0.7,
-                        ),
-                        backgroundColor: context.colors.surface.withValues(
-                          alpha: 0.7,
-                        ),
-                        padding: AppSpacing.xxl.allPadding,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Stack(
-                              clipBehavior: Clip.none,
+        return Scaffold(
+          appBar: AppAppBar.transparent(
+            title: context.l10n.editCompanyProfile,
+            fontSize: 14,
+          ),
+          body: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                padding: context.horizontalEdgeInsets,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Form(
+                    key: _formKey,
+                    child: IntrinsicHeight(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          AppSpacing.xl.h,
+
+                          // 1. Avatar Card with Monogram / Logo, Camera Badge & Company Name
+                          WrapperCard(
+                            borderColor: context.colors.surface.withValues(
+                              alpha: 0.7,
+                            ),
+                            backgroundColor: context.colors.surface.withValues(
+                              alpha: 0.7,
+                            ),
+                            padding: AppSpacing.xxl.allPadding,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                // Circular Avatar with Gold Ring Border
-                                QuickContainer(
-                                  w: AppSizes.avatarColossal,
-                                  h: AppSizes.avatarColossal,
-                                  shape: QuickContainerShape.circle,
-                                  border: Border.all(
-                                    color: context.colors.primary,
-                                    width: 2.5,
-                                  ),
-                                  p: 2,
-                                  child: ValueListenableBuilder<XFile?>(
-                                    valueListenable: _logoImageNotifier,
-                                    builder: (context, logoImage, _) {
-                                      return ClipOval(
+                                Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    // Circular Avatar with Gold Ring Border
+                                    QuickContainer(
+                                      w: AppSizes.avatarColossal,
+                                      h: AppSizes.avatarColossal,
+                                      shape: QuickContainerShape.circle,
+                                      border: Border.all(
+                                        color: context.colors.primary,
+                                        width: 2.5,
+                                      ),
+                                      p: 2,
+                                      child: ClipOval(
                                         child: logoImage != null
                                             ? AppImage.xFile(
                                                 xFile: logoImage,
@@ -310,200 +273,201 @@ class _CompanyEditProfileScreenState extends State<CompanyEditProfileScreen> {
                                                         );
                                                       },
                                                     )),
-                                      );
-                                    },
-                                  ),
-                                ),
-
-                                // Camera Icon Badge
-                                Positioned(
-                                  right: 0,
-                                  bottom: 2,
-                                  child: GestureDetector(
-                                    onTap: _handleChangePhoto,
-                                    child: QuickContainer(
-                                      w: AppSizes.iconMdl,
-                                      h: AppSizes.iconMdl,
-                                      shape: QuickContainerShape.circle,
-                                      color: context.colors.primary,
-                                      alignment: Alignment.center,
-                                      child: Icon(
-                                        Icons.camera_alt,
-                                        size: AppSizes.iconSm,
-                                        color: context.colors.surface,
                                       ),
                                     ),
-                                  ),
+
+                                    // Camera Icon Badge
+                                    Positioned(
+                                      right: 0,
+                                      bottom: 2,
+                                      child: GestureDetector(
+                                        onTap: _handleChangePhoto,
+                                        child: QuickContainer(
+                                          w: AppSizes.iconMdl,
+                                          h: AppSizes.iconMdl,
+                                          shape: QuickContainerShape.circle,
+                                          color: context.colors.primary,
+                                          alignment: Alignment.center,
+                                          child: Icon(
+                                            Icons.camera_alt,
+                                            size: AppSizes.iconSm,
+                                            color: context.colors.surface,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                AppSpacing.sm.h,
+
+                                // Company Name with Verified Checkmark Icon
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ValueListenableBuilder<TextEditingValue>(
+                                      valueListenable: _companyNameController,
+                                      builder: (context, textVal, _) {
+                                        final name = textVal.text.trim();
+                                        return Text(
+                                          name.isEmpty
+                                              ? 'SecurePro Security Ltd.'
+                                              : name,
+                                          style: context.textTheme.titleMedium
+                                              ?.bold(),
+                                        );
+                                      },
+                                    ),
+                                    AppSpacing.xs.w,
+                                    Icon(
+                                      Icons.check_circle_rounded,
+                                      size: AppSizes.iconSm,
+                                      color: context.colors.primary,
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                            AppSpacing.sm.h,
+                          ),
+                          AppSpacing.xl.h,
 
-                            // Company Name with Verified Checkmark Icon
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
+                          // 2. Company Information Section Heading
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.business_center_outlined,
+                                color: context.colors.primary,
+                                size: AppSizes.iconMd,
+                              ),
+                              AppSpacing.xs.w,
+                              Text(
+                                context.l10n.companyInformation,
+                                style: context.textTheme.titleMedium?.bold(),
+                              ),
+                            ],
+                          ),
+                          AppSpacing.sm.h,
+
+                          // 3. Company Information Form Fields Card
+                          WrapperCard(
+                            borderColor: context.colors.surface,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                ValueListenableBuilder<TextEditingValue>(
-                                  valueListenable: _companyNameController,
-                                  builder: (context, textVal, _) {
-                                    final name = textVal.text.trim();
-                                    return Text(
-                                      name.isEmpty
-                                          ? 'SecurePro Security Ltd.'
-                                          : name,
-                                      style: context.textTheme.titleMedium
-                                          ?.bold(),
-                                    );
-                                  },
+                                // Company Name Field
+                                AppTextField(
+                                  controller: _companyNameController,
+                                  decoration: InputDecoration(
+                                    hintText: context.l10n.companyName,
+                                  ),
+                                  keyboardType: TextInputType.text,
+                                  textCapitalization: TextCapitalization.words,
+                                  textInputAction: TextInputAction.next,
+                                  validator: (value) =>
+                                      Validators.required(context, value),
                                 ),
-                                AppSpacing.xs.w,
-                                Icon(
-                                  Icons.check_circle_rounded,
-                                  size: AppSizes.iconSm,
-                                  color: context.colors.primary,
+                                AppSpacing.md.h,
+
+                                // Email Address Field (Read-only)
+                                AppTextField.email(
+                                  controller: _emailController,
+                                  enabled: false,
+                                  decoration: InputDecoration(
+                                    hintText: context.l10n.emailAddress,
+                                    suffixIcon: Icon(
+                                      Icons.lock_outline_rounded,
+                                      size: AppSizes.iconSm,
+                                      color: context.colors.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  textInputAction: TextInputAction.next,
+                                ),
+                                AppSpacing.md.h,
+
+                                // Phone Number Field (Read-only)
+                                AppTextField.phone(
+                                  controller: _phoneController,
+                                  enabled: false,
+                                  phoneCountryCode: _phoneCode,
+                                  decoration: InputDecoration(
+                                    hintText: context.l10n.phoneNumber,
+                                    suffixIcon: Icon(
+                                      Icons.lock_outline_rounded,
+                                      size: AppSizes.iconSm,
+                                      color: context.colors.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  textInputAction: TextInputAction.next,
+                                ),
+                                AppSpacing.md.h,
+
+                                // Experience (Years) Field
+                                AppTextField(
+                                  controller: _experienceController,
+                                  keyboardType: TextInputType.number,
+                                  decoration: const InputDecoration(
+                                    hintText: 'Experience (Years)',
+                                    prefixIcon: Icon(
+                                      Icons.work_history_outlined,
+                                    ),
+                                  ),
+                                  textInputAction: TextInputAction.next,
+                                ),
+                                AppSpacing.md.h,
+
+                                // Company Type Dropdown
+                                AppDropdown<BusinessType>(
+                                  controller: _businessTypeController,
+                                  hintText: context.l10n.companyType,
+                                  items: BusinessType.values
+                                      .map(
+                                        (e) => DropdownItem<BusinessType>(
+                                          id: e,
+                                          data: e.label(context.l10n),
+                                          icon: Icon(
+                                            e.icon,
+                                            size: AppSizes.iconSmd,
+                                            color: e.color(context),
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
+                                  validator: (_) =>
+                                      _businessTypeController.selectedItem ==
+                                          null
+                                      ? context.l10n.selectCompanyType
+                                      : null,
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                      ),
-                      AppSpacing.xl.h,
+                          ),
+                          const Spacer(),
+                          AppSpacing.xl.h,
 
-                      // 2. Company Information Section Heading
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.business_center_outlined,
-                            color: context.colors.primary,
-                            size: AppSizes.iconMd,
+                          // 4. Save Changes Primary Button
+                          AppButton(
+                            text: context.l10n.saveChanges,
+                            isLoading: isLoading,
+                            onPressed: () => _handleSave(state),
                           ),
-                          AppSpacing.xs.w,
-                          Text(
-                            context.l10n.companyInformation,
-                            style: context.textTheme.titleMedium?.bold(),
+                          AppSpacing.md.h,
+
+                          // 5. Cancel Secondary Button
+                          AppButton(
+                            text: context.l10n.cancel,
+                            type: ButtonType.secondaryOff,
+                            onPressed: () => context.pop(),
                           ),
+                          AppSpacing.huge.h,
                         ],
                       ),
-                      AppSpacing.sm.h,
-
-                      // 3. Company Information Form Fields Card
-                      WrapperCard(
-                        borderColor: context.colors.surface,
-
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            // Company Name Field
-                            AppTextField(
-                              controller: _companyNameController,
-                              decoration: InputDecoration(
-                                hintText: context.l10n.companyName,
-                              ),
-                              keyboardType: TextInputType.text,
-                              textCapitalization: TextCapitalization.words,
-                              textInputAction: TextInputAction.next,
-                              validator: (value) =>
-                                  Validators.required(context, value),
-                            ),
-                            AppSpacing.md.h,
-
-                            // Email Address Field (Read-only)
-                            AppTextField.email(
-                              controller: _emailController,
-                              enabled: false,
-                              decoration: InputDecoration(
-                                hintText: context.l10n.emailAddress,
-                                suffixIcon: Icon(
-                                  Icons.lock_outline_rounded,
-                                  size: AppSizes.iconSm,
-                                  color: context.colors.onSurfaceVariant,
-                                ),
-                              ),
-                              textInputAction: TextInputAction.next,
-                            ),
-                            AppSpacing.md.h,
-
-                            // Phone Number Field (Read-only)
-                            AppTextField.phone(
-                              controller: _phoneController,
-                              enabled: false,
-                              phoneCountryCode: _phoneCode,
-                              decoration: InputDecoration(
-                                hintText: context.l10n.phoneNumber,
-                                suffixIcon: Icon(
-                                  Icons.lock_outline_rounded,
-                                  size: AppSizes.iconSm,
-                                  color: context.colors.onSurfaceVariant,
-                                ),
-                              ),
-                              textInputAction: TextInputAction.next,
-                            ),
-                            AppSpacing.md.h,
-
-                            // Experience (Years) Field
-                            AppTextField(
-                              controller: _experienceController,
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                hintText: 'Experience (Years)',
-                                prefixIcon: Icon(Icons.work_history_outlined),
-                              ),
-                              textInputAction: TextInputAction.next,
-                            ),
-                            AppSpacing.md.h,
-
-                            // Company Type Dropdown
-                            AppDropdown<BusinessType>(
-                              controller: _businessTypeController,
-                              hintText: context.l10n.companyType,
-                              items: BusinessType.values
-                                  .map(
-                                    (e) => DropdownItem<BusinessType>(
-                                      id: e,
-                                      data: e.label(context.l10n),
-                                      icon: Icon(
-                                        e.icon,
-                                        size: AppSizes.iconSmd,
-                                        color: e.color(context),
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
-                              validator: (_) =>
-                                  _businessTypeController.selectedItem == null
-                                  ? context.l10n.selectCompanyType
-                                  : null,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Spacer(),
-                      AppSpacing.xl.h,
-
-                      // 4. Save Changes Primary Button
-                      AppButton(
-                        text: context.l10n.saveChanges,
-                        isLoading: _isLoading,
-                        onPressed: _handleSave,
-                      ),
-                      AppSpacing.md.h,
-
-                      // 5. Cancel Secondary Button
-                      AppButton(
-                        text: context.l10n.cancel,
-                        type: ButtonType.secondaryOff,
-
-                        onPressed: () => context.pop(),
-                      ),
-                      AppSpacing.huge.h,
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            ),
-          );
-        },
-      ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

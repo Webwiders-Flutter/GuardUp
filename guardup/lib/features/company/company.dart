@@ -12,6 +12,7 @@ export 'data/repositories/company.repository.dart';
 
 // Bloc / Cubit
 export 'bloc/companies/companies_bloc.dart';
+export 'bloc/company_profile/company_profile_bloc.dart';
 
 // Widgets
 export 'presentation/widgets/company_card.dart';
