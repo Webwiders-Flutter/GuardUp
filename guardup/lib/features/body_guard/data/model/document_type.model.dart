@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../auth/data/enum/user_role.enum.dart';
 import '../../../company/data/enum/company_doc_type.enum.dart';
 import '../enum/guard_doc_type.enum.dart';
+import '/core/utils/json_converters/enum.jsonconverter.dart';
 
 /// Represents a document type managed by the Admin via the admin web portal.
 class DocumentTypeModel {
@@ -32,7 +33,10 @@ class DocumentTypeModel {
       code: (json['code'] ?? '') as String,
       name: (json['name'] ?? '') as String,
       description: json['description'] as String?,
-      targetRole: UserRole.fromApiValue(json['target_role'] as String?),
+      targetRole: UserRole.values.parse(
+        json['target_role'],
+        defaultValue: UserRole.customer,
+      ),
       isRequired: (json['is_required'] ?? true) as bool,
       isActive: (json['is_active'] ?? true) as bool,
       displayOrder: (json['display_order'] ?? 0) as int,
@@ -52,8 +56,8 @@ class DocumentTypeModel {
     };
   }
 
-  GuardDocType? get guardDocType => GuardDocType.tryFromApiValue(code);
-  CompanyDocType? get companyDocType => CompanyDocType.tryFromApiValue(code);
+  GuardDocType? get guardDocType => GuardDocType.values.fromValue(code);
+  CompanyDocType? get companyDocType => CompanyDocType.values.fromValue(code);
 
   /// Unique key for state mappings and foreign keys (prefers unique UUID id, fallbacks to code).
   String get docKey => id.isNotEmpty ? id : code;

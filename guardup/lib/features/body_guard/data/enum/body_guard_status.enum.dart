@@ -26,27 +26,6 @@ enum BodyGuardStatus {
 
   const BodyGuardStatus(this.apiValue, this.label, {required this.hasDot});
 
-  static BodyGuardStatus fromApiValue(String? value) {
-    if (value == null) return BodyGuardStatus.availableToday;
-    final normalized = value.replaceAll('-', '_').toUpperCase().trim();
-    return BodyGuardStatus.values.firstWhere(
-      (e) => e.apiValue == normalized || e.name.toUpperCase() == normalized,
-      orElse: () => BodyGuardStatus.availableToday,
-    );
-  }
-
-  static BodyGuardStatus? tryFromApiValue(String? value) {
-    if (value == null) return null;
-    try {
-      final normalized = value.replaceAll('-', '_').toUpperCase().trim();
-      return BodyGuardStatus.values.firstWhere(
-        (e) => e.apiValue == normalized || e.name.toUpperCase() == normalized,
-      );
-    } catch (_) {
-      return null;
-    }
-  }
-
   Color badgeColor(BuildContext context) {
     switch (this) {
       case BodyGuardStatus.availableToday:

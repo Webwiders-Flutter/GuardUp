@@ -11,6 +11,7 @@ import '/features/notifications/bloc/unread_count/unread_notification_count_cubi
 import '/features/notifications/data/enums/notification_type.enum.dart';
 import '/features/notifications/data/repositories/notification_repository.dart';
 import '/features/notifications/presentation/screens/notifications_screen.dart';
+import '/core/utils/json_converters/enum.jsonconverter.dart';
 
 /// Opens what a notification is about. Used by the notifications list, the
 /// foreground banner and push taps (background / terminated), so every entry
@@ -52,7 +53,7 @@ abstract final class NotificationNavigator {
     if (notificationId != null) unawaited(_markRead(notificationId));
 
     final type =
-        NotificationType.tryFromApiValue(_string(data, JsonKeys.type)) ??
+        NotificationType.values.fromValue(_string(data, JsonKeys.type)) ??
         NotificationType.system;
     if (!open(type, data)) {
       AppRouter.router.push(NotificationsScreen.route);

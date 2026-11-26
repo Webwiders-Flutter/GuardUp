@@ -10,6 +10,7 @@ import '/core/services/local_storage/storage.dart';
 import '/features/notifications/bloc/user_device/user_device_cubit.dart';
 import '../enum/language.enum.dart';
 import 'language_state.dart';
+import '/core/utils/json_converters/enum.jsonconverter.dart';
 
 class LanguageCubit extends Cubit<LanguageState> {
   final LocalStorage _storage;
@@ -26,7 +27,10 @@ class LanguageCubit extends Cubit<LanguageState> {
         AppLocalStorageKeys.language,
       );
       if (languageStr != null) {
-        final language = LanguageType.fromApiValue(languageStr);
+        final language = LanguageType.values.parse(
+          languageStr,
+          defaultValue: LanguageType.english,
+        );
         emit(state.copyWith(language: language, isLoading: false));
         return;
       }

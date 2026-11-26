@@ -40,25 +40,6 @@ enum ContentType {
     }
   }
 
-  static ContentType fromApiValue(String? value) {
-    if (value == null) return ContentType.terms;
-    return ContentType.values.firstWhere(
-      (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      orElse: () => ContentType.terms,
-    );
-  }
-
-  static ContentType? tryFromApiValue(String? value) {
-    if (value == null) return null;
-    try {
-      return ContentType.values.firstWhere(
-        (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      );
-    } catch (_) {
-      return null;
-    }
-  }
-
   Color color(BuildContext context) {
     final colors = context.colors;
     switch (this) {

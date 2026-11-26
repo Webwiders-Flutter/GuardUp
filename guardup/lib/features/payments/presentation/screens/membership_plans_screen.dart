@@ -42,24 +42,6 @@ enum MembershipPlanMode {
 
   const MembershipPlanMode(this.apiValue);
 
-  static MembershipPlanMode fromApiValue(String? value) {
-    if (value == null) return MembershipPlanMode.profile;
-    return MembershipPlanMode.values.firstWhere(
-      (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      orElse: () => MembershipPlanMode.profile,
-    );
-  }
-
-  static MembershipPlanMode? tryFromApiValue(String? value) {
-    if (value == null) return null;
-    try {
-      return MembershipPlanMode.values.firstWhere(
-        (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      );
-    } catch (_) {
-      return null;
-    }
-  }
 }
 
 /// Named record typedef for navigation arguments to [MembershipPlansScreen].

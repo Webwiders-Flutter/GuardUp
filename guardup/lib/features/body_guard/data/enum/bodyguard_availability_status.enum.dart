@@ -25,27 +25,6 @@ enum BodyguardAvailabilityStatus {
     required this.hasDot,
   });
 
-  static BodyguardAvailabilityStatus fromApiValue(String? value) {
-    if (value == null) return BodyguardAvailabilityStatus.notSet;
-    final normalized = value.replaceAll('-', '_').toUpperCase().trim();
-    return BodyguardAvailabilityStatus.values.firstWhere(
-      (e) => e.apiValue == normalized || e.name.toUpperCase() == normalized,
-      orElse: () => BodyguardAvailabilityStatus.notSet,
-    );
-  }
-
-  static BodyguardAvailabilityStatus? tryFromApiValue(String? value) {
-    if (value == null) return null;
-    try {
-      final normalized = value.replaceAll('-', '_').toUpperCase().trim();
-      return BodyguardAvailabilityStatus.values.firstWhere(
-        (e) => e.apiValue == normalized || e.name.toUpperCase() == normalized,
-      );
-    } catch (_) {
-      return null;
-    }
-  }
-
   Color badgeColor(BuildContext context) {
     switch (this) {
       case BodyguardAvailabilityStatus.available:

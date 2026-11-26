@@ -21,25 +21,6 @@ enum GuardDocType {
 
   const GuardDocType(this.apiValue);
 
-  static GuardDocType fromApiValue(String? value) {
-    if (value == null) return GuardDocType.idProof;
-    return GuardDocType.values.firstWhere(
-      (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      orElse: () => GuardDocType.idProof,
-    );
-  }
-
-  static GuardDocType? tryFromApiValue(String? value) {
-    if (value == null) return null;
-    try {
-      return GuardDocType.values.firstWhere(
-        (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      );
-    } catch (_) {
-      return null;
-    }
-  }
-
   String label(AppLocalizations l10n) {
     switch (this) {
       case GuardDocType.idProof:

@@ -15,25 +15,6 @@ enum ConversationType {
 
   const ConversationType(this.apiValue);
 
-  static ConversationType fromApiValue(String? value) {
-    if (value == null) return ConversationType.direct;
-    return ConversationType.values.firstWhere(
-      (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      orElse: () => ConversationType.direct,
-    );
-  }
-
-  static ConversationType? tryFromApiValue(String? value) {
-    if (value == null) return null;
-    try {
-      return ConversationType.values.firstWhere(
-        (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      );
-    } catch (_) {
-      return null;
-    }
-  }
-
   String get label {
     switch (this) {
       case ConversationType.direct:

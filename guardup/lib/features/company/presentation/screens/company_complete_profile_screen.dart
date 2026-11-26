@@ -23,6 +23,7 @@ import '/shared/widgets/sections/app_image.dart';
 import '/shared/widgets/selection/selection.controller.dart';
 import '../../data/enum/business_type.enum.dart';
 import '/features/company/presentation/screens/company_upload_documents_screen.dart';
+import '/core/utils/json_converters/enum.jsonconverter.dart';
 
 /// Screen for company registration / entering company details.
 class CompanyCompleteProfileScreen extends StatefulWidget {
@@ -88,7 +89,10 @@ class _CompanyCompleteProfileScreenState
         // 4. Company Type
         final dbCompanyType = data['company_type'] as String?;
         if (dbCompanyType != null && dbCompanyType.isNotEmpty) {
-          final type = BusinessType.fromApiValue(dbCompanyType);
+          final type = BusinessType.values.parse(
+            dbCompanyType,
+            defaultValue: BusinessType.proprietorship,
+          );
           _businessTypeController.select(type);
         }
       }

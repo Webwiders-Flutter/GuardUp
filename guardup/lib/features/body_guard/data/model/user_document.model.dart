@@ -1,4 +1,5 @@
 import '../enum/document_status.enum.dart';
+import '/core/utils/json_converters/enum.jsonconverter.dart';
 
 /// Represents a document submitted by a Guard or Company user.
 class UserDocumentModel {
@@ -34,7 +35,10 @@ class UserDocumentModel {
       documentTypeId: (json['document_type_id'] ?? '') as String,
       fileUrl: (json['file_url'] ?? '') as String,
       fileName: json['file_name'] as String?,
-      status: DocumentStatus.fromApiValue(json['status'] as String?),
+      status: DocumentStatus.values.parse(
+        json['status'],
+        defaultValue: DocumentStatus.pending,
+      ),
       rejectionReason: json['rejection_reason'] as String?,
       validTill: json['valid_till'] != null
           ? DateTime.tryParse(json['valid_till'] as String)

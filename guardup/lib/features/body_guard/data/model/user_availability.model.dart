@@ -1,16 +1,17 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../enum/week_day.enum.dart';
+import '/core/utils/json_converters/enum.jsonconverter.dart';
 
 part 'user_availability.model.freezed.dart';
 part 'user_availability.model.g.dart';
 
 WeekDay? _weekDayFromJson(dynamic value) {
   if (value == null) return null;
-  return WeekDay.tryFromApiValue(value.toString());
+  return WeekDay.values.fromValue(value);
 }
 
-String? _weekDayToJson(WeekDay? day) => day?.name.toLowerCase();
+String? _weekDayToJson(WeekDay? day) => day?.apiValue;
 
 /// One row of `user_availabilities`: a user's working hours for one day.
 @freezed

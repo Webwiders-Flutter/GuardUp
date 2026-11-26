@@ -24,25 +24,6 @@ enum OtpType {
 
   const OtpType(this.apiValue);
 
-  static OtpType fromApiValue(String? value) {
-    if (value == null) return OtpType.sms;
-    return OtpType.values.firstWhere(
-      (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      orElse: () => OtpType.sms,
-    );
-  }
-
-  static OtpType? tryFromApiValue(String? value) {
-    if (value == null) return null;
-    try {
-      return OtpType.values.firstWhere(
-        (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      );
-    } catch (_) {
-      return null;
-    }
-  }
-
   String get label {
     switch (this) {
       case OtpType.sms:

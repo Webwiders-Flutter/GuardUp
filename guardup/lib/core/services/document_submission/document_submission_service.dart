@@ -11,6 +11,7 @@ import '/core/services/file_storage/models/file_upload_request.model.dart';
 import '/features/auth/auth.dart';
 import '/features/body_guard/data/enum/document_status.enum.dart';
 import '/features/body_guard/data/model/document_type.model.dart';
+import '/core/utils/json_converters/enum.jsonconverter.dart';
 
 /// Structured container holding a user's uploaded document records mapped by document type id.
 class UserDocumentRecords {
@@ -117,7 +118,10 @@ class SupabaseDocumentSubmissionService implements DocumentSubmissionService {
       final docTypeId = map['document_type_id'] as String?;
       final fileUrl = map['file_url'] as String?;
       final fileName = map['file_name'] as String?;
-      final status = DocumentStatus.fromApiValue(map['status'] as String?);
+      final status = DocumentStatus.values.parse(
+        map['status'],
+        defaultValue: DocumentStatus.pending,
+      );
       final reason = map['rejection_reason'] as String?;
 
       if (docTypeId != null && fileUrl != null && fileUrl.isNotEmpty) {

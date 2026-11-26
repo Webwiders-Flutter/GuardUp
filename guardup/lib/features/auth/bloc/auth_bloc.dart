@@ -15,6 +15,7 @@ import '../domain/repositories/auth_repository.dart';
 import '../domain/repositories/user_repository.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
+import '/core/utils/json_converters/enum.jsonconverter.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository? _authRepo;
@@ -83,9 +84,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
               return;
             }
             final profile = UserModel.fromJson(data);
-            final status = UserStatus.tryFromApiValue(
-              data['status'] as String?,
-            );
+            final status = UserStatus.values.fromValue(data['status']);
             add(
               AuthProfileChanged(
                 profile,
@@ -468,7 +467,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             final raw = await _userRepo.getUserData(uid);
             if (raw != null) {
               profile = UserModel.fromJson(raw);
-              dbStatus = UserStatus.tryFromApiValue(raw['status'] as String?);
+              dbStatus = UserStatus.values.fromValue(raw['status']);
             }
           } catch (_) {}
         }

@@ -51,8 +51,17 @@ class ServiceItemModel {
   }
 
   /// Maps to local [GuardService] enum if matching code or name exists.
-  GuardService? get guardService =>
-      GuardService.tryFromApiValue(code.isNotEmpty ? code : name);
+  GuardService? get guardService {
+    final raw = (code.isNotEmpty ? code : name).trim();
+    if (raw.isEmpty) return null;
+    final normalized = raw.toUpperCase().replaceAll(RegExp(r'[\s\-]+'), '_');
+    for (final e in GuardService.values) {
+      if (e.apiValue == normalized || e.label.toUpperCase() == raw.toUpperCase()) {
+        return e;
+      }
+    }
+    return null;
+  }
 
   IconData get icon {
     final guard = guardService;

@@ -29,25 +29,6 @@ enum NotificationType {
 
   const NotificationType(this.apiValue);
 
-  static NotificationType fromApiValue(String? value) {
-    if (value == null) return NotificationType.system;
-    return NotificationType.values.firstWhere(
-      (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      orElse: () => NotificationType.system,
-    );
-  }
-
-  static NotificationType? tryFromApiValue(String? value) {
-    if (value == null) return null;
-    try {
-      return NotificationType.values.firstWhere(
-        (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      );
-    } catch (_) {
-      return null;
-    }
-  }
-
   /// The SVG icon corresponding to this notification type.
   SvgGenImage get svgIcon {
     switch (this) {
@@ -97,25 +78,6 @@ enum NotificationCategory {
   final String apiValue;
 
   const NotificationCategory(this.apiValue);
-
-  static NotificationCategory fromApiValue(String? value) {
-    if (value == null) return NotificationCategory.all;
-    return NotificationCategory.values.firstWhere(
-      (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      orElse: () => NotificationCategory.all,
-    );
-  }
-
-  static NotificationCategory? tryFromApiValue(String? value) {
-    if (value == null) return null;
-    try {
-      return NotificationCategory.values.firstWhere(
-        (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      );
-    } catch (_) {
-      return null;
-    }
-  }
 
   String get label {
     switch (this) {

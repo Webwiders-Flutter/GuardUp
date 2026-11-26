@@ -19,25 +19,6 @@ enum DocumentStatus {
 
   const DocumentStatus(this.apiValue, this.label);
 
-  static DocumentStatus fromApiValue(String? value) {
-    if (value == null) return DocumentStatus.pending;
-    return DocumentStatus.values.firstWhere(
-      (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      orElse: () => DocumentStatus.pending,
-    );
-  }
-
-  static DocumentStatus? tryFromApiValue(String? value) {
-    if (value == null) return null;
-    try {
-      return DocumentStatus.values.firstWhere(
-        (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      );
-    } catch (_) {
-      return null;
-    }
-  }
-
   bool get isApproved => this == DocumentStatus.approved;
   bool get isPending => this == DocumentStatus.pending;
   bool get isRejected => this == DocumentStatus.rejected;

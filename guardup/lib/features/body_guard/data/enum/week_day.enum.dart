@@ -1,58 +1,65 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-/// Enum representing days of the week for bodyguard scheduling and availability.
+import '/gen/app_localizations.dart';
+
+/// Day of the week stored in `user_availabilities.day_of_week`.
+///
+/// The database stores lowercase names (`monday` … `sunday`), matching the
+/// admin `WeekDay` enum. Parse with `WeekDay.values.fromValue(...)`, which is
+/// case-insensitive, so legacy uppercase values still resolve.
 enum WeekDay {
-  @JsonValue('MONDAY')
-  monday('MONDAY', 'Monday', 'Mon', 1),
+  @JsonValue('monday')
+  monday('monday', 1),
 
-  @JsonValue('TUESDAY')
-  tuesday('TUESDAY', 'Tuesday', 'Tue', 2),
+  @JsonValue('tuesday')
+  tuesday('tuesday', 2),
 
-  @JsonValue('WEDNESDAY')
-  wednesday('WEDNESDAY', 'Wednesday', 'Wed', 3),
+  @JsonValue('wednesday')
+  wednesday('wednesday', 3),
 
-  @JsonValue('THURSDAY')
-  thursday('THURSDAY', 'Thursday', 'Thu', 4),
+  @JsonValue('thursday')
+  thursday('thursday', 4),
 
-  @JsonValue('FRIDAY')
-  friday('FRIDAY', 'Friday', 'Fri', 5),
+  @JsonValue('friday')
+  friday('friday', 5),
 
-  @JsonValue('SATURDAY')
-  saturday('SATURDAY', 'Saturday', 'Sat', 6),
+  @JsonValue('saturday')
+  saturday('saturday', 6),
 
-  @JsonValue('SUNDAY')
-  sunday('SUNDAY', 'Sunday', 'Sun', 7);
+  @JsonValue('sunday')
+  sunday('sunday', 7);
 
   final String apiValue;
-  final String label;
-  final String shortLabel;
+
+  /// ISO weekday number, matching [DateTime.weekday] (Monday = 1).
   final int weekdayNumber;
 
-  const WeekDay(this.apiValue, this.label, this.shortLabel, this.weekdayNumber);
+  const WeekDay(this.apiValue, this.weekdayNumber);
 
-  static WeekDay fromApiValue(String? value) {
-    if (value == null) return WeekDay.monday;
-    return WeekDay.values.firstWhere(
-      (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      orElse: () => WeekDay.monday,
-    );
-  }
-
-  static WeekDay? tryFromApiValue(String? value) {
-    if (value == null) return null;
-    try {
-      return WeekDay.values.firstWhere(
-        (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      );
-    } catch (_) {
-      return null;
+  String label([AppLocalizations? l10n]) {
+    switch (this) {
+      case WeekDay.monday:
+        return 'Monday';
+      case WeekDay.tuesday:
+        return 'Tuesday';
+      case WeekDay.wednesday:
+        return 'Wednesday';
+      case WeekDay.thursday:
+        return 'Thursday';
+      case WeekDay.friday:
+        return 'Friday';
+      case WeekDay.saturday:
+        return 'Saturday';
+      case WeekDay.sunday:
+        return 'Sunday';
     }
   }
 
-  static WeekDay fromDateTime(DateTime dateTime) {
-    return WeekDay.values.firstWhere(
-      (e) => e.weekdayNumber == dateTime.weekday,
-      orElse: () => WeekDay.monday,
-    );
-  }
+  String shortLabel([AppLocalizations? l10n]) => label(l10n).substring(0, 3);
+
+  /// Monday to Friday — the default working days for a new schedule.
+  bool get isWeekday => weekdayNumber <= DateTime.friday;
+
+  static WeekDay fromDateTime(DateTime dateTime) =>
+      WeekDay.values.firstWhere((e) => e.weekdayNumber == dateTime.weekday);
 }

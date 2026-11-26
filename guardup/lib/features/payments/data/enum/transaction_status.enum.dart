@@ -25,27 +25,6 @@ enum TransactionStatus {
 
   const TransactionStatus(this.apiValue, this.label);
 
-  static TransactionStatus fromApiValue(String? value) {
-    if (value == null) return TransactionStatus.completed;
-    final normalized = value.replaceAll('-', '_').toUpperCase().trim();
-    return TransactionStatus.values.firstWhere(
-      (e) => e.apiValue == normalized || e.name.toUpperCase() == normalized,
-      orElse: () => TransactionStatus.completed,
-    );
-  }
-
-  static TransactionStatus? tryFromApiValue(String? value) {
-    if (value == null) return null;
-    try {
-      final normalized = value.replaceAll('-', '_').toUpperCase().trim();
-      return TransactionStatus.values.firstWhere(
-        (e) => e.apiValue == normalized || e.name.toUpperCase() == normalized,
-      );
-    } catch (_) {
-      return null;
-    }
-  }
-
   bool get isCompleted => this == TransactionStatus.completed;
   bool get isPending => this == TransactionStatus.pending;
   bool get isFailed => this == TransactionStatus.failed;

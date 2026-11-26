@@ -12,6 +12,7 @@ import '/features/body_guard/data/enum/guard_doc_type.enum.dart';
 import '/features/body_guard/data/model/body_guard.model.dart';
 import '/features/body_guard/data/model/user_document.model.dart';
 import '/shared/widgets/feedbacks/widgets/app_file_preview.dart';
+import '/core/utils/json_converters/enum.jsonconverter.dart';
 
 /// Company View "Document" Tab: Displays operative credentials and compliance documents
 /// along with verification audit badges and preview capabilities.
@@ -112,7 +113,7 @@ class CompanyGuardDocumentsTabWidget extends StatelessWidget {
             ? context.colors.error
             : context.colors.primary;
 
-    final docType = GuardDocType.tryFromApiValue(doc.documentTypeId);
+    final docType = GuardDocType.values.fromValue(doc.documentTypeId);
     final title = doc.fileName != null && doc.fileName!.isNotEmpty
         ? doc.fileName!
         : switch (docType) {

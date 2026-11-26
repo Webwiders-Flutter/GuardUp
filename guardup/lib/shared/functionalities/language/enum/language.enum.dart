@@ -25,28 +25,4 @@ enum LanguageType {
 
   Locale get locale => Locale(code);
 
-  static LanguageType fromApiValue(String? value) {
-    if (value == null) return LanguageType.english;
-    final normalized = value.toLowerCase().trim();
-    return LanguageType.values.firstWhere(
-      (e) =>
-          e.apiValue.toLowerCase() == normalized ||
-          e.code.toLowerCase() == normalized,
-      orElse: () => LanguageType.english,
-    );
-  }
-
-  static LanguageType? tryFromApiValue(String? value) {
-    if (value == null) return null;
-    final normalized = value.toLowerCase().trim();
-    try {
-      return LanguageType.values.firstWhere(
-        (e) =>
-            e.apiValue.toLowerCase() == normalized ||
-            e.code.toLowerCase() == normalized,
-      );
-    } catch (_) {
-      return null;
-    }
-  }
 }

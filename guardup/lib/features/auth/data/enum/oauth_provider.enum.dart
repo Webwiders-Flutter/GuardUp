@@ -21,25 +21,6 @@ enum OAuthProvider {
 
   const OAuthProvider(this.apiValue);
 
-  static OAuthProvider fromApiValue(String? value) {
-    if (value == null) return OAuthProvider.google;
-    return OAuthProvider.values.firstWhere(
-      (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      orElse: () => OAuthProvider.google,
-    );
-  }
-
-  static OAuthProvider? tryFromApiValue(String? value) {
-    if (value == null) return null;
-    try {
-      return OAuthProvider.values.firstWhere(
-        (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      );
-    } catch (_) {
-      return null;
-    }
-  }
-
   String get label {
     switch (this) {
       case OAuthProvider.google:

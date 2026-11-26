@@ -26,33 +26,6 @@ enum BookingStatus {
 
   const BookingStatus(this.apiValue, this.label, {required this.hasDot});
 
-  static BookingStatus fromApiValue(String? value) {
-    if (value == null) return BookingStatus.pending;
-    final normalized = value.replaceAll('-', '_').toUpperCase().trim();
-    if (normalized == 'RUNNING' || normalized == 'ONGOING') {
-      return BookingStatus.onGoing;
-    }
-    return BookingStatus.values.firstWhere(
-      (e) => e.apiValue == normalized || e.name.toUpperCase() == normalized,
-      orElse: () => BookingStatus.pending,
-    );
-  }
-
-  static BookingStatus? tryFromApiValue(String? value) {
-    if (value == null) return null;
-    try {
-      final normalized = value.replaceAll('-', '_').toUpperCase().trim();
-      if (normalized == 'RUNNING' || normalized == 'ONGOING') {
-        return BookingStatus.onGoing;
-      }
-      return BookingStatus.values.firstWhere(
-        (e) => e.apiValue == normalized || e.name.toUpperCase() == normalized,
-      );
-    } catch (_) {
-      return null;
-    }
-  }
-
   bool get isPending => this == BookingStatus.pending;
   bool get isConfirmed => this == BookingStatus.confirmed;
   bool get isOngoing => this == BookingStatus.onGoing;

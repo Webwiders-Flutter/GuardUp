@@ -21,25 +21,6 @@ enum CompanyDocType {
 
   const CompanyDocType(this.apiValue);
 
-  static CompanyDocType fromApiValue(String? value) {
-    if (value == null) return CompanyDocType.businessRegistration;
-    return CompanyDocType.values.firstWhere(
-      (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      orElse: () => CompanyDocType.businessRegistration,
-    );
-  }
-
-  static CompanyDocType? tryFromApiValue(String? value) {
-    if (value == null) return null;
-    try {
-      return CompanyDocType.values.firstWhere(
-        (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      );
-    } catch (_) {
-      return null;
-    }
-  }
-
   String label(AppLocalizations l10n) {
     switch (this) {
       case CompanyDocType.businessRegistration:

@@ -20,25 +20,6 @@ enum UserRole {
 
   const UserRole(this.apiValue);
 
-  static UserRole fromApiValue(String? value) {
-    if (value == null) return UserRole.customer;
-    return UserRole.values.firstWhere(
-      (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      orElse: () => UserRole.customer,
-    );
-  }
-
-  static UserRole? tryFromApiValue(String? value) {
-    if (value == null) return null;
-    try {
-      return UserRole.values.firstWhere(
-        (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      );
-    } catch (_) {
-      return null;
-    }
-  }
-
   String label(AppLocalizations l10n) {
     switch (this) {
       case UserRole.customer:

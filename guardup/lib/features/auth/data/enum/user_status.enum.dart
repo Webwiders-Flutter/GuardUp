@@ -38,28 +38,12 @@ enum UserStatus {
 
   const UserStatus(this.apiValue);
 
-  static UserStatus fromApiValue(String? value) {
-    if (value == null) return UserStatus.active;
-    final normalized = value.toUpperCase().trim();
-    if (normalized == 'APPROVED') return UserStatus.active;
-    return UserStatus.values.firstWhere(
-      (e) => e.apiValue == normalized,
-      orElse: () => UserStatus.active,
-    );
-  }
-
-  static UserStatus? tryFromApiValue(String? value) {
-    if (value == null) return null;
-    final normalized = value.toUpperCase().trim();
-    if (normalized == 'APPROVED') return UserStatus.active;
-    try {
-      return UserStatus.values.firstWhere(
-        (e) => e.apiValue == normalized,
-      );
-    } catch (_) {
-      return null;
-    }
-  }
+  bool get isIncomplete => this == UserStatus.incomplete;
+  bool get isPendingApproval => this == UserStatus.pendingApproval;
+  bool get isActive => this == UserStatus.active;
+  bool get isRejected => this == UserStatus.rejected;
+  bool get isBlocked => this == UserStatus.blocked;
+  bool get isDeleted => this == UserStatus.deleted;
 
   String get label {
     switch (this) {

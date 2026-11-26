@@ -450,7 +450,7 @@ class _BodyguardAvailabilityWidgetState
                         AppSpacing.sm.w,
                         Expanded(
                           child: Text(
-                            day.label,
+                            day.label(),
                             style: context.textTheme.bodyMedium
                                 ?.semiBold()
                                 .decreaseSize(1),

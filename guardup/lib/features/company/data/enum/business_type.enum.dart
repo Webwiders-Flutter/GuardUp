@@ -45,25 +45,6 @@ enum BusinessType {
     }
   }
 
-  static BusinessType fromApiValue(String? value) {
-    if (value == null) return BusinessType.proprietorship;
-    return BusinessType.values.firstWhere(
-      (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      orElse: () => BusinessType.proprietorship,
-    );
-  }
-
-  static BusinessType? tryFromApiValue(String? value) {
-    if (value == null) return null;
-    try {
-      return BusinessType.values.firstWhere(
-        (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      );
-    } catch (_) {
-      return null;
-    }
-  }
-
   Color color(BuildContext context) {
     final colors = context.colors;
     switch (this) {

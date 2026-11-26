@@ -15,6 +15,7 @@ import '/features/customer/customer.dart';
 import '/features/legal/legal.dart';
 import '/features/notifications/notifications.dart';
 import '/features/payments/payments.dart';
+import '/core/utils/json_converters/enum.jsonconverter.dart';
 
 BodyGuardModel? _parseBodyGuard(dynamic extra) {
   if (extra is BodyGuardModel) return extra;
@@ -310,7 +311,7 @@ final class AppRouter {
             if (rawOtpType is OtpType) {
               otpType = rawOtpType;
             } else if (rawOtpType is String) {
-              otpType = OtpType.tryFromApiValue(rawOtpType) ?? otpType;
+              otpType = OtpType.values.fromValue(rawOtpType) ?? otpType;
             }
           } else if (extra is String) {
             email = extra;
@@ -319,7 +320,7 @@ final class AppRouter {
           email ??= state.uri.queryParameters['email'];
           final queryType = state.uri.queryParameters['type'];
           if (queryType != null) {
-            otpType = OtpType.tryFromApiValue(queryType) ?? otpType;
+            otpType = OtpType.values.fromValue(queryType) ?? otpType;
           }
 
           return EmailVerificationScreen(
@@ -617,7 +618,7 @@ final class AppRouter {
         builder: (context, state) {
           final queryModeStr = state.uri.queryParameters['mode'];
           final queryMode = queryModeStr != null
-              ? MembershipPlanMode.tryFromApiValue(queryModeStr)
+              ? MembershipPlanMode.values.fromValue(queryModeStr)
               : null;
 
           final extra = state.extra;
@@ -629,7 +630,7 @@ final class AppRouter {
           if (extra is MembershipPlanMode) {
             mode ??= extra;
           } else if (extra is String) {
-            mode ??= MembershipPlanMode.tryFromApiValue(extra);
+            mode ??= MembershipPlanMode.values.fromValue(extra);
           } else if (extra is MembershipPlanArgs) {
             mode ??= extra.mode;
             bookingAmount = extra.bookingAmount;
@@ -640,7 +641,7 @@ final class AppRouter {
             if (rawMode is MembershipPlanMode) {
               mode ??= rawMode;
             } else if (rawMode is String) {
-              mode ??= MembershipPlanMode.tryFromApiValue(rawMode);
+              mode ??= MembershipPlanMode.values.fromValue(rawMode);
             }
             bookingAmount = (extra['bookingAmount'] as num?)?.toDouble();
             operativeName = extra['operativeName'] as String?;
@@ -651,7 +652,7 @@ final class AppRouter {
               if (r.mode is MembershipPlanMode) {
                 mode ??= r.mode as MembershipPlanMode;
               } else if (r.mode is String) {
-                mode ??= MembershipPlanMode.tryFromApiValue(r.mode as String);
+                mode ??= MembershipPlanMode.values.fromValue(r.mode as String);
               }
               if (r.bookingAmount is num) {
                 bookingAmount = (r.bookingAmount as num).toDouble();

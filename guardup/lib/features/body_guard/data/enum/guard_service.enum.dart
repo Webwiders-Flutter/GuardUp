@@ -33,27 +33,6 @@ enum GuardService {
 
   const GuardService(this.apiValue);
 
-  static GuardService fromApiValue(String? value) {
-    return tryFromApiValue(value) ?? GuardService.vipCloseProtection;
-  }
-
-  static GuardService? tryFromApiValue(String? value) {
-    if (value == null || value.trim().isEmpty) return null;
-    final normalized = value
-        .trim()
-        .toUpperCase()
-        .replaceAll(RegExp(r'[\s\-]+'), '_');
-
-    for (final e in GuardService.values) {
-      if (e.apiValue == normalized ||
-          e.name.toUpperCase() == normalized ||
-          e.label.toUpperCase() == value.trim().toUpperCase()) {
-        return e;
-      }
-    }
-    return null;
-  }
-
   String get label {
     switch (this) {
       case GuardService.vipCloseProtection:

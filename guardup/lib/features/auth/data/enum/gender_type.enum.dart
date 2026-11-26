@@ -18,25 +18,6 @@ enum GenderType {
 
   const GenderType(this.apiValue);
 
-  static GenderType fromApiValue(String? value) {
-    if (value == null) return GenderType.male;
-    return GenderType.values.firstWhere(
-      (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      orElse: () => GenderType.male,
-    );
-  }
-
-  static GenderType? tryFromApiValue(String? value) {
-    if (value == null) return null;
-    try {
-      return GenderType.values.firstWhere(
-        (e) => e.apiValue.toUpperCase() == value.toUpperCase().trim(),
-      );
-    } catch (_) {
-      return null;
-    }
-  }
-
   String label(AppLocalizations l10n) {
     switch (this) {
       case GenderType.male:
