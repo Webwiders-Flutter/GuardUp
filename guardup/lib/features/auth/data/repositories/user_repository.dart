@@ -43,7 +43,7 @@ class SupabaseUserRepository extends BaseSupabaseRepository<UserModel>
     availabilities:user_availabilities!user_availabilities_user_id_fkey(*),
     user_services!user_services_user_id_fkey(
       id,
-      service:services(id, name, description, icon_name, is_active, display_order)
+      service:services(id, name, description, icon_name, icon_url, is_active, display_order)
     ),
     documents:user_documents!user_documents_user_id_fkey(
       *,
@@ -105,7 +105,27 @@ class SupabaseUserRepository extends BaseSupabaseRepository<UserModel>
       final account = accountRow;
       if (account == null) return;
 
-      final model = merged ?? lastMerged;
+      UserModel? model = merged;
+      if (model == null) {
+        final accountModel = UserModel.fromJson(account);
+        model = lastMerged != null
+            ? lastMerged!.copyWith(
+                name: accountModel.name,
+                email: accountModel.email,
+                phoneCode: accountModel.phoneCode,
+                phoneNumber: accountModel.phoneNumber,
+                role: accountModel.role,
+                status: accountModel.status,
+                rejectionReason: accountModel.rejectionReason,
+                profileImageUrl: accountModel.profileImageUrl,
+                gender: accountModel.gender,
+                isPushNotificationEnabled:
+                    accountModel.isPushNotificationEnabled,
+                metadata: accountModel.metadata,
+                updatedAt: accountModel.updatedAt,
+              )
+            : accountModel;
+      }
       lastMerged = model;
       controller.add(model);
     }
