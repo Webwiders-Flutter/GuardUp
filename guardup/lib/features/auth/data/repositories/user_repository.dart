@@ -206,6 +206,33 @@ class SupabaseUserRepository extends BaseSupabaseRepository<UserModel>
   }
 
   @override
+  Future<void> recordRegistrationPayment({
+    required String userId,
+    required String paymentId,
+    required String referenceId,
+    required double amount,
+    String currency = 'USD',
+    DateTime? paidAt,
+  }) async {
+    final now = paidAt ?? DateTime.now();
+    await _supabase
+        .from(DatabaseTables.users)
+        .update({
+          JsonKeys.status: UserStatus.pendingApproval.apiValue,
+          JsonKeys.updatedAt: now.toIso8601String(),
+          JsonKeys.metadata: {
+            'payment_status': 'PAID',
+            'payment_id': paymentId,
+            'payment_reference': referenceId,
+            'payment_amount': amount,
+            'payment_currency': currency,
+            'payment_date': now.toIso8601String(),
+          },
+        })
+        .eq(JsonKeys.id, userId);
+  }
+
+  @override
   Stream<UserModel?> watchUserProfile(String userId) => watchProfile(userId);
 
   /// Streams the merged profile row (same shape as [getUserData]).

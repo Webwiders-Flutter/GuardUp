@@ -21,6 +21,7 @@ export 'data/repositories/membership_plan.repository.dart';
 // Blocs
 export 'bloc/bank_accounts/bank_accounts_bloc.dart';
 export 'bloc/membership_plans/membership_plans_bloc.dart';
+export 'bloc/registration_fee/registration_fee_bloc.dart';
 
 // DI
 export 'di/payments.di.dart';

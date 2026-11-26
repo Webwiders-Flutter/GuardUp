@@ -26,6 +26,16 @@ abstract class UserRepository {
   /// Moves a user account's status to `PENDING_APPROVAL` for admin review.
   Future<void> submitForReview(String userId);
 
+  /// Records registration payment details and moves the account to `PENDING_APPROVAL`.
+  Future<void> recordRegistrationPayment({
+    required String userId,
+    required String paymentId,
+    required String referenceId,
+    required double amount,
+    String currency = 'USD',
+    DateTime? paidAt,
+  });
+
   /// Streams real-time updates for a specific user profile by [userId].
   Stream<UserModel?> watchUserProfile(String userId);
 
