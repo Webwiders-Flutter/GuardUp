@@ -3,16 +3,19 @@ import '/features/body_guard/presentation/widgets/body_guard_list_skeleton.dart'
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:guardup/features/body_guard/presentation/screens/guard_detail.screen.dart';
 
 import '/core/constants/app_durations.dart';
 import '/core/constants/app_radius.dart';
 import '/core/di/injection_container.dart';
+import '/core/extensions/api_error.extension.dart';
 import '/features/auth/auth.dart';
+import '/shared/bloc/pagination/pagination_event.dart';
 import '/shared/widgets/feedbacks/widgets/app_popup.dart';
 import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
-import '../../bloc/company_bodyguards/company_bodyguards_cubit.dart';
+import '../../bloc/company_bodyguards/company_bodyguards_bloc.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/context.extension.dart';
@@ -36,17 +39,37 @@ import '/features/body_guard/data/fixtures/bodyguard.fixtures.dart';
 
 /// Screen presenting all company or platform bodyguards with search,
 /// pagination, and management actions (Add, Edit, Delete).
-class CompanyBodyguardsScreen extends StatefulWidget {
+class CompanyBodyguardsScreen extends StatelessWidget {
   static const route = '/all-bodyguards';
 
   const CompanyBodyguardsScreen({super.key});
 
   @override
-  State<CompanyBodyguardsScreen> createState() =>
-      _CompanyBodyguardsScreenState();
+  Widget build(BuildContext context) {
+    final authState = context.read<AuthBloc>().state;
+    final userId = authState.user?.id;
+    if (authState.isCompany && userId != null && userId.isNotEmpty) {
+      return BlocProvider(
+        create: (_) =>
+            sl<CompanyBodyguardsBloc>(param1: userId)
+              ..add(const PaginationLoadRequested()),
+        child: const _CompanyBodyguardsView(isCompany: true),
+      );
+    }
+    return const _CompanyBodyguardsView(isCompany: false);
+  }
 }
 
-class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen>
+class _CompanyBodyguardsView extends StatefulWidget {
+  final bool isCompany;
+
+  const _CompanyBodyguardsView({required this.isCompany});
+
+  @override
+  State<_CompanyBodyguardsView> createState() => _CompanyBodyguardsViewState();
+}
+
+class _CompanyBodyguardsViewState extends State<_CompanyBodyguardsView>
     with SingleTickerProviderStateMixin {
   final _searchController = TextEditingController();
   late final PaginationController<BodyGuardModel> _paginationController;
@@ -59,13 +82,8 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen>
     'Rejected',
   ];
 
-  /// Companies see and manage their own bodyguards (live data). Other roles
-  /// still browse the sample roster until the public listing is built.
-  late final bool _isCompany =
-      sl.isRegistered<AuthBloc>() && sl<AuthBloc>().state.isCompany;
-  CompanyBodyguardsCubit? _cubit;
-  StreamSubscription<CompanyBodyguardsState>? _cubitSubscription;
   Timer? _searchDebounce;
+  String? _pendingDeletedName;
 
   @override
   void initState() {
@@ -73,17 +91,14 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen>
     _tabController = TabController(length: _statusTabs.length, vsync: this);
     _tabController.addListener(_onTabChanged);
 
-    if (_isCompany) {
-      final cubit = sl<CompanyBodyguardsCubit>();
-      _cubit = cubit;
+    if (widget.isCompany) {
+      final bloc = context.read<CompanyBodyguardsBloc>();
       _paginationController = PaginationController<BodyGuardModel>(
-        initialState: cubit.state.pagination,
-        onRefresh: cubit.refresh,
-        onLoadMore: cubit.loadMore,
+        initialState: bloc.state.pagination,
+        onRefresh: () async => bloc.add(const PaginationLoadRequested()),
+        onLoadMore: () async => bloc.add(const PaginationNextPageRequested()),
       );
-      _cubitSubscription = cubit.stream.listen(_onCubitState);
       _searchController.addListener(_onSearchChanged);
-      cubit.refresh();
     } else {
       _paginationController = PaginationController<BodyGuardModel>(
         initialState: PaginationState<BodyGuardModel>(
@@ -96,30 +111,30 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen>
   }
 
   void _onTabChanged() {
-    if (_tabController.indexIsChanging) return;
+    if (_tabController.indexIsChanging || !widget.isCompany) return;
     final selectedStatus = switch (_tabController.index) {
       1 => UserStatus.active,
       2 => UserStatus.pendingApproval,
       3 => UserStatus.rejected,
       _ => null,
     };
-    _cubit?.refresh(status: selectedStatus, updateStatus: true);
-  }
-
-  void _onCubitState(CompanyBodyguardsState state) {
-    if (!mounted) return;
-    _paginationController.updateState(state.pagination);
-    final error = state.actionError;
-    if (error != null) AppSnackbar.error(error);
+    context.read<CompanyBodyguardsBloc>().add(
+      CompanyBodyguardsStatusChanged(selectedStatus),
+    );
   }
 
   void _onSearchChanged() {
+    if (!widget.isCompany) return;
     final term = _searchController.text.trim();
-    if (term == _cubit?.state.search) return;
+    final bloc = context.read<CompanyBodyguardsBloc>();
+    if (term == bloc.state.search) return;
     _searchDebounce?.cancel();
     _searchDebounce = Timer(
       AppDurations.slow,
-      () => _cubit?.refresh(search: term),
+      () {
+        if (!mounted) return;
+        bloc.add(PaginationSearchChanged(term));
+      },
     );
   }
 
@@ -128,8 +143,6 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen>
     _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     _searchDebounce?.cancel();
-    _cubitSubscription?.cancel();
-    _cubit?.close();
     _searchController.dispose();
     _paginationController.dispose();
     super.dispose();
@@ -140,7 +153,9 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen>
   Future<void> _handleAddBodyguard() async {
     await context.push(BodyGuardCompleteProfileScreen.route);
     // A bodyguard may have been created even if the flow was not finished.
-    if (mounted) unawaited(_cubit?.refresh());
+    if (mounted && widget.isCompany) {
+      context.read<CompanyBodyguardsBloc>().add(const PaginationLoadRequested());
+    }
   }
 
   Future<void> _handleEditBodyguard(BodyGuardModel bodyguard) async {
@@ -152,26 +167,27 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen>
         extra: bodyguard,
       );
     }
-    if (mounted) unawaited(_cubit?.refresh());
+    if (mounted && widget.isCompany) {
+      context.read<CompanyBodyguardsBloc>().add(const PaginationLoadRequested());
+    }
   }
 
   Future<void> _handleDeleteBodyguard(BodyGuardModel bodyguard) async {
-    final cubit = _cubit;
-    if (cubit == null) return;
+    if (!widget.isCompany) return;
     final result = await AppPopup.showDeleteConfirmation(
       context,
       deleteItemName: bodyguard.name,
     );
     if (result?.action != PopupAction.confirm || !mounted) return;
-    final deleted = await cubit.delete(bodyguard);
-    if (deleted && mounted) {
-      AppSnackbar.success('${bodyguard.name} removed.');
-    }
+    _pendingDeletedName = bodyguard.name;
+    context.read<CompanyBodyguardsBloc>().add(
+      CompanyBodyguardDeleted(bodyguard),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final scaffold = Scaffold(
       appBar: AppAppBar.transparent(
         title: 'All Bodyguards',
         fontSize: 14,
@@ -214,7 +230,7 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen>
                       style: TextStyle(color: context.colors.onSurface),
                     ),
                   ),
-                  if (_isCompany) ...[
+                  if (widget.isCompany) ...[
                     AppSpacing.sm.w,
                     Expanded(
                       child: AppButton(
@@ -234,7 +250,7 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen>
                 ],
               ),
             ),
-            if (_isCompany) ...[
+            if (widget.isCompany) ...[
               AppSpacing.sm.h,
               Padding(
                 padding: context.horizontalEdgeInsets,
@@ -275,7 +291,8 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen>
                         ),
                         AppSpacing.xs.h,
                         Text(
-                          _isCompany && _searchController.text.trim().isEmpty
+                          widget.isCompany &&
+                                  _searchController.text.trim().isEmpty
                               ? 'Tap Add to register your first bodyguard.'
                               : 'Try adjusting your search criteria.',
                           style: context.textTheme.bodySmall?.colour(
@@ -293,10 +310,10 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen>
                     onTap: () {
                       context.push(GuardDetailScreen.route, extra: guard);
                     },
-                    onEdit: _isCompany
+                    onEdit: widget.isCompany
                         ? () => _handleEditBodyguard(guard)
                         : null,
-                    onDelete: _isCompany
+                    onDelete: widget.isCompany
                         ? () => _handleDeleteBodyguard(guard)
                         : null,
                   );
@@ -306,6 +323,41 @@ class _CompanyBodyguardsScreenState extends State<CompanyBodyguardsScreen>
           ],
         ),
       ),
+    );
+
+    if (!widget.isCompany) return scaffold;
+
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<CompanyBodyguardsBloc, CompanyBodyguardsState>(
+          listenWhen: (previous, current) =>
+              previous.pagination != current.pagination,
+          listener: (context, state) =>
+              _paginationController.updateState(state.pagination),
+        ),
+        BlocListener<CompanyBodyguardsBloc, CompanyBodyguardsState>(
+          listenWhen: (previous, current) =>
+              previous.actionStatus != current.actionStatus,
+          listener: (context, state) {
+            if (state.actionStatus.isSuccess) {
+              final name = _pendingDeletedName;
+              _pendingDeletedName = null;
+              if (name != null) {
+                AppSnackbar.success('$name removed.');
+              }
+            } else if (state.actionStatus.isFailure) {
+              _pendingDeletedName = null;
+              AppSnackbar.error(
+                context.apiErrorText(
+                  state.actionStatus.errorOrNull,
+                  fallback: state.actionStatus.errorMessageOrNull,
+                ),
+              );
+            }
+          },
+        ),
+      ],
+      child: scaffold,
     );
   }
 }

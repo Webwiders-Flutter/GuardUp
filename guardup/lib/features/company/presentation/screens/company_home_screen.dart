@@ -1,7 +1,5 @@
 import '/core/extensions/localization.extension.dart';
 
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +8,7 @@ import 'package:quick_container/quick_container.dart';
 import '/core/constants/app_radius.dart';
 import '/core/constants/app_sizes.dart';
 import '/core/constants/app_spacing.dart';
+import '/core/extensions/api_error.extension.dart';
 import '/core/extensions/context.extension.dart';
 import '/core/extensions/number.extension.dart';
 import '/core/extensions/spacing.extension.dart';
@@ -20,6 +19,7 @@ import '/core/state/api_state.dart';
 import '/features/auth/auth.dart';
 import '/features/body_guard/body_guard.dart';
 import '/features/booking/booking.dart';
+import '/shared/bloc/pagination/pagination_event.dart';
 import '/shared/widgets/buttons/app_button.dart';
 import '/shared/widgets/feedbacks/widgets/app_popup.dart';
 import '/shared/widgets/feedbacks/widgets/app_snackbar.dart';
@@ -38,7 +38,7 @@ import '/core/extensions/company.extension.dart';
 /// - Operative & booking overview cards in [WrapperCard]
 /// - Latest bookings section with live search and paginated feed using [AppPagination] and [BookingCard]
 /// - My bodyguards roster section with paginated feed using [AppPagination] and [BodyGuardCard]
-class CompanyHomeScreen extends StatefulWidget {
+class CompanyHomeScreen extends StatelessWidget {
   /// Shared `/home` route: one shell tab whose builder in `app_router.dart`
   /// shows the customer, company or bodyguard home based on the session role.
   static const route = '/home';
@@ -46,19 +46,31 @@ class CompanyHomeScreen extends StatefulWidget {
   const CompanyHomeScreen({super.key});
 
   @override
-  State<CompanyHomeScreen> createState() => _CompanyHomeScreenState();
+  Widget build(BuildContext context) {
+    final userId = context.read<AuthBloc>().state.user?.id ?? '';
+    return BlocProvider(
+      create: (_) =>
+          sl<CompanyBodyguardsBloc>(param1: userId)
+            ..add(const PaginationLoadRequested()),
+      child: const _CompanyHomeView(),
+    );
+  }
 }
 
-class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
+class _CompanyHomeView extends StatefulWidget {
+  const _CompanyHomeView();
+
+  @override
+  State<_CompanyHomeView> createState() => _CompanyHomeViewState();
+}
+
+class _CompanyHomeViewState extends State<_CompanyHomeView> {
   final _bookingSearchController = TextEditingController();
 
   late final PaginationController<BookingModel> _bookingsPaginationController;
   late final PaginationController<BodyGuardModel>
   _bodyguardsPaginationController;
-
-  /// The company's own bodyguards (live data).
-  final CompanyBodyguardsCubit _bodyguardsCubit = sl<CompanyBodyguardsCubit>();
-  StreamSubscription<CompanyBodyguardsState>? _bodyguardsSubscription;
+  String? _pendingDeletedName;
 
   @override
   void initState() {
@@ -72,19 +84,11 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
       ),
     );
 
+    final bloc = context.read<CompanyBodyguardsBloc>();
     _bodyguardsPaginationController = PaginationController<BodyGuardModel>(
-      initialState: _rosterPreview(_bodyguardsCubit.state.pagination),
-      onRefresh: _bodyguardsCubit.refresh,
+      initialState: _rosterPreview(bloc.state.pagination),
+      onRefresh: () async => bloc.add(const PaginationLoadRequested()),
     );
-    _bodyguardsSubscription = _bodyguardsCubit.stream.listen((state) {
-      if (!mounted) return;
-      _bodyguardsPaginationController.updateState(
-        _rosterPreview(state.pagination),
-      );
-      final error = state.actionError;
-      if (error != null) AppSnackbar.error(error);
-    });
-    _bodyguardsCubit.refresh();
   }
 
   /// Number of bodyguards previewed on the home screen ("View All" for more).
@@ -101,8 +105,6 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
 
   @override
   void dispose() {
-    _bodyguardsSubscription?.cancel();
-    _bodyguardsCubit.close();
     _bookingSearchController.dispose();
     _bookingsPaginationController.dispose();
     _bodyguardsPaginationController.dispose();
@@ -130,13 +132,17 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
         extra: bodyguard,
       );
     }
-    if (mounted) unawaited(_bodyguardsCubit.refresh());
+    if (mounted) {
+      context.read<CompanyBodyguardsBloc>().add(const PaginationLoadRequested());
+    }
   }
 
   Future<void> _handleViewAllBodyguards() async {
     await context.push(CompanyBodyguardsScreen.route);
     // Bodyguards may have been added, edited or removed there.
-    if (mounted) unawaited(_bodyguardsCubit.refresh());
+    if (mounted) {
+      context.read<CompanyBodyguardsBloc>().add(const PaginationLoadRequested());
+    }
   }
 
   Future<void> _handleDeleteBodyguard(BodyGuardModel bodyguard) async {
@@ -145,17 +151,49 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
       deleteItemName: bodyguard.name,
     );
     if (result?.action != PopupAction.confirm || !mounted) return;
-    final deleted = await _bodyguardsCubit.delete(bodyguard);
-    if (deleted && mounted) {
-      AppSnackbar.success('${bodyguard.name} removed.');
-      // Pull the next bodyguard into the preview.
-      unawaited(_bodyguardsCubit.refresh());
-    }
+    _pendingDeletedName = bodyguard.name;
+    context.read<CompanyBodyguardsBloc>().add(
+      CompanyBodyguardDeleted(bodyguard),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<CompanyBodyguardsBloc, CompanyBodyguardsState>(
+          listenWhen: (previous, current) =>
+              previous.pagination != current.pagination,
+          listener: (context, state) => _bodyguardsPaginationController
+              .updateState(_rosterPreview(state.pagination)),
+        ),
+        BlocListener<CompanyBodyguardsBloc, CompanyBodyguardsState>(
+          listenWhen: (previous, current) =>
+              previous.actionStatus != current.actionStatus,
+          listener: (context, state) {
+            if (state.actionStatus.isSuccess) {
+              final name = _pendingDeletedName;
+              _pendingDeletedName = null;
+              if (name != null) {
+                AppSnackbar.success('$name removed.');
+              }
+              // Pull the next bodyguard into the preview.
+              context.read<CompanyBodyguardsBloc>().add(
+                const PaginationLoadRequested(),
+              );
+            } else if (state.actionStatus.isFailure) {
+              _pendingDeletedName = null;
+              AppSnackbar.error(
+                context.apiErrorText(
+                  state.actionStatus.errorOrNull,
+                  fallback: state.actionStatus.errorMessageOrNull,
+                ),
+              );
+            }
+          },
+        ),
+      ],
+      child: Scaffold(
       appBar: AppAppBar.transparent(
         automaticallyImplyLeading: false,
         alignTitle: .left,
@@ -321,6 +359,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 

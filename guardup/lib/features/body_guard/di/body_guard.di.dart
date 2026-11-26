@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '/features/auth/data/enum/user_status.enum.dart';
 import '../bloc/bodyguards/bodyguards_bloc.dart';
-import '../bloc/company_bodyguards/company_bodyguards_cubit.dart';
+import '../bloc/company_bodyguards/company_bodyguards_bloc.dart';
 import '../data/model/bodyguard_filters.model.dart';
 import '../data/repositories/availability.repository.dart';
 import '../data/repositories/bodyguard.repository.dart';
@@ -15,8 +15,11 @@ void registerBodyguardDependencies(GetIt sl) {
   sl.registerLazySingleton<AvailabilityRepository>(
     () => AvailabilityRepository(sl<SupabaseClient>()),
   );
-  sl.registerFactory<CompanyBodyguardsCubit>(
-    () => CompanyBodyguardsCubit(sl<BodyguardRepository>()),
+  sl.registerFactoryParam<CompanyBodyguardsBloc, String, void>(
+    (companyUserId, _) => CompanyBodyguardsBloc(
+      sl<BodyguardRepository>(),
+      companyUserId: companyUserId,
+    ),
   );
   sl.registerFactoryParam<BodyguardsBloc, BodyguardFilters?, void>(
     (initialFilters, _) => BodyguardsBloc(
