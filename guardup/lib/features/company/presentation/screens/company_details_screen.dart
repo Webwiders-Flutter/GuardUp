@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:guardup/core/di/injection_container.dart';
 import 'package:guardup/features/auth/auth.dart';
 
-import '../../../../shared/widgets/feedbacks/widgets/app_snackbar.dart';
 import '/core/constants/app_spacing.dart';
 import '/core/extensions/spacing.extension.dart';
 import '/shared/widgets/navigation/app_tab_bar.dart';
@@ -16,7 +14,6 @@ import '../widgets/company_card.dart';
 import '../widgets/tabs/company_about_tab.dart';
 import '../widgets/tabs/company_bodyguards_tab.dart';
 import '../widgets/tabs/company_reviews_tab.dart';
-import '/features/customer/presentation/screens/booking_screen.dart';
 
 /// Company operational profile and details screen.
 ///
@@ -76,12 +73,6 @@ class _CompanyDetailsViewState extends State<_CompanyDetailsView>
   void dispose() {
     _tabController.dispose();
     super.dispose();
-  }
-
-  void _handleBookNow(CompanyModel company) {
-    AppSnackbar.show(message: "Coming soon");
-    return;
-    context.push(BookingScreen.route, extra: company);
   }
 
   @override
