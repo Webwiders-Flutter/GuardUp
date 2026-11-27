@@ -64,6 +64,9 @@ jobs:
           pod install --repo-update
           cd ..
 
+      - name: Run Code Generation
+        run: dart run build_runner build --delete-conflicting-outputs
+
       - name: Install Apple Certificate & Provisioning Profile
         env:
           P12_BASE64: ${{ secrets.P12_CERTIFICATE_BASE64 }}
